@@ -1,9 +1,12 @@
+import { invoke } from "@tauri-apps/api/core";
 import { cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
-import type { CleanerCategory, DiagnosticResult, HermesTweak, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
+import type { CleanerCategory, DiagnosticReport, DiagnosticResult, HardwareInfo, HermesTweak, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
 
 type MockRegistry = {
   get_system_overview: SystemOverview;
   run_diagnostics: DiagnosticResult[];
+  get_hardware_info: HardwareInfo;
+  get_diagnostic_report: DiagnosticReport;
   scan_temp_files: CleanerCategory[];
   list_startup_apps: StartupApp[];
   list_available_tweaks: HermesTweak[];
@@ -26,6 +29,20 @@ export type HermesApiResult<T> = {
 const mockRegistry: MockRegistry = {
   get_system_overview: systemOverview,
   run_diagnostics: diagnostics,
+  get_hardware_info: {
+    os: { computerName: systemOverview.computerName, name: systemOverview.operatingSystem, version: systemOverview.windowsVersion, build: "Mock", architecture: systemOverview.architecture, uptimeSeconds: systemOverview.uptimeSeconds },
+    cpu: { name: systemOverview.cpuName, frequencyMhz: 0, cores: systemOverview.cpuCores, threads: systemOverview.cpuCores, usagePercent: systemOverview.cpuUsage },
+    memory: { totalBytes: systemOverview.ramTotalGb * 1024 ** 3, usedBytes: systemOverview.ramUsedGb * 1024 ** 3, freeBytes: systemOverview.ramFreeGb * 1024 ** 3, usagePercent: systemOverview.ramUsage },
+    disks: [{ name: systemOverview.diskName, model: "Mock fallback", totalBytes: systemOverview.diskTotalGb * 1024 ** 3, usedBytes: systemOverview.diskUsedGb * 1024 ** 3, freeBytes: systemOverview.diskFreeGb * 1024 ** 3, usagePercent: systemOverview.diskUsage, isPrimary: true }],
+    gpuReady: true,
+    dataSource: "Fallback mock do frontend",
+  },
+  get_diagnostic_report: {
+    summary: "Foram encontrados pontos simulados que podem ser melhorados.",
+    health: { score: systemOverview.healthScore, label: systemOverview.healthLabel, reasons: ["Fallback mock do frontend"] },
+    problems: diagnostics.filter((item) => item.status !== "ok"),
+    recommendations: diagnostics.filter((item) => item.status !== "ok").map((item) => item.recommendation),
+  },
   scan_temp_files: cleanerCategories,
   list_startup_apps: startupApps,
   list_available_tweaks: tweaks,
@@ -63,7 +80,6 @@ export async function invokeSafe<T>(command: HermesCommand, args?: Record<string
   }
 
   try {
-    const { invoke } = await import("@tauri-apps/api/core");
     const data = await invoke<T>(command, args);
     return { data, fallback: false };
   } catch (error) {

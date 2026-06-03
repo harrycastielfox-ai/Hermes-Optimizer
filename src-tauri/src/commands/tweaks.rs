@@ -18,6 +18,7 @@ pub struct HermesTweak {
     enabled: bool,
     recommended: bool,
     benefit: String,
+    reversal_plan: String,
     warning: Option<String>,
 }
 
@@ -55,6 +56,8 @@ pub fn list_available_tweaks() -> Vec<HermesTweak> {
             enabled: false,
             recommended: true,
             benefit: "Interface mais responsiva.".into(),
+            reversal_plan: "Restaurar a configuração anterior documentada no snapshot futuro."
+                .into(),
             warning: None,
         },
         HermesTweak {
@@ -69,6 +72,8 @@ pub fn list_available_tweaks() -> Vec<HermesTweak> {
             enabled: false,
             recommended: false,
             benefit: "Pode reduzir carga em cenários específicos.".into(),
+            reversal_plan: "Reativar serviços alterados conforme plano de reversão obrigatório."
+                .into(),
             warning: Some("Não executado nesta base inicial.".into()),
         },
     ]

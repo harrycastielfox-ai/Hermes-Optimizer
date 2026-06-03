@@ -7,6 +7,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             diagnostics::get_system_overview,
             diagnostics::run_diagnostics,
+            diagnostics::get_hardware_info,
+            diagnostics::get_diagnostic_report,
             cleaner::scan_temp_files,
             startup::list_startup_apps,
             tweaks::list_available_tweaks,
