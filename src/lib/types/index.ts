@@ -10,14 +10,32 @@ export type SystemOverview = {
   tempFilesEstimateMb: number;
   performanceMode: string;
   lastDiagnostic: string;
+  computerName: string;
+  operatingSystem: string;
+  windowsVersion: string;
+  architecture: string;
+  uptimeSeconds: number;
+  cpuName: string;
+  cpuCores: number;
+  ramTotalGb: number;
+  ramUsedGb: number;
+  ramFreeGb: number;
+  diskName: string;
+  diskTotalGb: number;
+  diskUsedGb: number;
+  diskFreeGb: number;
+  healthScore: number;
+  healthLabel: string;
 };
 
 export type DiagnosticResult = {
   id: string;
   title: string;
-  status: "ok" | "warning" | "attention";
+  status: "ok" | "warning" | "attention" | "critical";
   value: string;
   description: string;
+  recommendation: string;
+  penalty: number;
 };
 
 export type CleanerCategory = {
@@ -38,6 +56,8 @@ export type StartupApp = {
   path: string;
   impact: "low" | "medium" | "high";
   enabled: boolean;
+  status: string;
+  origin: string;
   risk: RiskLevel;
   suggestedAction: string;
 };
@@ -54,6 +74,7 @@ export type HermesTweak = {
   enabled: boolean;
   recommended: boolean;
   benefit: string;
+  reversalPlan: string;
   warning?: string;
 };
 
@@ -95,4 +116,61 @@ export type GamerAppProfile = {
   powerPlan: "balanced" | "high-performance" | "ultimate";
   processesToClose: string[];
   restoreOnExit: boolean;
+};
+
+
+export type OsInfo = {
+  computerName: string;
+  name: string;
+  version: string;
+  build: string;
+  architecture: string;
+  uptimeSeconds: number;
+};
+
+export type CpuInfo = {
+  name: string;
+  frequencyMhz: number;
+  cores: number;
+  threads: number;
+  usagePercent: number;
+};
+
+export type MemoryInfo = {
+  totalBytes: number;
+  usedBytes: number;
+  freeBytes: number;
+  usagePercent: number;
+};
+
+export type DiskInfo = {
+  name: string;
+  model: string;
+  totalBytes: number;
+  usedBytes: number;
+  freeBytes: number;
+  usagePercent: number;
+  isPrimary: boolean;
+};
+
+export type HardwareInfo = {
+  os: OsInfo;
+  cpu: CpuInfo;
+  memory: MemoryInfo;
+  disks: DiskInfo[];
+  gpuReady: boolean;
+  dataSource: string;
+};
+
+export type HealthScore = {
+  score: number;
+  label: string;
+  reasons: string[];
+};
+
+export type DiagnosticReport = {
+  summary: string;
+  health: HealthScore;
+  problems: DiagnosticResult[];
+  recommendations: string[];
 };

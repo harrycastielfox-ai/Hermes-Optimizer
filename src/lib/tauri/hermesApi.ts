@@ -1,7 +1,9 @@
 import { cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
 import type {
   CleanerCategory,
+  DiagnosticReport,
   DiagnosticResult,
+  HardwareInfo,
   HermesTweak,
   OptimizationLog,
   PerformanceProfile,
@@ -20,6 +22,22 @@ type SnakeSystemOverview = {
   temp_files_estimate_mb: number;
   performance_mode: string;
   last_diagnostic: string;
+  computer_name: string;
+  operating_system: string;
+  windows_version: string;
+  architecture: string;
+  uptime_seconds: number;
+  cpu_name: string;
+  cpu_cores: number;
+  ram_total_gb: number;
+  ram_used_gb: number;
+  ram_free_gb: number;
+  disk_name: string;
+  disk_total_gb: number;
+  disk_used_gb: number;
+  disk_free_gb: number;
+  health_score: number;
+  health_label: string;
 };
 
 type SnakeCleanerCategory = Omit<CleanerCategory, "estimatedSizeMb" | "safeToClean" | "requiresConfirmation" | "selected"> & {
@@ -31,7 +49,19 @@ type SnakeCleanerCategory = Omit<CleanerCategory, "estimatedSizeMb" | "safeToCle
 
 type SnakeStartupApp = Omit<StartupApp, "suggestedAction"> & { suggested_action: string };
 
-type SnakeTweak = Omit<HermesTweak, "requiresAdmin"> & { requires_admin: boolean };
+type SnakeTweak = Omit<HermesTweak, "requiresAdmin" | "reversalPlan"> & { requires_admin: boolean; reversal_plan?: string };
+
+
+type SnakeHardwareInfo = {
+  os: { computer_name: string; name: string; version: string; build: string; architecture: string; uptime_seconds: number };
+  cpu: { name: string; frequency_mhz: number; cores: number; threads: number; usage_percent: number };
+  memory: { total_bytes: number; used_bytes: number; free_bytes: number; usage_percent: number };
+  disks: Array<{ name: string; model: string; total_bytes: number; used_bytes: number; free_bytes: number; usage_percent: number; is_primary: boolean }>;
+  gpu_ready: boolean;
+  data_source: string;
+};
+
+type SnakeDiagnosticReport = Omit<DiagnosticReport, "health"> & { health: DiagnosticReport["health"] };
 
 type SnakeLog = OptimizationLog;
 
@@ -68,6 +98,22 @@ function mapOverview(input: SystemOverview | SnakeSystemOverview): SystemOvervie
     tempFilesEstimateMb: input.temp_files_estimate_mb,
     performanceMode: input.performance_mode,
     lastDiagnostic: input.last_diagnostic,
+    computerName: input.computer_name,
+    operatingSystem: input.operating_system,
+    windowsVersion: input.windows_version,
+    architecture: input.architecture,
+    uptimeSeconds: input.uptime_seconds,
+    cpuName: input.cpu_name,
+    cpuCores: input.cpu_cores,
+    ramTotalGb: input.ram_total_gb,
+    ramUsedGb: input.ram_used_gb,
+    ramFreeGb: input.ram_free_gb,
+    diskName: input.disk_name,
+    diskTotalGb: input.disk_total_gb,
+    diskUsedGb: input.disk_used_gb,
+    diskFreeGb: input.disk_free_gb,
+    healthScore: input.health_score,
+    healthLabel: input.health_label,
   };
 }
 
@@ -92,7 +138,7 @@ function mapStartup(input: StartupApp | SnakeStartupApp): StartupApp {
 
 function mapTweak(input: HermesTweak | SnakeTweak): HermesTweak {
   if ("requiresAdmin" in input) return input;
-  return { ...input, requiresAdmin: input.requires_admin };
+  return { ...input, requiresAdmin: input.requires_admin, reversalPlan: input.reversal_plan ?? "Reversão documentada antes de qualquer aplicação real." };
 }
 
 function mapProfile(input: PerformanceProfile | SnakeProfile): PerformanceProfile {
@@ -110,6 +156,18 @@ function mapSimulation(input: SimulationResult | SnakeSimulationResult): Simulat
   return { success: input.success, message: input.message, logId: input.log_id };
 }
 
+function mapHardware(input: HardwareInfo | SnakeHardwareInfo): HardwareInfo {
+  if ("gpuReady" in input) return input;
+  return {
+    os: { computerName: input.os.computer_name, name: input.os.name, version: input.os.version, build: input.os.build, architecture: input.os.architecture, uptimeSeconds: input.os.uptime_seconds },
+    cpu: { name: input.cpu.name, frequencyMhz: input.cpu.frequency_mhz, cores: input.cpu.cores, threads: input.cpu.threads, usagePercent: input.cpu.usage_percent },
+    memory: { totalBytes: input.memory.total_bytes, usedBytes: input.memory.used_bytes, freeBytes: input.memory.free_bytes, usagePercent: input.memory.usage_percent },
+    disks: input.disks.map((disk) => ({ name: disk.name, model: disk.model, totalBytes: disk.total_bytes, usedBytes: disk.used_bytes, freeBytes: disk.free_bytes, usagePercent: disk.usage_percent, isPrimary: disk.is_primary })),
+    gpuReady: input.gpu_ready,
+    dataSource: input.data_source,
+  };
+}
+
 export async function getSystemOverview() {
   const result = await invokeSafe<SystemOverview | SnakeSystemOverview>("get_system_overview", undefined, systemOverview);
   return withMappedData(result, mapOverview);
@@ -118,6 +176,30 @@ export async function getSystemOverview() {
 export async function runDiagnostics() {
   const result = await invokeSafe<DiagnosticResult[]>("run_diagnostics", undefined, diagnostics);
   return result;
+}
+
+export async function getHardwareInfo() {
+  const fallback: HardwareInfo = {
+    os: { computerName: systemOverview.computerName, name: systemOverview.operatingSystem, version: systemOverview.windowsVersion, build: "Mock", architecture: systemOverview.architecture, uptimeSeconds: systemOverview.uptimeSeconds },
+    cpu: { name: systemOverview.cpuName, frequencyMhz: 0, cores: systemOverview.cpuCores, threads: systemOverview.cpuCores, usagePercent: systemOverview.cpuUsage },
+    memory: { totalBytes: systemOverview.ramTotalGb * 1024 ** 3, usedBytes: systemOverview.ramUsedGb * 1024 ** 3, freeBytes: systemOverview.ramFreeGb * 1024 ** 3, usagePercent: systemOverview.ramUsage },
+    disks: [{ name: systemOverview.diskName, model: "Mock fallback", totalBytes: systemOverview.diskTotalGb * 1024 ** 3, usedBytes: systemOverview.diskUsedGb * 1024 ** 3, freeBytes: systemOverview.diskFreeGb * 1024 ** 3, usagePercent: systemOverview.diskUsage, isPrimary: true }],
+    gpuReady: true,
+    dataSource: "Fallback mock do frontend",
+  };
+  const result = await invokeSafe<HardwareInfo | SnakeHardwareInfo>("get_hardware_info", undefined, fallback);
+  return withMappedData(result, mapHardware);
+}
+
+export async function getDiagnosticReport() {
+  const fallback: DiagnosticReport = {
+    summary: "Foram encontrados pontos simulados que podem ser melhorados.",
+    health: { score: systemOverview.healthScore, label: systemOverview.healthLabel, reasons: ["Fallback mock do frontend"] },
+    problems: diagnostics.filter((item) => item.status !== "ok"),
+    recommendations: diagnostics.filter((item) => item.status !== "ok").map((item) => item.recommendation),
+  };
+  const result = await invokeSafe<DiagnosticReport | SnakeDiagnosticReport>("get_diagnostic_report", undefined, fallback);
+  return result as HermesApiResult<DiagnosticReport>;
 }
 
 export async function scanTempFiles() {
