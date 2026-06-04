@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:prepare-icons": "node scripts/generate-tauri-icon.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.5.0",
