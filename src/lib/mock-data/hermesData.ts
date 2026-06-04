@@ -33,8 +33,15 @@ export const systemOverview: SystemOverview = {
   diskTotalGb: 512,
   diskUsedGb: 274,
   diskFreeGb: 238,
+  gpuDetected: true,
+  gpuName: "NVIDIA GeForce RTX Mock",
+  gpuMemoryGb: 8,
   healthScore: 88,
   healthLabel: "Bom",
+  performanceScore: 86,
+  stabilityScore: 92,
+  storageScore: 90,
+  gamingReadinessScore: 84,
 };
 
 export const diagnostics: DiagnosticResult[] = [

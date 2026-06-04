@@ -22,11 +22,18 @@ export function DashboardPage() {
       <ApiNotice error={error} fallback={fallback} />
       {loading || !overview ? <LoadingState /> : (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             <MetricCard title="Saúde geral" value={`${overview.healthScore}/100`} description={`${overview.healthLabel} • ${statusLabel(overview.status)}`} accent={overview.status === "good" ? "green" : "purple"} />
             <MetricCard title="CPU" value={`${overview.cpuUsage}%`} description={`${overview.cpuName} • ${overview.cpuCores} núcleos`} />
             <MetricCard title="RAM" value={`${overview.ramUsage}%`} description={`${formatGb(overview.ramUsedGb)} usados • ${formatGb(overview.ramFreeGb)} livres`} accent="purple" />
             <MetricCard title="Disco principal" value={`${overview.diskUsage}%`} description={`${formatGb(overview.diskFreeGb)} livres em ${overview.diskName}`} />
+            <MetricCard title="GPU" value={overview.gpuDetected ? "Detectada" : "Não detectada"} description={overview.gpuDetected ? `${overview.gpuName}${overview.gpuMemoryGb > 0 ? ` • ${formatGb(overview.gpuMemoryGb)} VRAM` : ""}` : "GPU não detectada nesta leitura."} accent={overview.gpuDetected ? "green" : "cyan"} />
+          </div>
+          <div className="mt-5 grid grid-cols-4 gap-4">
+            <MetricCard title="Performance" value={`${overview.performanceScore}/100`} description="RAM, CPU e inicialização" />
+            <MetricCard title="Estabilidade" value={`${overview.stabilityScore}/100`} description="Uptime e inicialização" />
+            <MetricCard title="Storage" value={`${overview.storageScore}/100`} description="Espaço livre do disco" />
+            <MetricCard title="Gaming readiness" value={`${overview.gamingReadinessScore}/100`} description={overview.gpuDetected ? "GPU disponível para análise futura" : "Sem GPU nesta leitura"} />
           </div>
           <div className="mt-5 grid grid-cols-3 gap-5">
             <SectionCard title="Sistema real" description="Dados lidos localmente pelo backend Rust/Tauri quando executado no Windows.">
@@ -47,7 +54,11 @@ export function DashboardPage() {
                 <p>Disco usado: <strong className="text-white">{formatGb(overview.diskUsedGb)}</strong></p>
               </div>
             </SectionCard>
-            <SectionCard title="Camada de segurança" description="Princípios internos que governam todas as ações presentes e futuras.">
+            <SectionCard title="GPU e segurança" description="Resumo gráfico e princípios internos que governam todas as ações presentes e futuras.">
+              <div className="mb-4 space-y-2 text-sm text-slate-300">
+                <p>GPU: <strong className="text-white">{overview.gpuName}</strong></p>
+                <p>VRAM: <strong className="text-white">{overview.gpuMemoryGb > 0 ? formatGb(overview.gpuMemoryGb) : "Não informada"}</strong></p>
+              </div>
               <ul className="space-y-3 text-sm leading-6 text-slate-300">
                 {SAFETY_RULES.slice(0, 5).map((rule) => <li key={rule}>• {rule}</li>)}
               </ul>
