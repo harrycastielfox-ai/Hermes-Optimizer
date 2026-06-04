@@ -1,5 +1,6 @@
-import { cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
+import { benchmarkResult, cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
 import type {
+  BenchmarkResult,
   CleanerCategory,
   DiagnosticReport,
   DiagnosticResult,
@@ -78,6 +79,14 @@ type SnakeHardwareInfo = {
 };
 
 type SnakeDiagnosticReport = Omit<DiagnosticReport, "health"> & { health: DiagnosticReport["health"] | SnakeHealthScore };
+
+type SnakeCpuBenchmark = Omit<BenchmarkResult["cpu"], "elapsedMs"> & { elapsed_ms: number };
+type SnakeMemoryBenchmark = Omit<BenchmarkResult["memory"], "elapsedMs" | "testedMb" | "throughputMbS"> & { elapsed_ms: number; tested_mb: number; throughput_mb_s: number };
+type SnakeDiskBenchmark = Omit<BenchmarkResult["disk"], "elapsedMs" | "testedMb" | "writeMs" | "readMs" | "writeMbS" | "readMbS"> & { elapsed_ms: number; tested_mb: number; write_ms: number; read_ms: number; write_mb_s: number; read_mb_s: number };
+type SnakeGpuBenchmark = Omit<BenchmarkResult["gpu"], "dedicatedMemoryMb" | "readinessScore"> & { dedicated_memory_mb: number; readiness_score: number };
+type SnakeBenchmarkScore = Omit<BenchmarkResult["score"], "cpuScore" | "memoryScore" | "diskScore" | "gpuReadinessScore" | "overallScore" | "gamingReadinessScore" | "stabilityScore"> & { cpu_score: number; memory_score: number; disk_score: number; gpu_readiness_score: number; overall_score: number; gaming_readiness_score: number; stability_score: number };
+type SnakeHardwareSnapshot = Omit<BenchmarkResult["hardwareSnapshot"], "cpuName" | "cpuThreads" | "memoryTotalGb" | "primaryDisk" | "gpuName" | "gpuDetected" | "gpuMemoryMb" | "dataSource"> & { cpu_name: string; cpu_threads: number; memory_total_gb: number; primary_disk: string; gpu_name: string; gpu_detected: boolean; gpu_memory_mb: number; data_source: string };
+type SnakeBenchmarkResult = Omit<BenchmarkResult, "hardwareSnapshot" | "safetyNote" | "dataSource" | "cpu" | "memory" | "disk" | "gpu" | "score"> & { cpu: SnakeCpuBenchmark; memory: SnakeMemoryBenchmark; disk: SnakeDiskBenchmark; gpu: SnakeGpuBenchmark; score: SnakeBenchmarkScore; hardware_snapshot: SnakeHardwareSnapshot; safety_note: string; data_source: string };
 
 type SnakeLog = OptimizationLog;
 
@@ -204,6 +213,37 @@ function mapHardware(input: HardwareInfo | SnakeHardwareInfo): HardwareInfo {
     dataSource: input.data_source,
     safetyNote: input.safety_note,
   };
+}
+
+
+function mapBenchmark(input: BenchmarkResult | SnakeBenchmarkResult): BenchmarkResult {
+  if ("hardwareSnapshot" in input) return input;
+  return {
+    id: input.id,
+    timestamp: input.timestamp,
+    cpu: { elapsedMs: input.cpu.elapsed_ms, iterations: input.cpu.iterations, score: input.cpu.score, classification: input.cpu.classification, details: input.cpu.details },
+    memory: { elapsedMs: input.memory.elapsed_ms, testedMb: input.memory.tested_mb, throughputMbS: input.memory.throughput_mb_s, score: input.memory.score, classification: input.memory.classification, details: input.memory.details },
+    disk: { elapsedMs: input.disk.elapsed_ms, testedMb: input.disk.tested_mb, writeMs: input.disk.write_ms, readMs: input.disk.read_ms, writeMbS: input.disk.write_mb_s, readMbS: input.disk.read_mb_s, score: input.disk.score, classification: input.disk.classification, details: input.disk.details },
+    gpu: { detected: input.gpu.detected, name: input.gpu.name, dedicatedMemoryMb: input.gpu.dedicated_memory_mb, readinessScore: input.gpu.readiness_score, classification: input.gpu.classification, details: input.gpu.details },
+    score: { cpuScore: input.score.cpu_score, memoryScore: input.score.memory_score, diskScore: input.score.disk_score, gpuReadinessScore: input.score.gpu_readiness_score, overallScore: input.score.overall_score, gamingReadinessScore: input.score.gaming_readiness_score, stabilityScore: input.score.stability_score, classification: input.score.classification, explanation: input.score.explanation },
+    recommendations: input.recommendations,
+    summary: input.summary,
+    hardwareSnapshot: { cpuName: input.hardware_snapshot.cpu_name, cpuThreads: input.hardware_snapshot.cpu_threads, memoryTotalGb: input.hardware_snapshot.memory_total_gb, primaryDisk: input.hardware_snapshot.primary_disk, gpuName: input.hardware_snapshot.gpu_name, gpuDetected: input.hardware_snapshot.gpu_detected, gpuMemoryMb: input.hardware_snapshot.gpu_memory_mb, dataSource: input.hardware_snapshot.data_source },
+    safetyNote: input.safety_note,
+    dataSource: input.data_source,
+  };
+}
+
+
+export async function runLightBenchmark() {
+  const result = await invokeSafe<BenchmarkResult | SnakeBenchmarkResult>("run_light_benchmark", undefined, benchmarkResult);
+  return withMappedData(result, mapBenchmark);
+}
+
+export async function getLastBenchmarkResult() {
+  const result = await invokeSafe<BenchmarkResult | SnakeBenchmarkResult | null>("get_last_benchmark_result", undefined, null);
+  if (!result.data) return result as HermesApiResult<BenchmarkResult | null>;
+  return withMappedData(result as HermesApiResult<BenchmarkResult | SnakeBenchmarkResult>, mapBenchmark);
 }
 
 export async function getSystemOverview() {
