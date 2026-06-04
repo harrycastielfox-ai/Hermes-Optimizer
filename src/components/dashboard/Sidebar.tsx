@@ -20,55 +20,74 @@ export function Sidebar() {
   const [logoMissing, setLogoMissing] = useState(false);
 
   return (
-    <aside className="sidebar-texture w-[260px] shrink-0 flex flex-col px-5 py-6 border-r border-border/60">
-      <div className="flex items-center justify-center mb-8">
+    <aside className="sidebar-texture w-[260px] shrink-0 flex flex-col px-5 py-6 border-r border-slate-200/80">
+      <div className="relative z-10 flex items-center justify-center mb-9 pt-1">
         {logoMissing ? (
-          <span className="text-lg font-bold tracking-tight text-foreground">Hermes Optimizer</span>
+          <span className="text-lg font-bold tracking-tight text-slate-900">Hermes Optimizer</span>
         ) : (
           <img
             src="/hermes-logo.png"
             alt="Hermes Optimizer"
-            className="w-[180px] h-auto object-contain drop-shadow-sm"
+            className="w-[178px] max-h-[82px] h-auto object-contain drop-shadow-[0_10px_18px_rgba(37,99,235,0.10)]"
             onError={() => setLogoMissing(true)}
           />
         )}
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1">
+      <nav className="relative z-10 flex-1 flex flex-col gap-1.5">
         {items.map(({ icon: Icon, label }) => {
           const isActive = active === label;
           return (
             <button
               key={label}
               onClick={() => setActive(label)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`group flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
-                  : "text-foreground/70 hover:bg-primary-soft hover:text-foreground"
+                  ? "bg-blue-600 text-white shadow-[0_12px_26px_-13px_rgba(37,99,235,0.95),0_0_0_1px_rgba(255,255,255,0.34)_inset]"
+                  : "text-slate-700 hover:bg-white/[0.72] hover:text-slate-950 hover:shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45)]"
               }`}
             >
-              <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.4 : 2} />
-              {label}
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-all duration-200 ${
+                  isActive ? "bg-white/[0.16] text-white" : "bg-slate-900/[0.04] text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600"
+                }`}
+              >
+                <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.4 : 2} />
+              </span>
+              <span>{label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="mt-6 rounded-2xl bg-card/80 backdrop-blur border border-border/60 p-4 flex items-center gap-3 shadow-sm">
-        <div className="w-9 h-9 rounded-lg bg-primary-soft flex items-center justify-center">
-          <Zap className="w-4 h-4 text-primary" />
+      <div className="relative z-10 mt-auto rounded-[1.35rem] border border-white/80 bg-white/[0.78] p-4 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.55),0_0_0_1px_rgba(37,99,235,0.06)_inset] backdrop-blur-xl">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-50 shadow-[0_0_0_1px_rgba(37,99,235,0.08)_inset]">
+            <Zap className="w-[18px] h-[18px] text-blue-600" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold tracking-[0.18em] text-slate-500">MODO GAMER</p>
+            <p className="text-sm font-bold text-slate-950">{gamer ? "Ativado" : "Desativado"}</p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">MODO GAMER</p>
-          <p className="text-sm font-semibold">{gamer ? "Ativado" : "Desativado"}</p>
-          <p className="text-[10px] text-muted-foreground truncate">Ative para máximo desempenho</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] leading-snug text-slate-500">Ative para máximo desempenho</p>
+          <button
+            type="button"
+            aria-pressed={gamer}
+            aria-label="Alternar Modo Gamer"
+            onClick={() => setGamer((v) => !v)}
+            className={`relative h-7 w-12 shrink-0 rounded-full p-0.5 transition-all duration-200 ${
+              gamer ? "bg-blue-600 shadow-[0_0_18px_rgba(37,99,235,0.35)]" : "bg-slate-200 shadow-inner"
+            }`}
+          >
+            <span
+              className={`block h-6 w-6 rounded-full bg-white shadow-[0_3px_10px_rgba(15,23,42,0.18)] transition-transform duration-200 ${
+                gamer ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
-        <button
-          onClick={() => setGamer((v) => !v)}
-          className={`w-10 h-6 rounded-full transition-colors relative ${gamer ? "bg-primary" : "bg-muted"}`}
-        >
-          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${gamer ? "translate-x-4" : "translate-x-0.5"}`} />
-        </button>
       </div>
     </aside>
   );

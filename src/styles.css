@@ -132,10 +132,39 @@
     linear-gradient(180deg, oklch(0.99 0.003 250), oklch(0.97 0.008 250));
 }
 
-@utility sidebar-texture {
-  background-image:
-    linear-gradient(180deg, oklch(1 0 0), oklch(0.97 0.01 250)),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='400' viewBox='0 0 200 400'><g fill='none' stroke='%232563eb' stroke-opacity='0.06' stroke-width='1'><path d='M20 0 L40 80 L20 120 L60 220 L30 280 L70 400'/><path d='M150 0 L130 90 L170 160 L120 260 L160 340 L130 400'/><path d='M90 0 L110 60 L80 140 L120 200 L90 300 L120 400'/></g></svg>");
-  background-size: cover, 200px 400px;
-  background-repeat: no-repeat, repeat;
+@layer components {
+  .sidebar-texture {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 35% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(37, 99, 235, 0.08), transparent 36%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.97) 52%, rgba(241, 247, 255, 0.94) 100%);
+    box-shadow: inset -1px 0 0 rgba(148, 163, 184, 0.22);
+  }
+
+  .sidebar-texture::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    opacity: 0.34;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='760' viewBox='0 0 260 760' fill='none'%3E%3Cg stroke='%232563eb' stroke-width='1.15' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath opacity='.34' d='M36 20 64 88 45 137 86 218 58 294 96 388 74 474 112 582 88 690'/%3E%3Cpath opacity='.22' d='M204 4 178 83 211 154 164 252 196 348 151 459 181 556 132 724'/%3E%3Cpath opacity='.18' d='M124 52 146 118 119 204 153 286 126 374 161 486 132 594 166 706'/%3E%3Cpath opacity='.14' d='M16 332 49 370 30 426 68 493 48 552'/%3E%3C/g%3E%3C/svg%3E");
+    background-position: center top;
+    background-repeat: repeat-y;
+    background-size: 260px 760px;
+    filter: blur(0.2px);
+  }
+
+  .sidebar-texture::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.48) 48%, rgba(255, 255, 255, 0.78)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.50), transparent 18%, rgba(255, 255, 255, 0.40) 72%);
+    pointer-events: none;
+  }
 }
