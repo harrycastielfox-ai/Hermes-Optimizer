@@ -24,8 +24,15 @@ export type SystemOverview = {
   diskTotalGb: number;
   diskUsedGb: number;
   diskFreeGb: number;
+  gpuDetected: boolean;
+  gpuName: string;
+  gpuMemoryGb: number;
   healthScore: number;
   healthLabel: string;
+  performanceScore: number;
+  stabilityScore: number;
+  storageScore: number;
+  gamingReadinessScore: number;
 };
 
 export type DiagnosticResult = {
@@ -130,9 +137,15 @@ export type OsInfo = {
 
 export type CpuInfo = {
   name: string;
+  manufacturer: string;
   frequencyMhz: number;
+  baseFrequencyMhz: number;
+  maxFrequencyMhz: number;
   cores: number;
+  physicalCores: number;
   threads: number;
+  logicalProcessors: number;
+  architecture: string;
   usagePercent: number;
 };
 
@@ -140,12 +153,18 @@ export type MemoryInfo = {
   totalBytes: number;
   usedBytes: number;
   freeBytes: number;
+  availableBytes: number;
   usagePercent: number;
+  moduleCount: number;
+  slotCount: number;
+  speedMhz: number;
 };
 
 export type DiskInfo = {
   name: string;
+  driveLetter: string;
   model: string;
+  mediaType: "SSD" | "HDD" | "NVMe" | "Desconhecido" | string;
   totalBytes: number;
   usedBytes: number;
   freeBytes: number;
@@ -153,19 +172,34 @@ export type DiskInfo = {
   isPrimary: boolean;
 };
 
+export type GpuInfo = {
+  name: string;
+  manufacturer: string;
+  dedicatedMemoryBytes: number;
+  driverVersion: string;
+  status: string;
+  detected: boolean;
+};
+
 export type HardwareInfo = {
   os: OsInfo;
   cpu: CpuInfo;
   memory: MemoryInfo;
   disks: DiskInfo[];
+  gpu?: GpuInfo | null;
   gpuReady: boolean;
   dataSource: string;
+  safetyNote: string;
 };
 
 export type HealthScore = {
   score: number;
   label: string;
   reasons: string[];
+  performanceScore: number;
+  stabilityScore: number;
+  storageScore: number;
+  gamingReadinessScore: number;
 };
 
 export type DiagnosticReport = {
