@@ -1,3 +1,4 @@
+pub mod benchmark;
 pub mod cleaner;
 pub mod diagnostics;
 pub mod logs;

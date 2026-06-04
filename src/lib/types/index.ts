@@ -208,3 +208,88 @@ export type DiagnosticReport = {
   problems: DiagnosticResult[];
   recommendations: string[];
 };
+
+export type BenchmarkClassification = "Excelente" | "Bom" | "Atenção" | "Limitado" | string;
+
+export type CpuBenchmark = {
+  elapsedMs: number;
+  iterations: number;
+  score: number;
+  classification: BenchmarkClassification;
+  details: string;
+};
+
+export type MemoryBenchmark = {
+  elapsedMs: number;
+  testedMb: number;
+  throughputMbS: number;
+  score: number;
+  classification: BenchmarkClassification;
+  details: string;
+};
+
+export type DiskBenchmark = {
+  elapsedMs: number;
+  testedMb: number;
+  writeMs: number;
+  readMs: number;
+  writeMbS: number;
+  readMbS: number;
+  score: number;
+  classification: BenchmarkClassification;
+  details: string;
+};
+
+export type GpuBenchmark = {
+  detected: boolean;
+  name: string;
+  dedicatedMemoryMb: number;
+  readinessScore: number;
+  classification: BenchmarkClassification;
+  details: string;
+};
+
+export type BenchmarkScore = {
+  cpuScore: number;
+  memoryScore: number;
+  diskScore: number;
+  gpuReadinessScore: number;
+  overallScore: number;
+  gamingReadinessScore: number;
+  stabilityScore: number;
+  classification: BenchmarkClassification;
+  explanation: string;
+};
+
+export type BenchmarkRecommendation = {
+  id: string;
+  title: string;
+  message: string;
+  severity: "info" | "attention" | "warning" | string;
+};
+
+export type HardwareSnapshot = {
+  cpuName: string;
+  cpuThreads: number;
+  memoryTotalGb: number;
+  primaryDisk: string;
+  gpuName: string;
+  gpuDetected: boolean;
+  gpuMemoryMb: number;
+  dataSource: string;
+};
+
+export type BenchmarkResult = {
+  id: string;
+  timestamp: string;
+  cpu: CpuBenchmark;
+  memory: MemoryBenchmark;
+  disk: DiskBenchmark;
+  gpu: GpuBenchmark;
+  score: BenchmarkScore;
+  recommendations: BenchmarkRecommendation[];
+  summary: string;
+  hardwareSnapshot: HardwareSnapshot;
+  safetyNote: string;
+  dataSource: string;
+};

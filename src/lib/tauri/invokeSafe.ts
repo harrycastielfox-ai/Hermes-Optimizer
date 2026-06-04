@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import { cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
-import type { CleanerCategory, DiagnosticReport, DiagnosticResult, HardwareInfo, HermesTweak, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
+import { benchmarkResult, cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
+import type { BenchmarkResult, CleanerCategory, DiagnosticReport, DiagnosticResult, HardwareInfo, HermesTweak, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
 
 type MockRegistry = {
+  run_light_benchmark: BenchmarkResult;
+  get_last_benchmark_result: BenchmarkResult | null;
   get_system_overview: SystemOverview;
   run_diagnostics: DiagnosticResult[];
   get_hardware_info: HardwareInfo;
@@ -27,6 +29,8 @@ export type HermesApiResult<T> = {
 };
 
 const mockRegistry: MockRegistry = {
+  run_light_benchmark: benchmarkResult,
+  get_last_benchmark_result: null,
   get_system_overview: systemOverview,
   run_diagnostics: diagnostics,
   get_hardware_info: {

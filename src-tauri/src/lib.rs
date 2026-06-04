@@ -1,10 +1,12 @@
 mod commands;
 
-use commands::{cleaner, diagnostics, logs, restore, startup, tweaks};
+use commands::{benchmark, cleaner, diagnostics, logs, restore, startup, tweaks};
 
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            benchmark::run_light_benchmark,
+            benchmark::get_last_benchmark_result,
             diagnostics::get_system_overview,
             diagnostics::run_diagnostics,
             diagnostics::get_hardware_info,

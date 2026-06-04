@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { BenchmarkPage } from "../features/benchmark/BenchmarkPage";
 import { CleanerPage } from "../features/cleaner/CleanerPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { DiagnosticsPage } from "../features/diagnostics/DiagnosticsPage";
@@ -15,6 +16,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/diagnostico" element={<DiagnosticsPage />} />
+      <Route path="/benchmark" element={<BenchmarkPage />} />
       <Route path="/limpeza" element={<CleanerPage />} />
       <Route path="/inicializacao" element={<StartupPage />} />
       <Route path="/otimizacoes" element={<TweaksPage />} />

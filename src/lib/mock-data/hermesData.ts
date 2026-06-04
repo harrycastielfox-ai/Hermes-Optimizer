@@ -1,4 +1,5 @@
 import type {
+  BenchmarkResult,
   CleanerCategory,
   DiagnosticResult,
   GamerAppProfile,
@@ -42,6 +43,75 @@ export const systemOverview: SystemOverview = {
   stabilityScore: 92,
   storageScore: 90,
   gamingReadinessScore: 84,
+};
+
+export const benchmarkResult: BenchmarkResult = {
+  id: "bench-mock-1",
+  timestamp: "1717450000",
+  cpu: {
+    elapsedMs: 92,
+    iterations: 2000000,
+    score: 88,
+    classification: "Excelente",
+    details: "Loop matemático controlado em thread única; fallback mock seguro.",
+  },
+  memory: {
+    elapsedMs: 18,
+    testedMb: 8,
+    throughputMbS: 444.4,
+    score: 72,
+    classification: "Bom",
+    details: "Alocação temporária pequena simulada pelo fallback do frontend.",
+  },
+  disk: {
+    elapsedMs: 38,
+    testedMb: 4,
+    writeMs: 22,
+    readMs: 16,
+    writeMbS: 181.8,
+    readMbS: 250,
+    score: 76,
+    classification: "Bom",
+    details: "Arquivo temporário pequeno em pasta temp; fallback mock não toca no disco.",
+  },
+  gpu: {
+    detected: true,
+    name: systemOverview.gpuName,
+    dedicatedMemoryMb: systemOverview.gpuMemoryGb * 1024,
+    readinessScore: 70,
+    classification: "Bom",
+    details: "GPU detectada. Benchmark gráfico real será implementado em fase futura.",
+  },
+  score: {
+    cpuScore: 88,
+    memoryScore: 72,
+    diskScore: 76,
+    gpuReadinessScore: 70,
+    overallScore: 78,
+    gamingReadinessScore: 77,
+    stabilityScore: 79,
+    classification: "Bom",
+    explanation: "Nota ponderada mock: CPU 30%, RAM 25%, Disco 25% e GPU readiness 20%.",
+  },
+  recommendations: [
+    { id: "disk-light", title: "Disco", severity: "info", message: "Seu disco apresentou leitura/escrita saudável para teste leve." },
+    { id: "memory-light", title: "RAM", severity: "info", message: "Sua RAM respondeu bem no teste controlado." },
+    { id: "gpu-readiness", title: "GPU", severity: "info", message: "GPU integrada/dedicada detectada; desempenho gamer pode variar conforme o jogo." },
+    { id: "professional-tests", title: "Limitação", severity: "info", message: "Este benchmark é leve e não substitui testes profissionais." },
+  ],
+  summary: "Benchmark leve mock concluído com nota 78/100 (Bom).",
+  hardwareSnapshot: {
+    cpuName: systemOverview.cpuName,
+    cpuThreads: systemOverview.cpuCores,
+    memoryTotalGb: systemOverview.ramTotalGb,
+    primaryDisk: `${systemOverview.diskName} SSD`,
+    gpuName: systemOverview.gpuName,
+    gpuDetected: systemOverview.gpuDetected,
+    gpuMemoryMb: systemOverview.gpuMemoryGb * 1024,
+    dataSource: "Fallback mock do frontend",
+  },
+  safetyNote: "Fallback local; nenhuma configuração será alterada.",
+  dataSource: "Mock local do frontend para uso fora do runtime Tauri.",
 };
 
 export const diagnostics: DiagnosticResult[] = [
