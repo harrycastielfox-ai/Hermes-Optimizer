@@ -1,36 +1,48 @@
 import { NavLink } from "react-router-dom";
+import { useUxMode } from "../../app/UxModeContext";
 
-const items = [
-  ["/", "Dashboard"],
+const advancedItems = [
   ["/diagnostico", "Diagnóstico"],
   ["/benchmark", "Benchmark"],
   ["/limpeza", "Limpeza"],
   ["/inicializacao", "Inicialização"],
-  ["/otimizacoes", "Otimizações"],
-  ["/modo-gamer", "Modo Gamer"],
+  ["/otimizacoes", "Tweaks"],
   ["/perfis", "Perfis"],
-  ["/restauracao", "Restauração"],
+  ["/restauracao", "Restauração detalhada"],
   ["/historico", "Histórico"],
   ["/logs", "Logs"],
   ["/configuracoes", "Configurações"],
 ];
 
 export function Sidebar() {
+  const { exitAdvancedMode } = useUxMode();
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-72 border-r border-slate-800 bg-slate-950/80 p-5 backdrop-blur-xl">
-      <div className="rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-400/10 to-violet-500/10 p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">Hermes</p>
-        <h1 className="mt-2 text-2xl font-bold text-white">Optimizer</h1>
-        <p className="mt-2 text-sm text-slate-400">Base segura, modular e pronta para evolução comercial.</p>
+    <aside className="fixed left-0 top-0 h-screen w-72 border-r border-stone-200 bg-white/88 p-5 shadow-[18px_0_60px_rgba(120,92,32,0.08)] backdrop-blur-xl">
+      <div className="rounded-[1.7rem] border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/75 to-stone-100 p-5 shadow-premium">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-600">Hermes</p>
+        <h1 className="mt-2 text-2xl font-bold text-stone-950">Optimizer</h1>
+        <p className="mt-2 text-sm leading-6 text-stone-500">Modo Avançado: módulos técnicos preservados para usuários experientes.</p>
       </div>
+
       <nav className="mt-6 space-y-1">
-        {items.map(([to, label]) => (
+        <NavLink
+          to="/"
+          className="block rounded-2xl px-4 py-3 text-sm font-semibold text-stone-500 transition hover:bg-amber-50 hover:text-stone-950"
+          onClick={exitAdvancedMode}
+        >
+          ← Voltar ao Modo Simples
+        </NavLink>
+        <div className="my-4 h-px bg-stone-200" />
+        {advancedItems.map(([to, label]) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `block rounded-xl px-4 py-3 text-sm font-medium transition ${
-                isActive ? "bg-cyan-400/15 text-cyan-100" : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-100"
+              `block rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                isActive
+                  ? "bg-amber-100/80 text-amber-900 shadow-sm"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-stone-950"
               }`
             }
           >
