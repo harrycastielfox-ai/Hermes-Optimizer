@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use super::history;
+
 #[derive(Serialize)]
 pub struct OptimizationLog {
     id: String,
@@ -13,13 +15,29 @@ pub struct OptimizationLog {
 
 #[tauri::command]
 pub fn list_logs() -> Vec<OptimizationLog> {
-    vec![OptimizationLog {
-        id: "log-1".into(),
-        date: "03/06/2026 21:10".into(),
-        action: "Diagnóstico executado".into(),
-        module: "Diagnóstico".into(),
-        result: "success".into(),
-        risk: "low".into(),
-        details: "Coleta simulada concluída sem ações no sistema.".into(),
-    }]
+    history::list_history_logs()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|entry| OptimizationLog {
+            id: entry.id,
+            date: entry.timestamp.to_string(),
+            module: module_from_action(&entry.action),
+            action: entry.action,
+            result: "success".into(),
+            risk: "low".into(),
+            details: entry.details,
+        })
+        .collect()
+}
+
+fn module_from_action(action: &str) -> String {
+    if action.contains("benchmark") {
+        "Benchmark".into()
+    } else if action.contains("diagnóstico") {
+        "Diagnóstico".into()
+    } else if action.contains("snapshot") {
+        "Snapshots".into()
+    } else {
+        "Histórico".into()
+    }
 }

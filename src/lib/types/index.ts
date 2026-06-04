@@ -293,3 +293,60 @@ export type BenchmarkResult = {
   safetyNote: string;
   dataSource: string;
 };
+
+export type BenchmarkHistoryEntry = {
+  id: string;
+  timestamp: number;
+  overallScore: number;
+  cpuScore: number;
+  ramScore: number;
+  diskScore: number;
+  gpuScore: number;
+  gamingReadiness: number;
+  summary: string;
+};
+
+export type DiagnosticHistoryEntry = {
+  id: string;
+  timestamp: number;
+  healthScore: number;
+  issuesCount: number;
+  recommendationsCount: number;
+  summary: string;
+};
+
+export type HistoryLogEntry = {
+  id: string;
+  timestamp: number;
+  level: string;
+  action: string;
+  details: string;
+};
+
+export type SnapshotHistoryEntry = {
+  id: string;
+  timestamp: number;
+  name: string;
+  description: string;
+  hardwareSummary: string;
+};
+
+export type HistoryComparison = {
+  currentScore: number;
+  previousScore: number;
+  delta: number;
+  direction: "up" | "down" | "stable" | string;
+  message: string;
+};
+
+export type HistoryOverview = {
+  databasePath: string;
+  localOnly: boolean;
+  benchmarks: BenchmarkHistoryEntry[];
+  diagnostics: DiagnosticHistoryEntry[];
+  logs: HistoryLogEntry[];
+  snapshots: SnapshotHistoryEntry[];
+  benchmarkComparison?: HistoryComparison | null;
+  diagnosticComparison?: HistoryComparison | null;
+  advisorInsights: string[];
+};

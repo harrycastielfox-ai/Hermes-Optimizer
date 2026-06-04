@@ -1,6 +1,7 @@
 pub mod benchmark;
 pub mod cleaner;
 pub mod diagnostics;
+pub mod history;
 pub mod logs;
 pub mod power;
 pub mod restore;

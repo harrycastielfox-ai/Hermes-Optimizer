@@ -10,6 +10,7 @@ const items = [
   ["/modo-gamer", "Modo Gamer"],
   ["/perfis", "Perfis"],
   ["/restauracao", "Restauração"],
+  ["/historico", "Histórico"],
   ["/logs", "Logs"],
   ["/configuracoes", "Configurações"],
 ];

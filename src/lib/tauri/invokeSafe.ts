@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { benchmarkResult, cleanerCategories, diagnostics, logs, profiles, snapshots, startupApps, systemOverview, tweaks } from "../mock-data/hermesData";
-import type { BenchmarkResult, CleanerCategory, DiagnosticReport, DiagnosticResult, HardwareInfo, HermesTweak, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
+import type { BenchmarkResult, CleanerCategory, DiagnosticReport, DiagnosticResult, HardwareInfo, HermesTweak, HistoryOverview, OptimizationLog, PerformanceProfile, RestoreSnapshot, StartupApp, SystemOverview } from "../types";
 
 type MockRegistry = {
   run_light_benchmark: BenchmarkResult;
@@ -18,6 +18,8 @@ type MockRegistry = {
   simulate_restore_snapshot: RestoreSnapshot;
   simulate_apply_tweak: { success: boolean; message: string; logId: string };
   simulate_apply_profile: { success: boolean; message: string; logId: string };
+  get_history_overview: HistoryOverview;
+  get_history_advisor_insights: string[];
 };
 
 export type HermesCommand = keyof MockRegistry;
@@ -58,6 +60,8 @@ const mockRegistry: MockRegistry = {
   simulate_restore_snapshot: { ...snapshots[0], status: "restored" },
   simulate_apply_tweak: { success: true, message: "Tweak simulado via fallback web. Nenhuma alteração real foi aplicada.", logId: "fallback-tweak" },
   simulate_apply_profile: { success: true, message: "Perfil simulado via fallback web com snapshot lógico.", logId: "fallback-profile" },
+  get_history_overview: { databasePath: "Fallback local do frontend", localOnly: true, benchmarks: [], diagnostics: [], logs: [], snapshots: [], benchmarkComparison: null, diagnosticComparison: null, advisorInsights: ["Histórico local será exibido quando o backend Tauri estiver disponível."] },
+  get_history_advisor_insights: ["Histórico local será exibido quando o backend Tauri estiver disponível."],
 };
 
 function isTauriRuntime() {

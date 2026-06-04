@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::history;
+
 #[derive(Deserialize)]
 pub struct SnapshotRequest {
     reason: String,
@@ -22,11 +24,22 @@ pub struct RestoreSnapshot {
 
 #[tauri::command]
 pub fn create_restore_snapshot(request: SnapshotRequest) -> RestoreSnapshot {
+    let timestamp = history::current_timestamp();
+    let id = format!("snapshot-{timestamp}");
+    let hardware_summary =
+        "Snapshot lógico local leve; sem cópia de arquivos pessoais e sem envio externo.";
+    let _ = history::save_snapshot_history(
+        &id,
+        &request.reason,
+        "Snapshot local criado para histórico leve e reversão futura.",
+        hardware_summary,
+    );
+
     RestoreSnapshot {
-        id: "mock-snapshot".into(),
-        date: "03/06/2026 21:15".into(),
+        id,
+        date: timestamp.to_string(),
         profile_applied: request.reason,
-        tweaks_applied: vec!["simulated-tweak".into()],
+        tweaks_applied: vec!["snapshot-logico".into()],
         status: "simulated".into(),
         reversible: true,
     }

@@ -4,7 +4,7 @@ import { MetricCard } from "../../components/cards/MetricCard";
 import { SectionCard } from "../../components/cards/SectionCard";
 import { ApiNotice } from "../../components/feedback/AsyncState";
 import { PageHeader } from "../../components/layout/PageHeader";
-import { getLastBenchmarkResult, runLightBenchmark } from "../../lib/tauri";
+import { getHistoryAdvisorInsights, getLastBenchmarkResult, runLightBenchmark } from "../../lib/tauri";
 import type { BenchmarkResult } from "../../lib/types";
 
 function formatNumber(value: number, digits = 0) {
@@ -34,6 +34,7 @@ export function BenchmarkPage() {
   const [result, setResult] = useState<BenchmarkResult | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [fallback, setFallback] = useState(false);
+  const [historyInsights, setHistoryInsights] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +45,7 @@ export function BenchmarkPage() {
         setError(response.error);
         setResult(response.data);
         setState(response.data ? "done" : "idle");
+        getHistoryAdvisorInsights().then((insights) => setHistoryInsights(insights.data)).catch(() => setHistoryInsights([]));
       })
       .catch((err) => {
         if (!mounted) return;
@@ -63,6 +65,8 @@ export function BenchmarkPage() {
       setFallback(response.fallback ?? false);
       setError(response.error);
       setResult(response.data);
+      const insights = await getHistoryAdvisorInsights();
+      setHistoryInsights(insights.data);
       setState("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao executar benchmark leve.");
@@ -151,6 +155,12 @@ export function BenchmarkPage() {
 
             <SectionCard title="Hermes Advisor para benchmark" description="Recomendações simples baseadas no teste leve atual.">
               <div className="grid grid-cols-2 gap-4">
+                {historyInsights.map((insight) => (
+                  <article key={insight} className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                    <h3 className="font-semibold text-emerald-100">Histórico local</h3>
+                    <p className="mt-2 text-sm leading-6 text-emerald-50/80">{insight}</p>
+                  </article>
+                ))}
                 {result.recommendations.map((item) => (
                   <article key={item.id} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
                     <div className="mb-2 flex items-center justify-between gap-3">
