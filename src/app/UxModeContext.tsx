@@ -9,13 +9,13 @@ type UxModeContextValue = {
 const UxModeContext = createContext<UxModeContextValue | undefined>(undefined);
 
 export function UxModeProvider({ children }: PropsWithChildren) {
-  const [advancedMode, setAdvancedMode] = useState(false);
+  const [advancedMode, setAdvancedMode] = useState(true);
 
   const value = useMemo(
     () => ({
       advancedMode,
       enterAdvancedMode: () => setAdvancedMode(true),
-      exitAdvancedMode: () => setAdvancedMode(false),
+      exitAdvancedMode: () => setAdvancedMode(true),
     }),
     [advancedMode],
   );
