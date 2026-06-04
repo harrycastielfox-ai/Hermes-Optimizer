@@ -5,26 +5,47 @@ import { PageHeader } from "../../components/layout/PageHeader";
 import { ConfirmModal } from "../../components/modals/ConfirmModal";
 import { gamerApps } from "../../lib/mock-data/hermesData";
 
+function profileLabel(value: string) {
+  if (value === "high-performance") return "Alto desempenho";
+  if (value === "ultimate") return "Máximo";
+  return "Balanceado";
+}
+
 export function GamerPage() {
   const [modal, setModal] = useState<"start" | "restore" | null>(null);
+  const selectedGame = gamerApps[0];
+
   return (
     <>
-      <PageHeader eyebrow="Modo Gamer" title="Sessões de jogo com restauração" description="Seleção visual de .exe, perfil gráfico, plano de energia e processos opcionais. Tudo mockado nesta primeira entrega." />
-      <div className="grid grid-cols-3 gap-5">
-        <SectionCard title="Adicionar jogo/app" description="Preparado para seletor nativo futuro via Tauri.">
-          <label className="text-sm text-slate-400">Executável .exe</label>
-          <div className="mt-2 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 p-4 font-mono text-sm text-slate-500">C:\Games\SeuJogo\game.exe</div>
-          <div className="mt-4 grid gap-3"><select className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm text-slate-200"><option>Gráficos: Alto desempenho</option><option>Gráficos: Balanceado</option></select><select className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-sm text-slate-200"><option>Energia: Alto desempenho</option><option>Energia: Equilibrado</option></select></div>
-        </SectionCard>
-        <SectionCard title="Jogos adicionados" description="Perfis simulados para demonstrar a UX.">
-          {gamerApps.map((app) => <div key={app.id} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4"><h3 className="font-semibold text-white">{app.name}</h3><p className="mt-2 font-mono text-xs text-slate-400">{app.executablePath}</p><p className="mt-3 text-sm text-slate-300">Plano: {app.powerPlan} • Restaurar ao sair: {app.restoreOnExit ? "sim" : "não"}</p></div>)}
-        </SectionCard>
-        <SectionCard title="Processos antes do jogo" description="Fechamento real exigirá seleção manual e confirmação.">
-          <ul className="space-y-2 text-sm text-slate-300"><li>• chat-launcher.exe</li><li>• updater.exe</li><li>• overlay-helper.exe</li></ul>
-          <div className="mt-6 flex flex-col gap-3"><PrimaryButton onClick={() => setModal("start")}>Iniciar modo gamer</PrimaryButton><PrimaryButton variant="secondary" onClick={() => setModal("restore")}>Restaurar estado anterior</PrimaryButton></div>
+      <PageHeader eyebrow="Modo simples" title="Modo Gamer" description="Uma sessão simples para jogar com foco em desempenho e restauração rápida ao terminar." />
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-white/80 bg-gradient-to-br from-white via-amber-50/85 to-stone-100 p-8 shadow-premium">
+          <div className="absolute right-8 top-6 text-[9rem] leading-none text-amber-200/30">🎮</div>
+          <div className="relative max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-600">Perfil Gamer</p>
+            <h1 className="mt-4 text-4xl font-black text-stone-950">Preparar o PC para jogar.</h1>
+            <p className="mt-4 text-base leading-8 text-stone-600">O Hermes oculta processos, planos e ajustes internos. Você só escolhe iniciar ou restaurar a sessão.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <PrimaryButton className="px-6 py-3 text-base" onClick={() => setModal("start")}>🎮 Ativar Modo Gamer</PrimaryButton>
+              <PrimaryButton variant="ghost" className="px-6 py-3 text-base" onClick={() => setModal("restore")}>🔄 Restaurar Sessão</PrimaryButton>
+            </div>
+          </div>
+        </section>
+
+        <SectionCard title="Jogo selecionado" description="A seleção avançada de executável fica oculta nesta experiência comercial.">
+          <div className="rounded-[1.5rem] border border-amber-100 bg-amber-50/70 p-5">
+            <p className="text-sm font-semibold text-stone-500">Jogo</p>
+            <h2 className="mt-2 text-2xl font-black text-stone-950">{selectedGame.name}</h2>
+            <p className="mt-3 truncate font-mono text-xs text-stone-500">{selectedGame.executablePath}</p>
+          </div>
+          <div className="mt-4 grid gap-3 text-sm text-stone-600">
+            <div className="rounded-2xl border border-stone-200 bg-white p-4"><strong className="text-stone-950">Perfil gráfico:</strong> {profileLabel(selectedGame.graphicsProfile)}</div>
+            <div className="rounded-2xl border border-stone-200 bg-white p-4"><strong className="text-stone-950">Energia:</strong> {profileLabel(selectedGame.powerPlan)}</div>
+            <div className="rounded-2xl border border-stone-200 bg-white p-4"><strong className="text-stone-950">Restauração:</strong> {selectedGame.restoreOnExit ? "automática ao sair" : "manual"}</div>
+          </div>
         </SectionCard>
       </div>
-      <ConfirmModal open={modal !== null} title={modal === "start" ? "Iniciar modo gamer simulado?" : "Restaurar estado anterior simulado?"} description="O fluxo demonstra confirmação, logs e reversão. Nenhum processo será encerrado e nenhum plano de energia será alterado nesta versão." onCancel={() => setModal(null)} onConfirm={() => setModal(null)} />
+      <ConfirmModal open={modal !== null} title={modal === "start" ? "Ativar Modo Gamer?" : "Restaurar sessão gamer?"} description="O fluxo continua seguro e reversível. A complexidade técnica fica reservada ao Modo Avançado." onCancel={() => setModal(null)} onConfirm={() => setModal(null)} />
     </>
   );
 }

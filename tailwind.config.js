@@ -18,6 +18,8 @@ export default {
       },
       boxShadow: {
         glow: "0 0 40px rgba(34, 211, 238, 0.08)",
+        premium: "0 22px 70px rgba(120, 92, 32, 0.10)",
+        gold: "0 18px 45px rgba(217, 119, 6, 0.18)",
       },
     },
   },

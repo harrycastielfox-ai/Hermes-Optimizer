@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useUxMode } from "../../app/UxModeContext";
 import { PrimaryButton } from "../../components/buttons/PrimaryButton";
 import { SectionCard } from "../../components/cards/SectionCard";
 import { ApiNotice, LoadingState } from "../../components/feedback/AsyncState";
@@ -8,6 +9,7 @@ import { useHermesResource } from "../../lib/hooks/useHermesResource";
 import { createRestoreSnapshot, simulateRestoreSnapshot } from "../../lib/tauri";
 
 export function RestorePage() {
+  const { advancedMode } = useUxMode();
   const [snapshotId, setSnapshotId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | undefined>();
   const loadSnapshot = useCallback(() => createRestoreSnapshot("restore-center-preview"), []);
@@ -23,17 +25,33 @@ export function RestorePage() {
 
   return (
     <>
-      <PageHeader eyebrow="Backup e reversão" title="Central de restauração" description="Histórico de snapshots simulados para construir confiança e preparar reversão real no backend." />
+      <PageHeader
+        eyebrow={advancedMode ? "Backup e reversão" : "Modo simples"}
+        title={advancedMode ? "Central de restauração detalhada" : "Restaurar Alterações"}
+        description={advancedMode ? "Histórico de snapshots simulados para construir confiança e preparar reversão real no backend." : "Uma central curta para voltar ao último estado conhecido sem expor detalhes técnicos."}
+      />
       <ApiNotice error={error} fallback={fallback} />
-      {actionMessage && <div className="mb-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">{actionMessage}</div>}
+      {actionMessage && <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-premium">{actionMessage}</div>}
       {loading ? <LoadingState /> : (
-        <SectionCard title="Snapshots disponíveis" description="Toda otimização real futura deverá criar snapshot quando aplicável.">
+        <SectionCard title={advancedMode ? "Snapshots disponíveis" : "Último snapshot"} description={advancedMode ? "Toda otimização real futura deverá criar snapshot quando aplicável." : "O Hermes mostra apenas o ponto de restauração mais relevante."}>
           <div className="space-y-4">
-            {snapshots.map((snap) => <article key={snap.id} className="rounded-2xl border border-slate-800 bg-slate-900/45 p-4"><div className="flex items-start justify-between gap-4"><div><h3 className="font-semibold text-white">{snap.profileApplied}</h3><p className="mt-2 text-sm text-slate-400">{snap.date} • Status: {snap.status}</p><p className="mt-2 text-sm text-slate-300">Tweaks: {snap.tweaksApplied.join(", ") || "snapshot lógico"}</p></div><PrimaryButton variant="secondary" disabled={!snap.reversible} onClick={() => setSnapshotId(snap.id)}>Restaurar</PrimaryButton></div></article>)}
+            {snapshots.map((snap) => (
+              <article key={snap.id} className="rounded-[1.5rem] border border-stone-200 bg-white p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-stone-500">Último snapshot</p>
+                    <h3 className="mt-1 text-2xl font-black text-stone-950">{snap.profileApplied}</h3>
+                    <p className="mt-2 text-sm text-stone-500">Data: {snap.date}</p>
+                    {advancedMode ? <p className="mt-2 text-sm text-stone-600">Tweaks: {snap.tweaksApplied.join(", ") || "snapshot lógico"} • Status: {snap.status}</p> : null}
+                  </div>
+                  <PrimaryButton disabled={!snap.reversible} onClick={() => setSnapshotId(snap.id)}>🔄 Restaurar</PrimaryButton>
+                </div>
+              </article>
+            ))}
           </div>
         </SectionCard>
       )}
-      <ConfirmModal open={snapshotId !== null} title="Restaurar snapshot simulado?" description="A restauração é apenas visual nesta etapa. A arquitetura reserva o caminho para reversão segura e auditável via Rust/Tauri." onCancel={() => setSnapshotId(null)} onConfirm={confirmRestore} />
+      <ConfirmModal open={snapshotId !== null} title="Restaurar snapshot?" description="A restauração é visual nesta etapa. A arquitetura reserva o caminho para reversão segura e auditável via Rust/Tauri." onCancel={() => setSnapshotId(null)} onConfirm={confirmRestore} />
     </>
   );
 }
