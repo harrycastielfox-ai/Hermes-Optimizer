@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::startup::read_startup_apps;
+use super::{history, startup::read_startup_apps};
 
 const GIB: u64 = 1024_u64.pow(3);
 
@@ -224,6 +224,14 @@ pub fn get_diagnostic_report() -> DiagnosticReport {
             problems.len()
         )
     };
+
+    let _ = history::save_diagnostic_history(
+        &format!("diag-{}", history::current_timestamp()),
+        health.score,
+        problems.len() as u32,
+        recommendations.len() as u32,
+        &summary,
+    );
 
     DiagnosticReport {
         summary,

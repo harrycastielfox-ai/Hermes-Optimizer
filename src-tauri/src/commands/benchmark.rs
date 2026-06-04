@@ -6,7 +6,7 @@ use std::io::{Read, Write};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
-use super::diagnostics;
+use super::{diagnostics, history};
 
 const CPU_ITERATIONS: u64 = 2_000_000;
 const MEMORY_TEST_BYTES: usize = 8 * 1024 * 1024;
@@ -137,6 +137,18 @@ pub fn run_light_benchmark() -> Result<BenchmarkResult, String> {
     if let Ok(mut last) = storage.lock() {
         *last = Some(result.clone());
     }
+
+    let _ = history::save_benchmark_history(
+        &result.id,
+        &result.timestamp,
+        result.score.overall_score,
+        result.score.cpu_score,
+        result.score.memory_score,
+        result.score.disk_score,
+        result.score.gpu_readiness_score,
+        result.score.gaming_readiness_score,
+        &result.summary,
+    );
 
     Ok(result)
 }

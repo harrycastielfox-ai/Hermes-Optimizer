@@ -5,6 +5,12 @@ import type {
   DiagnosticReport,
   DiagnosticResult,
   HardwareInfo,
+  BenchmarkHistoryEntry,
+  DiagnosticHistoryEntry,
+  HistoryComparison,
+  HistoryLogEntry,
+  HistoryOverview,
+  SnapshotHistoryEntry,
   HermesTweak,
   OptimizationLog,
   PerformanceProfile,
@@ -13,6 +19,40 @@ import type {
   SystemOverview,
 } from "../types";
 import { invokeSafe, type HermesApiResult } from "./invokeSafe";
+
+
+type SnakeBenchmarkHistoryEntry = Omit<BenchmarkHistoryEntry, "overallScore" | "cpuScore" | "ramScore" | "diskScore" | "gpuScore" | "gamingReadiness"> & {
+  overall_score: number;
+  cpu_score: number;
+  ram_score: number;
+  disk_score: number;
+  gpu_score: number;
+  gaming_readiness: number;
+};
+
+type SnakeDiagnosticHistoryEntry = Omit<DiagnosticHistoryEntry, "healthScore" | "issuesCount" | "recommendationsCount"> & {
+  health_score: number;
+  issues_count: number;
+  recommendations_count: number;
+};
+
+type SnakeSnapshotHistoryEntry = Omit<SnapshotHistoryEntry, "hardwareSummary"> & { hardware_summary: string };
+
+type SnakeHistoryComparison = Omit<HistoryComparison, "currentScore" | "previousScore"> & {
+  current_score: number;
+  previous_score: number;
+};
+
+type SnakeHistoryOverview = Omit<HistoryOverview, "databasePath" | "localOnly" | "benchmarkComparison" | "diagnosticComparison" | "advisorInsights" | "benchmarks" | "diagnostics" | "snapshots"> & {
+  database_path: string;
+  local_only: boolean;
+  benchmarks: SnakeBenchmarkHistoryEntry[];
+  diagnostics: SnakeDiagnosticHistoryEntry[];
+  snapshots: SnakeSnapshotHistoryEntry[];
+  benchmark_comparison?: SnakeHistoryComparison | null;
+  diagnostic_comparison?: SnakeHistoryComparison | null;
+  advisor_insights: string[];
+};
 
 type SnakeSystemOverview = {
   status: SystemOverview["status"];
@@ -110,6 +150,43 @@ type SnakeSimulationResult = Omit<SimulationResult, "logId"> & { log_id: string 
 
 function withMappedData<TInput, TOutput>(result: HermesApiResult<TInput>, mapper: (input: TInput) => TOutput): HermesApiResult<TOutput> {
   return { ...result, data: mapper(result.data) };
+}
+
+
+function mapBenchmarkHistory(input: BenchmarkHistoryEntry | SnakeBenchmarkHistoryEntry): BenchmarkHistoryEntry {
+  if ("overallScore" in input) return input;
+  return { id: input.id, timestamp: input.timestamp, overallScore: input.overall_score, cpuScore: input.cpu_score, ramScore: input.ram_score, diskScore: input.disk_score, gpuScore: input.gpu_score, gamingReadiness: input.gaming_readiness, summary: input.summary };
+}
+
+function mapDiagnosticHistory(input: DiagnosticHistoryEntry | SnakeDiagnosticHistoryEntry): DiagnosticHistoryEntry {
+  if ("healthScore" in input) return input;
+  return { id: input.id, timestamp: input.timestamp, healthScore: input.health_score, issuesCount: input.issues_count, recommendationsCount: input.recommendations_count, summary: input.summary };
+}
+
+function mapSnapshotHistory(input: SnapshotHistoryEntry | SnakeSnapshotHistoryEntry): SnapshotHistoryEntry {
+  if ("hardwareSummary" in input) return input;
+  return { id: input.id, timestamp: input.timestamp, name: input.name, description: input.description, hardwareSummary: input.hardware_summary };
+}
+
+function mapHistoryComparison(input: HistoryComparison | SnakeHistoryComparison | null | undefined): HistoryComparison | null {
+  if (!input) return null;
+  if ("currentScore" in input) return input;
+  return { currentScore: input.current_score, previousScore: input.previous_score, delta: input.delta, direction: input.direction, message: input.message };
+}
+
+function mapHistoryOverview(input: HistoryOverview | SnakeHistoryOverview): HistoryOverview {
+  if ("databasePath" in input) return input;
+  return {
+    databasePath: input.database_path,
+    localOnly: input.local_only,
+    benchmarks: input.benchmarks.map(mapBenchmarkHistory),
+    diagnostics: input.diagnostics.map(mapDiagnosticHistory),
+    logs: input.logs,
+    snapshots: input.snapshots.map(mapSnapshotHistory),
+    benchmarkComparison: mapHistoryComparison(input.benchmark_comparison),
+    diagnosticComparison: mapHistoryComparison(input.diagnostic_comparison),
+    advisorInsights: input.advisor_insights,
+  };
 }
 
 function mapOverview(input: SystemOverview | SnakeSystemOverview): SystemOverview {
@@ -325,4 +402,14 @@ export async function createRestoreSnapshot(reason: string) {
 export async function simulateRestoreSnapshot(snapshotId: string) {
   const result = await invokeSafe<RestoreSnapshot | SnakeSnapshot>("simulate_restore_snapshot", { request: { snapshot_id: snapshotId } }, snapshots[0]);
   return withMappedData(result, mapSnapshot);
+}
+
+export async function getHistoryOverview() {
+  const fallback: HistoryOverview = { databasePath: "Local indisponível no fallback", localOnly: true, benchmarks: [], diagnostics: [], logs: [], snapshots: [], benchmarkComparison: null, diagnosticComparison: null, advisorInsights: ["Histórico local será exibido quando o backend Tauri estiver disponível."] };
+  const result = await invokeSafe<HistoryOverview | SnakeHistoryOverview>("get_history_overview", undefined, fallback);
+  return withMappedData(result, mapHistoryOverview);
+}
+
+export async function getHistoryAdvisorInsights() {
+  return invokeSafe<string[]>("get_history_advisor_insights", undefined, []);
 }

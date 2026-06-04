@@ -1,6 +1,6 @@
 mod commands;
 
-use commands::{benchmark, cleaner, diagnostics, logs, restore, startup, tweaks};
+use commands::{benchmark, cleaner, diagnostics, history, logs, restore, startup, tweaks};
 
 pub fn run() {
     tauri::Builder::default()
@@ -20,6 +20,14 @@ pub fn run() {
             logs::list_logs,
             restore::create_restore_snapshot,
             restore::simulate_restore_snapshot,
+            history::get_history_overview,
+            history::list_benchmark_history,
+            history::list_diagnostic_history,
+            history::list_history_logs,
+            history::list_snapshot_history,
+            history::compare_last_benchmarks,
+            history::compare_last_diagnostics,
+            history::get_history_advisor_insights,
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Hermes Optimizer");
