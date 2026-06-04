@@ -1,6 +1,5 @@
 import { Home, Stethoscope, Zap, Sparkles, Beaker, Gamepad2, UserCog, History, FileText, Settings } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/hermes-logo.png.asset.json";
 
 const items = [
   { icon: Home, label: "Dashboard" },
@@ -18,11 +17,21 @@ const items = [
 export function Sidebar() {
   const [active, setActive] = useState("Dashboard");
   const [gamer, setGamer] = useState(false);
+  const [logoMissing, setLogoMissing] = useState(false);
 
   return (
     <aside className="sidebar-texture w-[260px] shrink-0 flex flex-col px-5 py-6 border-r border-border/60">
       <div className="flex items-center justify-center mb-8">
-        <img src={logo.url} alt="Hermes Optimizer" className="w-[180px] h-auto drop-shadow-sm" />
+        {logoMissing ? (
+          <span className="text-lg font-bold tracking-tight text-foreground">Hermes Optimizer</span>
+        ) : (
+          <img
+            src="/hermes-logo.png"
+            alt="Hermes Optimizer"
+            className="w-[180px] h-auto object-contain drop-shadow-sm"
+            onError={() => setLogoMissing(true)}
+          />
+        )}
       </div>
 
       <nav className="flex-1 flex flex-col gap-1">
