@@ -17,6 +17,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { HermesAiCenter } from "@/components/ai/HermesAiCenter";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { HermesAdminSettings } from "@/components/settings/HermesAdminSettings";
+import { HermesRepairCenter } from "@/components/settings/HermesRepairCenter";
 import {
   applyRestoreSnapshot,
   getRestoreEngineStatus,
@@ -351,7 +353,9 @@ function ConfiguracoesPage() {
             </div>
           </section>
 
+          <HermesRepairCenter />
           <HermesAiCenter />
+          <HermesAdminSettings />
         </main>
       </div>
     </div>
