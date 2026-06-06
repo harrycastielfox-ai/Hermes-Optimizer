@@ -14,19 +14,19 @@ interface Props {
 
 export function MetricCard({ icon: Icon, label, value, sub, footer, iconBg = "bg-primary-soft", iconColor = "text-primary", children }: Props) {
   return (
-    <div className="rounded-2xl bg-card border border-border/60 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start gap-4">
-        <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center shrink-0`}>
-          <Icon className={`w-5 h-5 ${iconColor}`} />
+    <div className="rounded-xl bg-card border border-border/60 px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_22px_-14px_rgba(15,23,42,0.10)]">
+      <div className="flex items-start gap-3">
+        <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center shrink-0`}>
+          <Icon className={`w-[22px] h-[22px] ${iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-3xl font-bold tracking-tight mt-0.5">{value}</p>
-          {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
+          <p className="text-[10px] font-semibold text-slate-600">{label}</p>
+          <p className="text-[24px] font-bold tracking-tight mt-0.5 leading-none text-slate-950">{value}</p>
+          {sub && <p className="text-[9px] text-muted-foreground mt-0.5">{sub}</p>}
         </div>
       </div>
-      {children && <div className="mt-3">{children}</div>}
-      {footer && <p className="text-[11px] text-muted-foreground mt-2">{footer}</p>}
+      {children && <div className="mt-2">{children}</div>}
+      {footer && <p className="text-[10px] leading-snug text-muted-foreground mt-2">{footer}</p>}
     </div>
   );
 }
@@ -45,7 +45,7 @@ export function Sparkline() {
   const step = w / (pts.length - 1);
   const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${i * step},${h - (p / max) * h}`).join(" ");
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-9">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-7">
       <defs>
         <linearGradient id="sp" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="oklch(0.6 0.2 250)" stopOpacity="0.3" />

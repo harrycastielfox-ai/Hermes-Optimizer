@@ -138,8 +138,8 @@
     isolation: isolate;
     overflow: hidden;
     background:
-      radial-gradient(circle at 35% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
-      radial-gradient(circle at 88% 74%, rgba(37, 99, 235, 0.08), transparent 36%),
+      radial-gradient(circle at 35% 0%, rgba(59, 130, 246, 0.14), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(37, 99, 235, 0.12), transparent 36%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.97) 52%, rgba(241, 247, 255, 0.94) 100%);
     box-shadow: inset -1px 0 0 rgba(148, 163, 184, 0.22);
   }
@@ -149,12 +149,12 @@
     position: absolute;
     inset: 0;
     z-index: -2;
-    opacity: 0.34;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='760' viewBox='0 0 260 760' fill='none'%3E%3Cg stroke='%232563eb' stroke-width='1.15' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath opacity='.34' d='M36 20 64 88 45 137 86 218 58 294 96 388 74 474 112 582 88 690'/%3E%3Cpath opacity='.22' d='M204 4 178 83 211 154 164 252 196 348 151 459 181 556 132 724'/%3E%3Cpath opacity='.18' d='M124 52 146 118 119 204 153 286 126 374 161 486 132 594 166 706'/%3E%3Cpath opacity='.14' d='M16 332 49 370 30 426 68 493 48 552'/%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.72;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='760' viewBox='0 0 260 760' fill='none'%3E%3Cg stroke='%232563eb' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath opacity='.36' stroke-width='1.25' d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath opacity='.30' stroke-width='1.05' d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3Cpath opacity='.22' stroke-width='.95' d='M125 44 147 117 119 207 154 288 126 376 162 488 133 596 168 718'/%3E%3Cpath opacity='.18' stroke-width='.9' d='M18 336 50 372 30 428 70 496 49 560'/%3E%3C/g%3E%3Cg stroke='%2393c5fd' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' opacity='.18'%3E%3Cpath d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3C/g%3E%3C/svg%3E");
     background-position: center top;
     background-repeat: repeat-y;
     background-size: 260px 760px;
-    filter: blur(0.2px);
+    filter: blur(0.05px);
   }
 
   .sidebar-texture::after {
@@ -163,8 +163,26 @@
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.48) 48%, rgba(255, 255, 255, 0.78)),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.50), transparent 18%, rgba(255, 255, 255, 0.40) 72%);
+      linear-gradient(90deg, rgba(255, 255, 255, 0.70), rgba(255, 255, 255, 0.30) 48%, rgba(255, 255, 255, 0.62)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 18%, rgba(255, 255, 255, 0.24) 72%);
     pointer-events: none;
+  }
+
+  .optimize-cta {
+    isolation: isolate;
+    background:
+      url("/optimize-button-bg-cropped.png") center / 100% 100% no-repeat,
+      linear-gradient(135deg, #2f82ff 0%, #1664f4 48%, #1454dd 100%);
+    box-shadow:
+      0 12px 26px -16px rgba(37, 99, 235, 0.95),
+      0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+  }
+
+  .optimize-cta:hover {
+    box-shadow:
+      0 14px 30px -16px rgba(37, 99, 235, 1),
+      0 0 22px rgba(59, 130, 246, 0.30),
+      0 0 0 1px rgba(255, 255, 255, 0.50) inset,
+      0 1px 0 rgba(255, 255, 255, 0.52) inset;
   }
 }

@@ -1,7 +1,6 @@
 import { Zap } from "lucide-react";
 
-export function HealthRing({ value = 97, size = 72 }: { value?: number; size?: number }) {
-  const stroke = 7;
+export function HealthRing({ value = 97, size = 72, stroke = 7 }: { value?: number; size?: number; stroke?: number }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (value / 100) * c;
@@ -28,8 +27,8 @@ export function HealthRing({ value = 97, size = 72 }: { value?: number; size?: n
         </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40">
-          <Zap className="w-5 h-5 text-white fill-white" />
+        <div className="h-[56%] w-[56%] rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40">
+          <Zap className="h-[48%] w-[48%] text-white fill-white" />
         </div>
       </div>
     </div>

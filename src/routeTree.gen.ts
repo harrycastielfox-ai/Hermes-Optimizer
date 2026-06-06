@@ -9,8 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PerfisRouteImport } from './routes/perfis'
+import { Route as OtimizacoesRouteImport } from './routes/otimizacoes'
+import { Route as LimpezaRouteImport } from './routes/limpeza'
+import { Route as InicializacaoRouteImport } from './routes/inicializacao'
+import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PerfisRoute = PerfisRouteImport.update({
+  id: '/perfis',
+  path: '/perfis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtimizacoesRoute = OtimizacoesRouteImport.update({
+  id: '/otimizacoes',
+  path: '/otimizacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LimpezaRoute = LimpezaRouteImport.update({
+  id: '/limpeza',
+  path: '/limpeza',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicializacaoRoute = InicializacaoRouteImport.update({
+  id: '/inicializacao',
+  path: '/inicializacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticoRoute = DiagnosticoRouteImport.update({
+  id: '/diagnostico',
+  path: '/diagnostico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +55,116 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/inicializacao': typeof InicializacaoRoute
+  '/limpeza': typeof LimpezaRoute
+  '/otimizacoes': typeof OtimizacoesRoute
+  '/perfis': typeof PerfisRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/inicializacao': typeof InicializacaoRoute
+  '/limpeza': typeof LimpezaRoute
+  '/otimizacoes': typeof OtimizacoesRoute
+  '/perfis': typeof PerfisRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/diagnostico': typeof DiagnosticoRoute
+  '/inicializacao': typeof InicializacaoRoute
+  '/limpeza': typeof LimpezaRoute
+  '/otimizacoes': typeof OtimizacoesRoute
+  '/perfis': typeof PerfisRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/configuracoes'
+    | '/diagnostico'
+    | '/inicializacao'
+    | '/limpeza'
+    | '/otimizacoes'
+    | '/perfis'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/configuracoes'
+    | '/diagnostico'
+    | '/inicializacao'
+    | '/limpeza'
+    | '/otimizacoes'
+    | '/perfis'
+  id:
+    | '__root__'
+    | '/'
+    | '/configuracoes'
+    | '/diagnostico'
+    | '/inicializacao'
+    | '/limpeza'
+    | '/otimizacoes'
+    | '/perfis'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
+  DiagnosticoRoute: typeof DiagnosticoRoute
+  InicializacaoRoute: typeof InicializacaoRoute
+  LimpezaRoute: typeof LimpezaRoute
+  OtimizacoesRoute: typeof OtimizacoesRoute
+  PerfisRoute: typeof PerfisRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/perfis': {
+      id: '/perfis'
+      path: '/perfis'
+      fullPath: '/perfis'
+      preLoaderRoute: typeof PerfisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otimizacoes': {
+      id: '/otimizacoes'
+      path: '/otimizacoes'
+      fullPath: '/otimizacoes'
+      preLoaderRoute: typeof OtimizacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/limpeza': {
+      id: '/limpeza'
+      path: '/limpeza'
+      fullPath: '/limpeza'
+      preLoaderRoute: typeof LimpezaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicializacao': {
+      id: '/inicializacao'
+      path: '/inicializacao'
+      fullPath: '/inicializacao'
+      preLoaderRoute: typeof InicializacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostico': {
+      id: '/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof DiagnosticoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +177,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
+  DiagnosticoRoute: DiagnosticoRoute,
+  InicializacaoRoute: InicializacaoRoute,
+  LimpezaRoute: LimpezaRoute,
+  OtimizacoesRoute: OtimizacoesRoute,
+  PerfisRoute: PerfisRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

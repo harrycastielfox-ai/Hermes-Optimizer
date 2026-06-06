@@ -1,9 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Heart, Cpu, MemoryStick, HardDrive, Monitor, Cog, Disc, Clock, Download, Zap, Shield, RefreshCw, CheckCircle2, Info, AlertTriangle, Gamepad2, Minus, Square, X, CircuitBoard } from "lucide-react";
+import { Heart, Cpu, MemoryStick, HardDrive, Clock, Zap, Shield, RefreshCw, CheckCircle2, Info, AlertTriangle, Gamepad2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { HealthRing } from "@/components/dashboard/HealthRing";
 import { MetricCard, ProgressBar, Sparkline } from "@/components/dashboard/MetricCard";
 import { InfoPanel, InfoRow, HwRow, RecRow } from "@/components/dashboard/InfoPanel";
+import { fallbackAdvisorRecommendations, loadAdvisorRecommendations, type AdvisorRecommendation } from "@/lib/advisor";
+import { advisorInputFromDiagnostic, fallbackDiagnosticReport, loadDiagnosticReport, type DiagnosticReport } from "@/lib/diagnostic";
+import { runOptimizeNowPlan } from "@/lib/optimizer";
+import {
+  HermesArchitectureIcon,
+  HermesClockIcon,
+  HermesCollectionIcon,
+  HermesComputerIcon,
+  HermesCpuIcon,
+  HermesDiskIcon,
+  HermesGpuIcon,
+  HermesMotherboardIcon,
+  HermesRamIcon,
+  HermesVersionIcon,
+  HermesWindowsIcon,
+} from "@/components/dashboard/HermesPanelIcons";
 
 
 export const Route = createFileRoute("/")({
@@ -17,81 +34,133 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const [diagnostic, setDiagnostic] = useState<DiagnosticReport>(fallbackDiagnosticReport);
+  const [recommendations, setRecommendations] = useState<AdvisorRecommendation[]>(fallbackAdvisorRecommendations);
+  const [isOptimizeRunning, setIsOptimizeRunning] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const timer = window.setTimeout(() => {
+      loadDiagnosticReport()
+        .then(async (report) => {
+          const items = await loadAdvisorRecommendations(advisorInputFromDiagnostic(report));
+          return { report, items };
+        })
+        .then(({ report, items }) => {
+          if (mounted) {
+            setDiagnostic(report);
+            setRecommendations(items);
+          }
+        });
+    }, 350);
+
+    return () => {
+      mounted = false;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  const handleOptimizeNow = useCallback(async () => {
+    if (isOptimizeRunning) {
+      return;
+    }
+
+    setIsOptimizeRunning(true);
+    try {
+      const plan = await runOptimizeNowPlan();
+      console.info("[Hermes] Plano seguro do Otimizar Agora", plan);
+    } finally {
+      setIsOptimizeRunning(false);
+    }
+  }, [isOptimizeRunning]);
+
+  const healthScore = Math.round(diagnostic.healthScore);
+  const healthSub = `${diagnostic.healthLabel} • ${diagnostic.defender.active ? "Sistema protegido" : "Verificar segurança"}`;
+  const cpuUsage = Math.round(diagnostic.cpu.usagePercent);
+  const ramUsage = Math.round(diagnostic.ram.usedPercent);
+  const diskUsage = Math.round(diagnostic.disk.usedPercent);
+  const startupImpact = getStartupImpactLabel(diagnostic);
+  const updateStatus = diagnostic.windowsUpdate.status;
+  const temperatureText = diagnostic.temperature.available && typeof diagnostic.temperature.celsius === "number"
+    ? ` • ${formatNumber(diagnostic.temperature.celsius)}°C`
+    : "";
+
   return (
     <div className="lightning-bg min-h-screen flex">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Window chrome */}
-        <div className="flex justify-end items-center gap-1 px-4 py-2 text-muted-foreground">
-          <button className="w-8 h-8 hover:bg-muted rounded grid place-items-center"><Minus className="w-4 h-4" /></button>
-          <button className="w-8 h-8 hover:bg-muted rounded grid place-items-center"><Square className="w-3.5 h-3.5" /></button>
-          <button className="w-8 h-8 hover:bg-destructive/10 hover:text-destructive rounded grid place-items-center"><X className="w-4 h-4" /></button>
-        </div>
-
-        <main className="flex-1 px-10 pb-6 overflow-auto">
+        <main className="flex-1 px-5 pt-6 pb-4 overflow-auto xl:px-8 xl:pt-7">
           {/* Header */}
-          <div className="flex items-start justify-between mb-7">
+          <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <p className="text-xs font-bold tracking-[0.2em] text-primary mb-2">VISÃO GERAL</p>
-              <h1 className="text-[34px] leading-tight font-bold tracking-tight text-foreground">Dashboard Hermes</h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
+              <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">Dashboard Hermes</h1>
+              <p className="text-[13px] text-muted-foreground mt-1">
                 Status central do PC com coleta local somente leitura. Nenhuma otimização real é executada nesta fase.
               </p>
             </div>
-            <div className="rounded-2xl bg-card border border-border/60 px-6 py-4 flex items-center gap-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
-              <div className="w-11 h-11 rounded-xl bg-primary-soft flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary" />
+            <div className="w-full max-w-[320px] rounded-xl bg-card border border-border/60 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_22px_-14px_rgba(15,23,42,0.10)] xl:w-[300px] xl:justify-start">
+              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+                <Shield className="absolute inset-0 h-full w-full text-blue-100 fill-blue-50 drop-shadow-[0_5px_10px_rgba(37,99,235,0.12)]" strokeWidth={1.6} />
+                <Zap className="relative h-5 w-5 text-primary fill-primary drop-shadow-[0_3px_8px_rgba(37,99,235,0.24)]" />
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold tracking-wider text-muted-foreground">SAÚDE GERAL</p>
-                <p className="text-2xl font-bold leading-none mt-1">97<span className="text-base text-muted-foreground font-medium">/100</span></p>
-                <p className="text-[10px] text-muted-foreground mt-1">Excelente • Sistema saudável</p>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-[9px] font-bold tracking-wider text-muted-foreground">SAÚDE GERAL</p>
+                <p className="text-[20px] font-bold leading-none mt-0.5">{healthScore}<span className="text-xs text-muted-foreground font-medium">/100</span></p>
+                <p className="text-[9px] text-muted-foreground mt-1 truncate">{healthSub}</p>
               </div>
-              <HealthRing value={97} />
+              <HealthRing value={healthScore} size={58} stroke={6} />
             </div>
           </div>
 
           {/* Metrics row */}
-          <div className="grid grid-cols-4 gap-4 mb-5">
-            <MetricCard icon={Heart} label="Saúde geral" value="97/100" sub="Excelente • Sistema saudável">
+          <div className="grid grid-cols-1 gap-3 mb-4 lg:grid-cols-2 2xl:grid-cols-4">
+            <MetricCard icon={Heart} label="Saúde geral" value={`${healthScore}/100`} sub={healthSub}>
               <Sparkline />
             </MetricCard>
-            <MetricCard icon={Cpu} label="CPU" value="23%" footer={<>12th Gen Intel Core i5-1235U<br />10 núcleos • 1.30 GHz</>}>
-              <ProgressBar value={23} gradient="from-primary to-info" />
+            <MetricCard icon={Cpu} label="CPU" value={`${cpuUsage}%`} footer={<>{diagnostic.cpu.name}<br />{diagnostic.cpu.logicalProcessors} threads • {formatGhz(diagnostic.cpu.currentClockMhz)}</>}>
+              <ProgressBar value={cpuUsage} gradient="from-primary to-info" />
             </MetricCard>
-            <MetricCard icon={MemoryStick} label="RAM" value="53%" footer={<>8.3 GB usados • 7.4 GB livres<br />Total 15.7 GB</>}>
-              <ProgressBar value={53} gradient="from-primary to-purple-accent" />
+            <MetricCard icon={MemoryStick} label="RAM" value={`${ramUsage}%`} footer={<>{formatGb(diagnostic.ram.usedGb)} GB usados • {formatGb(diagnostic.ram.freeGb)} GB livres<br />Total {formatGb(diagnostic.ram.totalGb)} GB</>}>
+              <ProgressBar value={ramUsage} gradient="from-primary to-purple-accent" />
             </MetricCard>
-            <MetricCard icon={HardDrive} label="Disco principal (C:)" value="49%" footer={<>235 GB livres de 456 GB<br />SSD • Saudável</>}>
-              <ProgressBar value={49} gradient="from-info to-primary" />
+            <MetricCard icon={HardDrive} label={`Disco principal (${diagnostic.disk.mount})`} value={`${diskUsage}%`} footer={<>{formatGb(diagnostic.disk.freeGb)} GB livres de {formatGb(diagnostic.disk.totalGb)} GB<br />{diagnostic.disk.mediaType} • {diagnostic.disk.healthStatus}</>}>
+              <ProgressBar value={diskUsage} gradient="from-info to-primary" />
             </MetricCard>
           </div>
 
           {/* Three panels */}
-          <div className="grid grid-cols-3 gap-4 mb-5">
-            <InfoPanel title="SISTEMA">
-              <InfoRow icon={Monitor} label="Computador:" value="DRT" />
-              <InfoRow icon={Cog} label="Sistema:" value="Windows 11 Home Single Language" />
-              <InfoRow icon={Disc} label="Versão:" value="10.0.26200 (Build 26200)" />
-              <InfoRow icon={CircuitBoard} label="Arquitetura:" value="64 bits" />
-              <InfoRow icon={Clock} label="Tempo ligado:" value="2h 34m" />
-              <InfoRow icon={Download} label="Coleta:" value="Somente leitura (local)" />
+          <div className="grid grid-cols-1 gap-3.5 mb-4 xl:grid-cols-2 2xl:grid-cols-3">
+            <InfoPanel title="SISTEMA" watermarkSrc="/hermes-watermark.png">
+              <InfoRow icon={HermesComputerIcon} label="Computador:" value={diagnostic.system.computerName} />
+              <InfoRow icon={HermesWindowsIcon} label="Sistema:" value={diagnostic.system.osName} />
+              <InfoRow icon={HermesVersionIcon} label="Versão:" value={`${diagnostic.system.osVersion} (Build ${diagnostic.system.osBuild})`} />
+              <InfoRow icon={HermesArchitectureIcon} label="Arquitetura:" value={diagnostic.system.architecture} />
+              <InfoRow icon={HermesClockIcon} label="Tempo ligado:" value={diagnostic.uptime.label} />
+              <InfoRow icon={HermesCollectionIcon} label="Coleta:" value="Somente leitura (local)" />
             </InfoPanel>
 
             <InfoPanel title="HARDWARE DETALHADO">
-              <HwRow icon={Cpu} label="CPU" primary="Intel Core i5-1235U" secondary="10 núcleos • 12 threads" />
-              <HwRow icon={MemoryStick} label="MEMÓRIA RAM" primary="15.7 GB DDR4" secondary="8.3 GB usados (53%)" />
-              <HwRow icon={Monitor} label="GPU" primary="Intel Iris Xe Graphics" secondary="Integrada • Driver 31.0.101.5445" />
-              <HwRow icon={HardDrive} label="DISCO PRINCIPAL" primary="NVMe KBG40ZNS512G" secondary="SSD • 456 GB • 49% usado" />
-              <HwRow icon={CircuitBoard} label="PLACA-MÃE" primary="Fabricante: LENOVO" secondary="Modelo: LNVNB161216" />
+              <HwRow icon={HermesCpuIcon} label="CPU" primary={diagnostic.cpu.name} secondary={`${diagnostic.cpu.physicalCores} núcleos • ${diagnostic.cpu.logicalProcessors} threads${temperatureText}`} />
+              <HwRow icon={HermesRamIcon} label="MEMÓRIA RAM" primary={`${formatGb(diagnostic.ram.totalGb)} GB RAM`} secondary={`${formatGb(diagnostic.ram.usedGb)} GB usados (${ramUsage}%)`} />
+              <HwRow icon={HermesGpuIcon} label="GPU" primary={diagnostic.gpu.name} secondary={`Driver ${diagnostic.gpu.driverVersion}`} />
+              <HwRow icon={HermesDiskIcon} label="DISCO PRINCIPAL" primary={diagnostic.disk.physicalName} secondary={`${diagnostic.disk.mediaType} • ${formatGb(diagnostic.disk.totalGb)} GB • ${diskUsage}% usado`} />
+              <HwRow icon={HermesMotherboardIcon} label="PLACA-MÃE" primary={`Fabricante: ${diagnostic.system.motherboardManufacturer}`} secondary={`Modelo: ${diagnostic.system.motherboardModel}`} />
             </InfoPanel>
 
             <InfoPanel title="RECOMENDAÇÕES HERMES">
-              <RecRow icon={CheckCircle2} color="bg-success/15 text-success" title="Seu sistema está saudável" desc="Todos os componentes principais estão dentro dos parâmetros normais." />
-              <RecRow icon={Info} color="bg-info/15 text-info" title="Muitos itens na inicialização" desc="17 programas iniciam com o Windows. Impacto estimado: +11s no boot." />
-              <RecRow icon={AlertTriangle} color="bg-warning/15 text-warning" title="Espaço em disco" desc="Seu disco está com 49% de uso. Mantenha acima de 20% livre para máximo desempenho." />
-              <RecRow icon={Gamepad2} color="bg-purple-accent/15 text-purple-accent" title="GPU integrada detectada" desc="Para melhor desempenho em jogos, considere GPU dedicada no futuro." />
+              {recommendations.map((recommendation) => {
+                const visual = getRecommendationVisual(recommendation);
+                return (
+                  <RecRow
+                    key={recommendation.id}
+                    icon={visual.icon}
+                    color={visual.color}
+                    title={recommendation.title}
+                    desc={recommendation.description}
+                  />
+                );
+              })}
               <button className="mt-2 text-xs font-semibold text-primary hover:underline flex items-center gap-1">
                 Ver todas as recomendações →
               </button>
@@ -99,52 +168,30 @@ function Dashboard() {
           </div>
 
           {/* Status bar */}
-          <div className="rounded-2xl bg-card border border-border/60 p-3 flex items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
-            <StatusItem icon={Zap} label="INICIALIZAÇÃO" value="17 itens" sub="Médio impacto" />
+          <div className="rounded-2xl bg-card border border-border/60 p-2.5 flex flex-wrap items-center gap-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] 2xl:flex-nowrap">
+            <StatusItem icon={Zap} label="INICIALIZAÇÃO" value={`${diagnostic.startup.totalItems} itens`} sub={`${startupImpact} impacto`} />
             <div className="w-px h-12 bg-border" />
-            <StatusItem icon={Clock} label="UPTIME" value="2h 34m" sub="Sistema estável" />
+            <StatusItem icon={Clock} label="UPTIME" value={diagnostic.uptime.label} sub="Sistema estável" />
             <div className="w-px h-12 bg-border" />
-            <StatusItem icon={Shield} label="SEGURANÇA" value="Ativo" sub="Windows Defender" />
+            <StatusItem icon={Shield} label="SEGURANÇA" value={diagnostic.defender.status} sub="Windows Defender" />
             <div className="w-px h-12 bg-border" />
-            <StatusItem icon={RefreshCw} label="ATUALIZAÇÕES" value="Em dia" sub="Última verificação hoje" />
+            <StatusItem icon={RefreshCw} label="ATUALIZAÇÕES" value={updateStatus} sub={diagnostic.windowsUpdate.lastHotfixId} />
             <button
-              className="group ml-auto shrink-0 relative overflow-hidden flex items-center gap-4 pl-4 pr-6 h-[80px] w-[340px] rounded-2xl text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(0.62 0.24 255) 0%, oklch(0.55 0.22 260) 50%, oklch(0.5 0.22 265) 100%)",
-                boxShadow:
-                  "0 10px 30px -8px color-mix(in oklab, var(--primary) 55%, transparent), 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent) inset, 0 1px 0 rgba(255,255,255,0.25) inset",
-              }}
+              aria-busy={isOptimizeRunning}
+              aria-label="Otimizar agora. Análise e segurança engine PRO."
+              className="optimize-cta group ml-auto shrink-0 relative overflow-hidden h-[58px] w-[210px] rounded-xl text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] 2xl:h-[60px] 2xl:w-[220px]"
+              disabled={isOptimizeRunning}
+              onClick={handleOptimizeNow}
             >
-              {/* shine overlay */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 opacity-70"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 40%, transparent 60%)",
-                }}
-              />
-              {/* glow edge */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute -inset-px rounded-2xl opacity-60 group-hover:opacity-100 transition-opacity"
-                style={{
-                  boxShadow:
-                    "0 0 24px color-mix(in oklab, var(--primary) 60%, transparent), 0 0 48px color-mix(in oklab, var(--info) 35%, transparent)",
-                }}
-              />
-              <span className="relative w-12 h-12 rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm flex items-center justify-center shrink-0">
-                <Zap className="w-6 h-6 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" fill="currentColor" />
-              </span>
-              <span className="relative flex flex-col items-start leading-tight text-left">
-                <span className="text-[17px] font-extrabold tracking-wide">OTIMIZAR AGORA</span>
-                <span className="text-[11px] font-medium text-white/80 mt-0.5">Análise e segurança engine (PRO)</span>
+              <span className="sr-only">OTIMIZAR AGORA</span>
+              <span className="sr-only">Análise e segurança engine PRO</span>
+              <span aria-hidden="true" className="hidden">
+                <Zap className="w-4 h-4 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.75)]" fill="currentColor" />
               </span>
             </button>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-5">
+          <p className="text-center text-[11px] text-muted-foreground mt-3">
             Hermes Optimizer 0.1.0 • Somente leitura • Nenhuma alteração é feita no sistema
           </p>
         </main>
@@ -155,15 +202,73 @@ function Dashboard() {
 
 function StatusItem({ icon: Icon, label, value, sub }: { icon: typeof Zap; label: string; value: string; sub: string }) {
   return (
-    <div className="flex items-center gap-3 px-3 flex-1 min-w-0">
-      <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-primary" />
+    <div className="flex items-center gap-2.5 px-2.5 flex-1 min-w-0">
+      <div className="w-9 h-9 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+        <Icon className="w-[18px] h-[18px] text-primary" />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-bold tracking-wider text-muted-foreground">{label}</p>
-        <p className="text-base font-semibold leading-tight">{value}</p>
+        <p className="text-sm font-semibold leading-tight">{value}</p>
         <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
       </div>
     </div>
   );
+}
+
+function getRecommendationVisual(recommendation: AdvisorRecommendation) {
+  if (recommendation.category === "hardware") {
+    return { icon: Gamepad2, color: "bg-purple-accent/15 text-purple-accent" };
+  }
+
+  if (recommendation.category === "profile") {
+    return { icon: Gamepad2, color: "bg-purple-accent/15 text-purple-accent" };
+  }
+
+  if (recommendation.category === "cleanup") {
+    return { icon: Zap, color: "bg-primary/15 text-primary" };
+  }
+
+  if (recommendation.category === "power") {
+    return { icon: Zap, color: "bg-info/15 text-info" };
+  }
+
+  if (recommendation.severity === "success") {
+    return { icon: CheckCircle2, color: "bg-success/15 text-success" };
+  }
+
+  if (recommendation.severity === "warning") {
+    return { icon: AlertTriangle, color: "bg-warning/15 text-warning" };
+  }
+
+  return { icon: Info, color: "bg-info/15 text-info" };
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: value >= 100 ? 0 : 1,
+  }).format(value);
+}
+
+function formatGb(value: number) {
+  return formatNumber(value);
+}
+
+function formatGhz(clockMhz: number) {
+  if (!clockMhz || clockMhz <= 0) {
+    return "clock indisponível";
+  }
+
+  return `${formatNumber(clockMhz / 1000)} GHz`;
+}
+
+function getStartupImpactLabel(report: DiagnosticReport) {
+  if (report.startup.highImpactCount >= 3 || report.startup.totalItems >= 25) {
+    return "Alto";
+  }
+
+  if (report.startup.highImpactCount >= 1 || report.startup.totalItems >= 10) {
+    return "Médio";
+  }
+
+  return "Baixo";
 }
