@@ -62,7 +62,7 @@ export function HermesAiCenter() {
   const topRecommendations = report.recommendations.slice(0, 5);
 
   return (
-    <section className="relative mt-5 overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
+    <section id="hermes-ai" className="relative scroll-mt-5 mt-5 overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute right-[-60px] top-[-70px] h-52 w-52 rounded-full bg-primary/8 blur-3xl" />
         <div className="absolute bottom-10 left-1/4 h-px w-80 rotate-[112deg] bg-gradient-to-r from-transparent via-primary/16 to-transparent" />

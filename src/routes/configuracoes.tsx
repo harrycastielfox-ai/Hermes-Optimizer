@@ -19,6 +19,8 @@ import { HermesAiCenter } from "@/components/ai/HermesAiCenter";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { HermesAdminSettings } from "@/components/settings/HermesAdminSettings";
 import { HermesRepairCenter } from "@/components/settings/HermesRepairCenter";
+import { HermesSchedulerCenter } from "@/components/settings/HermesSchedulerCenter";
+import { HermesSettingsOverview } from "@/components/settings/HermesSettingsOverview";
 import {
   applyRestoreSnapshot,
   getRestoreEngineStatus,
@@ -204,7 +206,12 @@ function ConfiguracoesPage() {
             </button>
           </div>
 
-          <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
+          <HermesSettingsOverview />
+
+          <section
+            id="seguranca-recuperacao"
+            className="scroll-mt-5 rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]"
+          >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
@@ -354,6 +361,7 @@ function ConfiguracoesPage() {
           </section>
 
           <HermesRepairCenter />
+          <HermesSchedulerCenter />
           <HermesAiCenter />
           <HermesAdminSettings />
         </main>
