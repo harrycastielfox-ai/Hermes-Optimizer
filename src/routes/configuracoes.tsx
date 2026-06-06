@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { HermesAiCenter } from "@/components/ai/HermesAiCenter";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import {
   applyRestoreSnapshot,
@@ -349,6 +350,8 @@ function ConfiguracoesPage() {
               </div>
             </div>
           </section>
+
+          <HermesAiCenter />
         </main>
       </div>
     </div>

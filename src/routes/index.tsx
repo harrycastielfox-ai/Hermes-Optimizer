@@ -5,9 +5,9 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { HealthRing } from "@/components/dashboard/HealthRing";
 import { MetricCard, ProgressBar, Sparkline } from "@/components/dashboard/MetricCard";
 import { InfoPanel, InfoRow, HwRow, RecRow } from "@/components/dashboard/InfoPanel";
+import { PremiumOptimizationModal } from "@/components/optimization/PremiumOptimizationModal";
 import { fallbackAdvisorRecommendations, loadAdvisorRecommendations, type AdvisorRecommendation } from "@/lib/advisor";
 import { advisorInputFromDiagnostic, fallbackDiagnosticReport, loadDiagnosticReport, type DiagnosticReport } from "@/lib/diagnostic";
-import { runOptimizeNowPlan } from "@/lib/optimizer";
 import {
   HermesArchitectureIcon,
   HermesClockIcon,
@@ -36,7 +36,8 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticReport>(fallbackDiagnosticReport);
   const [recommendations, setRecommendations] = useState<AdvisorRecommendation[]>(fallbackAdvisorRecommendations);
-  const [isOptimizeRunning, setIsOptimizeRunning] = useState(false);
+  const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
+  const [optimizationRunKey, setOptimizationRunKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -60,19 +61,14 @@ function Dashboard() {
     };
   }, []);
 
-  const handleOptimizeNow = useCallback(async () => {
-    if (isOptimizeRunning) {
+  const handleOptimizeNow = useCallback(() => {
+    if (isOptimizeModalOpen) {
       return;
     }
 
-    setIsOptimizeRunning(true);
-    try {
-      const plan = await runOptimizeNowPlan();
-      console.info("[Hermes] Plano seguro do Otimizar Agora", plan);
-    } finally {
-      setIsOptimizeRunning(false);
-    }
-  }, [isOptimizeRunning]);
+    setOptimizationRunKey((current) => current + 1);
+    setIsOptimizeModalOpen(true);
+  }, [isOptimizeModalOpen]);
 
   const healthScore = Math.round(diagnostic.healthScore);
   const healthSub = `${diagnostic.healthLabel} • ${diagnostic.defender.active ? "Sistema protegido" : "Verificar segurança"}`;
@@ -177,10 +173,10 @@ function Dashboard() {
             <div className="w-px h-12 bg-border" />
             <StatusItem icon={RefreshCw} label="ATUALIZAÇÕES" value={updateStatus} sub={diagnostic.windowsUpdate.lastHotfixId} />
             <button
-              aria-busy={isOptimizeRunning}
+              aria-busy={isOptimizeModalOpen}
               aria-label="Otimizar agora. Análise e segurança engine PRO."
               className="optimize-cta group ml-auto shrink-0 relative overflow-hidden h-[58px] w-[210px] rounded-xl text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] 2xl:h-[60px] 2xl:w-[220px]"
-              disabled={isOptimizeRunning}
+              disabled={isOptimizeModalOpen}
               onClick={handleOptimizeNow}
             >
               <span className="sr-only">OTIMIZAR AGORA</span>
@@ -196,6 +192,11 @@ function Dashboard() {
           </p>
         </main>
       </div>
+      <PremiumOptimizationModal
+        open={isOptimizeModalOpen}
+        runKey={optimizationRunKey}
+        onClose={() => setIsOptimizeModalOpen(false)}
+      />
     </div>
   );
 }
