@@ -232,7 +232,7 @@ pub async fn clean_quarantine_purge_expired(
     .map_err(|err| format!("Falha ao limpar quarentena em segundo plano: {err}"))?
 }
 
-fn clean_engine_apply_blocking(
+pub(crate) fn clean_engine_apply_blocking(
     app: AppHandle,
     request: Option<CleanApplyRequest>,
 ) -> Result<CleanApplyResult, String> {

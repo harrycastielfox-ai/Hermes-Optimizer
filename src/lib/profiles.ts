@@ -1,7 +1,9 @@
 import type { PerformanceApplyActionStatus } from "@/lib/performance";
+import type { StartupApplyAction, StartupImpact } from "@/lib/startup";
 
 export type ProfileRisk = "low" | "medium" | "high";
 export type ProfileStatus = "ready" | "previewOnly";
+export type ProfileEngineStatus = "dryRun" | "applied" | "skipped" | "failed";
 
 export type HermesProfile = {
   id: string;
@@ -13,6 +15,11 @@ export type HermesProfile = {
   requiresConfirmation: boolean;
   requiresExtraConfirmation: boolean;
   performanceActionIds: string[];
+  cleanItemIds: string[];
+  startupAction?: StartupApplyAction;
+  startupImpacts: StartupImpact[];
+  gamerEnabled: boolean;
+  advancedActionIds: string[];
   expectedImpact: string[];
   safeguards: string[];
 };
@@ -40,11 +47,19 @@ export type ProfileApplyResult = {
   profileName: string;
   dryRun: boolean;
   snapshotId: string;
+  snapshotIds: string[];
   rollbackAvailable: boolean;
   appliedActions: Array<{
     id: string;
     title: string;
     status: PerformanceApplyActionStatus;
+    message: string;
+  }>;
+  engineResults: Array<{
+    engine: string;
+    status: ProfileEngineStatus;
+    snapshotId?: string;
+    rollbackAvailable: boolean;
     message: string;
   }>;
   message: string;
@@ -57,27 +72,39 @@ export const fallbackProfilesCatalog: ProfilesCatalog = {
   telemetry: false,
   residentProcess: false,
   profiles: [
-    profile("seguro", "Seguro", "Maxima estabilidade com plano equilibrado.", "low", ["set-balanced-power-plan"]),
+    profile("seguro", "Seguro", "Maxima estabilidade com plano equilibrado.", "low", ["set-balanced-power-plan"], [], undefined, [], false, ["list-power-plans"]),
     profile("trabalho", "Trabalho", "Equilibrio para produtividade diaria.", "low", [
       "disable-transparency",
       "set-balanced-power-plan",
-    ]),
+    ], ["temp", "cache"], undefined, [], false, ["flush-dns-cache"]),
     profile("gamer", "Gamer", "Prioriza resposta e desempenho sob demanda.", "medium", [
       "disable-transparency",
       "disable-window-animations",
       "disable-visual-shadows",
       "set-high-performance-power-plan",
+    ], ["temp", "cache", "thumbnails"], "disable", ["high"], true, [
+      "enable-game-mode",
+      "disable-game-dvr",
+      "flush-dns-cache",
+      "set-visual-effects-custom",
     ]),
     profile("economia", "Economia", "Reduz consumo e animacoes nao essenciais.", "low", [
       "disable-transparency",
       "disable-window-animations",
       "set-power-saver-power-plan",
-    ]),
+    ], ["temp"], "disable", ["high"], false, ["disable-game-dvr", "flush-dns-cache"]),
     profile("extremo", "Extremo", "Desempenho maximo com confirmacao extra.", "high", [
       "disable-transparency",
       "disable-window-animations",
       "disable-visual-shadows",
       "set-high-performance-power-plan",
+    ], ["temp", "cache", "logs", "thumbnails", "windows-update-cache"], "disable", ["high", "medium"], true, [
+      "enable-game-mode",
+      "disable-game-dvr",
+      "disable-startup-delay",
+      "flush-dns-cache",
+      "list-power-plans",
+      "set-visual-effects-custom",
     ], true),
   ],
 };
@@ -111,6 +138,11 @@ function profile(
   summary: string,
   risk: ProfileRisk,
   performanceActionIds: string[],
+  cleanItemIds: string[] = [],
+  startupAction?: StartupApplyAction,
+  startupImpacts: StartupImpact[] = [],
+  gamerEnabled = false,
+  advancedActionIds: string[] = [],
   requiresExtraConfirmation = false,
 ): HermesProfile {
   return {
@@ -123,6 +155,11 @@ function profile(
     requiresConfirmation: true,
     requiresExtraConfirmation,
     performanceActionIds,
+    cleanItemIds,
+    startupAction,
+    startupImpacts,
+    gamerEnabled,
+    advancedActionIds,
     expectedImpact: ["Snapshot obrigatorio", "Rollback disponivel"],
     safeguards: ["Sem telemetria", "Sem servico residente", "Log local"],
   };

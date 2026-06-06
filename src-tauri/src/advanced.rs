@@ -219,7 +219,7 @@ pub async fn advanced_engine_apply(
         .map_err(|err| format!("Falha ao aplicar Advanced Engine em segundo plano: {err}"))?
 }
 
-fn advanced_engine_apply_blocking(
+pub(crate) fn advanced_engine_apply_blocking(
     app: AppHandle,
     request: Option<AdvancedApplyRequest>,
 ) -> Result<AdvancedApplyResult, String> {

@@ -1,5 +1,10 @@
-use crate::performance::{
-    self, PerformanceApplyActionResult, PerformanceApplyRequest, PerformanceApplyResult,
+use crate::{
+    advanced::{self, AdvancedApplyRequest},
+    clean::{self, CleanApplyRequest},
+    gamer::{self, GamerApplyRequest},
+    performance::{self, PerformanceApplyActionResult, PerformanceApplyRequest},
+    restore,
+    startup::{self, StartupApplyAction, StartupApplyRequest},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -34,6 +39,11 @@ pub struct HermesProfile {
     pub requires_confirmation: bool,
     pub requires_extra_confirmation: bool,
     pub performance_action_ids: Vec<String>,
+    pub clean_item_ids: Vec<String>,
+    pub startup_action: Option<StartupApplyAction>,
+    pub startup_impacts: Vec<startup::StartupImpact>,
+    pub gamer_enabled: bool,
+    pub advanced_action_ids: Vec<String>,
     pub expected_impact: Vec<String>,
     pub safeguards: Vec<String>,
 }
@@ -71,9 +81,30 @@ pub struct ProfileApplyResult {
     pub profile_name: String,
     pub dry_run: bool,
     pub snapshot_id: String,
+    pub snapshot_ids: Vec<String>,
     pub rollback_available: bool,
     pub applied_actions: Vec<PerformanceApplyActionResult>,
+    pub engine_results: Vec<ProfileEngineResult>,
     pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileEngineResult {
+    pub engine: String,
+    pub status: ProfileEngineStatus,
+    pub snapshot_id: Option<String>,
+    pub rollback_available: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ProfileEngineStatus {
+    DryRun,
+    Applied,
+    Skipped,
+    Failed,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,7 +144,16 @@ pub fn profiles_list() -> ProfilesCatalog {
 }
 
 #[tauri::command]
-pub fn profiles_apply(
+pub async fn profiles_apply(
+    app: AppHandle,
+    request: Option<ProfileApplyRequest>,
+) -> Result<ProfileApplyResult, String> {
+    tauri::async_runtime::spawn_blocking(move || profiles_apply_blocking(app, request))
+        .await
+        .map_err(|err| format!("Falha ao aplicar perfil em segundo plano: {err}"))?
+}
+
+fn profiles_apply_blocking(
     app: AppHandle,
     request: Option<ProfileApplyRequest>,
 ) -> Result<ProfileApplyResult, String> {
@@ -143,7 +183,132 @@ pub fn profiles_apply(
         },
     )?;
 
-    let performance_result = performance::performance_apply_controlled(
+    let mut engine_results = Vec::new();
+    let mut snapshot_ids = Vec::new();
+    let mut applied_actions = Vec::new();
+    let mut failed = false;
+
+    run_profile_performance(
+        &app,
+        &request,
+        &profile,
+        dry_run,
+        &mut engine_results,
+        &mut snapshot_ids,
+        &mut applied_actions,
+    );
+    failed = failed || has_profile_failure(&engine_results);
+
+    if !failed {
+        run_profile_advanced(
+            &app,
+            &request,
+            &profile,
+            dry_run,
+            &mut engine_results,
+            &mut snapshot_ids,
+        );
+        failed = failed || has_profile_failure(&engine_results);
+    }
+
+    if !failed {
+        run_profile_startup(
+            &app,
+            &request,
+            &profile,
+            dry_run,
+            &mut engine_results,
+            &mut snapshot_ids,
+        );
+        failed = failed || has_profile_failure(&engine_results);
+    }
+
+    if !failed {
+        run_profile_clean(
+            &app,
+            &request,
+            &profile,
+            dry_run,
+            &mut engine_results,
+            &mut snapshot_ids,
+        );
+        failed = failed || has_profile_failure(&engine_results);
+    }
+
+    if !failed {
+        run_profile_gamer(
+            &app,
+            &request,
+            &profile,
+            dry_run,
+            &mut engine_results,
+            &mut snapshot_ids,
+        );
+        failed = failed || has_profile_failure(&engine_results);
+    }
+
+    if failed && !dry_run {
+        rollback_profile_snapshots(&app, &profile, &snapshot_ids)?;
+    }
+
+    let message = if failed {
+        "Perfil interrompido por falha em uma engine. Rollback automatico foi tentado para snapshots ja criados.".to_string()
+    } else if dry_run {
+        "Perfil validado em dry-run pelas engines configuradas, com snapshots e rollback preparados quando aplicavel.".to_string()
+    } else {
+        "Perfil aplicado orquestrando engines Hermes com snapshot, log e rollback por engine."
+            .to_string()
+    };
+
+    append_profile_event(
+        &app,
+        if failed {
+            ProfileEventLevel::Error
+        } else {
+            ProfileEventLevel::Info
+        },
+        Some(profile.id.clone()),
+        &message,
+    )?;
+
+    Ok(ProfileApplyResult {
+        generated_at: now_timestamp(),
+        engine_version: "profiles-engine-v1".to_string(),
+        profile_id: profile.id,
+        profile_name: profile.name,
+        dry_run,
+        snapshot_id: snapshot_ids
+            .first()
+            .cloned()
+            .unwrap_or_else(|| "sem-snapshot".to_string()),
+        snapshot_ids,
+        rollback_available: engine_results
+            .iter()
+            .any(|result| result.rollback_available),
+        applied_actions,
+        engine_results,
+        message,
+    })
+}
+
+fn run_profile_performance(
+    app: &AppHandle,
+    request: &ProfileApplyRequest,
+    profile: &HermesProfile,
+    dry_run: bool,
+    engine_results: &mut Vec<ProfileEngineResult>,
+    snapshot_ids: &mut Vec<String>,
+    applied_actions: &mut Vec<PerformanceApplyActionResult>,
+) {
+    if profile.performance_action_ids.is_empty() {
+        engine_results.push(skipped_engine(
+            "Performance Engine",
+            "Sem acoes de performance neste perfil.",
+        ));
+        return;
+    }
+
+    match performance::performance_apply_controlled(
         app.clone(),
         Some(PerformanceApplyRequest {
             confirmed: request.confirmed,
@@ -151,21 +316,278 @@ pub fn profiles_apply(
             action_ids: Some(profile.performance_action_ids.clone()),
             reason: Some(format!("Perfil Hermes: {}", profile.name)),
         }),
-    )?;
+    ) {
+        Ok(result) => {
+            snapshot_ids.push(result.snapshot_id.clone());
+            applied_actions.extend(result.applied_actions.clone());
+            engine_results.push(engine_result(
+                "Performance Engine",
+                status_from_dry_run(dry_run),
+                Some(result.snapshot_id),
+                result.rollback_available,
+                result.message,
+            ));
+        }
+        Err(error) => engine_results.push(failed_engine("Performance Engine", error)),
+    }
+}
 
-    log_profile_result(&app, &profile, &performance_result)?;
+fn run_profile_advanced(
+    app: &AppHandle,
+    request: &ProfileApplyRequest,
+    profile: &HermesProfile,
+    dry_run: bool,
+    engine_results: &mut Vec<ProfileEngineResult>,
+    snapshot_ids: &mut Vec<String>,
+) {
+    if profile.advanced_action_ids.is_empty() {
+        engine_results.push(skipped_engine(
+            "Advanced Engine",
+            "Sem acoes avancadas neste perfil.",
+        ));
+        return;
+    }
 
-    Ok(ProfileApplyResult {
-        generated_at: now_timestamp(),
-        engine_version: "profiles-engine-v1".to_string(),
-        profile_id: profile.id,
-        profile_name: profile.name,
-        dry_run: performance_result.dry_run,
-        snapshot_id: performance_result.snapshot_id,
-        rollback_available: performance_result.rollback_available,
-        applied_actions: performance_result.applied_actions,
-        message: performance_result.message,
-    })
+    match advanced::advanced_engine_apply_blocking(
+        app.clone(),
+        Some(AdvancedApplyRequest {
+            confirmed: request.confirmed,
+            dry_run: Some(dry_run),
+            action_ids: Some(profile.advanced_action_ids.clone()),
+            extreme_mode: Some(profile.id == "extremo" && request.extreme_confirmed == Some(true)),
+        }),
+    ) {
+        Ok(result) => {
+            snapshot_ids.push(result.snapshot_id.clone());
+            engine_results.push(engine_result(
+                "Advanced Engine",
+                status_from_dry_run(dry_run),
+                Some(result.snapshot_id),
+                result.rollback_available,
+                result.message,
+            ));
+        }
+        Err(error) => {
+            if is_skippable_engine_error(&error) {
+                engine_results.push(skipped_engine("Advanced Engine", &error));
+            } else {
+                engine_results.push(failed_engine("Advanced Engine", error));
+            }
+        }
+    }
+}
+
+fn run_profile_startup(
+    app: &AppHandle,
+    request: &ProfileApplyRequest,
+    profile: &HermesProfile,
+    dry_run: bool,
+    engine_results: &mut Vec<ProfileEngineResult>,
+    snapshot_ids: &mut Vec<String>,
+) {
+    let Some(action) = profile.startup_action.clone() else {
+        engine_results.push(skipped_engine(
+            "Startup Engine",
+            "Sem controle de inicializacao neste perfil.",
+        ));
+        return;
+    };
+    if profile.startup_impacts.is_empty() {
+        engine_results.push(skipped_engine(
+            "Startup Engine",
+            "Sem impactos selecionados para inicializacao.",
+        ));
+        return;
+    }
+
+    match startup::startup_engine_apply_blocking(
+        app.clone(),
+        Some(StartupApplyRequest {
+            confirmed: request.confirmed,
+            dry_run: Some(dry_run),
+            action,
+            item_ids: None,
+            impacts: Some(profile.startup_impacts.clone()),
+        }),
+    ) {
+        Ok(result) => {
+            snapshot_ids.push(result.snapshot_id.clone());
+            engine_results.push(engine_result(
+                "Startup Engine",
+                status_from_dry_run(dry_run),
+                Some(result.snapshot_id),
+                result.rollback_available,
+                result.message,
+            ));
+        }
+        Err(error) => {
+            if is_skippable_engine_error(&error) {
+                engine_results.push(skipped_engine("Startup Engine", &error));
+            } else {
+                engine_results.push(failed_engine("Startup Engine", error));
+            }
+        }
+    }
+}
+
+fn run_profile_clean(
+    app: &AppHandle,
+    request: &ProfileApplyRequest,
+    profile: &HermesProfile,
+    dry_run: bool,
+    engine_results: &mut Vec<ProfileEngineResult>,
+    snapshot_ids: &mut Vec<String>,
+) {
+    if profile.clean_item_ids.is_empty() {
+        engine_results.push(skipped_engine("Clean Engine", "Sem limpeza neste perfil."));
+        return;
+    }
+
+    match clean::clean_engine_apply_blocking(
+        app.clone(),
+        Some(CleanApplyRequest {
+            confirmed: request.confirmed,
+            dry_run: Some(dry_run),
+            item_ids: Some(profile.clean_item_ids.clone()),
+        }),
+    ) {
+        Ok(result) => {
+            snapshot_ids.push(result.snapshot_id.clone());
+            engine_results.push(engine_result(
+                "Clean Engine",
+                status_from_dry_run(dry_run),
+                Some(result.snapshot_id),
+                result.rollback_available,
+                result.message,
+            ));
+        }
+        Err(error) => {
+            if is_skippable_engine_error(&error) {
+                engine_results.push(skipped_engine("Clean Engine", &error));
+            } else {
+                engine_results.push(failed_engine("Clean Engine", error));
+            }
+        }
+    }
+}
+
+fn run_profile_gamer(
+    app: &AppHandle,
+    request: &ProfileApplyRequest,
+    profile: &HermesProfile,
+    dry_run: bool,
+    engine_results: &mut Vec<ProfileEngineResult>,
+    snapshot_ids: &mut Vec<String>,
+) {
+    if !profile.gamer_enabled {
+        engine_results.push(skipped_engine(
+            "Gamer Engine",
+            "Modo Gamer nao faz parte deste perfil.",
+        ));
+        return;
+    }
+
+    match gamer::gamer_engine_apply_blocking(
+        app.clone(),
+        Some(GamerApplyRequest {
+            confirmed: request.confirmed,
+            dry_run: Some(dry_run),
+            process_ids: None,
+            include_performance_profile: Some(false),
+            game_profile_id: None,
+        }),
+    ) {
+        Ok(result) => {
+            snapshot_ids.push(result.snapshot_id.clone());
+            engine_results.push(engine_result(
+                "Gamer Engine",
+                status_from_dry_run(dry_run),
+                Some(result.snapshot_id),
+                result.rollback_available,
+                result.message,
+            ));
+        }
+        Err(error) => {
+            if is_skippable_engine_error(&error) {
+                engine_results.push(skipped_engine("Gamer Engine", &error));
+            } else {
+                engine_results.push(failed_engine("Gamer Engine", error));
+            }
+        }
+    }
+}
+
+fn rollback_profile_snapshots(
+    app: &AppHandle,
+    profile: &HermesProfile,
+    snapshot_ids: &[String],
+) -> Result<(), String> {
+    for snapshot_id in snapshot_ids.iter().rev() {
+        let message =
+            match restore::restore_apply_snapshot(app.clone(), snapshot_id.clone(), Some(false)) {
+                Ok(result) => format!("Rollback de perfil em {}: {}", snapshot_id, result.message),
+                Err(error) => format!("Rollback de perfil falhou em {}: {}", snapshot_id, error),
+            };
+        append_profile_event(
+            app,
+            ProfileEventLevel::Warning,
+            Some(profile.id.clone()),
+            &message,
+        )?;
+    }
+    Ok(())
+}
+
+fn has_profile_failure(results: &[ProfileEngineResult]) -> bool {
+    results
+        .iter()
+        .any(|result| result.status == ProfileEngineStatus::Failed)
+}
+
+fn status_from_dry_run(dry_run: bool) -> ProfileEngineStatus {
+    if dry_run {
+        ProfileEngineStatus::DryRun
+    } else {
+        ProfileEngineStatus::Applied
+    }
+}
+
+fn engine_result(
+    engine: &str,
+    status: ProfileEngineStatus,
+    snapshot_id: Option<String>,
+    rollback_available: bool,
+    message: String,
+) -> ProfileEngineResult {
+    ProfileEngineResult {
+        engine: engine.to_string(),
+        status,
+        snapshot_id,
+        rollback_available,
+        message,
+    }
+}
+
+fn skipped_engine(engine: &str, message: &str) -> ProfileEngineResult {
+    engine_result(
+        engine,
+        ProfileEngineStatus::Skipped,
+        None,
+        false,
+        message.to_string(),
+    )
+}
+
+fn failed_engine(engine: &str, message: String) -> ProfileEngineResult {
+    engine_result(engine, ProfileEngineStatus::Failed, None, false, message)
+}
+
+fn is_skippable_engine_error(error: &str) -> bool {
+    let normalized = error.to_ascii_lowercase();
+    normalized.contains("nenhum item")
+        || normalized.contains("nenhuma acao")
+        || normalized.contains("fallback")
+        || normalized.contains("indisponivel")
 }
 
 fn profile_definitions() -> Vec<HermesProfile> {
@@ -177,9 +599,15 @@ fn profile_definitions() -> Vec<HermesProfile> {
             ProfileRisk::Low,
             false,
             vec!["set-balanced-power-plan"],
+            vec![],
+            None,
+            vec![],
+            false,
+            vec!["list-power-plans"],
             vec![
                 "Mantem o Windows em modo equilibrado.".to_string(),
                 "Evita ajustes agressivos.".to_string(),
+                "Apenas registra planos de energia disponiveis.".to_string(),
             ],
         ),
         profile(
@@ -189,9 +617,15 @@ fn profile_definitions() -> Vec<HermesProfile> {
             ProfileRisk::Low,
             false,
             vec!["disable-transparency", "set-balanced-power-plan"],
+            vec!["temp", "cache"],
+            None,
+            vec![],
+            false,
+            vec!["flush-dns-cache"],
             vec![
                 "Reduz custo visual leve.".to_string(),
                 "Mantem energia equilibrada.".to_string(),
+                "Limpa temporarios/cache seguros com quarentena.".to_string(),
             ],
         ),
         profile(
@@ -206,9 +640,21 @@ fn profile_definitions() -> Vec<HermesProfile> {
                 "disable-visual-shadows",
                 "set-high-performance-power-plan",
             ],
+            vec!["temp", "cache", "thumbnails"],
+            Some(StartupApplyAction::Disable),
+            vec![startup::StartupImpact::High],
+            true,
+            vec![
+                "enable-game-mode",
+                "disable-game-dvr",
+                "flush-dns-cache",
+                "set-visual-effects-custom",
+            ],
             vec![
                 "Reduz efeitos visuais nao essenciais.".to_string(),
                 "Ativa Alto Desempenho quando disponivel.".to_string(),
+                "Sugere fechamento seguro de overlays/apps secundarios.".to_string(),
+                "Desabilita inicializacao de alto impacto quando controlavel.".to_string(),
             ],
         ),
         profile(
@@ -222,9 +668,15 @@ fn profile_definitions() -> Vec<HermesProfile> {
                 "disable-window-animations",
                 "set-power-saver-power-plan",
             ],
+            vec!["temp"],
+            Some(StartupApplyAction::Disable),
+            vec![startup::StartupImpact::High],
+            false,
+            vec!["disable-game-dvr", "flush-dns-cache"],
             vec![
                 "Reduz efeitos visuais leves.".to_string(),
                 "Ativa Economia de Energia quando disponivel.".to_string(),
+                "Reduz inicializacao pesada quando seguro.".to_string(),
             ],
         ),
         profile(
@@ -240,8 +692,27 @@ fn profile_definitions() -> Vec<HermesProfile> {
                 "set-high-performance-power-plan",
             ],
             vec![
+                "temp",
+                "cache",
+                "logs",
+                "thumbnails",
+                "windows-update-cache",
+            ],
+            Some(StartupApplyAction::Disable),
+            vec![startup::StartupImpact::High, startup::StartupImpact::Medium],
+            true,
+            vec![
+                "enable-game-mode",
+                "disable-game-dvr",
+                "disable-startup-delay",
+                "flush-dns-cache",
+                "list-power-plans",
+                "set-visual-effects-custom",
+            ],
+            vec![
                 "Aplica todos os ajustes disponiveis desta fase.".to_string(),
                 "Exige confirmacao extra antes da aplicacao real.".to_string(),
+                "Usa Clean, Startup, Gamer e Advanced em modo allowlist.".to_string(),
             ],
         ),
     ]
@@ -254,6 +725,11 @@ fn profile(
     risk: ProfileRisk,
     requires_extra_confirmation: bool,
     performance_action_ids: Vec<&str>,
+    clean_item_ids: Vec<&str>,
+    startup_action: Option<StartupApplyAction>,
+    startup_impacts: Vec<startup::StartupImpact>,
+    gamer_enabled: bool,
+    advanced_action_ids: Vec<&str>,
     expected_impact: Vec<String>,
 ) -> HermesProfile {
     HermesProfile {
@@ -269,6 +745,17 @@ fn profile(
             .into_iter()
             .map(ToString::to_string)
             .collect(),
+        clean_item_ids: clean_item_ids
+            .into_iter()
+            .map(ToString::to_string)
+            .collect(),
+        startup_action,
+        startup_impacts,
+        gamer_enabled,
+        advanced_action_ids: advanced_action_ids
+            .into_iter()
+            .map(ToString::to_string)
+            .collect(),
         expected_impact,
         safeguards: vec![
             "Snapshot obrigatorio antes de aplicar.".to_string(),
@@ -277,33 +764,6 @@ fn profile(
             "Sem telemetria ou processo residente.".to_string(),
         ],
     }
-}
-
-fn log_profile_result(
-    app: &AppHandle,
-    profile: &HermesProfile,
-    result: &PerformanceApplyResult,
-) -> Result<(), String> {
-    let failed = result.applied_actions.iter().any(|action| {
-        matches!(
-            action.status,
-            performance::PerformanceApplyActionStatus::Failed
-        )
-    });
-    let level = if failed {
-        ProfileEventLevel::Error
-    } else {
-        ProfileEventLevel::Info
-    };
-    append_profile_event(
-        app,
-        level,
-        Some(profile.id.clone()),
-        &format!(
-            "Perfil {} concluido. Snapshot: {}. Mensagem: {}",
-            profile.name, result.snapshot_id, result.message
-        ),
-    )
 }
 
 fn append_profile_event(

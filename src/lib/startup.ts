@@ -1,5 +1,7 @@
 export type StartupImpact = "high" | "medium" | "low";
-export type StartupStatus = "active" | "unknown";
+export type StartupStatus = "active" | "disabled" | "unknown";
+export type StartupApplyAction = "disable" | "enable";
+export type StartupApplyActionStatus = "dryRun" | "disabled" | "enabled" | "skipped" | "failed";
 
 export type StartupItem = {
   id: string;
@@ -10,6 +12,11 @@ export type StartupItem = {
   impact: StartupImpact;
   status: StartupStatus;
   canDisableLater: boolean;
+  canEnableLater: boolean;
+  controllable: boolean;
+  controlReason: string;
+  registryPath?: string;
+  registryValueName?: string;
 };
 
 export type StartupReport = {
@@ -17,10 +24,40 @@ export type StartupReport = {
   engineVersion: string;
   readOnly: boolean;
   totalItems: number;
+  disabledItems: number;
   highImpactCount: number;
   mediumImpactCount: number;
   lowImpactCount: number;
   items: StartupItem[];
+  warnings: string[];
+};
+
+export type StartupApplyRequest = {
+  confirmed: boolean;
+  dryRun?: boolean;
+  action: StartupApplyAction;
+  itemIds?: string[];
+  impacts?: StartupImpact[];
+};
+
+export type StartupApplyResult = {
+  generatedAt: string;
+  engineVersion: string;
+  dryRun: boolean;
+  action: StartupApplyAction;
+  snapshotId: string;
+  rollbackAvailable: boolean;
+  selectedItems: number;
+  changedItems: number;
+  skippedItems: number;
+  failedItems: number;
+  message: string;
+  actions: Array<{
+    itemId: string;
+    name: string;
+    status: StartupApplyActionStatus;
+    message: string;
+  }>;
   warnings: string[];
 };
 
@@ -29,6 +66,7 @@ export const fallbackStartupReport: StartupReport = {
   engineVersion: "startup-engine-fallback-v1",
   readOnly: true,
   totalItems: 4,
+  disabledItems: 0,
   highImpactCount: 2,
   mediumImpactCount: 2,
   lowImpactCount: 0,
@@ -55,6 +93,15 @@ export async function loadStartupReport(): Promise<StartupReport> {
   }
 }
 
+export async function applyStartupEngine(request: StartupApplyRequest): Promise<StartupApplyResult> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    throw new Error("Startup Engine exige o backend Tauri.");
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<StartupApplyResult>("startup_engine_apply", { request });
+}
+
 function fallbackItem(name: string, command: string, impact: StartupImpact): StartupItem {
   return {
     id: `fallback-${name.toLowerCase()}`,
@@ -65,5 +112,8 @@ function fallbackItem(name: string, command: string, impact: StartupImpact): Sta
     impact,
     status: "active",
     canDisableLater: true,
+    canEnableLater: false,
+    controllable: false,
+    controlReason: "Fallback somente leitura; nao controlavel.",
   };
 }

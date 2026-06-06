@@ -323,7 +323,7 @@ pub async fn gamer_restore_session(
         .map_err(|err| format!("Falha ao restaurar sessao gamer em segundo plano: {err}"))?
 }
 
-fn gamer_engine_apply_blocking(
+pub(crate) fn gamer_engine_apply_blocking(
     app: AppHandle,
     request: Option<GamerApplyRequest>,
 ) -> Result<GamerApplyResult, String> {

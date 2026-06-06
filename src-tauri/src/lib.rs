@@ -51,6 +51,7 @@ pub fn run() {
             restore::restore_list_snapshots,
             restore::restore_list_events,
             restore::restore_validate_snapshot,
+            startup::startup_engine_apply,
             startup::startup_engine_read
         ])
         .run(tauri::generate_context!())
