@@ -1,3 +1,5 @@
+import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+
 export type AdvisorAiSourceStatus = "available" | "partial" | "unavailable";
 export type AdvisorAiConfidence = "low" | "medium" | "high";
 export type AdvisorAiSeverity = "critical" | "high" | "medium" | "low" | "informational";
@@ -149,13 +151,23 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
 };
 
 export async function loadAdvisorAiReport(): Promise<AdvisorAiReport> {
+  const cached = readLocalReportCache<AdvisorAiReport>("advisor-ai-report");
+  if (cached) {
+    return cached;
+  }
+
+  return refreshAdvisorAiReport();
+}
+
+export async function refreshAdvisorAiReport(): Promise<AdvisorAiReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return unavailableAdvisorAiReport;
   }
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<AdvisorAiReport>("advisor_ai_engine_analyze");
+    const report = await invoke<AdvisorAiReport>("advisor_ai_engine_analyze");
+    return writeLocalReportCache("advisor-ai-report", report);
   } catch (error) {
     console.warn("Hermes AI local indisponivel.", error);
     return {

@@ -66,7 +66,8 @@ struct OptimizeNowHistory {
 
 #[tauri::command]
 pub fn optimize_now_plan(app: AppHandle) -> Result<OptimizeNowPlan, String> {
-    let diagnostic_report = diagnostic::collect_diagnostic_report();
+    let diagnostic_report = diagnostic::latest_cached_report(&app)?
+        .unwrap_or_else(diagnostic::collect_diagnostic_report);
     let advisor_report = advisor::advisor_pro_analyze(
         app.clone(),
         Some(advisor_input_from_diagnostic(&diagnostic_report)),

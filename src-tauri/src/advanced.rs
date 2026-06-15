@@ -1,7 +1,10 @@
-use crate::restore::{
-    self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
-    RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
-    RestoreRollbackActionStatus, RestoreRollbackActionType,
+use crate::{
+    restore::{
+        self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
+        RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
+        RestoreRollbackActionStatus, RestoreRollbackActionType,
+    },
+    safe_mode,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -214,17 +217,47 @@ pub async fn advanced_engine_apply(
     app: AppHandle,
     request: Option<AdvancedApplyRequest>,
 ) -> Result<AdvancedApplyResult, String> {
-    tauri::async_runtime::spawn_blocking(move || advanced_engine_apply_blocking(app, request))
+    tauri::async_runtime::spawn_blocking(move || advanced_engine_apply_blocking(app, request, true))
         .await
         .map_err(|err| format!("Falha ao aplicar Advanced Engine em segundo plano: {err}"))?
+}
+
+#[tauri::command]
+pub async fn advanced_engine_apply_optimize_now(
+    app: AppHandle,
+    request: Option<AdvancedApplyRequest>,
+) -> Result<AdvancedApplyResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        advanced_engine_apply_blocking(app, request, false)
+    })
+    .await
+    .map_err(|err| format!("Falha ao otimizar emulador no Otimizar Agora: {err}"))?
+}
+
+#[tauri::command]
+pub async fn advanced_set_graphics_high_performance_optimize_now(
+    app: AppHandle,
+    executable_path: String,
+) -> Result<AdvancedApplyResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        graphics_preference_apply_blocking(app, executable_path)
+    })
+    .await
+    .map_err(|err| format!("Falha ao priorizar Elementos Graficos: {err}"))?
 }
 
 pub(crate) fn advanced_engine_apply_blocking(
     app: AppHandle,
     request: Option<AdvancedApplyRequest>,
+    enforce_safe_test_mode: bool,
 ) -> Result<AdvancedApplyResult, String> {
     let request = request.unwrap_or_default();
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let requested_dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = if enforce_safe_test_mode {
+        safe_mode::force_dry_run(requested_dry_run)
+    } else {
+        requested_dry_run
+    };
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria antes de aplicar comandos avancados.".to_string());
     }
@@ -237,6 +270,33 @@ pub(crate) fn advanced_engine_apply_blocking(
     }
     validate_plans_for_apply(&plans, request.extreme_mode.unwrap_or(false))?;
 
+    execute_advanced_plans(app, plans, dry_run)
+}
+
+fn graphics_preference_apply_blocking(
+    app: AppHandle,
+    executable_path: String,
+) -> Result<AdvancedApplyResult, String> {
+    if !cfg!(target_os = "windows") {
+        return Err("Elementos Graficos exige Windows.".to_string());
+    }
+
+    let executable_path = normalize_graphics_preference_path(&executable_path)?;
+    let registry_path = "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences";
+    let previous_value = read_registry_string(registry_path, &executable_path)?;
+    let plans = vec![graphics_high_performance_plan(
+        &executable_path,
+        previous_value,
+    )];
+    validate_plans_for_apply(&plans, false)?;
+    execute_advanced_plans(app, plans, false)
+}
+
+fn execute_advanced_plans(
+    app: AppHandle,
+    plans: Vec<AdvancedPlan>,
+    dry_run: bool,
+) -> Result<AdvancedApplyResult, String> {
     let snapshot = restore::restore_create_snapshot(
         app.clone(),
         Some(build_snapshot_request(&plans, dry_run)),
@@ -246,7 +306,7 @@ pub(crate) fn advanced_engine_apply_blocking(
         AdvancedEventLevel::Info,
         Some(snapshot.id.clone()),
         if dry_run {
-            "Advanced Engine criou snapshot obrigatorio em dry-run."
+            "DRY-RUN | Advanced Engine criou snapshot obrigatorio em dry-run."
         } else {
             "Advanced Engine criou snapshot obrigatorio antes da aplicacao."
         },
@@ -259,7 +319,10 @@ pub(crate) fn advanced_engine_apply_blocking(
                 id: plan.action.id.clone(),
                 title: plan.action.title.clone(),
                 status: AdvancedActionStatus::DryRun,
-                message: "Dry-run validado. Nenhum comando foi executado.".to_string(),
+                message: format!(
+                    "{} — nenhum comando CMD/PowerShell/Registro foi executado.",
+                    safe_mode::mode_prefix(dry_run)
+                ),
             })
             .collect::<Vec<_>>()
     } else {
@@ -287,7 +350,15 @@ pub(crate) fn advanced_engine_apply_blocking(
             Err(error) => format!("Falha durante comandos avancados e rollback falhou: {error}"),
         }
     } else if dry_run {
-        "Comandos avancados validados em dry-run com snapshot e rollback preparados.".to_string()
+        format!(
+            "{} — comandos avancados validados com snapshot e rollback preparados. {}",
+            safe_mode::mode_prefix(dry_run),
+            if safe_mode::is_enabled() {
+                safe_mode::notice()
+            } else {
+                ""
+            }
+        )
     } else {
         "Comandos avancados aplicados com snapshot, log e rollback disponiveis.".to_string()
     };
@@ -666,6 +737,36 @@ fn set_power_plan_plan(
             previous_guid: state.power_plan_guid.clone(),
             previous_name: state.power_plan_name.clone(),
         }],
+    }
+}
+
+fn graphics_high_performance_plan(
+    executable_path: &str,
+    previous_value: Option<String>,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-fate-trigger-graphics-high-performance",
+            "Priorizar GPU do Fate Trigger",
+            "Define o Fate Trigger em Elementos Graficos do Windows como Alto desempenho no usuario atual.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Medium,
+            false,
+            false,
+            true,
+            true,
+            false,
+            display_optional_string(previous_value.as_deref()),
+            "Definir GpuPreference=2 para o executavel",
+            "PowerShell New-ItemProperty em HKCU DirectX\\UserGpuPreferences",
+        ),
+        operations: vec![registry_string(
+            "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
+            executable_path,
+            "GpuPreference=2;",
+            previous_value,
+            RestoreRollbackActionType::RestoreRegistryValue,
+        )],
     }
 }
 
@@ -1129,11 +1230,11 @@ fn validate_plans_for_apply(plans: &[AdvancedPlan], extreme_mode: bool) -> Resul
 
 fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
     match operation {
-        AdvancedOperation::RegistryDword { path, .. }
-        | AdvancedOperation::RegistryString { path, .. } => {
-            if !is_advanced_allowed_registry_path(path) {
+        AdvancedOperation::RegistryDword { path, name, .. }
+        | AdvancedOperation::RegistryString { path, name, .. } => {
+            if !is_advanced_allowed_registry_target(path, name) {
                 return Err(format!(
-                    "Registro fora da allowlist do Advanced Engine: {path}"
+                    "Registro fora da allowlist do Advanced Engine: {path}|{name}"
                 ));
             }
             Ok(())
@@ -1164,18 +1265,47 @@ fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
     }
 }
 
-fn is_advanced_allowed_registry_path(path: &str) -> bool {
+fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
     let normalized = path.replace('/', "\\").to_ascii_lowercase();
+    let normalized_name = name.to_ascii_lowercase();
+    if normalized == "hkcu:\\software\\microsoft\\directx\\usergpupreferences" {
+        return is_allowed_graphics_preference_executable_path(name);
+    }
+
     matches!(
-        normalized.as_str(),
-        "hkcu:\\software\\microsoft\\gamebar"
-            | "hkcu:\\system\\gameconfigstore"
-            | "hkcu:\\software\\microsoft\\windows\\currentversion\\gamedvr"
-            | "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\serialize"
-            | "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize"
-            | "hkcu:\\control panel\\desktop\\windowmetrics"
-            | "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced"
-            | "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\visualeffects"
+        (normalized.as_str(), normalized_name.as_str()),
+        ("hkcu:\\software\\microsoft\\gamebar", "autogamemodeenabled")
+            | ("hkcu:\\software\\microsoft\\gamebar", "allowautogamemode")
+            | ("hkcu:\\system\\gameconfigstore", "gamedvr_enabled")
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\gamedvr",
+                "appcaptureenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\serialize",
+                "startupdelayinmsec"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
+                "enabletransparency"
+            )
+            | ("hkcu:\\control panel\\desktop\\windowmetrics", "minanimate")
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "taskbaranimations"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "listviewalphaselect"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "listviewshadow"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\visualeffects",
+                "visualfxsetting"
+            )
     )
 }
 
@@ -1467,6 +1597,20 @@ fn set_registry_string(path: &str, name: &str, value: &str) -> Result<(), String
     run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS).map(|_| ())
 }
 
+fn read_registry_string(path: &str, name: &str) -> Result<Option<String>, String> {
+    let path_arg = ps_escape(path);
+    let name_arg = ps_escape(name);
+    let script = format!(
+        "$ErrorActionPreference = 'Stop'; $path = '{path_arg}'; $name = '{name_arg}'; if (-not (Test-Path $path)) {{ '__HERMES_MISSING__'; exit 0 }}; $item = Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue; if ($null -eq $item) {{ '__HERMES_MISSING__'; exit 0 }}; $property = $item.PSObject.Properties[$name]; if ($null -eq $property) {{ '__HERMES_MISSING__' }} else {{ [string]$property.Value }}"
+    );
+    let output = run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS)?;
+    if output.trim() == MISSING_REGISTRY_VALUE {
+        Ok(None)
+    } else {
+        Ok(Some(output))
+    }
+}
+
 fn run_native_command(program: &str, args: &[String]) -> Result<String, String> {
     if !is_allowed_native_command(program, args) {
         return Err("Comando CMD bloqueado pela allowlist Hermes.".to_string());
@@ -1529,6 +1673,27 @@ fn is_allowed_power_plan_guid(guid: &str) -> bool {
     ]
     .iter()
     .any(|allowed| guid.eq_ignore_ascii_case(allowed))
+}
+
+fn normalize_graphics_preference_path(path: &str) -> Result<String, String> {
+    let normalized = path.trim().replace('/', "\\");
+    if is_allowed_graphics_preference_executable_path(&normalized) {
+        Ok(normalized)
+    } else {
+        Err("Elementos Graficos aceita apenas executavel local do Fate Trigger.".to_string())
+    }
+}
+
+fn is_allowed_graphics_preference_executable_path(path: &str) -> bool {
+    let normalized = path.replace('/', "\\").to_ascii_lowercase();
+    let bytes = normalized.as_bytes();
+    normalized.ends_with(".exe")
+        && bytes.len() > 6
+        && bytes.get(1) == Some(&b':')
+        && bytes.get(2) == Some(&b'\\')
+        && (normalized.contains("fate trigger")
+            || normalized.contains("fatetrigger")
+            || normalized.contains("fate_trigger"))
 }
 
 fn append_advanced_event(
@@ -1741,6 +1906,13 @@ try {
   }
 } catch {}
 
+$minAnimateValue = $null
+try {
+  $minAnimateValue = [string](Get-ItemProperty -Path $windowMetricsPath -Name 'MinAnimate' -ErrorAction SilentlyContinue).MinAnimate
+} catch {
+  $minAnimateValue = $null
+}
+
 [pscustomobject]@{
   autoGameModeEnabled = Get-Dword $gameBarPath 'AutoGameModeEnabled'
   allowAutoGameMode = Get-Dword $gameBarPath 'AllowAutoGameMode'
@@ -1748,7 +1920,7 @@ try {
   appCaptureEnabled = Get-Dword $gameDvrPath 'AppCaptureEnabled'
   startupDelayInMsec = Get-Dword $serializePath 'StartupDelayInMSec'
   enableTransparency = Get-Dword $personalizePath 'EnableTransparency'
-  minAnimate = try { [string](Get-ItemProperty -Path $windowMetricsPath -Name 'MinAnimate' -ErrorAction SilentlyContinue).MinAnimate } catch { $null }
+  minAnimate = $minAnimateValue
   taskbarAnimations = Get-Dword $advancedPath 'TaskbarAnimations'
   listviewAlphaSelect = Get-Dword $advancedPath 'ListviewAlphaSelect'
   listviewShadow = Get-Dword $advancedPath 'ListviewShadow'
@@ -1757,3 +1929,36 @@ try {
   powerPlanName = $powerPlanName
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn advanced_allowlist_blocks_windows_theme_values() {
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "EnableTransparency"
+        ));
+        assert!(!is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "AppsUseLightTheme"
+        ));
+        assert!(!is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "SystemUsesLightTheme"
+        ));
+    }
+
+    #[test]
+    fn advanced_allowlist_scopes_graphics_preference_to_fate_trigger() {
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
+            "D:\\Games\\FateTrigger\\FateTrigger.exe"
+        ));
+        assert!(!is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
+            "C:\\Windows\\System32\\notepad.exe"
+        ));
+    }
+}

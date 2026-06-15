@@ -1,4 +1,4 @@
-use crate::diagnostic;
+use crate::{anti_cheat, diagnostic};
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf, time::SystemTime};
 use tauri::{AppHandle, Manager};
@@ -28,6 +28,7 @@ pub struct BenchmarkComponents {
     pub startup: BenchmarkComponentScore,
     pub power: BenchmarkComponentScore,
     pub security: BenchmarkComponentScore,
+    pub anti_cheat: BenchmarkComponentScore,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,8 +53,16 @@ pub async fn benchmark_engine_run(app: AppHandle) -> Result<BenchmarkReport, Str
         .map_err(|err| format!("Falha ao executar benchmark em segundo plano: {err}"))?
 }
 
+#[tauri::command]
+pub async fn benchmark_engine_read_cached(app: AppHandle) -> Result<BenchmarkReport, String> {
+    tauri::async_runtime::spawn_blocking(move || benchmark_engine_read_cached_blocking(app))
+        .await
+        .map_err(|err| format!("Falha ao ler benchmark salvo em segundo plano: {err}"))?
+}
+
 fn benchmark_engine_run_blocking(app: AppHandle) -> Result<BenchmarkReport, String> {
     let diagnostic = diagnostic::collect_diagnostic_report();
+    diagnostic::save_diagnostic_report(&app, diagnostic.clone())?;
     let history_path = benchmark_history_path(&app)?;
     let mut history = read_history(&history_path);
     let previous_score = history.reports.first().map(|report| report.score);
@@ -64,6 +73,25 @@ fn benchmark_engine_run_blocking(app: AppHandle) -> Result<BenchmarkReport, Stri
     write_history(&history_path, &history)?;
 
     Ok(report)
+}
+
+fn benchmark_engine_read_cached_blocking(app: AppHandle) -> Result<BenchmarkReport, String> {
+    let history_path = benchmark_history_path(&app)?;
+    let history = read_history(&history_path);
+
+    if let Some(report) = history.reports.first() {
+        return Ok(report.clone());
+    }
+
+    if let Some(diagnostic) = diagnostic::latest_cached_report(&app)? {
+        let report = build_report(&diagnostic, None);
+        let mut history = BenchmarkHistory::default();
+        history.reports.insert(0, report.clone());
+        write_history(&history_path, &history)?;
+        return Ok(report);
+    }
+
+    benchmark_engine_run_blocking(app)
 }
 
 fn build_report(
@@ -77,6 +105,7 @@ fn build_report(
         startup: startup_score(diagnostic),
         power: power_score(diagnostic),
         security: security_score(diagnostic),
+        anti_cheat: anti_cheat_score(),
     };
 
     let score = weighted_score(&components);
@@ -187,6 +216,11 @@ fn security_score(diagnostic: &diagnostic::DiagnosticReport) -> BenchmarkCompone
     component(score, "Seguranca", diagnostic.defender.status.clone(), 10)
 }
 
+fn anti_cheat_score() -> BenchmarkComponentScore {
+    let (score, status) = anti_cheat::collect_anti_cheat_component_score();
+    component(score, "Anti-Cheat", status, 10)
+}
+
 fn component(
     score: u8,
     label: impl Into<String>,
@@ -207,13 +241,15 @@ fn weighted_score(components: &BenchmarkComponents) -> u8 {
         + components.disk.score as u32 * components.disk.weight as u32
         + components.startup.score as u32 * components.startup.weight as u32
         + components.power.score as u32 * components.power.weight as u32
-        + components.security.score as u32 * components.security.weight as u32;
+        + components.security.score as u32 * components.security.weight as u32
+        + components.anti_cheat.score as u32 * components.anti_cheat.weight as u32;
     let weight_total = components.cpu.weight as u32
         + components.memory.weight as u32
         + components.disk.weight as u32
         + components.startup.weight as u32
         + components.power.weight as u32
-        + components.security.weight as u32;
+        + components.security.weight as u32
+        + components.anti_cheat.weight as u32;
 
     ((weighted_total as f32 / weight_total as f32).round() as u8).clamp(0, 100)
 }
@@ -272,6 +308,10 @@ fn observations(
             "Plano de energia atual: {}.",
             diagnostic.power_plan.active_scheme_name
         ));
+    }
+
+    if components.anti_cheat.score < 70 {
+        observations.push("Anti-Cheat tem pontos de compatibilidade para revisar.".to_string());
     }
 
     observations

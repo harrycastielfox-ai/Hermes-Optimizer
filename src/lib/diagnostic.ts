@@ -47,6 +47,20 @@ export type DiagnosticReport = {
     driverVersion: string;
     adapterRamGb?: number;
   };
+  display: {
+    resolution: string;
+    refreshRateHz?: number;
+    status: string;
+  };
+  network: {
+    ssid: string;
+    adapterName: string;
+    signalPercent?: number;
+    gateway: string;
+    pingMs?: number;
+    pingStatus: string;
+    status: string;
+  };
   temperature: {
     available: boolean;
     celsius?: number;
@@ -136,6 +150,20 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
     name: "Intel Iris Xe Graphics",
     driverVersion: "31.0.101.5445",
   },
+  display: {
+    resolution: "1920 x 1080",
+    refreshRateHz: 120,
+    status: "Alta taxa",
+  },
+  network: {
+    ssid: "Wi-Fi",
+    adapterName: "Wi-Fi",
+    signalPercent: 92,
+    gateway: "192.168.0.1",
+    pingMs: 4,
+    pingStatus: "Excelente",
+    status: "Conectado, forte",
+  },
   temperature: {
     available: false,
     status: "Indisponivel",
@@ -178,18 +206,85 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
   warnings: [],
 };
 
+let diagnosticMemoryCache: DiagnosticReport | null = null;
+let diagnosticLoadPromise: Promise<DiagnosticReport> | null = null;
+let diagnosticLivePromise: Promise<DiagnosticReport> | null = null;
+let diagnosticLiveRefreshedAt = 0;
+const LIVE_REFRESH_TTL_MS = 15_000;
+
 export async function loadDiagnosticReport(): Promise<DiagnosticReport> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return fallbackDiagnosticReport;
+  }
+
+  if (diagnosticMemoryCache) {
+    return diagnosticMemoryCache;
+  }
+
+  diagnosticLoadPromise ??= import("@tauri-apps/api/core")
+    .then(({ invoke }) => invoke<DiagnosticReport>("diagnostic_engine_read_cached"))
+    .then((report) => {
+      diagnosticMemoryCache = report;
+      return report;
+    })
+    .catch((error) => {
+      console.warn("Diagnostico salvo indisponivel, usando fallback estatico.", error);
+      return fallbackDiagnosticReport;
+    })
+    .finally(() => {
+      diagnosticLoadPromise = null;
+    });
+
+  return diagnosticLoadPromise;
+}
+
+export async function refreshDiagnosticReport(): Promise<DiagnosticReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return fallbackDiagnosticReport;
   }
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<DiagnosticReport>("diagnostic_engine_read");
+    const report = await invoke<DiagnosticReport>("diagnostic_engine_read");
+    diagnosticMemoryCache = report;
+    diagnosticLiveRefreshedAt = Date.now();
+    return report;
   } catch (error) {
-    console.warn("Diagnostic Engine Real indisponivel, usando fallback estatico.", error);
+    console.warn("Atualizacao real do diagnostico indisponivel, usando fallback estatico.", error);
     return fallbackDiagnosticReport;
   }
+}
+
+export async function refreshLiveDiagnosticReport(force = false): Promise<DiagnosticReport> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return diagnosticMemoryCache ?? fallbackDiagnosticReport;
+  }
+
+  const now = Date.now();
+  if (!force && diagnosticMemoryCache && now - diagnosticLiveRefreshedAt < LIVE_REFRESH_TTL_MS) {
+    return diagnosticMemoryCache;
+  }
+
+  if (diagnosticLivePromise) {
+    return diagnosticLivePromise;
+  }
+
+  diagnosticLivePromise = import("@tauri-apps/api/core")
+    .then(({ invoke }) => invoke<DiagnosticReport>("diagnostic_engine_refresh_live"))
+    .then((report) => {
+      diagnosticMemoryCache = report;
+      diagnosticLiveRefreshedAt = Date.now();
+      return report;
+    })
+    .catch((error) => {
+      console.warn("Atualizacao leve do diagnostico indisponivel; mantendo dados salvos.", error);
+      return diagnosticMemoryCache ?? fallbackDiagnosticReport;
+    })
+    .finally(() => {
+      diagnosticLivePromise = null;
+    });
+
+  return diagnosticLivePromise;
 }
 
 export function advisorInputFromDiagnostic(report: DiagnosticReport): AdvisorInput {

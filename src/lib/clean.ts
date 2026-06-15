@@ -1,3 +1,6 @@
+import { forceSafeDryRun } from "@/lib/safe-mode";
+import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+
 export type CleanScanItem = {
   id: string;
   label: string;
@@ -97,20 +100,35 @@ export const fallbackCleanScanReport: CleanScanReport = {
     fallbackItem("cache", "Cache", "Caches seguros de apps e navegadores", 0.9),
     fallbackItem("logs", "Logs", "Logs antigos do sistema", 0.4),
     fallbackItem("thumbnails", "Miniaturas", "Cache de miniaturas do Explorer", 0.2),
-    fallbackItem("windows-update-cache", "Windows Update Cache", "Pacotes baixados pelo Windows Update", 1.7),
+    fallbackItem(
+      "windows-update-cache",
+      "Windows Update Cache",
+      "Pacotes baixados pelo Windows Update",
+      1.7,
+    ),
   ],
   protectedLocations: ["Downloads", "Documentos", "Desktop", "Imagens", "Videos"],
   warnings: [],
 };
 
 export async function loadCleanScanReport(): Promise<CleanScanReport> {
+  const cached = readLocalReportCache<CleanScanReport>("clean-scan");
+  if (cached) {
+    return cached;
+  }
+
+  return refreshCleanScanReport();
+}
+
+export async function refreshCleanScanReport(): Promise<CleanScanReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return fallbackCleanScanReport;
   }
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<CleanScanReport>("clean_engine_scan");
+    const report = await invoke<CleanScanReport>("clean_engine_scan");
+    return writeLocalReportCache("clean-scan", report);
   } catch (error) {
     console.warn("Clean Engine Scan indisponivel, usando fallback local.", error);
     return fallbackCleanScanReport;
@@ -123,7 +141,20 @@ export async function applyCleanEngine(request: CleanApplyRequest): Promise<Clea
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<CleanApplyResult>("clean_engine_apply", { request });
+  return await invoke<CleanApplyResult>("clean_engine_apply", {
+    request: forceSafeDryRun(request),
+  });
+}
+
+export async function applyOptimizeNowCleanEngine(
+  request: CleanApplyRequest,
+): Promise<CleanApplyResult> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    throw new Error("Clean Engine real exige o backend Tauri.");
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<CleanApplyResult>("clean_engine_apply_optimize_now", { request });
 }
 
 export async function purgeExpiredCleanQuarantine(
@@ -134,7 +165,9 @@ export async function purgeExpiredCleanQuarantine(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<CleanQuarantinePurgeResult>("clean_quarantine_purge_expired", { request });
+  return await invoke<CleanQuarantinePurgeResult>("clean_quarantine_purge_expired", {
+    request: forceSafeDryRun(request),
+  });
 }
 
 function fallbackItem(id: string, label: string, description: string, gb: number): CleanScanItem {

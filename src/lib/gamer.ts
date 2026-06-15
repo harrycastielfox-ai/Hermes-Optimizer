@@ -1,5 +1,6 @@
 import type { PerformanceApplyResult } from "@/lib/performance";
 import type { RestoreApplyResult } from "@/lib/restore";
+import { forceSafeDryRun } from "@/lib/safe-mode";
 
 export type GamerProcessCategory =
   | "game"
@@ -197,7 +198,7 @@ export async function applyGamerEngine(request: GamerApplyRequest): Promise<Game
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<GamerApplyResult>("gamer_engine_apply", { request });
+  return await invoke<GamerApplyResult>("gamer_engine_apply", { request: forceSafeDryRun(request) });
 }
 
 export async function listGamerProfiles(): Promise<GamerProfileList> {
@@ -239,7 +240,7 @@ export async function restoreGamerSession(request: GamerRestoreSessionRequest): 
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<GamerRestoreSessionResult>("gamer_restore_session", { request });
+  return await invoke<GamerRestoreSessionResult>("gamer_restore_session", { request: forceSafeDryRun({ ...request, confirmed: request.confirmed ?? false }) });
 }
 
 function process(

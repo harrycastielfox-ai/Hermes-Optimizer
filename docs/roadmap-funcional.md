@@ -215,6 +215,7 @@ Itens comerciais e tecnicos tambem permanecem planejados:
 - Restore Center Completo.
 - IA Local Hermes.
 - Licenciamento Comercial.
+- Autenticacao e licenciamento LigaHub/WooCommerce via MU-plugin WordPress real. Requisito salvo em `docs/futuro-ligahub-auth.md`.
 
 ## Comandos Windows/CMD - Politica
 

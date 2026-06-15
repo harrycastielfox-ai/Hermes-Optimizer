@@ -1,7 +1,10 @@
-use crate::restore::{
-    self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
-    RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
-    RestoreRollbackActionStatus, RestoreRollbackActionType,
+use crate::{
+    restore::{
+        self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
+        RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
+        RestoreRollbackActionStatus, RestoreRollbackActionType,
+    },
+    safe_mode,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -213,9 +216,19 @@ pub async fn clean_engine_apply(
     app: AppHandle,
     request: Option<CleanApplyRequest>,
 ) -> Result<CleanApplyResult, String> {
-    tauri::async_runtime::spawn_blocking(move || clean_engine_apply_blocking(app, request))
+    tauri::async_runtime::spawn_blocking(move || clean_engine_apply_blocking(app, request, true))
         .await
         .map_err(|err| format!("Falha ao executar Clean Engine em segundo plano: {err}"))?
+}
+
+#[tauri::command]
+pub async fn clean_engine_apply_optimize_now(
+    app: AppHandle,
+    request: Option<CleanApplyRequest>,
+) -> Result<CleanApplyResult, String> {
+    tauri::async_runtime::spawn_blocking(move || clean_engine_apply_blocking(app, request, false))
+        .await
+        .map_err(|err| format!("Falha ao executar limpeza do Otimizar Agora: {err}"))?
 }
 
 #[tauri::command]
@@ -225,7 +238,7 @@ pub async fn clean_quarantine_purge_expired(
 ) -> Result<CleanQuarantinePurgeResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let request = request.unwrap_or_default();
-        let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+        let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
         purge_expired_quarantine(&app, dry_run, request.confirmed)
     })
     .await
@@ -235,9 +248,15 @@ pub async fn clean_quarantine_purge_expired(
 pub(crate) fn clean_engine_apply_blocking(
     app: AppHandle,
     request: Option<CleanApplyRequest>,
+    enforce_safe_test_mode: bool,
 ) -> Result<CleanApplyResult, String> {
     let request = request.unwrap_or_default();
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let requested_dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = if enforce_safe_test_mode {
+        safe_mode::force_dry_run(requested_dry_run)
+    } else {
+        requested_dry_run
+    };
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria antes de aplicar limpeza real.".to_string());
     }
@@ -271,7 +290,7 @@ pub(crate) fn clean_engine_apply_blocking(
         CleanEventLevel::Info,
         Some(snapshot.id.clone()),
         if dry_run {
-            "Clean Engine iniciou dry-run com snapshot obrigatorio."
+            "DRY-RUN | Clean Engine iniciou dry-run com snapshot obrigatorio."
         } else {
             "Clean Engine iniciou quarentena reversivel apos confirmacao."
         },
@@ -286,7 +305,10 @@ pub(crate) fn clean_engine_apply_blocking(
                 backup_path: Some(path_text(&plan.backup_path)),
                 bytes: plan.bytes,
                 status: CleanApplyActionStatus::DryRun,
-                message: "Dry-run validado. Nenhum arquivo foi movido.".to_string(),
+                message: format!(
+                    "{} — nenhum arquivo foi movido.",
+                    safe_mode::mode_prefix(dry_run)
+                ),
             })
             .collect::<Vec<_>>()
     } else {
@@ -830,7 +852,15 @@ fn clean_apply_message(
     failed_entries: usize,
 ) -> String {
     if dry_run {
-        "Clean Engine validada em dry-run. Nenhum arquivo foi movido.".to_string()
+        format!(
+            "{} — Clean Engine validada. Nenhum arquivo foi movido. {}",
+            safe_mode::mode_prefix(dry_run),
+            if safe_mode::is_enabled() {
+                safe_mode::notice()
+            } else {
+                ""
+            }
+        )
     } else if failed_entries > 0 {
         format!(
             "Clean Engine moveu {} item(ns) para quarentena, pulou {} e falhou em {}.",

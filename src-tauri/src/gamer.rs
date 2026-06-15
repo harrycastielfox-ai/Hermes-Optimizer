@@ -5,6 +5,7 @@ use crate::{
         RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
         RestoreRollbackActionStatus, RestoreRollbackActionType,
     },
+    safe_mode,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -20,6 +21,7 @@ use tauri::{AppHandle, Manager};
 const GAMER_COMMAND_TIMEOUT_SECONDS: u64 = 10;
 const MAX_GAMER_EVENTS: usize = 100;
 const MAX_GAMER_PROFILES: usize = 50;
+const GAMER_PERFORMANCE_ACTION_IDS: &[&str] = &["set-high-performance-power-plan"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -328,7 +330,7 @@ pub(crate) fn gamer_engine_apply_blocking(
     request: Option<GamerApplyRequest>,
 ) -> Result<GamerApplyResult, String> {
     let request = request.unwrap_or_default();
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
     let include_performance_profile = request.include_performance_profile.unwrap_or(true);
 
     if !dry_run && !request.confirmed {
@@ -355,7 +357,7 @@ pub(crate) fn gamer_engine_apply_blocking(
         GamerEventLevel::Info,
         Some(snapshot.id.clone()),
         if dry_run {
-            "Gamer Engine iniciou dry-run com snapshot obrigatorio."
+            "DRY-RUN | Gamer Engine iniciou dry-run com snapshot obrigatorio."
         } else {
             "Gamer Engine iniciou aplicacao controlada apos confirmacao."
         },
@@ -367,12 +369,12 @@ pub(crate) fn gamer_engine_apply_blocking(
             Some(PerformanceApplyRequest {
                 confirmed: request.confirmed,
                 dry_run: Some(dry_run),
-                action_ids: Some(vec![
-                    "disable-transparency".to_string(),
-                    "disable-window-animations".to_string(),
-                    "disable-visual-shadows".to_string(),
-                    "set-high-performance-power-plan".to_string(),
-                ]),
+                action_ids: Some(
+                    GAMER_PERFORMANCE_ACTION_IDS
+                        .iter()
+                        .map(|item| item.to_string())
+                        .collect(),
+                ),
                 reason: Some("Gamer Engine".to_string()),
             }),
         )?)
@@ -387,7 +389,10 @@ pub(crate) fn gamer_engine_apply_blocking(
                 pid: process.pid,
                 name: process.display_name.clone(),
                 status: GamerCloseStatus::DryRun,
-                message: "Dry-run validado. Processo nao foi fechado.".to_string(),
+                message: format!(
+                    "{} — processo nao foi fechado.",
+                    safe_mode::mode_prefix(dry_run)
+                ),
             })
             .collect::<Vec<_>>()
     } else {
@@ -406,7 +411,15 @@ pub(crate) fn gamer_engine_apply_blocking(
         )?;
         "Gamer Engine aplicada parcialmente. Veja os logs e o snapshot para reversao.".to_string()
     } else if dry_run {
-        "Gamer Engine validada em dry-run com snapshot, logs e rollback preparados.".to_string()
+        format!(
+            "{} — Gamer Engine validada com snapshot, logs e rollback preparados. {}",
+            safe_mode::mode_prefix(dry_run),
+            if safe_mode::is_enabled() {
+                safe_mode::notice()
+            } else {
+                ""
+            }
+        )
     } else {
         "Gamer Engine aplicada com fechamento gracioso e rollback disponivel.".to_string()
     };
@@ -949,9 +962,11 @@ fn gamer_restore_session_blocking(
     app: AppHandle,
     request: GamerRestoreSessionRequest,
 ) -> Result<GamerRestoreSessionResult, String> {
-    let dry_run = request
-        .dry_run
-        .unwrap_or(!request.confirmed.unwrap_or(false));
+    let dry_run = safe_mode::force_dry_run(
+        request
+            .dry_run
+            .unwrap_or(!request.confirmed.unwrap_or(false)),
+    );
     if !dry_run && !request.confirmed.unwrap_or(false) {
         return Err("Confirmacao obrigatoria antes de restaurar sessao gamer.".to_string());
     }
@@ -1014,8 +1029,9 @@ fn build_gamer_snapshot_request(
             id: "gamer-performance-profile".to_string(),
             engine: "Gamer Engine".to_string(),
             title: "Aplicar ajustes de desempenho gamer".to_string(),
-            description: "Encaminha o perfil gamer para a Performance Engine com snapshot proprio."
-                .to_string(),
+            description:
+                "Encaminha somente plano de energia gamer; efeitos visuais ficam separados e opt-in."
+                    .to_string(),
             risk: RestoreRiskLevel::Medium,
             will_modify_system: true,
             requires_admin: false,
@@ -1428,6 +1444,14 @@ fn critical_process_names() -> &'static [&'static str] {
 
 fn game_patterns() -> &'static [&'static str] {
     &[
+        "fate trigger",
+        "fatetrigger",
+        "fate_trigger",
+        "hd-player",
+        "bluestacks",
+        "bstk",
+        "msi app player",
+        "msiappplayer",
         "valorant",
         "leagueclient",
         "r5apex",
@@ -1745,3 +1769,25 @@ $items = @($allProcesses | ForEach-Object {
   processes = @($items | Sort-Object -Property memoryMb -Descending | Select-Object -First 80)
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gamer_performance_actions_do_not_include_visual_tweaks() {
+        let blocked = [
+            "disable-transparency",
+            "disable-window-animations",
+            "disable-visual-shadows",
+            "set-visual-effects-custom",
+        ];
+
+        for action in blocked {
+            assert!(
+                !GAMER_PERFORMANCE_ACTION_IDS.contains(&action),
+                "Gamer Engine must keep visual action {action} opt-in and separate"
+            );
+        }
+    }
+}

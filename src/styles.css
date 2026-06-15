@@ -116,8 +116,40 @@
   --sidebar-ring: oklch(0.65 0.22 260);
 }
 
+html[data-hermes-accent="gold"] {
+  --primary: oklch(0.62 0.15 78);
+  --primary-foreground: oklch(0.2 0.035 70);
+  --primary-soft: oklch(0.95 0.055 82);
+  --accent: oklch(0.95 0.045 82);
+  --accent-foreground: oklch(0.35 0.085 75);
+  --ring: oklch(0.62 0.15 78);
+  --info: oklch(0.66 0.13 82);
+  --sidebar-primary: oklch(0.62 0.15 78);
+  --sidebar-primary-foreground: oklch(0.2 0.035 70);
+  --sidebar-accent: oklch(0.95 0.045 82);
+  --sidebar-accent-foreground: oklch(0.35 0.085 75);
+  --sidebar-ring: oklch(0.62 0.15 78);
+}
+
+html.dark[data-hermes-accent="gold"] {
+  --primary: oklch(0.76 0.15 82);
+  --primary-foreground: oklch(0.19 0.035 70);
+  --primary-soft: oklch(0.31 0.075 76);
+  --accent: oklch(0.29 0.055 75);
+  --accent-foreground: oklch(0.96 0.025 86);
+  --ring: oklch(0.76 0.15 82);
+  --info: oklch(0.74 0.13 82);
+  --sidebar-primary: oklch(0.76 0.15 82);
+  --sidebar-primary-foreground: oklch(0.19 0.035 70);
+  --sidebar-accent: oklch(0.29 0.055 75);
+  --sidebar-accent-foreground: oklch(0.96 0.025 86);
+  --sidebar-ring: oklch(0.76 0.15 82);
+}
+
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -127,12 +159,35 @@
 
 @utility lightning-bg {
   background-image:
-    radial-gradient(ellipse at top left, color-mix(in oklab, var(--primary) 8%, transparent), transparent 60%),
-    radial-gradient(ellipse at bottom right, color-mix(in oklab, var(--primary) 6%, transparent), transparent 60%),
+    radial-gradient(
+      ellipse at top left,
+      color-mix(in oklab, var(--primary) 8%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at bottom right,
+      color-mix(in oklab, var(--primary) 6%, transparent),
+      transparent 60%
+    ),
     linear-gradient(180deg, oklch(0.99 0.003 250), oklch(0.97 0.008 250));
 }
 
 @layer components {
+  .dark .lightning-bg {
+    background-image:
+      radial-gradient(
+        ellipse at top left,
+        color-mix(in oklab, var(--primary) 16%, transparent),
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse at bottom right,
+        color-mix(in oklab, var(--info) 12%, transparent),
+        transparent 58%
+      ),
+      linear-gradient(180deg, oklch(0.18 0.03 260), oklch(0.13 0.025 260));
+  }
+
   .sidebar-texture {
     position: relative;
     isolation: isolate;
@@ -140,8 +195,50 @@
     background:
       radial-gradient(circle at 35% 0%, rgba(59, 130, 246, 0.14), transparent 34%),
       radial-gradient(circle at 88% 74%, rgba(37, 99, 235, 0.12), transparent 36%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.97) 52%, rgba(241, 247, 255, 0.94) 100%);
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.98) 0%,
+        rgba(248, 251, 255, 0.97) 52%,
+        rgba(241, 247, 255, 0.94) 100%
+      );
     box-shadow: inset -1px 0 0 rgba(148, 163, 184, 0.22);
+  }
+
+  .dark .sidebar-texture {
+    background:
+      radial-gradient(circle at 35% 0%, rgba(59, 130, 246, 0.22), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(37, 99, 235, 0.16), transparent 36%),
+      linear-gradient(
+        180deg,
+        rgba(19, 28, 48, 0.98) 0%,
+        rgba(15, 23, 42, 0.97) 52%,
+        rgba(12, 18, 34, 0.96) 100%
+      );
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+  }
+
+  html[data-hermes-accent="gold"] .sidebar-texture {
+    background:
+      radial-gradient(circle at 35% 0%, rgba(212, 175, 55, 0.2), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(180, 135, 28, 0.14), transparent 36%),
+      linear-gradient(
+        180deg,
+        rgba(255, 254, 249, 0.98) 0%,
+        rgba(255, 251, 238, 0.97) 52%,
+        rgba(250, 244, 224, 0.94) 100%
+      );
+  }
+
+  html.dark[data-hermes-accent="gold"] .sidebar-texture {
+    background:
+      radial-gradient(circle at 35% 0%, rgba(212, 175, 55, 0.24), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(180, 135, 28, 0.18), transparent 36%),
+      linear-gradient(
+        180deg,
+        rgba(32, 28, 20, 0.98) 0%,
+        rgba(24, 22, 18, 0.97) 52%,
+        rgba(18, 17, 15, 0.96) 100%
+      );
   }
 
   .sidebar-texture::before {
@@ -163,13 +260,50 @@
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(90deg, rgba(255, 255, 255, 0.70), rgba(255, 255, 255, 0.30) 48%, rgba(255, 255, 255, 0.62)),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 18%, rgba(255, 255, 255, 0.24) 72%);
+      linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 255, 255, 0.3) 48%,
+        rgba(255, 255, 255, 0.62)
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.34),
+        transparent 18%,
+        rgba(255, 255, 255, 0.24) 72%
+      );
     pointer-events: none;
+  }
+
+  .dark .sidebar-texture::before {
+    opacity: 0.46;
+    filter: blur(0.15px);
+  }
+
+  html[data-hermes-accent="gold"] .sidebar-texture::before {
+    filter: sepia(1) saturate(1.7) hue-rotate(355deg) brightness(0.92);
+  }
+
+  .dark .sidebar-texture::after {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(15, 23, 42, 0.36),
+        rgba(15, 23, 42, 0.08) 48%,
+        rgba(15, 23, 42, 0.42)
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.02),
+        transparent 18%,
+        rgba(255, 255, 255, 0.03) 72%
+      );
   }
 
   .optimize-cta {
     isolation: isolate;
+    color: white;
+    text-shadow: 0 1px 2px rgba(15, 23, 42, 0.45);
     background:
       url("/optimize-button-bg-cropped.png") center / 100% 100% no-repeat,
       linear-gradient(135deg, #2f82ff 0%, #1664f4 48%, #1454dd 100%);
@@ -181,8 +315,58 @@
   .optimize-cta:hover {
     box-shadow:
       0 14px 30px -16px rgba(37, 99, 235, 1),
-      0 0 22px rgba(59, 130, 246, 0.30),
-      0 0 0 1px rgba(255, 255, 255, 0.50) inset,
+      0 0 22px rgba(59, 130, 246, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.5) inset,
       0 1px 0 rgba(255, 255, 255, 0.52) inset;
   }
+
+  .optimize-cta-label {
+    opacity: 0;
+  }
+
+  html[data-hermes-accent="gold"] .optimize-cta {
+    color: oklch(0.19 0.035 70);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.32);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 48%),
+      linear-gradient(135deg, #e6c45b 0%, #c99a27 48%, #a87514 100%);
+    box-shadow:
+      0 12px 26px -16px rgba(180, 135, 28, 0.95),
+      0 0 0 1px rgba(255, 255, 255, 0.24) inset;
+  }
+
+  html[data-hermes-accent="gold"] .optimize-cta-label {
+    opacity: 1;
+  }
+
+  html.dark[data-hermes-accent="gold"] .optimize-cta {
+    color: oklch(0.17 0.035 70);
+  }
+
+  html[data-hermes-accent="gold"] .optimize-cta:hover {
+    box-shadow:
+      0 14px 30px -16px rgba(180, 135, 28, 1),
+      0 0 24px rgba(212, 175, 55, 0.34),
+      0 0 0 1px rgba(255, 255, 255, 0.52) inset;
+  }
+}
+
+html.dark body {
+  background-color: oklch(0.13 0.025 260);
+}
+
+html.dark .lightning-bg {
+  background-color: oklch(0.13 0.025 260);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgba(37, 99, 235, 0.22), transparent 42%),
+    radial-gradient(ellipse at 82% 18%, rgba(14, 165, 233, 0.12), transparent 38%),
+    linear-gradient(180deg, oklch(0.18 0.03 260), oklch(0.13 0.025 260)) !important;
+}
+
+html.dark[data-hermes-accent="gold"] .lightning-bg {
+  background-color: oklch(0.14 0.018 75);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgba(212, 175, 55, 0.2), transparent 42%),
+    radial-gradient(ellipse at 82% 18%, rgba(180, 135, 28, 0.1), transparent 38%),
+    linear-gradient(180deg, oklch(0.19 0.025 75), oklch(0.135 0.018 70)) !important;
 }

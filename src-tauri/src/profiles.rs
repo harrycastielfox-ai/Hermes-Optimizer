@@ -3,7 +3,7 @@ use crate::{
     clean::{self, CleanApplyRequest},
     gamer::{self, GamerApplyRequest},
     performance::{self, PerformanceApplyActionResult, PerformanceApplyRequest},
-    restore,
+    restore, safe_mode,
     startup::{self, StartupApplyAction, StartupApplyRequest},
 };
 use serde::{Deserialize, Serialize};
@@ -162,7 +162,7 @@ fn profiles_apply_blocking(
         .into_iter()
         .find(|profile| profile.id == request.profile_id)
         .ok_or_else(|| format!("Perfil Hermes nao encontrado: {}", request.profile_id))?;
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
 
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria antes de aplicar um perfil Hermes.".to_string());
@@ -177,7 +177,7 @@ fn profiles_apply_blocking(
         ProfileEventLevel::Info,
         Some(profile.id.clone()),
         if dry_run {
-            "Dry-run de perfil Hermes iniciado."
+            "DRY-RUN | Perfil Hermes iniciado em dry-run."
         } else {
             "Aplicacao real de perfil Hermes iniciada apos confirmacao."
         },
@@ -254,7 +254,11 @@ fn profiles_apply_blocking(
     let message = if failed {
         "Perfil interrompido por falha em uma engine. Rollback automatico foi tentado para snapshots ja criados.".to_string()
     } else if dry_run {
-        "Perfil validado em dry-run pelas engines configuradas, com snapshots e rollback preparados quando aplicavel.".to_string()
+        format!(
+            "{} — perfil validado pelas engines configuradas, com snapshots e rollback preparados quando aplicavel. {}",
+            safe_mode::mode_prefix(dry_run),
+            if safe_mode::is_enabled() { safe_mode::notice() } else { "" }
+        )
     } else {
         "Perfil aplicado orquestrando engines Hermes com snapshot, log e rollback por engine."
             .to_string()
@@ -356,6 +360,7 @@ fn run_profile_advanced(
             action_ids: Some(profile.advanced_action_ids.clone()),
             extreme_mode: Some(profile.id == "extremo" && request.extreme_confirmed == Some(true)),
         }),
+        true,
     ) {
         Ok(result) => {
             snapshot_ids.push(result.snapshot_id.clone());
@@ -450,6 +455,7 @@ fn run_profile_clean(
             dry_run: Some(dry_run),
             item_ids: Some(profile.clean_item_ids.clone()),
         }),
+        true,
     ) {
         Ok(result) => {
             snapshot_ids.push(result.snapshot_id.clone());
@@ -616,14 +622,14 @@ fn profile_definitions() -> Vec<HermesProfile> {
             "Equilibrio para produtividade diaria.",
             ProfileRisk::Low,
             false,
-            vec!["disable-transparency", "set-balanced-power-plan"],
+            vec!["set-balanced-power-plan"],
             vec!["temp", "cache"],
             None,
             vec![],
             false,
             vec!["flush-dns-cache"],
             vec![
-                "Reduz custo visual leve.".to_string(),
+                "Mantem ajustes visuais separados e opt-in.".to_string(),
                 "Mantem energia equilibrada.".to_string(),
                 "Limpa temporarios/cache seguros com quarentena.".to_string(),
             ],
@@ -634,24 +640,14 @@ fn profile_definitions() -> Vec<HermesProfile> {
             "Prioriza resposta e desempenho sob demanda.",
             ProfileRisk::Medium,
             false,
-            vec![
-                "disable-transparency",
-                "disable-window-animations",
-                "disable-visual-shadows",
-                "set-high-performance-power-plan",
-            ],
+            vec!["set-high-performance-power-plan"],
             vec!["temp", "cache", "thumbnails"],
             Some(StartupApplyAction::Disable),
             vec![startup::StartupImpact::High],
             true,
+            vec!["enable-game-mode", "disable-game-dvr", "flush-dns-cache"],
             vec![
-                "enable-game-mode",
-                "disable-game-dvr",
-                "flush-dns-cache",
-                "set-visual-effects-custom",
-            ],
-            vec![
-                "Reduz efeitos visuais nao essenciais.".to_string(),
+                "Nao altera tema ou efeitos visuais automaticamente.".to_string(),
                 "Ativa Alto Desempenho quando disponivel.".to_string(),
                 "Sugere fechamento seguro de overlays/apps secundarios.".to_string(),
                 "Desabilita inicializacao de alto impacto quando controlavel.".to_string(),
@@ -663,18 +659,14 @@ fn profile_definitions() -> Vec<HermesProfile> {
             "Reduz consumo e animacoes nao essenciais.",
             ProfileRisk::Low,
             false,
-            vec![
-                "disable-transparency",
-                "disable-window-animations",
-                "set-power-saver-power-plan",
-            ],
+            vec!["set-power-saver-power-plan"],
             vec!["temp"],
             Some(StartupApplyAction::Disable),
             vec![startup::StartupImpact::High],
             false,
             vec!["disable-game-dvr", "flush-dns-cache"],
             vec![
-                "Reduz efeitos visuais leves.".to_string(),
+                "Nao altera tema ou efeitos visuais automaticamente.".to_string(),
                 "Ativa Economia de Energia quando disponivel.".to_string(),
                 "Reduz inicializacao pesada quando seguro.".to_string(),
             ],
@@ -685,12 +677,7 @@ fn profile_definitions() -> Vec<HermesProfile> {
             "Desempenho maximo com confirmacao extra.",
             ProfileRisk::High,
             true,
-            vec![
-                "disable-transparency",
-                "disable-window-animations",
-                "disable-visual-shadows",
-                "set-high-performance-power-plan",
-            ],
+            vec!["set-high-performance-power-plan"],
             vec![
                 "temp",
                 "cache",
@@ -707,10 +694,9 @@ fn profile_definitions() -> Vec<HermesProfile> {
                 "disable-startup-delay",
                 "flush-dns-cache",
                 "list-power-plans",
-                "set-visual-effects-custom",
             ],
             vec![
-                "Aplica todos os ajustes disponiveis desta fase.".to_string(),
+                "Aplica apenas ajustes nao visuais desta fase.".to_string(),
                 "Exige confirmacao extra antes da aplicacao real.".to_string(),
                 "Usa Clean, Startup, Gamer e Advanced em modo allowlist.".to_string(),
             ],
@@ -830,4 +816,45 @@ fn now_nanos() -> u128 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_nanos())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VISUAL_ACTIONS: &[&str] = &[
+        "disable-transparency",
+        "disable-window-animations",
+        "disable-visual-shadows",
+        "set-visual-effects-custom",
+    ];
+
+    #[test]
+    fn gamer_economia_extremo_profiles_do_not_embed_visual_actions() {
+        let profiles = profile_definitions();
+
+        for profile_id in ["gamer", "economia", "extremo"] {
+            let profile = profiles
+                .iter()
+                .find(|item| item.id == profile_id)
+                .expect("profile must exist");
+
+            for action in VISUAL_ACTIONS {
+                assert!(
+                    !profile
+                        .performance_action_ids
+                        .iter()
+                        .any(|item| item == action),
+                    "{profile_id} must not embed visual performance action {action}"
+                );
+                assert!(
+                    !profile
+                        .advanced_action_ids
+                        .iter()
+                        .any(|item| item == action),
+                    "{profile_id} must not embed visual advanced action {action}"
+                );
+            }
+        }
+    }
 }

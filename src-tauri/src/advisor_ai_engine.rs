@@ -213,7 +213,10 @@ pub async fn advisor_ai_engine_analyze(app: AppHandle) -> Result<AdvisorAiReport
 }
 
 fn collect_context(app: &AppHandle) -> AdvisorAiContext {
-    let diagnostic_report = diagnostic::collect_diagnostic_report();
+    let diagnostic_report = diagnostic::latest_cached_report(app)
+        .ok()
+        .flatten()
+        .unwrap_or_else(diagnostic::collect_diagnostic_report);
     let startup_report = startup::collect_startup_report();
     let clean_report = clean::collect_clean_scan();
     let performance_report = performance::collect_performance_report();

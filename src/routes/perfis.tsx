@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Battery, BriefcaseBusiness, CheckCircle2, Flame, Gamepad2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { SafeTestModeNotice } from "@/components/common/SafeTestModeNotice";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import {
   applyGamerEngine,
@@ -21,6 +22,7 @@ import {
   type ProfileRisk,
   type ProfilesCatalog,
 } from "@/lib/profiles";
+import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 
 export const Route = createFileRoute("/perfis")({
   head: () => ({
@@ -87,8 +89,8 @@ function PerfisPage() {
     setError(null);
     setResult(null);
 
-    if (!dryRun) {
-      const confirmed = window.confirm(`Aplicar o perfil ${profile.name}? Um snapshot sera criado antes.`);
+    if (!dryRun && !HERMES_SAFE_TEST_MODE) {
+      const confirmed = window.confirm(`Aplicar o perfil ${profile.name}? Um ponto de seguranca sera criado antes.`);
       if (!confirmed) {
         return;
       }
@@ -105,9 +107,9 @@ function PerfisPage() {
     try {
       const nextResult = await applyHermesProfile({
         profileId: profile.id,
-        confirmed: !dryRun,
-        dryRun,
-        extremeConfirmed: !dryRun && profile.requiresExtraConfirmation,
+        confirmed: !dryRun && !HERMES_SAFE_TEST_MODE,
+        dryRun: dryRun || HERMES_SAFE_TEST_MODE,
+        extremeConfirmed: !dryRun && !HERMES_SAFE_TEST_MODE && profile.requiresExtraConfirmation,
       });
       setResult(nextResult);
     } catch (nextError) {
@@ -125,8 +127,8 @@ function PerfisPage() {
       .filter((process) => process.canClose && process.rollbackAvailable && process.recommendation === "suggestedClose")
       .map((process) => process.pid);
 
-    if (!dryRun) {
-      const confirmed = window.confirm("Ativar Gamer Engine? Um snapshot sera criado antes e os apps sugeridos serao fechados de forma graciosa.");
+    if (!dryRun && !HERMES_SAFE_TEST_MODE) {
+      const confirmed = window.confirm("Ativar Modo Gamer Hermes? Um ponto de seguranca sera criado antes e os apps sugeridos serao fechados de forma graciosa.");
       if (!confirmed) {
         return;
       }
@@ -135,8 +137,8 @@ function PerfisPage() {
     setIsGamerApplying(true);
     try {
       const nextResult = await applyGamerEngine({
-        confirmed: !dryRun,
-        dryRun,
+        confirmed: !dryRun && !HERMES_SAFE_TEST_MODE,
+        dryRun: dryRun || HERMES_SAFE_TEST_MODE,
         processIds: selectedProcesses,
         includePerformanceProfile: true,
       });
@@ -159,9 +161,11 @@ function PerfisPage() {
             <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">PERFIS HERMES</p>
             <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">Perfis</h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Perfis locais com snapshot, log e reversao antes de ajustes reais.
+              Perfis locais com ponto de seguranca, historico e reversao antes de ajustes reais.
             </p>
           </div>
+
+          <SafeTestModeNotice />
 
           <div className="grid grid-cols-1 gap-3 mb-4 lg:grid-cols-5">
             {catalog.profiles.map((profile) => (
@@ -223,7 +227,7 @@ function PerfisPage() {
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_10px_26px_-14px_rgba(37,99,235,0.85)] transition hover:bg-primary/95 disabled:opacity-60"
                   >
                     <Zap className="w-4 h-4" />
-                    Aplicar perfil
+                    {HERMES_SAFE_TEST_MODE ? "Validar seguro" : "Aplicar perfil"}
                   </button>
                 </div>
               </div>
@@ -237,7 +241,7 @@ function PerfisPage() {
                 <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
                   <p className="text-sm font-semibold text-success">{result.dryRun ? "Dry-run concluido" : "Perfil aplicado"}</p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
-                    Snapshot: {result.snapshotId}. {result.message}
+                    Ponto de seguranca: {result.snapshotId}. {result.message}
                   </p>
                 </div>
               )}
@@ -284,9 +288,9 @@ function GamerEnginePanel({
     <section className="mt-4 rounded-2xl bg-card border border-border/60 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-sm font-bold tracking-[0.18em] text-primary">GAMER ENGINE</h2>
+          <h2 className="text-sm font-bold tracking-[0.18em] text-primary">MODO GAMER HERMES</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Analisa jogos, overlays e apps em segundo plano. Fechamento real sempre exige confirmacao.
+            Analisa jogos, sobreposicoes e apps em segundo plano. Fechamento real sempre exige confirmacao.
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -306,14 +310,14 @@ function GamerEnginePanel({
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_10px_26px_-14px_rgba(37,99,235,0.85)] transition hover:bg-primary/95 disabled:opacity-60"
           >
             <Gamepad2 className="w-4 h-4" />
-            Ativar modo
+            {HERMES_SAFE_TEST_MODE ? "Validar seguro" : "Ativar modo"}
           </button>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
         <GamerMetric label="JOGOS" value={`${report.summary.detectedGames}`} sub="Detectados agora" />
-        <GamerMetric label="SUGERIDOS" value={`${report.summary.suggestedToClose}`} sub="Apps para fechar" />
+        <GamerMetric label="SUGERIDOS" value={`${report.summary.suggestedToClose}`} sub="Apps avaliados" />
         <GamerMetric label="RAM" value={`${report.summary.estimatedRamToFreeMb} MB`} sub="Potencial liberavel" />
         <GamerMetric label="PROTEGIDOS" value={`${report.summary.protectedCount}`} sub="Nunca fechados" />
       </div>
@@ -321,11 +325,11 @@ function GamerEnginePanel({
       <div className="mt-4 rounded-xl border border-border/70 bg-background/70 px-4 py-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">PROCESSOS SUGERIDOS</h3>
-            <p className="mt-1 text-[12px] text-muted-foreground">Somente apps com rollback disponivel entram na aplicacao automatica.</p>
+            <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">APPS SUGERIDOS</h3>
+            <p className="mt-1 text-[12px] text-muted-foreground">Somente apps com reversao disponivel entram na aplicacao automatica.</p>
           </div>
           <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
-            Sem kill forcado
+            Sem fechamento forcado
           </span>
         </div>
 
@@ -342,9 +346,9 @@ function GamerEnginePanel({
 
       {result && (
         <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
-          <p className="text-sm font-semibold text-success">{result.dryRun ? "Dry-run gamer concluido" : "Gamer Engine aplicada"}</p>
+          <p className="text-sm font-semibold text-success">{result.dryRun ? "Validacao gamer concluida" : "Modo Gamer aplicado"}</p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Snapshot: {result.snapshotId}. {result.message}
+            Ponto de seguranca: {result.snapshotId}. {result.message}
           </p>
         </div>
       )}
@@ -465,14 +469,14 @@ function profileIcon(profileId: string): LucideIcon {
 
 function riskLabel(risk: ProfileRisk) {
   if (risk === "high") {
-    return "Risco alto";
+    return "Alto";
   }
 
   if (risk === "medium") {
-    return "Risco medio";
+    return "Medio";
   }
 
-  return "Risco baixo";
+  return "Baixo";
 }
 
 function riskVisual(risk: ProfileRisk) {

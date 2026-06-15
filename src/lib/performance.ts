@@ -1,3 +1,6 @@
+import { forceSafeDryRun } from "@/lib/safe-mode";
+import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+
 export type PerformanceSettingStatus = "enabled" | "disabled" | "optimized" | "balanced" | "unknown";
 export type PerformanceApplyActionStatus = "dryRun" | "applied" | "skipped" | "failed";
 
@@ -111,13 +114,23 @@ export const fallbackPerformanceReport: PerformanceReport = {
 };
 
 export async function loadPerformanceReport(): Promise<PerformanceReport> {
+  const cached = readLocalReportCache<PerformanceReport>("performance-report");
+  if (cached) {
+    return cached;
+  }
+
+  return refreshPerformanceReport();
+}
+
+export async function refreshPerformanceReport(): Promise<PerformanceReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return fallbackPerformanceReport;
   }
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<PerformanceReport>("performance_engine_read");
+    const report = await invoke<PerformanceReport>("performance_engine_read");
+    return writeLocalReportCache("performance-report", report);
   } catch (error) {
     console.warn("Performance Engine indisponivel, usando fallback local.", error);
     return fallbackPerformanceReport;
@@ -132,7 +145,7 @@ export async function applyPerformanceControlled(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<PerformanceApplyResult>("performance_apply_controlled", { request });
+  return await invoke<PerformanceApplyResult>("performance_apply_controlled", { request: forceSafeDryRun(request) });
 }
 
 function setting(

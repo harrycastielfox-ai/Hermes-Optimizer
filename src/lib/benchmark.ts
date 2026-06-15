@@ -20,6 +20,7 @@ export type BenchmarkReport = {
     startup: BenchmarkComponentScore;
     power: BenchmarkComponentScore;
     security: BenchmarkComponentScore;
+    antiCheat: BenchmarkComponentScore;
   };
   observations: string[];
 };
@@ -39,9 +40,39 @@ export const fallbackBenchmarkReport: BenchmarkReport = {
     startup: component("Inicializacao", 60, "17 itens, 2 de alto impacto", 15),
     power: component("Energia", 82, "Equilibrado", 15),
     security: component("Seguranca", 100, "Ativo", 10),
+    antiCheat: component("Anti-Cheat", 0, "Aguardando analise", 10),
   },
   observations: ["Primeiro benchmark salvo como base de comparacao."],
 };
+
+let benchmarkMemoryCache: BenchmarkReport | null = null;
+let benchmarkLoadPromise: Promise<BenchmarkReport> | null = null;
+
+export async function loadCachedBenchmark(): Promise<BenchmarkReport> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return fallbackBenchmarkReport;
+  }
+
+  if (benchmarkMemoryCache) {
+    return benchmarkMemoryCache;
+  }
+
+  benchmarkLoadPromise ??= import("@tauri-apps/api/core")
+    .then(({ invoke }) => invoke<BenchmarkReport>("benchmark_engine_read_cached"))
+    .then((report) => {
+      benchmarkMemoryCache = report;
+      return report;
+    })
+    .catch((error) => {
+      console.warn("Benchmark salvo indisponivel, usando fallback local.", error);
+      return fallbackBenchmarkReport;
+    })
+    .finally(() => {
+      benchmarkLoadPromise = null;
+    });
+
+  return benchmarkLoadPromise;
+}
 
 export async function runBenchmark(): Promise<BenchmarkReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
@@ -50,7 +81,9 @@ export async function runBenchmark(): Promise<BenchmarkReport> {
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<BenchmarkReport>("benchmark_engine_run");
+    const report = await invoke<BenchmarkReport>("benchmark_engine_run");
+    benchmarkMemoryCache = report;
+    return report;
   } catch (error) {
     console.warn("Benchmark Engine indisponivel, usando fallback local.", error);
     return fallbackBenchmarkReport;

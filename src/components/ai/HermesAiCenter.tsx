@@ -22,6 +22,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import {
   loadAdvisorAiReport,
+  refreshAdvisorAiReport,
   type AdvisorAiCategory,
   type AdvisorAiConfidence,
   type AdvisorAiFinding,
@@ -38,15 +39,15 @@ export function HermesAiCenter() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadReport();
+    void loadReport(false);
   }, []);
 
-  async function loadReport() {
+  async function loadReport(force = true) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const nextReport = await loadAdvisorAiReport();
+      const nextReport = force ? await refreshAdvisorAiReport() : await loadAdvisorAiReport();
       setReport(nextReport);
     } catch (nextError) {
       setError(errorMessage(nextError));
@@ -85,7 +86,7 @@ export function HermesAiCenter() {
 
         <button
           type="button"
-          onClick={loadReport}
+          onClick={() => loadReport(true)}
           disabled={isLoading}
           className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-muted disabled:opacity-60"
         >

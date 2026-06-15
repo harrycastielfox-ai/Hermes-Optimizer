@@ -10,6 +10,7 @@ use tauri::{AppHandle, Manager};
 
 const MAX_DIAGNOSTIC_REPORTS: usize = 20;
 const POWERSHELL_TIMEOUT_SECONDS: u64 = 18;
+const POWERSHELL_LIVE_TIMEOUT_SECONDS: u64 = 6;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,6 +25,8 @@ pub struct DiagnosticReport {
     pub ram: MemoryInfo,
     pub disk: DiskInfo,
     pub gpu: GpuInfo,
+    pub display: DisplayInfo,
+    pub network: NetworkInfo,
     pub temperature: TemperatureInfo,
     pub defender: DefenderInfo,
     pub windows_update: WindowsUpdateInfo,
@@ -88,6 +91,26 @@ pub struct GpuInfo {
     pub name: String,
     pub driver_version: String,
     pub adapter_ram_gb: Option<f32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayInfo {
+    pub resolution: String,
+    pub refresh_rate_hz: Option<f32>,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkInfo {
+    pub ssid: String,
+    pub adapter_name: String,
+    pub signal_percent: Option<u8>,
+    pub gateway: String,
+    pub ping_ms: Option<f32>,
+    pub ping_status: String,
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,6 +211,14 @@ struct RawDiagnostic {
     gpu_name: Option<String>,
     gpu_driver_version: Option<String>,
     gpu_adapter_ram_bytes: Option<f64>,
+    display_width: Option<f64>,
+    display_height: Option<f64>,
+    display_refresh_rate_hz: Option<f64>,
+    wifi_ssid: Option<String>,
+    wifi_signal_percent: Option<f64>,
+    network_adapter_name: Option<String>,
+    network_gateway: Option<String>,
+    network_ping_ms: Option<f64>,
     temperature_celsius: Option<f64>,
     defender_available: Option<bool>,
     defender_antivirus_enabled: Option<bool>,
@@ -206,6 +237,24 @@ struct RawDiagnostic {
     temporary_scan_locations: Option<Vec<String>>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawLiveDiagnostic {
+    uptime_seconds: Option<f64>,
+    cpu_usage_percent: Option<f64>,
+    cpu_current_clock_mhz: Option<f64>,
+    ram_total_kb: Option<f64>,
+    ram_free_kb: Option<f64>,
+    disk_total_bytes: Option<f64>,
+    disk_free_bytes: Option<f64>,
+    wifi_ssid: Option<String>,
+    wifi_signal_percent: Option<f64>,
+    network_adapter_name: Option<String>,
+    network_gateway: Option<String>,
+    network_ping_ms: Option<f64>,
+    temperature_celsius: Option<f64>,
+}
+
 #[tauri::command]
 pub async fn diagnostic_engine_read(app: AppHandle) -> Result<DiagnosticReport, String> {
     tauri::async_runtime::spawn_blocking(move || diagnostic_engine_read_blocking(app))
@@ -213,16 +262,77 @@ pub async fn diagnostic_engine_read(app: AppHandle) -> Result<DiagnosticReport, 
         .map_err(|err| format!("Falha ao executar diagnostico em segundo plano: {err}"))?
 }
 
+#[tauri::command]
+pub async fn diagnostic_engine_read_cached(app: AppHandle) -> Result<DiagnosticReport, String> {
+    tauri::async_runtime::spawn_blocking(move || diagnostic_engine_read_cached_blocking(app))
+        .await
+        .map_err(|err| format!("Falha ao ler diagnostico salvo em segundo plano: {err}"))?
+}
+
+#[tauri::command]
+pub async fn diagnostic_engine_refresh_live(app: AppHandle) -> Result<DiagnosticReport, String> {
+    tauri::async_runtime::spawn_blocking(move || diagnostic_engine_refresh_live_blocking(app))
+        .await
+        .map_err(|err| format!("Falha ao atualizar metricas leves em segundo plano: {err}"))?
+}
+
 fn diagnostic_engine_read_blocking(app: AppHandle) -> Result<DiagnosticReport, String> {
     let report = collect_diagnostic_report();
-    let history_path = diagnostic_history_path(&app)?;
+    save_diagnostic_report(&app, report.clone())?;
+
+    Ok(report)
+}
+
+fn diagnostic_engine_read_cached_blocking(app: AppHandle) -> Result<DiagnosticReport, String> {
+    if let Some(report) = latest_cached_report(&app)? {
+        return Ok(report);
+    }
+
+    diagnostic_engine_read_blocking(app)
+}
+
+fn diagnostic_engine_refresh_live_blocking(app: AppHandle) -> Result<DiagnosticReport, String> {
+    let mut report = match latest_cached_report(&app)? {
+        Some(report) => report,
+        None => return diagnostic_engine_read_blocking(app),
+    };
+
+    match collect_windows_live_diagnostic() {
+        Ok(live) => merge_live_diagnostic(&mut report, live),
+        Err(error) => report.warnings.push(error),
+    }
+
+    save_latest_diagnostic_report(&app, report.clone())?;
+    Ok(report)
+}
+
+pub fn latest_cached_report(app: &AppHandle) -> Result<Option<DiagnosticReport>, String> {
+    let history_path = diagnostic_history_path(app)?;
+    let history = read_history(&history_path);
+    Ok(history.reports.first().cloned())
+}
+
+pub fn save_diagnostic_report(app: &AppHandle, report: DiagnosticReport) -> Result<(), String> {
+    let history_path = diagnostic_history_path(app)?;
     let mut history = read_history(&history_path);
 
     history.reports.insert(0, report.clone());
     history.reports.truncate(MAX_DIAGNOSTIC_REPORTS);
-    write_history(&history_path, &history)?;
+    write_history(&history_path, &history)
+}
 
-    Ok(report)
+fn save_latest_diagnostic_report(app: &AppHandle, report: DiagnosticReport) -> Result<(), String> {
+    let history_path = diagnostic_history_path(app)?;
+    let mut history = read_history(&history_path);
+
+    if history.reports.is_empty() {
+        history.reports.push(report);
+    } else {
+        history.reports[0] = report;
+    }
+
+    history.reports.truncate(MAX_DIAGNOSTIC_REPORTS);
+    write_history(&history_path, &history)
 }
 
 pub fn collect_diagnostic_report() -> DiagnosticReport {
@@ -247,6 +357,106 @@ fn collect_windows_diagnostic() -> Result<RawDiagnostic, String> {
     let stdout = run_powershell(POWERSHELL_DIAGNOSTIC_SCRIPT)?;
     serde_json::from_str::<RawDiagnostic>(&stdout)
         .map_err(|err| format!("Nao foi possivel interpretar diagnostico real: {err}"))
+}
+
+fn collect_windows_live_diagnostic() -> Result<RawLiveDiagnostic, String> {
+    if !cfg!(target_os = "windows") {
+        return Err(
+            "Atualizacao leve usa APIs do Windows e esta plataforma nao e Windows.".to_string(),
+        );
+    }
+
+    let stdout = run_powershell_with_timeout(
+        POWERSHELL_LIVE_DIAGNOSTIC_SCRIPT,
+        POWERSHELL_LIVE_TIMEOUT_SECONDS,
+        "metricas leves",
+    )?;
+    serde_json::from_str::<RawLiveDiagnostic>(&stdout)
+        .map_err(|err| format!("Nao foi possivel interpretar metricas leves: {err}"))
+}
+
+fn merge_live_diagnostic(report: &mut DiagnosticReport, live: RawLiveDiagnostic) {
+    if let Some(value) = live.cpu_usage_percent {
+        report.cpu.usage_percent = round1(value as f32).clamp(0.0, 100.0);
+    }
+    if let Some(value) = live.cpu_current_clock_mhz {
+        report.cpu.current_clock_mhz = value.max(0.0).round() as u32;
+    }
+
+    let ram_total_gb = live
+        .ram_total_kb
+        .map(kb_to_gb)
+        .filter(|value| *value > 0.0)
+        .unwrap_or(report.ram.total_gb);
+    let ram_free_gb = live
+        .ram_free_kb
+        .map(kb_to_gb)
+        .filter(|value| *value >= 0.0)
+        .unwrap_or(report.ram.free_gb);
+    report.ram.total_gb = ram_total_gb;
+    report.ram.free_gb = ram_free_gb;
+    report.ram.used_gb = (ram_total_gb - ram_free_gb).max(0.0);
+    report.ram.used_percent = percent(report.ram.used_gb, ram_total_gb);
+
+    let disk_total_gb = live
+        .disk_total_bytes
+        .map(bytes_to_gb)
+        .filter(|value| *value > 0.0)
+        .unwrap_or(report.disk.total_gb);
+    let disk_free_gb = live
+        .disk_free_bytes
+        .map(bytes_to_gb)
+        .filter(|value| *value >= 0.0)
+        .unwrap_or(report.disk.free_gb);
+    report.disk.total_gb = disk_total_gb;
+    report.disk.free_gb = disk_free_gb;
+    report.disk.used_gb = (disk_total_gb - disk_free_gb).max(0.0);
+    report.disk.used_percent = percent(report.disk.used_gb, disk_total_gb);
+
+    if let Some(seconds) = live.uptime_seconds {
+        report.uptime.seconds = seconds.max(0.0).round() as u64;
+        report.uptime.label = uptime_label(report.uptime.seconds);
+    }
+
+    if let Some(value) = live.wifi_ssid {
+        report.network.ssid = value_or(Some(value), "Nao conectado");
+    }
+    if let Some(value) = live.network_adapter_name {
+        report.network.adapter_name = value_or(Some(value), "Adaptador nao identificado");
+    }
+    if let Some(value) = live.network_gateway {
+        report.network.gateway = value_or(Some(value), "Nao identificado");
+    }
+    report.network.signal_percent = live
+        .wifi_signal_percent
+        .filter(|value| *value >= 0.0)
+        .map(|value| value.round().clamp(0.0, 100.0) as u8);
+    report.network.ping_ms = live
+        .network_ping_ms
+        .filter(|value| *value >= 0.0)
+        .map(|value| round1(value as f32));
+    report.network.ping_status = ping_status(live.network_ping_ms).to_string();
+    report.network.status =
+        network_status(Some(&report.network.ssid), live.wifi_signal_percent).to_string();
+
+    report.temperature.celsius = live.temperature_celsius.map(|value| round1(value as f32));
+    report.temperature.available = report.temperature.celsius.is_some();
+    report.temperature.status = temperature_status(report.temperature.celsius).to_string();
+
+    report.health_score = calculate_health_score(
+        report.cpu.usage_percent,
+        report.ram.used_percent,
+        report.disk.used_percent,
+        report.disk.free_gb,
+        report.disk.total_gb,
+        report.defender.active,
+        &report.windows_update.service_status,
+        report.startup.total_items,
+        report.temperature.celsius,
+    );
+    report.health_label = health_label(report.health_score).to_string();
+    report.generated_at = now_timestamp();
+    report.engine_version = "diagnostic-engine-hybrid-v1".to_string();
 }
 
 fn build_report(raw: RawDiagnostic, mut warnings: Vec<String>) -> DiagnosticReport {
@@ -285,6 +495,7 @@ fn build_report(raw: RawDiagnostic, mut warnings: Vec<String>) -> DiagnosticRepo
     let temporary_files_bytes = raw.temporary_files_bytes.unwrap_or_default().max(0.0) as u64;
     let temporary_scan_locations = raw.temporary_scan_locations.unwrap_or_default();
     let uptime_seconds = raw.uptime_seconds.unwrap_or_default().max(0.0) as u64;
+    let wifi_ssid_for_status = raw.wifi_ssid.clone();
 
     let cpu_usage = round1(raw.cpu_usage_percent.unwrap_or_default() as f32).clamp(0.0, 100.0);
     let health_score = calculate_health_score(
@@ -347,6 +558,30 @@ fn build_report(raw: RawDiagnostic, mut warnings: Vec<String>) -> DiagnosticRepo
             adapter_ram_gb: raw
                 .gpu_adapter_ram_bytes
                 .map(|bytes| round1(bytes_to_gb(bytes))),
+        },
+        display: DisplayInfo {
+            resolution: display_resolution(raw.display_width, raw.display_height),
+            refresh_rate_hz: raw
+                .display_refresh_rate_hz
+                .filter(|value| *value > 0.0)
+                .map(|value| round1(value as f32)),
+            status: display_status(raw.display_refresh_rate_hz).to_string(),
+        },
+        network: NetworkInfo {
+            ssid: value_or(raw.wifi_ssid, "Nao conectado"),
+            adapter_name: value_or(raw.network_adapter_name, "Adaptador nao identificado"),
+            signal_percent: raw
+                .wifi_signal_percent
+                .filter(|value| *value >= 0.0)
+                .map(|value| value.round().clamp(0.0, 100.0) as u8),
+            gateway: value_or(raw.network_gateway, "Nao identificado"),
+            ping_ms: raw
+                .network_ping_ms
+                .filter(|value| *value >= 0.0)
+                .map(|value| round1(value as f32)),
+            ping_status: ping_status(raw.network_ping_ms).to_string(),
+            status: network_status(wifi_ssid_for_status.as_deref(), raw.wifi_signal_percent)
+                .to_string(),
         },
         temperature: TemperatureInfo {
             available: temperature_celsius.is_some(),
@@ -423,6 +658,14 @@ fn fallback_report() -> DiagnosticReport {
             gpu_name: Some("Intel Iris Xe Graphics".to_string()),
             gpu_driver_version: Some("31.0.101.5445".to_string()),
             gpu_adapter_ram_bytes: None,
+            display_width: Some(1920.0),
+            display_height: Some(1080.0),
+            display_refresh_rate_hz: Some(120.0),
+            wifi_ssid: Some("Wi-Fi".to_string()),
+            wifi_signal_percent: Some(92.0),
+            network_adapter_name: Some("Wi-Fi".to_string()),
+            network_gateway: Some("192.168.0.1".to_string()),
+            network_ping_ms: Some(4.0),
             temperature_celsius: None,
             defender_available: Some(true),
             defender_antivirus_enabled: Some(true),
@@ -448,6 +691,14 @@ fn fallback_report() -> DiagnosticReport {
 }
 
 fn run_powershell(script: &str) -> Result<String, String> {
+    run_powershell_with_timeout(script, POWERSHELL_TIMEOUT_SECONDS, "diagnostico")
+}
+
+fn run_powershell_with_timeout(
+    script: &str,
+    timeout_seconds: u64,
+    operation: &str,
+) -> Result<String, String> {
     let mut command = Command::new("powershell.exe");
     command
         .arg("-NoProfile")
@@ -483,9 +734,9 @@ fn run_powershell(script: &str) -> Result<String, String> {
             .duration_since(started_at)
             .unwrap_or_default()
             .as_secs();
-        if elapsed >= POWERSHELL_TIMEOUT_SECONDS {
+        if elapsed >= timeout_seconds {
             let _ = child.kill();
-            return Err("Tempo limite atingido ao coletar diagnostico real.".to_string());
+            return Err(format!("Tempo limite atingido ao coletar {operation}."));
         }
 
         thread::sleep(Duration::from_millis(80));
@@ -501,7 +752,7 @@ fn run_powershell(script: &str) -> Result<String, String> {
 
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if stdout.is_empty() {
-        Err("PowerShell nao retornou dados de diagnostico.".to_string())
+        Err(format!("PowerShell nao retornou dados de {operation}."))
     } else {
         Ok(stdout)
     }
@@ -636,6 +887,53 @@ fn temperature_status(celsius: Option<f32>) -> &'static str {
     }
 }
 
+fn display_resolution(width: Option<f64>, height: Option<f64>) -> String {
+    let width = width.unwrap_or_default().round() as u32;
+    let height = height.unwrap_or_default().round() as u32;
+
+    if width == 0 || height == 0 {
+        "Indisponivel".to_string()
+    } else {
+        format!("{width} x {height}")
+    }
+}
+
+fn display_status(refresh_rate_hz: Option<f64>) -> &'static str {
+    match refresh_rate_hz {
+        Some(value) if value >= 120.0 => "Alta taxa",
+        Some(value) if value >= 75.0 => "Boa",
+        Some(value) if value >= 55.0 => "Padrao",
+        Some(_) => "Baixa",
+        None => "Indisponivel",
+    }
+}
+
+fn network_status(ssid: Option<&str>, signal_percent: Option<f64>) -> &'static str {
+    if ssid
+        .map(|value| value.trim().is_empty() || value.eq_ignore_ascii_case("nao conectado"))
+        .unwrap_or(true)
+    {
+        return "Desconectado";
+    }
+
+    match signal_percent {
+        Some(value) if value >= 75.0 => "Conectado, forte",
+        Some(value) if value >= 45.0 => "Conectado",
+        Some(_) => "Sinal baixo",
+        None => "Conectado",
+    }
+}
+
+fn ping_status(ping_ms: Option<f64>) -> &'static str {
+    match ping_ms {
+        Some(value) if value <= 10.0 => "Excelente",
+        Some(value) if value <= 30.0 => "Bom",
+        Some(value) if value <= 70.0 => "Estavel",
+        Some(_) => "Alto",
+        None => "Indisponivel",
+    }
+}
+
 fn normalize_media_type(value: Option<String>) -> String {
     let value = value_or(value, "Desconhecido");
     if value.eq_ignore_ascii_case("unspecified") || value == "0" {
@@ -715,6 +1013,30 @@ $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
 $logicalDisk = Get-CimInstance Win32_LogicalDisk | Where-Object { $_.DeviceID -eq 'C:' } | Select-Object -First 1
 $physicalDisk = Get-PhysicalDisk | Select-Object -First 1
 $gpu = Get-CimInstance Win32_VideoController | Where-Object { $_.Name } | Select-Object -First 1
+$displayAdapter = Get-CimInstance Win32_VideoController | Where-Object { $_.CurrentHorizontalResolution -and $_.CurrentVerticalResolution } | Select-Object -First 1
+$wifiText = [string]::Join("`n", (netsh wlan show interfaces 2>$null))
+$wifiSsid = $null
+$wifiSignal = $null
+if ($wifiText -match '(?im)^\s*SSID\s*:\s*(.+?)\s*$') {
+  $wifiSsid = $Matches[1].Trim()
+}
+if ($wifiText -match '(?im)^\s*(Signal|Sinal)\s*:\s*(\d+)\s*%') {
+  $wifiSignal = [double]$Matches[2]
+}
+$ipConfig = Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway } | Select-Object -First 1
+$networkGateway = $null
+$networkAdapterName = $null
+$networkPingMs = $null
+if ($ipConfig) {
+  $networkAdapterName = if ($ipConfig.InterfaceAlias) { $ipConfig.InterfaceAlias } else { $ipConfig.InterfaceDescription }
+  $networkGateway = $ipConfig.IPv4DefaultGateway.NextHop
+  if ($networkGateway) {
+    $pingSamples = @(Test-Connection -ComputerName $networkGateway -Count 2 -ErrorAction SilentlyContinue)
+    if ($pingSamples.Count -gt 0) {
+      $networkPingMs = [math]::Round((($pingSamples | Measure-Object -Property ResponseTime -Average).Average), 1)
+    }
+  }
+}
 $thermal = Get-CimInstance -Namespace root/wmi -ClassName MSAcpi_ThermalZoneTemperature | Select-Object -First 1
 $temperatureCelsius = $null
 if ($thermal -and $thermal.CurrentTemperature) {
@@ -787,6 +1109,14 @@ if ($os.LastBootUpTime) {
   gpuName = $gpu.Name
   gpuDriverVersion = $gpu.DriverVersion
   gpuAdapterRamBytes = $gpu.AdapterRAM
+  displayWidth = $displayAdapter.CurrentHorizontalResolution
+  displayHeight = $displayAdapter.CurrentVerticalResolution
+  displayRefreshRateHz = $displayAdapter.CurrentRefreshRate
+  wifiSsid = $wifiSsid
+  wifiSignalPercent = $wifiSignal
+  networkAdapterName = $networkAdapterName
+  networkGateway = $networkGateway
+  networkPingMs = $networkPingMs
   temperatureCelsius = $temperatureCelsius
   defenderAvailable = [bool]($defender -ne $null)
   defenderAntivirusEnabled = [bool]$defender.AntivirusEnabled
@@ -804,4 +1134,63 @@ if ($os.LastBootUpTime) {
   temporaryFilesBytes = $temporaryFilesBytes
   temporaryScanLocations = @($tempPaths)
 } | ConvertTo-Json -Depth 5 -Compress
+"#;
+
+const POWERSHELL_LIVE_DIAGNOSTIC_SCRIPT: &str = r#"
+$ErrorActionPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$os = Get-CimInstance Win32_OperatingSystem
+$cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+$logicalDisk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" | Select-Object -First 1
+$wifiText = [string]::Join("`n", (netsh wlan show interfaces 2>$null))
+$wifiSsid = $null
+$wifiSignal = $null
+if ($wifiText -match '(?im)^\s*SSID\s*:\s*(.+?)\s*$') {
+  $wifiSsid = $Matches[1].Trim()
+}
+if ($wifiText -match '(?im)^\s*(Signal|Sinal)\s*:\s*(\d+)\s*%') {
+  $wifiSignal = [double]$Matches[2]
+}
+$ipConfig = Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway } | Select-Object -First 1
+$networkGateway = $null
+$networkAdapterName = $null
+$networkPingMs = $null
+if ($ipConfig) {
+  $networkAdapterName = if ($ipConfig.InterfaceAlias) { $ipConfig.InterfaceAlias } else { $ipConfig.InterfaceDescription }
+  $networkGateway = $ipConfig.IPv4DefaultGateway.NextHop
+  if ($networkGateway) {
+    try {
+      $ping = New-Object System.Net.NetworkInformation.Ping
+      $reply = $ping.Send($networkGateway, 700)
+      if ($reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
+        $networkPingMs = [double]$reply.RoundtripTime
+      }
+      $ping.Dispose()
+    } catch {}
+  }
+}
+$thermal = Get-CimInstance -Namespace root/wmi -ClassName MSAcpi_ThermalZoneTemperature | Select-Object -First 1
+$temperatureCelsius = $null
+if ($thermal -and $thermal.CurrentTemperature) {
+  $temperatureCelsius = [math]::Round(($thermal.CurrentTemperature - 2732) / 10, 1)
+}
+$uptimeSeconds = $null
+if ($os.LastBootUpTime) {
+  $uptimeSeconds = [math]::Round(((Get-Date) - $os.LastBootUpTime).TotalSeconds)
+}
+[pscustomobject]@{
+  uptimeSeconds = $uptimeSeconds
+  cpuUsagePercent = $cpu.LoadPercentage
+  cpuCurrentClockMhz = $cpu.CurrentClockSpeed
+  ramTotalKb = $os.TotalVisibleMemorySize
+  ramFreeKb = $os.FreePhysicalMemory
+  diskTotalBytes = $logicalDisk.Size
+  diskFreeBytes = $logicalDisk.FreeSpace
+  wifiSsid = $wifiSsid
+  wifiSignalPercent = $wifiSignal
+  networkAdapterName = $networkAdapterName
+  networkGateway = $networkGateway
+  networkPingMs = $networkPingMs
+  temperatureCelsius = $temperatureCelsius
+} | ConvertTo-Json -Depth 3 -Compress
 "#;

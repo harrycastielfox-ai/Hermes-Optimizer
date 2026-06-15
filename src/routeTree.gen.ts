@@ -9,14 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
+import { Route as RepararWindowsRouteImport } from './routes/reparar-windows'
+import { Route as PersonalizadoRouteImport } from './routes/personalizado'
 import { Route as PerfisRouteImport } from './routes/perfis'
 import { Route as OtimizacoesRouteImport } from './routes/otimizacoes'
+import { Route as ManutencaoProgramadaRouteImport } from './routes/manutencao-programada'
 import { Route as LimpezaRouteImport } from './routes/limpeza'
 import { Route as InicializacaoRouteImport } from './routes/inicializacao'
 import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as CentralRouteImport } from './routes/central'
+import { Route as AntiCheatRouteImport } from './routes/anti-cheat'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepararWindowsRoute = RepararWindowsRouteImport.update({
+  id: '/reparar-windows',
+  path: '/reparar-windows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PersonalizadoRoute = PersonalizadoRouteImport.update({
+  id: '/personalizado',
+  path: '/personalizado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfisRoute = PerfisRouteImport.update({
   id: '/perfis',
   path: '/perfis',
@@ -25,6 +46,11 @@ const PerfisRoute = PerfisRouteImport.update({
 const OtimizacoesRoute = OtimizacoesRouteImport.update({
   id: '/otimizacoes',
   path: '/otimizacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManutencaoProgramadaRoute = ManutencaoProgramadaRouteImport.update({
+  id: '/manutencao-programada',
+  path: '/manutencao-programada',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LimpezaRoute = LimpezaRouteImport.update({
@@ -47,6 +73,16 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CentralRoute = CentralRouteImport.update({
+  id: '/central',
+  path: '/central',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AntiCheatRoute = AntiCheatRouteImport.update({
+  id: '/anti-cheat',
+  path: '/anti-cheat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,74 +91,137 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/anti-cheat': typeof AntiCheatRoute
+  '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
+  '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
+  '/personalizado': typeof PersonalizadoRoute
+  '/reparar-windows': typeof RepararWindowsRoute
+  '/seguranca': typeof SegurancaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/anti-cheat': typeof AntiCheatRoute
+  '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
+  '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
+  '/personalizado': typeof PersonalizadoRoute
+  '/reparar-windows': typeof RepararWindowsRoute
+  '/seguranca': typeof SegurancaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/anti-cheat': typeof AntiCheatRoute
+  '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
+  '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
+  '/personalizado': typeof PersonalizadoRoute
+  '/reparar-windows': typeof RepararWindowsRoute
+  '/seguranca': typeof SegurancaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/anti-cheat'
+    | '/central'
     | '/configuracoes'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
+    | '/manutencao-programada'
     | '/otimizacoes'
     | '/perfis'
+    | '/personalizado'
+    | '/reparar-windows'
+    | '/seguranca'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/anti-cheat'
+    | '/central'
     | '/configuracoes'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
+    | '/manutencao-programada'
     | '/otimizacoes'
     | '/perfis'
+    | '/personalizado'
+    | '/reparar-windows'
+    | '/seguranca'
   id:
     | '__root__'
     | '/'
+    | '/anti-cheat'
+    | '/central'
     | '/configuracoes'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
+    | '/manutencao-programada'
     | '/otimizacoes'
     | '/perfis'
+    | '/personalizado'
+    | '/reparar-windows'
+    | '/seguranca'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AntiCheatRoute: typeof AntiCheatRoute
+  CentralRoute: typeof CentralRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   DiagnosticoRoute: typeof DiagnosticoRoute
   InicializacaoRoute: typeof InicializacaoRoute
   LimpezaRoute: typeof LimpezaRoute
+  ManutencaoProgramadaRoute: typeof ManutencaoProgramadaRoute
   OtimizacoesRoute: typeof OtimizacoesRoute
   PerfisRoute: typeof PerfisRoute
+  PersonalizadoRoute: typeof PersonalizadoRoute
+  RepararWindowsRoute: typeof RepararWindowsRoute
+  SegurancaRoute: typeof SegurancaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reparar-windows': {
+      id: '/reparar-windows'
+      path: '/reparar-windows'
+      fullPath: '/reparar-windows'
+      preLoaderRoute: typeof RepararWindowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/personalizado': {
+      id: '/personalizado'
+      path: '/personalizado'
+      fullPath: '/personalizado'
+      preLoaderRoute: typeof PersonalizadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfis': {
       id: '/perfis'
       path: '/perfis'
@@ -135,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/otimizacoes'
       fullPath: '/otimizacoes'
       preLoaderRoute: typeof OtimizacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manutencao-programada': {
+      id: '/manutencao-programada'
+      path: '/manutencao-programada'
+      fullPath: '/manutencao-programada'
+      preLoaderRoute: typeof ManutencaoProgramadaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/limpeza': {
@@ -165,6 +271,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/central': {
+      id: '/central'
+      path: '/central'
+      fullPath: '/central'
+      preLoaderRoute: typeof CentralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anti-cheat': {
+      id: '/anti-cheat'
+      path: '/anti-cheat'
+      fullPath: '/anti-cheat'
+      preLoaderRoute: typeof AntiCheatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -177,12 +297,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AntiCheatRoute: AntiCheatRoute,
+  CentralRoute: CentralRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   DiagnosticoRoute: DiagnosticoRoute,
   InicializacaoRoute: InicializacaoRoute,
   LimpezaRoute: LimpezaRoute,
+  ManutencaoProgramadaRoute: ManutencaoProgramadaRoute,
   OtimizacoesRoute: OtimizacoesRoute,
   PerfisRoute: PerfisRoute,
+  PersonalizadoRoute: PersonalizadoRoute,
+  RepararWindowsRoute: RepararWindowsRoute,
+  SegurancaRoute: SegurancaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

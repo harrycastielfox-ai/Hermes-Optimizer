@@ -1,3 +1,6 @@
+import { forceSafeDryRun } from "@/lib/safe-mode";
+import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+
 export type StartupImpact = "high" | "medium" | "low";
 export type StartupStatus = "active" | "disabled" | "unknown";
 export type StartupApplyAction = "disable" | "enable";
@@ -80,13 +83,23 @@ export const fallbackStartupReport: StartupReport = {
 };
 
 export async function loadStartupReport(): Promise<StartupReport> {
+  const cached = readLocalReportCache<StartupReport>("startup-report");
+  if (cached) {
+    return cached;
+  }
+
+  return refreshStartupReport();
+}
+
+export async function refreshStartupReport(): Promise<StartupReport> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return fallbackStartupReport;
   }
 
   try {
     const { invoke } = await import("@tauri-apps/api/core");
-    return await invoke<StartupReport>("startup_engine_read");
+    const report = await invoke<StartupReport>("startup_engine_read");
+    return writeLocalReportCache("startup-report", report);
   } catch (error) {
     console.warn("Startup Engine indisponivel, usando fallback local.", error);
     return fallbackStartupReport;
@@ -99,7 +112,7 @@ export async function applyStartupEngine(request: StartupApplyRequest): Promise<
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<StartupApplyResult>("startup_engine_apply", { request });
+  return await invoke<StartupApplyResult>("startup_engine_apply", { request: forceSafeDryRun(request) });
 }
 
 function fallbackItem(name: string, command: string, impact: StartupImpact): StartupItem {

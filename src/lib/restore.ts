@@ -1,3 +1,5 @@
+import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
+
 export type RestoreRiskLevel = "low" | "medium" | "high";
 export type RestoreSnapshotStatus = "created" | "dryRun" | "validated" | "applied" | "failed";
 export type RestoreRollbackActionType =
@@ -179,6 +181,6 @@ export async function applyRestoreSnapshot(snapshotId: string, dryRun = true): P
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<RestoreApplyResult>("restore_apply_snapshot", {
     snapshotId,
-    dryRun,
+    dryRun: HERMES_SAFE_TEST_MODE || dryRun,
   });
 }

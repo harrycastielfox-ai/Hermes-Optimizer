@@ -1,7 +1,10 @@
-use crate::restore::{
-    self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
-    RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
-    RestoreRollbackActionStatus, RestoreRollbackActionType,
+use crate::{
+    restore::{
+        self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
+        RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
+        RestoreRollbackActionStatus, RestoreRollbackActionType,
+    },
+    safe_mode,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -19,6 +22,13 @@ const MISSING_REGISTRY_VALUE: &str = "__HERMES_MISSING__";
 const BALANCED_POWER_PLAN_GUID: &str = "381b4222-f694-41f0-9685-ff5bb260df2e";
 const POWER_SAVER_POWER_PLAN_GUID: &str = "a1841308-3541-4fab-bc81-f71556f20b4a";
 const HIGH_PERFORMANCE_POWER_PLAN_GUID: &str = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";
+const PERSONALIZE_REGISTRY_PATH: &str =
+    "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+const EXPLORER_ADVANCED_REGISTRY_PATH: &str =
+    "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
+const WINDOW_METRICS_REGISTRY_PATH: &str = "HKCU:\\Control Panel\\Desktop\\WindowMetrics";
+const VISUAL_EFFECTS_REGISTRY_PATH: &str =
+    "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -227,7 +237,7 @@ pub fn performance_apply_controlled(
     request: Option<PerformanceApplyRequest>,
 ) -> Result<PerformanceApplyResult, String> {
     let request = request.unwrap_or_default();
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria antes de aplicar otimizacoes reais.".to_string());
     }
@@ -247,7 +257,7 @@ pub fn performance_apply_controlled(
         PerformanceEventLevel::Info,
         Some(snapshot.id.clone()),
         if dry_run {
-            "Performance Engine 6.2 criou snapshot obrigatorio em dry-run."
+            "DRY-RUN | Performance Engine 6.2 criou snapshot obrigatorio em dry-run."
         } else {
             "Performance Engine 6.2 criou snapshot obrigatorio antes da aplicacao."
         },
@@ -260,7 +270,10 @@ pub fn performance_apply_controlled(
                 id: action.id.clone(),
                 title: action.title.clone(),
                 status: PerformanceApplyActionStatus::DryRun,
-                message: "Dry-run validado. Nenhuma alteracao foi aplicada.".to_string(),
+                message: format!(
+                    "{} — nenhuma alteracao de performance foi aplicada.",
+                    safe_mode::mode_prefix(dry_run)
+                ),
             })
             .collect::<Vec<_>>();
 
@@ -272,8 +285,15 @@ pub fn performance_apply_controlled(
             snapshot_id: snapshot.id,
             rollback_available: true,
             applied_actions,
-            message: "Aplicacao controlada validada em dry-run com snapshot e rollback preparados."
-                .to_string(),
+            message: format!(
+                "{} — aplicacao controlada validada com snapshot e rollback preparados. {}",
+                safe_mode::mode_prefix(dry_run),
+                if safe_mode::is_enabled() {
+                    safe_mode::notice()
+                } else {
+                    ""
+                }
+            ),
         });
     }
 
@@ -519,13 +539,7 @@ fn selected_action_ids(action_ids: Option<&[String]>) -> Vec<String> {
     let ids = action_ids
         .filter(|items| !items.is_empty())
         .map(|items| items.iter().map(|item| item.trim().to_string()).collect())
-        .unwrap_or_else(|| {
-            vec![
-                "disable-transparency".to_string(),
-                "disable-window-animations".to_string(),
-                "disable-visual-shadows".to_string(),
-            ]
-        });
+        .unwrap_or_else(Vec::new);
 
     ids.into_iter()
         .filter(|id| is_known_controlled_action_id(id))
@@ -561,8 +575,7 @@ fn controlled_actions_from_raw(
                 risk: RestoreRiskLevel::Low,
                 requires_admin: false,
                 operations: vec![PerformanceOperation::RegistryDword {
-                    path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-                        .to_string(),
+                    path: PERSONALIZE_REGISTRY_PATH.to_string(),
                     name: "EnableTransparency".to_string(),
                     value: 0,
                     previous_value: previous_dword(raw.enable_transparency),
@@ -577,22 +590,21 @@ fn controlled_actions_from_raw(
                 risk: RestoreRiskLevel::Low,
                 requires_admin: false,
                 operations: vec![
+                    visual_fx_custom_operation(raw),
                     PerformanceOperation::RegistryString {
-                        path: "HKCU:\\Control Panel\\Desktop\\WindowMetrics".to_string(),
+                        path: WINDOW_METRICS_REGISTRY_PATH.to_string(),
                         name: "MinAnimate".to_string(),
                         value: "0".to_string(),
                         previous_value: previous_string(raw.min_animate.as_deref()),
                     },
                     PerformanceOperation::RegistryDword {
-                        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
-                            .to_string(),
+                        path: EXPLORER_ADVANCED_REGISTRY_PATH.to_string(),
                         name: "TaskbarAnimations".to_string(),
                         value: 0,
                         previous_value: previous_dword(raw.taskbar_animations),
                     },
                     PerformanceOperation::RegistryDword {
-                        path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
-                            .to_string(),
+                        path: EXPLORER_ADVANCED_REGISTRY_PATH.to_string(),
                         name: "ListviewAlphaSelect".to_string(),
                         value: 0,
                         previous_value: previous_dword(raw.listview_alpha_select),
@@ -607,13 +619,15 @@ fn controlled_actions_from_raw(
                         .to_string(),
                 risk: RestoreRiskLevel::Low,
                 requires_admin: false,
-                operations: vec![PerformanceOperation::RegistryDword {
-                    path: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
-                        .to_string(),
-                    name: "ListviewShadow".to_string(),
-                    value: 0,
-                    previous_value: previous_dword(raw.listview_shadow),
-                }],
+                operations: vec![
+                    visual_fx_custom_operation(raw),
+                    PerformanceOperation::RegistryDword {
+                        path: EXPLORER_ADVANCED_REGISTRY_PATH.to_string(),
+                        name: "ListviewShadow".to_string(),
+                        value: 0,
+                        previous_value: previous_dword(raw.listview_shadow),
+                    },
+                ],
             }),
             "set-balanced-power-plan" => actions.push(PerformanceControlledAction {
                 id: id.clone(),
@@ -644,8 +658,8 @@ fn controlled_actions_from_raw(
             "set-high-performance-power-plan" => actions.push(PerformanceControlledAction {
                 id: id.clone(),
                 title: "Ativar Alto Desempenho".to_string(),
-                description:
-                    "Troca o plano de energia para Alto Desempenho usando powercfg.".to_string(),
+                description: "Troca o plano de energia para Alto Desempenho usando powercfg."
+                    .to_string(),
                 risk: RestoreRiskLevel::Medium,
                 requires_admin: false,
                 operations: vec![PerformanceOperation::PowerPlan {
@@ -659,6 +673,15 @@ fn controlled_actions_from_raw(
     }
 
     actions
+}
+
+fn visual_fx_custom_operation(raw: &RawPerformanceReport) -> PerformanceOperation {
+    PerformanceOperation::RegistryDword {
+        path: VISUAL_EFFECTS_REGISTRY_PATH.to_string(),
+        name: "VisualFXSetting".to_string(),
+        value: 3,
+        previous_value: previous_dword(raw.visual_fx_setting),
+    }
 }
 
 fn ensure_rollback_ready(actions: &[PerformanceControlledAction]) -> Result<(), String> {
@@ -753,7 +776,7 @@ fn operation_to_rollback_action(
             ..
         } => Some(RestoreRollbackAction {
             id,
-            action_type: RestoreRollbackActionType::RestoreRegistryValue,
+            action_type: rollback_type_for_registry_value(path),
             target: registry_target(path, name, "DWord"),
             description: format!("Restaurar {name} no Registro para o estado anterior."),
             previous_value: previous_value.clone(),
@@ -768,7 +791,7 @@ fn operation_to_rollback_action(
             ..
         } => Some(RestoreRollbackAction {
             id,
-            action_type: RestoreRollbackActionType::RestoreRegistryValue,
+            action_type: rollback_type_for_registry_value(path),
             target: registry_target(path, name, "String"),
             description: format!("Restaurar {name} no Registro para o estado anterior."),
             previous_value: previous_value.clone(),
@@ -821,7 +844,7 @@ fn operation_to_previous_state(
             ..
         } => RestorePreviousState {
             key: format!("{}:{}:{}", action.id, path, name),
-            category: RestorePreviousStateCategory::Registry,
+            category: previous_state_category_for_registry_value(path),
             value: previous_value
                 .clone()
                 .unwrap_or_else(|| MISSING_REGISTRY_VALUE.to_string()),
@@ -889,6 +912,34 @@ fn apply_operation(operation: &PerformanceOperation) -> Result<(), String> {
         } => set_registry_string(path, name, value),
         PerformanceOperation::PowerPlan { guid, .. } => set_power_plan(guid),
     }
+}
+
+fn rollback_type_for_registry_value(path: &str) -> RestoreRollbackActionType {
+    if is_visual_effects_registry_path(path) {
+        RestoreRollbackActionType::RestoreVisualEffects
+    } else {
+        RestoreRollbackActionType::RestoreRegistryValue
+    }
+}
+
+fn previous_state_category_for_registry_value(path: &str) -> RestorePreviousStateCategory {
+    if is_visual_effects_registry_path(path) {
+        RestorePreviousStateCategory::VisualEffects
+    } else {
+        RestorePreviousStateCategory::Registry
+    }
+}
+
+fn is_visual_effects_registry_path(path: &str) -> bool {
+    let normalized = path.replace('/', "\\").to_ascii_lowercase();
+    matches!(
+        normalized.as_str(),
+        "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize"
+            | "hkcu:\\control panel\\desktop"
+            | "hkcu:\\control panel\\desktop\\windowmetrics"
+            | "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced"
+            | "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\visualeffects"
+    )
 }
 
 fn set_registry_dword(path: &str, name: &str, value: i64) -> Result<(), String> {
@@ -1266,3 +1317,120 @@ $gameDvrEnabled = DwordToBool (Get-Dword $gameConfigPath 'GameDVR_Enabled')
   powerThrottlingOff = Get-Dword $powerThrottlePath 'PowerThrottlingOff'
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn raw_report() -> RawPerformanceReport {
+        RawPerformanceReport {
+            power_plan_name: Some("Equilibrado".to_string()),
+            power_plan_guid: Some(BALANCED_POWER_PLAN_GUID.to_string()),
+            auto_game_mode_enabled: Some(false),
+            allow_auto_game_mode: Some(false),
+            game_dvr_enabled: Some(true),
+            enable_transparency: Some(1),
+            visual_fx_setting: Some(1),
+            min_animate: Some("1".to_string()),
+            taskbar_animations: Some(1),
+            listview_shadow: Some(1),
+            listview_alpha_select: Some(1),
+            drag_full_windows: Some("1".to_string()),
+            background_apps_global_disabled: Some(0),
+            power_throttling_off: Some(0),
+        }
+    }
+
+    fn snapshot_for_profile(
+        profile_name: &str,
+        action_ids: Vec<&str>,
+    ) -> RestoreCreateSnapshotRequest {
+        let request = PerformanceApplyRequest {
+            action_ids: Some(action_ids.into_iter().map(str::to_string).collect()),
+            confirmed: true,
+            dry_run: Some(true),
+            reason: Some(format!("Perfil Hermes: {profile_name}")),
+        };
+        let selected_ids = selected_action_ids(request.action_ids.as_deref());
+        let actions = controlled_actions_from_raw(&raw_report(), &selected_ids);
+
+        build_performance_snapshot_request(&request, &actions, true)
+    }
+
+    fn assert_visual_fx_setting_snapshot(snapshot: RestoreCreateSnapshotRequest) {
+        let rollback_manifest = snapshot
+            .rollback_manifest
+            .expect("snapshot must include rollback manifest");
+        let visual_fx_rollback = rollback_manifest
+            .iter()
+            .find(|action| {
+                action
+                    .target
+                    .contains("Explorer\\VisualEffects|VisualFXSetting|DWord")
+            })
+            .expect("VisualFXSetting rollback must be registered");
+
+        assert!(matches!(
+            visual_fx_rollback.action_type,
+            RestoreRollbackActionType::RestoreVisualEffects
+        ));
+        assert_eq!(visual_fx_rollback.previous_value.as_deref(), Some("1"));
+
+        let previous_state = snapshot
+            .previous_state
+            .expect("snapshot must include previous state");
+        let visual_fx_state = previous_state
+            .iter()
+            .find(|state| {
+                state
+                    .key
+                    .contains("Explorer\\VisualEffects:VisualFXSetting")
+            })
+            .expect("VisualFXSetting previous state must be captured");
+
+        assert!(matches!(
+            visual_fx_state.category,
+            RestorePreviousStateCategory::VisualEffects
+        ));
+        assert_eq!(visual_fx_state.value, "1");
+        assert!(visual_fx_state.captured);
+    }
+
+    #[test]
+    fn gamer_profile_snapshot_captures_visual_fx_setting() {
+        assert_visual_fx_setting_snapshot(snapshot_for_profile(
+            "Gamer",
+            vec![
+                "disable-transparency",
+                "disable-window-animations",
+                "disable-visual-shadows",
+                "set-high-performance-power-plan",
+            ],
+        ));
+    }
+
+    #[test]
+    fn economia_profile_snapshot_captures_visual_fx_setting() {
+        assert_visual_fx_setting_snapshot(snapshot_for_profile(
+            "Economia",
+            vec![
+                "disable-transparency",
+                "disable-window-animations",
+                "set-power-saver-power-plan",
+            ],
+        ));
+    }
+
+    #[test]
+    fn extremo_profile_snapshot_captures_visual_fx_setting() {
+        assert_visual_fx_setting_snapshot(snapshot_for_profile(
+            "Extremo",
+            vec![
+                "disable-transparency",
+                "disable-window-animations",
+                "disable-visual-shadows",
+                "set-high-performance-power-plan",
+            ],
+        ));
+    }
+}

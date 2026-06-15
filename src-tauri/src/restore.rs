@@ -1,3 +1,4 @@
+use crate::safe_mode;
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -536,7 +537,7 @@ pub fn restore_apply_snapshot(
     snapshot_id: String,
     dry_run: Option<bool>,
 ) -> Result<RestoreApplyResult, String> {
-    let dry_run = dry_run.unwrap_or(true);
+    let dry_run = safe_mode::force_dry_run(dry_run.unwrap_or(true));
     let paths = restore_paths(&app)?;
     let mut history = read_snapshot_history(&paths.snapshots);
     let Some(index) = history
@@ -557,7 +558,7 @@ pub fn restore_apply_snapshot(
     snapshot.logs_after.push(log_entry(
         RestoreLogLevel::Info,
         if dry_run {
-            "Restore dry-run iniciado. Nenhuma alteracao sera executada."
+            "DRY-RUN | Restore dry-run iniciado. Nenhuma alteracao sera executada."
         } else {
             "Restore iniciado. Acoes seguras do manifesto serao revertidas quando suportadas."
         },
@@ -600,7 +601,7 @@ pub fn restore_apply_snapshot(
         RestoreLogLevel::Info,
         Some(snapshot_id.clone()),
         if dry_run {
-            "Snapshot validado em dry-run."
+            "DRY-RUN | Snapshot validado em dry-run."
         } else {
             "Snapshot aplicado com rollback seguro."
         },
@@ -774,7 +775,7 @@ fn validate_scoped_registry_value_action(
     is_allowed_path: fn(&str) -> bool,
     allowed_value_kinds: &[&str],
 ) -> RestoreActionResult {
-    let Some((path, _name, value_kind)) = parse_registry_target(&action.target) else {
+    let Some((path, name, value_kind)) = parse_registry_target(&action.target) else {
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
@@ -787,6 +788,14 @@ fn validate_scoped_registry_value_action(
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
             message: format!("{scope}: caminho de Registro fora da allowlist Hermes."),
+        };
+    }
+
+    if scope == "Efeitos visuais" && !is_allowed_visual_effects_registry_target(&path, &name) {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: format!("{scope}: valor de Registro fora da allowlist Hermes."),
         };
     }
 
@@ -906,6 +915,16 @@ fn restore_scoped_registry_value_action(
             status: RestoreActionResultStatus::Failed,
             message: format!(
                 "Rollback bloqueado: caminho de Registro fora da allowlist Hermes para {scope}."
+            ),
+        };
+    }
+
+    if scope == "Efeitos visuais" && !is_allowed_visual_effects_registry_target(&path, &name) {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: format!(
+                "Rollback bloqueado: valor de Registro fora da allowlist Hermes para {scope}."
             ),
         };
     }
@@ -1267,6 +1286,35 @@ fn is_allowed_visual_effects_registry_path(path: &str) -> bool {
     )
 }
 
+fn is_allowed_visual_effects_registry_target(path: &str, name: &str) -> bool {
+    let normalized = path.replace('/', "\\").to_ascii_lowercase();
+    let normalized_name = name.to_ascii_lowercase();
+    matches!(
+        (normalized.as_str(), normalized_name.as_str()),
+        (
+            "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
+            "enabletransparency"
+        ) | ("hkcu:\\control panel\\desktop", "dragfullwindows")
+            | ("hkcu:\\control panel\\desktop\\windowmetrics", "minanimate")
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "taskbaranimations"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "listviewalphaselect"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "listviewshadow"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\visualeffects",
+                "visualfxsetting"
+            )
+    )
+}
+
 fn is_allowed_game_mode_registry_path(path: &str) -> bool {
     let normalized = path.replace('/', "\\").to_ascii_lowercase();
     matches!(
@@ -1516,4 +1564,51 @@ fn now_nanos() -> u128 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_nanos())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_visual_fx_setting_rollback_in_isolation() {
+        let action = RestoreRollbackAction {
+            id: "rollback-visual-fx-setting".to_string(),
+            action_type: RestoreRollbackActionType::RestoreVisualEffects,
+            target: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects|VisualFXSetting|DWord".to_string(),
+            description: "Restaurar VisualFXSetting no Registro para o estado anterior.".to_string(),
+            previous_value: Some("1".to_string()),
+            backup_path: None,
+            command_preview: Some("PowerShell New-ItemProperty -PropertyType DWord".to_string()),
+            status: RestoreRollbackActionStatus::Pending,
+        };
+
+        let result = validate_rollback_action(&action);
+
+        assert!(matches!(result.status, RestoreActionResultStatus::DryRun));
+        assert!(result.message.contains("Efeitos visuais"));
+    }
+
+    #[test]
+    fn blocks_windows_theme_values_in_visual_effects_rollback() {
+        for value_name in ["AppsUseLightTheme", "SystemUsesLightTheme"] {
+            let action = RestoreRollbackAction {
+                id: format!("rollback-{value_name}"),
+                action_type: RestoreRollbackActionType::RestoreVisualEffects,
+                target: format!(
+                    "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize|{value_name}|DWord"
+                ),
+                description: "Tema do Windows nao deve ser restaurado automaticamente.".to_string(),
+                previous_value: Some("0".to_string()),
+                backup_path: None,
+                command_preview: Some("PowerShell New-ItemProperty -PropertyType DWord".to_string()),
+                status: RestoreRollbackActionStatus::Pending,
+            };
+
+            let result = validate_rollback_action(&action);
+
+            assert!(matches!(result.status, RestoreActionResultStatus::Failed));
+            assert!(result.message.contains("fora da allowlist"));
+        }
+    }
 }

@@ -1,6 +1,7 @@
 mod advanced;
 mod advisor;
 mod advisor_ai_engine;
+mod anti_cheat;
 mod benchmark;
 mod clean;
 mod diagnostic;
@@ -9,7 +10,38 @@ mod optimizer;
 mod performance;
 mod profiles;
 mod restore;
+mod safe_mode;
 mod startup;
+
+use tauri::Manager;
+
+fn force_fullscreen(window: &tauri::WebviewWindow) {
+    if window.is_fullscreen().unwrap_or(false) {
+        return;
+    }
+
+    if let Err(error) = window.set_fullscreen(true) {
+        log::warn!("Nao foi possivel manter o Hermes em tela cheia: {error}");
+        let _ = window.maximize();
+    }
+}
+
+#[tauri::command]
+fn hermes_window_minimize(app: tauri::AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "Janela principal nao encontrada.".to_string())?;
+
+    if window.is_fullscreen().unwrap_or(false) {
+        window.set_fullscreen(false).map_err(|error| {
+            format!("Nao foi possivel sair da tela cheia antes de minimizar: {error}")
+        })?;
+    }
+
+    window
+        .minimize()
+        .map_err(|error| format!("Nao foi possivel minimizar a janela: {error}"))
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,17 +54,38 @@ pub fn run() {
                         .build(),
                 )?;
             }
+            if let Some(window) = app.get_webview_window("main") {
+                force_fullscreen(&window);
+
+                let restore_window = window.clone();
+                window.on_window_event(move |event| {
+                    if matches!(event, tauri::WindowEvent::Focused(true)) {
+                        let window = restore_window.clone();
+                        std::thread::spawn(move || {
+                            std::thread::sleep(std::time::Duration::from_millis(160));
+                            force_fullscreen(&window);
+                        });
+                    }
+                });
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             advanced::advanced_engine_apply,
+            advanced::advanced_engine_apply_optimize_now,
             advanced::advanced_engine_catalog,
+            advanced::advanced_set_graphics_high_performance_optimize_now,
+            anti_cheat::anti_cheat_engine_read,
             advisor_ai_engine::advisor_ai_engine_analyze,
             advisor::advisor_pro_analyze,
+            benchmark::benchmark_engine_read_cached,
             benchmark::benchmark_engine_run,
             clean::clean_engine_apply,
+            clean::clean_engine_apply_optimize_now,
             clean::clean_engine_scan,
             clean::clean_quarantine_purge_expired,
+            diagnostic::diagnostic_engine_read_cached,
+            diagnostic::diagnostic_engine_refresh_live,
             diagnostic::diagnostic_engine_read,
             gamer::gamer_engine_apply,
             gamer::gamer_engine_read,
@@ -52,7 +105,8 @@ pub fn run() {
             restore::restore_list_events,
             restore::restore_validate_snapshot,
             startup::startup_engine_apply,
-            startup::startup_engine_read
+            startup::startup_engine_read,
+            hermes_window_minimize
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

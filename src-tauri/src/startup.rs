@@ -1,7 +1,10 @@
-use crate::restore::{
-    self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
-    RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
-    RestoreRollbackActionStatus, RestoreRollbackActionType,
+use crate::{
+    restore::{
+        self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
+        RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
+        RestoreRollbackActionStatus, RestoreRollbackActionType,
+    },
+    safe_mode,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -238,7 +241,7 @@ pub(crate) fn startup_engine_apply_blocking(
     request: Option<StartupApplyRequest>,
 ) -> Result<StartupApplyResult, String> {
     let request = request.unwrap_or_default();
-    let dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria antes de alterar inicializacao.".to_string());
     }
@@ -269,7 +272,7 @@ pub(crate) fn startup_engine_apply_blocking(
         StartupEventLevel::Info,
         Some(snapshot.id.clone()),
         if dry_run {
-            "Startup Engine iniciou dry-run com snapshot obrigatorio."
+            "DRY-RUN | Startup Engine iniciou dry-run com snapshot obrigatorio."
         } else {
             "Startup Engine iniciou aplicacao apos confirmacao."
         },
@@ -282,8 +285,10 @@ pub(crate) fn startup_engine_apply_blocking(
                 item_id: item.id.clone(),
                 name: item.name.clone(),
                 status: StartupApplyActionStatus::DryRun,
-                message: "Dry-run validado. Nenhuma entrada de inicializacao foi alterada."
-                    .to_string(),
+                message: format!(
+                    "{} — nenhuma entrada de inicializacao foi alterada.",
+                    safe_mode::mode_prefix(dry_run)
+                ),
             })
             .collect::<Vec<_>>()
     } else {
@@ -325,7 +330,15 @@ pub(crate) fn startup_engine_apply_blocking(
             Err(error) => format!("Falha durante Startup Engine e rollback falhou: {error}"),
         }
     } else if dry_run {
-        "Startup Engine validada em dry-run com snapshot e rollback preparados.".to_string()
+        format!(
+            "{} — Startup Engine validada com snapshot e rollback preparados. {}",
+            safe_mode::mode_prefix(dry_run),
+            if safe_mode::is_enabled() {
+                safe_mode::notice()
+            } else {
+                ""
+            }
+        )
     } else {
         "Startup Engine aplicada com snapshot, log e rollback disponiveis.".to_string()
     };

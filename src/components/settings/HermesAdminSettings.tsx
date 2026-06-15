@@ -12,150 +12,74 @@ import {
   MonitorCog,
   Palette,
   RefreshCcw,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Switch } from "@/components/ui/switch";
-
-type UpdateChannel = "stable" | "beta";
-type ThemePreference = "light" | "dark" | "system";
-type AccentPreference = "blue" | "gold" | "auto";
-type LanguagePreference = "pt-BR" | "en-US" | "es-ES";
-
-type HermesAdminPreferences = {
-  version: 1;
-  updates: {
-    autoCheck: boolean;
-    autoDownload: boolean;
-    channel: UpdateChannel;
-    versionHistory: boolean;
-  };
-  appearance: {
-    theme: ThemePreference;
-    accent: AccentPreference;
-  };
-  notifications: {
-    system: boolean;
-    aiReports: boolean;
-    cleanupDone: boolean;
-    snapshotsCreated: boolean;
-    performanceAlerts: boolean;
-  };
-  language: {
-    current: LanguagePreference;
-  };
-  privacy: {
-    anonymousSharing: false;
-  };
-  updatedAt: string;
-};
-
-const STORAGE_KEY = "hermes.admin.preferences.v1";
-
-const defaultPreferences: HermesAdminPreferences = {
-  version: 1,
-  updates: {
-    autoCheck: true,
-    autoDownload: false,
-    channel: "stable",
-    versionHistory: true,
-  },
-  appearance: {
-    theme: "light",
-    accent: "blue",
-  },
-  notifications: {
-    system: true,
-    aiReports: true,
-    cleanupDone: true,
-    snapshotsCreated: true,
-    performanceAlerts: true,
-  },
-  language: {
-    current: "pt-BR",
-  },
-  privacy: {
-    anonymousSharing: false,
-  },
-  updatedAt: "0",
-};
+import { useHermesPreferences, type UpdateChannel } from "@/lib/preferences";
 
 export function HermesAdminSettings() {
-  const [preferences, setPreferences] = useState<HermesAdminPreferences>(defaultPreferences);
-  const [loaded, setLoaded] = useState(false);
+  const { preferences, loaded, language, updatePreferences, resetPreferences, t } =
+    useHermesPreferences();
   const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    setPreferences(readPreferences());
-    setLoaded(true);
-  }, []);
-
-  function updatePreferences(updater: (current: HermesAdminPreferences) => HermesAdminPreferences) {
-    setPreferences((current) => {
-      const next = {
-        ...updater(current),
-        updatedAt: new Date().toISOString(),
-      };
-      savePreferences(next);
-      setNotice("Preferencias salvas localmente.");
-      return next;
-    });
+  function savePreference(updater: Parameters<typeof updatePreferences>[0]) {
+    updatePreferences(updater);
+    setNotice(t("settings.notice.saved"));
   }
 
-  function resetPreferences() {
-    const confirmed = window.confirm("Restaurar preferencias visuais e administrativas padrao? Nenhuma engine sera alterada.");
+  function handleResetPreferences() {
+    const confirmed = window.confirm(t("settings.confirmReset"));
     if (!confirmed) {
       return;
     }
 
-    const next = {
-      ...defaultPreferences,
-      updatedAt: new Date().toISOString(),
-    };
-    savePreferences(next);
-    setPreferences(next);
-    setNotice("Preferencias locais restauradas para o padrao.");
+    resetPreferences();
+    setNotice(t("settings.notice.reset"));
   }
 
   const storageText = useMemo(() => {
     if (!loaded || preferences.updatedAt === "0") {
-      return "Aguardando leitura local.";
+      return t("settings.waiting");
     }
 
-    return `Salvo em ${formatDate(preferences.updatedAt)}`;
-  }, [loaded, preferences.updatedAt]);
+    return `${t("settings.saved")} ${formatDate(preferences.updatedAt, language)}`;
+  }, [language, loaded, preferences.updatedAt, t]);
 
   return (
-    <section id="configuracoes-completas" className="scroll-mt-5 mt-5 rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
+    <section
+      id="configuracoes-completas"
+      className="scroll-mt-5 mt-5 rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
             <MonitorCog className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-[0.22em] text-primary">ADMINISTRACAO</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">Configuracoes completas</h2>
+            <p className="text-[11px] font-bold tracking-[0.22em] text-primary">
+              {t("settings.admin.eyebrow")}
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{t("settings.admin.title")}</h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Preferencias locais para atualizacoes futuras, aparencia, notificacoes, idioma, licenca e privacidade.
+              {t("settings.admin.description")}
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={resetPreferences}
+          onClick={handleResetPreferences}
           className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-muted"
         >
           <RefreshCcw className="h-4 w-4 text-primary" />
-          Restaurar padrao
+          {t("settings.reset")}
         </button>
       </div>
 
       <div className="mt-4 flex flex-col gap-2 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-primary sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-2">
           <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>Preferencias salvas apenas neste dispositivo. Sem conta, sem nuvem e sem telemetria.</span>
+          <span>{t("settings.localOnly")}</span>
         </div>
         <span className="text-[12px] font-semibold">{storageText}</span>
       </div>
@@ -169,16 +93,16 @@ export function HermesAdminSettings() {
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SettingsPanel
           icon={RefreshCcw}
-          title="Atualizacoes"
-          description="Estrutura visual para verificacao, download automatico e canais futuros. Nenhuma atualizacao real e executada."
+          title={t("settings.updates.title")}
+          description={t("settings.updates.description")}
         >
           <ToggleRow
             icon={CheckCircle2}
-            title="Verificar atualizacoes automaticamente"
-            description="Preparado para fase futura de updates locais."
+            title={t("settings.updates.autoCheck.title")}
+            description={t("settings.updates.autoCheck.description")}
             checked={preferences.updates.autoCheck}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 updates: { ...current.updates, autoCheck: checked },
               }))
@@ -186,25 +110,33 @@ export function HermesAdminSettings() {
           />
           <ToggleRow
             icon={Download}
-            title="Baixar atualizacoes automaticamente"
-            description="Preferencia salva, sem downloader implementado nesta fase."
+            title={t("settings.updates.autoDownload.title")}
+            description={t("settings.updates.autoDownload.description")}
             checked={preferences.updates.autoDownload}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 updates: { ...current.updates, autoDownload: checked },
               }))
             }
           />
           <SegmentedControl
-            label="Canal"
+            label={t("settings.updates.channel")}
             value={preferences.updates.channel}
             options={[
-              { value: "stable", label: "Estavel", description: "Recomendado" },
-              { value: "beta", label: "Beta", description: "Futuro" },
+              {
+                value: "stable",
+                label: t("settings.option.stable"),
+                description: t("settings.option.recommended"),
+              },
+              {
+                value: "beta",
+                label: t("settings.option.beta"),
+                description: t("settings.option.future"),
+              },
             ]}
             onChange={(channel) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 updates: { ...current.updates, channel },
               }))
@@ -212,11 +144,11 @@ export function HermesAdminSettings() {
           />
           <ToggleRow
             icon={FileKey2}
-            title="Historico de versoes"
-            description="Area preparada para changelog local futuro."
+            title={t("settings.updates.history.title")}
+            description={t("settings.updates.history.description")}
             checked={preferences.updates.versionHistory}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 updates: { ...current.updates, versionHistory: checked },
               }))
@@ -226,34 +158,73 @@ export function HermesAdminSettings() {
 
         <SettingsPanel
           icon={Palette}
-          title="Aparencia"
-          description="Preferencias preparadas sem alterar a identidade visual aprovada nesta fase."
+          title={t("settings.appearance.title")}
+          description={t("settings.appearance.description")}
         >
           <SegmentedControl
-            label="Tema"
+            label={t("settings.appearance.theme")}
             value={preferences.appearance.theme}
             options={[
-              { value: "light", label: "Claro", description: "Atual" },
-              { value: "dark", label: "Escuro", description: "Futuro" },
-              { value: "system", label: "Sistema", description: "Futuro" },
+              {
+                value: "light",
+                label: t("settings.option.light"),
+                description:
+                  preferences.appearance.theme === "light"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "dark",
+                label: t("settings.option.dark"),
+                description:
+                  preferences.appearance.theme === "dark"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "system",
+                label: t("settings.option.system"),
+                description:
+                  preferences.appearance.theme === "system"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
             ]}
             onChange={(theme) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 appearance: { ...current.appearance, theme },
               }))
             }
           />
           <SegmentedControl
-            label="Cor principal"
+            label={t("settings.appearance.accent")}
             value={preferences.appearance.accent}
             options={[
-              { value: "blue", label: "Azul Hermes", description: "Atual" },
-              { value: "gold", label: "Dourado", description: "Futuro" },
-              { value: "auto", label: "Automatico", description: "Futuro" },
+              {
+                value: "blue",
+                label: t("settings.option.blue"),
+                description:
+                  preferences.appearance.accent === "blue"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "gold",
+                label: t("settings.option.gold"),
+                description:
+                  preferences.appearance.accent === "gold"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "auto",
+                label: t("settings.option.auto"),
+                description: t("settings.option.future"),
+              },
             ]}
             onChange={(accent) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 appearance: { ...current.appearance, accent },
               }))
@@ -261,71 +232,47 @@ export function HermesAdminSettings() {
           />
           <ReadonlyNote
             icon={Eye}
-            title="Identidade preservada"
-            text="Salvar estas preferencias nao muda o tema global agora. A aplicacao continua no visual branco premium Hermes aprovado."
+            title={t("settings.appearance.note.title")}
+            text={t("settings.appearance.note.text")}
           />
         </SettingsPanel>
 
         <SettingsPanel
           icon={Bell}
-          title="Notificacoes"
-          description="Preferencias locais para avisos futuros. Nenhum servico residente e criado."
+          title={t("settings.notifications.title")}
+          description={t("settings.notifications.description")}
         >
           <ToggleRow
             icon={Bell}
-            title="Notificacoes do sistema"
-            description="Preparado para avisos locais sob demanda."
+            title={t("settings.notifications.system.title")}
+            description={t("settings.notifications.system.description")}
             checked={preferences.notifications.system}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 notifications: { ...current.notifications, system: checked },
               }))
             }
           />
           <ToggleRow
-            icon={Sparkles}
-            title="Relatorios Hermes AI"
-            description="Avisos quando uma analise local gerar recomendacoes."
-            checked={preferences.notifications.aiReports}
-            onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
-                ...current,
-                notifications: { ...current.notifications, aiReports: checked },
-              }))
-            }
-          />
-          <ToggleRow
             icon={CheckCircle2}
-            title="Limpezas concluidas"
-            description="Preparado para resultados da Clean Engine."
+            title={t("settings.notifications.cleanup.title")}
+            description={t("settings.notifications.cleanup.description")}
             checked={preferences.notifications.cleanupDone}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 notifications: { ...current.notifications, cleanupDone: checked },
               }))
             }
           />
           <ToggleRow
-            icon={ShieldCheck}
-            title="Snapshots criados"
-            description="Preparado para eventos do Restore Engine."
-            checked={preferences.notifications.snapshotsCreated}
-            onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
-                ...current,
-                notifications: { ...current.notifications, snapshotsCreated: checked },
-              }))
-            }
-          />
-          <ToggleRow
             icon={MonitorCog}
-            title="Alertas de desempenho"
-            description="Preparado para leituras futuras sem monitoramento permanente."
+            title={t("settings.notifications.performance.title")}
+            description={t("settings.notifications.performance.description")}
             checked={preferences.notifications.performanceAlerts}
             onCheckedChange={(checked) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 notifications: { ...current.notifications, performanceAlerts: checked },
               }))
@@ -335,19 +282,40 @@ export function HermesAdminSettings() {
 
         <SettingsPanel
           icon={Globe2}
-          title="Idioma"
-          description="Preferencia local preparada. A traducao completa da aplicacao fica para fase futura."
+          title={t("settings.language.title")}
+          description={t("settings.language.description")}
         >
           <SegmentedControl
-            label="Idioma da interface"
+            label={t("settings.language.interface")}
             value={preferences.language.current}
             options={[
-              { value: "pt-BR", label: "Portugues", description: "Atual" },
-              { value: "en-US", label: "English", description: "Futuro" },
-              { value: "es-ES", label: "Espanol", description: "Futuro" },
+              {
+                value: "pt-BR",
+                label: t("settings.option.portuguese"),
+                description:
+                  preferences.language.current === "pt-BR"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "en-US",
+                label: t("settings.option.english"),
+                description:
+                  preferences.language.current === "en-US"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
+              {
+                value: "es-ES",
+                label: t("settings.option.spanish"),
+                description:
+                  preferences.language.current === "es-ES"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
             ]}
             onChange={(language) =>
-              updatePreferences((current) => ({
+              savePreference((current) => ({
                 ...current,
                 language: { ...current.language, current: language },
               }))
@@ -355,49 +323,61 @@ export function HermesAdminSettings() {
           />
           <ReadonlyNote
             icon={Info}
-            title="Aplicacao ainda nao traduzida"
-            text="O Hermes salva a preferencia, mas nao troca textos globais nesta fase."
+            title={t("settings.language.note.title")}
+            text={t("settings.language.note.text")}
           />
         </SettingsPanel>
 
         <SettingsPanel
           icon={FileKey2}
-          title="Licenca"
-          description="Area comercial preparada sem ativacao, servidor, pagamento ou validacao real."
+          title={t("settings.license.title")}
+          description={t("settings.license.description")}
         >
           <InfoGrid
             items={[
-              { label: "Versao atual", value: "0.x" },
-              { label: "Canal atual", value: channelLabel(preferences.updates.channel) },
-              { label: "Status da licenca", value: "Modo Desenvolvimento" },
-              { label: "Ativacao", value: "Nao implementada" },
+              { label: t("settings.license.version"), value: "0.x" },
+              {
+                label: t("settings.license.channel"),
+                value: channelLabel(preferences.updates.channel, t),
+              },
+              { label: t("settings.license.status"), value: t("settings.license.devMode") },
+              {
+                label: t("settings.license.activation"),
+                value: t("settings.license.notImplemented"),
+              },
             ]}
           />
           <ReadonlyNote
             icon={LockKeyhole}
-            title="Sem licenciamento real"
-            text="Nenhuma chave e validada, nenhum servidor e chamado e nenhum pagamento e integrado."
+            title={t("settings.license.note.title")}
+            text={t("settings.license.note.text")}
           />
         </SettingsPanel>
 
         <SettingsPanel
-          icon={ShieldCheck}
-          title="Privacidade"
-          description="Compromissos locais do Hermes e base visual para preferencias futuras."
+          icon={LockKeyhole}
+          title={t("settings.privacy.title")}
+          description={t("settings.privacy.description")}
         >
-          <PrivacyPromise text="Hermes funciona localmente." />
-          <PrivacyPromise text="Sem telemetria obrigatoria." />
-          <PrivacyPromise text="Sem envio automatico de dados." />
-          <PrivacyPromise text="Sem nuvem obrigatoria, conta ou login." />
+          <PrivacyPromise text={t("settings.privacy.local")} />
+          <PrivacyPromise text={t("settings.privacy.noTelemetry")} />
+          <PrivacyPromise text={t("settings.privacy.noUpload")} />
+          <PrivacyPromise text={t("settings.privacy.noCloud")} />
           <div className="rounded-xl border border-border/70 bg-background/70 px-3 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground">Compartilhar dados anonimos</p>
+                <p className="text-sm font-bold text-foreground">
+                  {t("settings.privacy.share.title")}
+                </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  Opcao futura. Desativada por padrao e sem qualquer coleta nesta fase.
+                  {t("settings.privacy.share.description")}
                 </p>
               </div>
-              <Switch checked={preferences.privacy.anonymousSharing} disabled aria-label="Compartilhar dados anonimos desativado" />
+              <Switch
+                checked={preferences.privacy.anonymousSharing}
+                disabled
+                aria-label={t("settings.privacy.share.title")}
+              />
             </div>
           </div>
         </SettingsPanel>
@@ -488,12 +468,14 @@ function SegmentedControl<T extends string>({
               onClick={() => onChange(option.value)}
               className={`min-h-16 rounded-xl border px-3 py-2 text-left transition ${
                 active
-                  ? "border-primary bg-primary/10 text-primary shadow-[0_8px_22px_-18px_rgba(37,99,235,0.8)]"
+                  ? "border-primary bg-primary/10 text-primary shadow-lg"
                   : "border-border/70 bg-background/70 text-foreground hover:border-primary/35"
               }`}
             >
               <span className="block text-sm font-bold">{option.label}</span>
-              <span className="mt-0.5 block text-[11px] text-muted-foreground">{option.description}</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                {option.description}
+              </span>
             </button>
           );
         })}
@@ -502,7 +484,15 @@ function SegmentedControl<T extends string>({
   );
 }
 
-function ReadonlyNote({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
+function ReadonlyNote({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+}) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 px-3 py-3">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -519,7 +509,9 @@ function InfoGrid({ items }: { items: Array<{ label: string; value: string }> })
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {items.map((item) => (
         <div key={item.label} className="rounded-xl border border-border/70 bg-card px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{item.label}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {item.label}
+          </p>
           <p className="mt-1 text-sm font-bold text-foreground">{item.value}</p>
         </div>
       ))}
@@ -536,81 +528,24 @@ function PrivacyPromise({ text }: { text: string }) {
   );
 }
 
-function readPreferences(): HermesAdminPreferences {
-  if (typeof window === "undefined") {
-    return defaultPreferences;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {
-        ...defaultPreferences,
-        updatedAt: new Date().toISOString(),
-      };
-    }
-
-    const parsed = JSON.parse(raw) as Partial<HermesAdminPreferences>;
-    return mergePreferences(parsed);
-  } catch (error) {
-    console.warn("Falha ao ler preferencias locais do Hermes.", error);
-    return {
-      ...defaultPreferences,
-      updatedAt: new Date().toISOString(),
-    };
-  }
-}
-
-function savePreferences(preferences: HermesAdminPreferences) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-}
-
-function mergePreferences(value: Partial<HermesAdminPreferences>): HermesAdminPreferences {
-  return {
-    ...defaultPreferences,
-    ...value,
-    updates: {
-      ...defaultPreferences.updates,
-      ...value.updates,
-    },
-    appearance: {
-      ...defaultPreferences.appearance,
-      ...value.appearance,
-    },
-    notifications: {
-      ...defaultPreferences.notifications,
-      ...value.notifications,
-    },
-    language: {
-      ...defaultPreferences.language,
-      ...value.language,
-    },
-    privacy: {
-      anonymousSharing: false,
-    },
-    updatedAt: value.updatedAt ?? new Date().toISOString(),
-  };
-}
-
-function channelLabel(channel: UpdateChannel) {
+function channelLabel(
+  channel: UpdateChannel,
+  t: (key: "settings.option.beta" | "settings.option.future" | "settings.option.stable") => string,
+) {
   if (channel === "beta") {
-    return "Beta futuro";
+    return `${t("settings.option.beta")} ${t("settings.option.future")}`;
   }
 
-  return "Estavel";
+  return t("settings.option.stable");
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, language: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return "localmente";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(language, {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",

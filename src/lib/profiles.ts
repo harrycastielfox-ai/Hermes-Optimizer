@@ -1,4 +1,5 @@
 import type { PerformanceApplyActionStatus } from "@/lib/performance";
+import { forceSafeDryRun } from "@/lib/safe-mode";
 import type { StartupApplyAction, StartupImpact } from "@/lib/startup";
 
 export type ProfileRisk = "low" | "medium" | "high";
@@ -74,29 +75,19 @@ export const fallbackProfilesCatalog: ProfilesCatalog = {
   profiles: [
     profile("seguro", "Seguro", "Maxima estabilidade com plano equilibrado.", "low", ["set-balanced-power-plan"], [], undefined, [], false, ["list-power-plans"]),
     profile("trabalho", "Trabalho", "Equilibrio para produtividade diaria.", "low", [
-      "disable-transparency",
       "set-balanced-power-plan",
     ], ["temp", "cache"], undefined, [], false, ["flush-dns-cache"]),
     profile("gamer", "Gamer", "Prioriza resposta e desempenho sob demanda.", "medium", [
-      "disable-transparency",
-      "disable-window-animations",
-      "disable-visual-shadows",
       "set-high-performance-power-plan",
     ], ["temp", "cache", "thumbnails"], "disable", ["high"], true, [
       "enable-game-mode",
       "disable-game-dvr",
       "flush-dns-cache",
-      "set-visual-effects-custom",
     ]),
     profile("economia", "Economia", "Reduz consumo e animacoes nao essenciais.", "low", [
-      "disable-transparency",
-      "disable-window-animations",
       "set-power-saver-power-plan",
     ], ["temp"], "disable", ["high"], false, ["disable-game-dvr", "flush-dns-cache"]),
     profile("extremo", "Extremo", "Desempenho maximo com confirmacao extra.", "high", [
-      "disable-transparency",
-      "disable-window-animations",
-      "disable-visual-shadows",
       "set-high-performance-power-plan",
     ], ["temp", "cache", "logs", "thumbnails", "windows-update-cache"], "disable", ["high", "medium"], true, [
       "enable-game-mode",
@@ -104,7 +95,6 @@ export const fallbackProfilesCatalog: ProfilesCatalog = {
       "disable-startup-delay",
       "flush-dns-cache",
       "list-power-plans",
-      "set-visual-effects-custom",
     ], true),
   ],
 };
@@ -129,7 +119,7 @@ export async function applyHermesProfile(request: ProfileApplyRequest): Promise<
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<ProfileApplyResult>("profiles_apply", { request });
+  return await invoke<ProfileApplyResult>("profiles_apply", { request: forceSafeDryRun(request) });
 }
 
 function profile(
