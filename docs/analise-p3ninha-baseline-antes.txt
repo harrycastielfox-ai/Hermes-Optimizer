@@ -1,0 +1,102 @@
+﻿# Baseline P3ninha antes - 2026-06-15 17:08:59
+
+## Processos
+
+   Id ProcessName    MainWindowTitle                                                          CPU WorkingSetMB StartTim
+                                                                                                               e       
+   -- -----------    ---------------                                                          --- ------------ --------
+ 2492 msedgewebview2                                                                       0,0625          4,9 15/06...
+ 3224 msedgewebview2                                                                      0,78125         20,8 15/06...
+ 3340 msedgewebview2                                                                       0,1875          5,8 15/06...
+ 5136 msedgewebview2                                                                   226,484375        148,5 15/06...
+ 6088 msedgewebview2                                                                    11,671875         45,5 15/06...
+ 6116 msedgewebview2                                                                     0,890625          8,3 15/06...
+ 6168 msedgewebview2                                                                      0,09375          4,4 15/06...
+ 6760 msedgewebview2                                                                       0,3125          9,5 15/06...
+ 9176 msedgewebview2                                                                     1,046875         30,9 15/06...
+ 9736 msedgewebview2                                                                     0,828125         16,6 15/06...
+12920 msedgewebview2                                                                   148,328125         60,1 15/06...
+13624 msedgewebview2                                                                      3,53125         45,9 15/06...
+13868 msedgewebview2                                                                     0,703125         39,3 15/06...
+ 8216 P3ninha® V5.0                                                                      4,109375          1,5 15/06...
+11628 P3ninha® V5.0  P3ninha® V5.0   —   © 2026 P3ninha · Todos os Direitos Reservados   65,21875         46,7 15/06...
+
+
+
+
+## Tarefas agendadas
+
+TaskName           TaskPath   State
+--------           --------   -----
+P3ninhaOtimizacoes \        Running
+
+
+
+
+## Arquivos locais topo
+
+Name                   Length LastWriteTime      
+----                   ------ -------------      
+.foco_toast                 1 15/06/2026 15:53:48
+autostart.json             33 15/06/2026 15:51:21
+checkout_debug.log        133 15/06/2026 15:24:42
+clips_config.json         215 15/06/2026 15:24:32
+p3ninha_crash.log          84 15/06/2026 15:49:32
+p3ninha_eventos.log      4200 15/06/2026 15:53:48
+session.dat               743 15/06/2026 15:53:07
+setup_fases.json           72 15/06/2026 15:53:08
+vc_runtimes.zip     187149412 15/06/2026 15:22:45
+
+
+
+
+## Log final
+2026-06-15 15:16:58 [INFO ] [sessao] ========================================================
+2026-06-15 15:16:58 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:16:58 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:16:58 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:17:18 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:17:21 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:17:26 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:17:26 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:17:26 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:17:32 [INFO ] [clips] config_set: qual=media fps=30 dur=60 res=720
+2026-06-15 15:17:32 [INFO ] [clips] clips: pré-config pela GPU 'Intel(R) Iris(R) Xe Graphics' → 720/30fps/media (fraco)
+2026-06-15 15:17:32 [INFO ] [clips] config_set: qual=media fps=30 dur=60 res=720
+2026-06-15 15:17:32 [INFO ] [clips] clips: pré-config pela GPU 'Intel(R) Iris(R) Xe Graphics' → 720/30fps/media (fraco)
+2026-06-15 15:24:10 [INFO ] [clips] config_set: qual=media fps=60 dur=60 res=720
+2026-06-15 15:24:26 [INFO ] [clips] config_set: qual=alta fps=60 dur=60 res=720
+2026-06-15 15:24:32 [INFO ] [clips] config_set: qual=alta fps=60 dur=60 res=720
+2026-06-15 15:24:35 [INFO ] [clips] rec(disco-restaurado) enc=h264_qsv mic=False jogo=True 12Mbps(teto 17) scale=-2:720
+2026-06-15 15:28:29 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:48:05 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:48:06 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:49:32 [INFO ] [sessao] ========================================================
+2026-06-15 15:49:32 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:49:32 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:49:32 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:49:39 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:49:40 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:49:42 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:49:42 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:49:42 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:51:12 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:12 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:51:12 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:51:21 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:22 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:22 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:28 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:30 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:01 [INFO ] [sessao] ========================================================
+2026-06-15 15:53:01 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:53:01 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+

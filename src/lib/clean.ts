@@ -1,5 +1,5 @@
-import { forceSafeDryRun } from "@/lib/safe-mode";
 import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+import { forceSafeDryRun } from "@/lib/safe-mode";
 
 export type CleanScanItem = {
   id: string;
@@ -93,22 +93,11 @@ export const fallbackCleanScanReport: CleanScanReport = {
   engineVersion: "clean-engine-fallback-v1",
   readOnly: true,
   willDeleteFiles: false,
-  totalBytes: 4939212390,
-  totalGb: 4.6,
-  items: [
-    fallbackItem("temp", "TEMP", "Arquivos temporarios do usuario e Windows", 1.4),
-    fallbackItem("cache", "Cache", "Caches seguros de apps e navegadores", 0.9),
-    fallbackItem("logs", "Logs", "Logs antigos do sistema", 0.4),
-    fallbackItem("thumbnails", "Miniaturas", "Cache de miniaturas do Explorer", 0.2),
-    fallbackItem(
-      "windows-update-cache",
-      "Windows Update Cache",
-      "Pacotes baixados pelo Windows Update",
-      1.7,
-    ),
-  ],
+  totalBytes: 0,
+  totalGb: 0,
+  items: [],
   protectedLocations: ["Downloads", "Documentos", "Desktop", "Imagens", "Videos"],
-  warnings: [],
+  warnings: ["Scan real indisponivel. Nenhum tamanho demonstrativo foi exibido."],
 };
 
 export async function loadCleanScanReport(): Promise<CleanScanReport> {
@@ -130,7 +119,7 @@ export async function refreshCleanScanReport(): Promise<CleanScanReport> {
     const report = await invoke<CleanScanReport>("clean_engine_scan");
     return writeLocalReportCache("clean-scan", report);
   } catch (error) {
-    console.warn("Clean Engine Scan indisponivel, usando fallback local.", error);
+    console.warn("Clean Engine Scan indisponivel, usando fallback indisponivel.", error);
     return fallbackCleanScanReport;
   }
 }
@@ -168,18 +157,4 @@ export async function purgeExpiredCleanQuarantine(
   return await invoke<CleanQuarantinePurgeResult>("clean_quarantine_purge_expired", {
     request: forceSafeDryRun(request),
   });
-}
-
-function fallbackItem(id: string, label: string, description: string, gb: number): CleanScanItem {
-  const estimatedBytes = Math.round(gb * 1024 * 1024 * 1024);
-  return {
-    id,
-    label,
-    description,
-    estimatedBytes,
-    estimatedGb: gb,
-    paths: [],
-    selectedByDefault: true,
-    safeToCleanLater: true,
-  };
 }

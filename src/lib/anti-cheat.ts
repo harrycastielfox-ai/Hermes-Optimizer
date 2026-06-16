@@ -34,8 +34,9 @@ export const fallbackAntiCheatReport: AntiCheatReport = {
   engineVersion: "anti-cheat-fallback-v1",
   readOnly: true,
   score: 0,
-  status: "Aguardando",
-  summary: "Clique em Analisar Anti-Cheat para verificar compatibilidade local sem alterar o Windows.",
+  status: "Indisponivel",
+  summary:
+    "Anti-Cheat real indisponivel fora do backend Tauri. Nenhum resultado demonstrativo foi exibido.",
   checks: {
     tpm: pendingCheck("TPM 2.0", 25),
     secureBoot: pendingCheck("Secure Boot", 25),
@@ -48,7 +49,7 @@ export const fallbackAntiCheatReport: AntiCheatReport = {
     battleye: pendingCheck("BattlEye Ready", 15),
     faceit: pendingCheck("FACEIT Ready", 15),
   },
-  warnings: [],
+  warnings: ["Leitura Anti-Cheat real indisponivel."],
 };
 
 export async function analyzeAntiCheat(): Promise<AntiCheatReport> {
@@ -65,7 +66,8 @@ export async function analyzeAntiCheat(): Promise<AntiCheatReport> {
     return {
       ...fallbackAntiCheatReport,
       status: "Indisponivel",
-      summary: "Nao foi possivel concluir a leitura Anti-Cheat nesta execucao. Nenhuma alteracao foi feita.",
+      summary:
+        "Nao foi possivel concluir a leitura Anti-Cheat nesta execucao. Nenhuma alteracao foi feita.",
       warnings: [error instanceof Error ? error.message : String(error)],
     };
   }
@@ -78,8 +80,8 @@ export function loadCachedAntiCheatReport(): AntiCheatReport {
 function pendingCheck(label: string, maxPoints: number): AntiCheatCheck {
   return {
     label,
-    status: "Aguardando",
-    detail: "Clique em Analisar Anti-Cheat para leitura local.",
+    status: "Indisponivel",
+    detail: "Leitura real indisponivel.",
     ok: false,
     points: 0,
     maxPoints,

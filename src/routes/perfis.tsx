@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Battery, BriefcaseBusiness, CheckCircle2, Flame, Gamepad2, RotateCcw, ShieldCheck, Zap } from "lucide-react";
+import {
+  Battery,
+  BriefcaseBusiness,
+  CheckCircle2,
+  Flame,
+  Gamepad2,
+  RotateCcw,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SafeTestModeNotice } from "@/components/common/SafeTestModeNotice";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -25,6 +34,9 @@ import {
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 
 export const Route = createFileRoute("/perfis")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    perfil: typeof search.perfil === "string" ? search.perfil : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Hermes Optimizer - Perfis" },
@@ -35,6 +47,7 @@ export const Route = createFileRoute("/perfis")({
 });
 
 function PerfisPage() {
+  const { perfil } = Route.useSearch();
   const [catalog, setCatalog] = useState<ProfilesCatalog>(fallbackProfilesCatalog);
   const [selectedId, setSelectedId] = useState("seguro");
   const [result, setResult] = useState<ProfileApplyResult | null>(null);
@@ -51,7 +64,11 @@ function PerfisPage() {
     loadProfilesCatalog().then((nextCatalog) => {
       if (mounted) {
         setCatalog(nextCatalog);
-        setSelectedId((current) => nextCatalog.profiles.some((profile) => profile.id === current) ? current : nextCatalog.profiles[0]?.id ?? "seguro");
+        setSelectedId((current) =>
+          nextCatalog.profiles.some((profile) => profile.id === current)
+            ? current
+            : (nextCatalog.profiles[0]?.id ?? "seguro"),
+        );
       }
     });
 
@@ -59,6 +76,12 @@ function PerfisPage() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (perfil) {
+      setSelectedId(perfil);
+    }
+  }, [perfil]);
 
   useEffect(() => {
     if (selectedId !== "gamer" && selectedId !== "extremo") {
@@ -90,13 +113,17 @@ function PerfisPage() {
     setResult(null);
 
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
-      const confirmed = window.confirm(`Aplicar o perfil ${profile.name}? Um ponto de seguranca sera criado antes.`);
+      const confirmed = window.confirm(
+        `Aplicar o perfil ${profile.name}? Um ponto de seguranca sera criado antes.`,
+      );
       if (!confirmed) {
         return;
       }
 
       if (profile.requiresExtraConfirmation) {
-        const extremeConfirmed = window.confirm("Perfil Extremo exige confirmacao extra. Continuar?");
+        const extremeConfirmed = window.confirm(
+          "Perfil Extremo exige confirmacao extra. Continuar?",
+        );
         if (!extremeConfirmed) {
           return;
         }
@@ -124,11 +151,18 @@ function PerfisPage() {
     setGamerResult(null);
 
     const selectedProcesses = gamerReport.suggestedProcesses
-      .filter((process) => process.canClose && process.rollbackAvailable && process.recommendation === "suggestedClose")
+      .filter(
+        (process) =>
+          process.canClose &&
+          process.rollbackAvailable &&
+          process.recommendation === "suggestedClose",
+      )
       .map((process) => process.pid);
 
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
-      const confirmed = window.confirm("Ativar Modo Gamer Hermes? Um ponto de seguranca sera criado antes e os apps sugeridos serao fechados de forma graciosa.");
+      const confirmed = window.confirm(
+        "Ativar Modo Gamer Hermes? Um ponto de seguranca sera criado antes e os apps sugeridos serao fechados de forma graciosa.",
+      );
       if (!confirmed) {
         return;
       }
@@ -159,7 +193,9 @@ function PerfisPage() {
         <main className="flex-1 px-5 pt-6 pb-4 overflow-auto xl:px-8 xl:pt-7">
           <div className="mb-6">
             <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">PERFIS HERMES</p>
-            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">Perfis</h1>
+            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
+              Perfis
+            </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
               Perfis locais com ponto de seguranca, historico e reversao antes de ajustes reais.
             </p>
@@ -188,7 +224,9 @@ function PerfisPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-xl font-bold text-foreground">{selectedProfile.name}</h2>
-                      <span className={`rounded-full border px-3 py-1 text-[11px] font-bold ${riskVisual(selectedProfile.risk)}`}>
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[11px] font-bold ${riskVisual(selectedProfile.risk)}`}
+                      >
                         {riskLabel(selectedProfile.risk)}
                       </span>
                       {selectedProfile.reversible && (
@@ -233,13 +271,18 @@ function PerfisPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                <DetailBox title="ACOES DO PERFIL" items={selectedProfile.performanceActionIds.map(actionLabel)} />
+                <DetailBox
+                  title="ACOES DO PERFIL"
+                  items={selectedProfile.performanceActionIds.map(actionLabel)}
+                />
                 <DetailBox title="GARANTIAS" items={selectedProfile.safeguards} />
               </div>
 
               {result && (
                 <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
-                  <p className="text-sm font-semibold text-success">{result.dryRun ? "Dry-run concluido" : "Perfil aplicado"}</p>
+                  <p className="text-sm font-semibold text-success">
+                    {result.dryRun ? "Dry-run concluido" : "Perfil aplicado"}
+                  </p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
                     Ponto de seguranca: {result.snapshotId}. {result.message}
                   </p>
@@ -254,15 +297,16 @@ function PerfisPage() {
             </section>
           )}
 
-          {selectedProfile && (selectedProfile.id === "gamer" || selectedProfile.id === "extremo") && (
-            <GamerEnginePanel
-              report={gamerReport}
-              result={gamerResult}
-              error={gamerError}
-              isApplying={isGamerApplying}
-              onRun={runGamerEngine}
-            />
-          )}
+          {selectedProfile &&
+            (selectedProfile.id === "gamer" || selectedProfile.id === "extremo") && (
+              <GamerEnginePanel
+                report={gamerReport}
+                result={gamerResult}
+                error={gamerError}
+                isApplying={isGamerApplying}
+                onRun={runGamerEngine}
+              />
+            )}
         </main>
       </div>
     </div>
@@ -290,7 +334,8 @@ function GamerEnginePanel({
         <div>
           <h2 className="text-sm font-bold tracking-[0.18em] text-primary">MODO GAMER HERMES</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Analisa jogos, sobreposicoes e apps em segundo plano. Fechamento real sempre exige confirmacao.
+            Analisa jogos, sobreposicoes e apps em segundo plano. Fechamento real sempre exige
+            confirmacao.
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -316,17 +361,35 @@ function GamerEnginePanel({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
-        <GamerMetric label="JOGOS" value={`${report.summary.detectedGames}`} sub="Detectados agora" />
-        <GamerMetric label="SUGERIDOS" value={`${report.summary.suggestedToClose}`} sub="Apps avaliados" />
-        <GamerMetric label="RAM" value={`${report.summary.estimatedRamToFreeMb} MB`} sub="Potencial liberavel" />
-        <GamerMetric label="PROTEGIDOS" value={`${report.summary.protectedCount}`} sub="Nunca fechados" />
+        <GamerMetric
+          label="JOGOS"
+          value={`${report.summary.detectedGames}`}
+          sub="Detectados agora"
+        />
+        <GamerMetric
+          label="SUGERIDOS"
+          value={`${report.summary.suggestedToClose}`}
+          sub="Apps avaliados"
+        />
+        <GamerMetric
+          label="RAM"
+          value={`${report.summary.estimatedRamToFreeMb} MB`}
+          sub="Potencial liberavel"
+        />
+        <GamerMetric
+          label="PROTEGIDOS"
+          value={`${report.summary.protectedCount}`}
+          sub="Nunca fechados"
+        />
       </div>
 
       <div className="mt-4 rounded-xl border border-border/70 bg-background/70 px-4 py-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">APPS SUGERIDOS</h3>
-            <p className="mt-1 text-[12px] text-muted-foreground">Somente apps com reversao disponivel entram na aplicacao automatica.</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Somente apps com reversao disponivel entram na aplicacao automatica.
+            </p>
           </div>
           <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
             Sem fechamento forcado
@@ -335,7 +398,9 @@ function GamerEnginePanel({
 
         <div className="mt-3 space-y-2">
           {suggested.length > 0 ? (
-            suggested.map((process) => <GamerProcessRow key={`${process.pid}-${process.name}`} process={process} />)
+            suggested.map((process) => (
+              <GamerProcessRow key={`${process.pid}-${process.name}`} process={process} />
+            ))
           ) : (
             <p className="rounded-xl border border-border/70 bg-card px-3 py-3 text-sm text-muted-foreground">
               Nenhum app nao essencial sugerido para fechar agora.
@@ -346,7 +411,9 @@ function GamerEnginePanel({
 
       {result && (
         <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
-          <p className="text-sm font-semibold text-success">{result.dryRun ? "Validacao gamer concluida" : "Modo Gamer aplicado"}</p>
+          <p className="text-sm font-semibold text-success">
+            {result.dryRun ? "Validacao gamer concluida" : "Modo Gamer aplicado"}
+          </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
             Ponto de seguranca: {result.snapshotId}. {result.message}
           </p>
@@ -378,7 +445,9 @@ function GamerProcessRow({ process }: { process: GamerProcess }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-semibold text-foreground">{process.displayName}</p>
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${recommendationVisual(process.recommendation)}`}>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${recommendationVisual(process.recommendation)}`}
+          >
             {recommendationLabel(process.recommendation)}
           </span>
         </div>
@@ -392,7 +461,15 @@ function GamerProcessRow({ process }: { process: GamerProcess }) {
   );
 }
 
-function ProfileCard({ profile, selected, onSelect }: { profile: HermesProfile; selected: boolean; onSelect: () => void }) {
+function ProfileCard({
+  profile,
+  selected,
+  onSelect,
+}: {
+  profile: HermesProfile;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const Icon = profileIcon(profile.id);
 
   return (
@@ -400,11 +477,15 @@ function ProfileCard({ profile, selected, onSelect }: { profile: HermesProfile; 
       type="button"
       onClick={onSelect}
       className={`rounded-2xl border p-4 text-left transition shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] ${
-        selected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/60 bg-card hover:border-primary/35"
+        selected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+          : "border-border/60 bg-card hover:border-primary/35"
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${selected ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary"}`}>
+        <div
+          className={`w-11 h-11 rounded-xl flex items-center justify-center ${selected ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary"}`}
+        >
           <Icon className="w-5 h-5" />
         </div>
         <div className="min-w-0">
@@ -412,7 +493,9 @@ function ProfileCard({ profile, selected, onSelect }: { profile: HermesProfile; 
           <p className="text-[11px] text-muted-foreground truncate">{riskLabel(profile.risk)}</p>
         </div>
       </div>
-      <p className="mt-3 min-h-[34px] text-[12px] leading-relaxed text-muted-foreground">{profile.summary}</p>
+      <p className="mt-3 min-h-[34px] text-[12px] leading-relaxed text-muted-foreground">
+        {profile.summary}
+      </p>
     </button>
   );
 }

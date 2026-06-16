@@ -41,9 +41,11 @@ export type HermesAdminPreferences = {
 
 type TranslationKey =
   | "sidebar.dashboard"
+  | "sidebar.optimize"
   | "sidebar.diagnostic"
   | "sidebar.antiCheat"
   | "sidebar.recommendations"
+  | "sidebar.prepare"
   | "sidebar.central"
   | "sidebar.startup"
   | "sidebar.clean"
@@ -171,9 +173,11 @@ export const defaultPreferences: HermesAdminPreferences = {
 const translations: Record<LanguagePreference, Record<TranslationKey, string>> = {
   "pt-BR": {
     "sidebar.dashboard": "Dashboard",
+    "sidebar.optimize": "Otimizar",
     "sidebar.diagnostic": "Diagnostico",
     "sidebar.antiCheat": "Anti-Cheat",
     "sidebar.recommendations": "Recomendacoes",
+    "sidebar.prepare": "Preparar Ambiente",
     "sidebar.central": "Central de Otimizacao",
     "sidebar.startup": "Inicializacao",
     "sidebar.clean": "Limpeza",
@@ -244,11 +248,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.license.channel": "Canal atual",
     "settings.license.status": "Status da licenca",
     "settings.license.activation": "Ativacao",
-    "settings.license.devMode": "Modo Desenvolvimento",
-    "settings.license.notImplemented": "Nao implementada",
+    "settings.license.devMode": "Congelada para esta release",
+    "settings.license.notImplemented": "Ativacao indisponivel",
     "settings.license.note.title": "Sem licenciamento real",
     "settings.license.note.text":
-      "Nenhuma chave e validada, nenhum servidor e chamado e nenhum pagamento e integrado.",
+      "Licenciamento real esta congelado nesta release: nenhuma chave e validada, nenhum servidor e chamado e nenhum pagamento e integrado.",
     "settings.privacy.title": "Privacidade",
     "settings.privacy.description":
       "Compromissos locais do Hermes e base visual para preferencias futuras.",
@@ -277,9 +281,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
   },
   "en-US": {
     "sidebar.dashboard": "Dashboard",
+    "sidebar.optimize": "Optimize",
     "sidebar.diagnostic": "Diagnostics",
     "sidebar.antiCheat": "Anti-Cheat",
     "sidebar.recommendations": "Recommendations",
+    "sidebar.prepare": "Prepare Environment",
     "sidebar.central": "Optimization Hub",
     "sidebar.startup": "Startup",
     "sidebar.clean": "Cleanup",
@@ -349,11 +355,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.license.channel": "Current channel",
     "settings.license.status": "License status",
     "settings.license.activation": "Activation",
-    "settings.license.devMode": "Development Mode",
-    "settings.license.notImplemented": "Not implemented",
+    "settings.license.devMode": "Frozen for this release",
+    "settings.license.notImplemented": "Activation unavailable",
     "settings.license.note.title": "No real licensing",
     "settings.license.note.text":
-      "No key is validated, no server is called, and no payment is integrated.",
+      "Real licensing is frozen for this release: no key is validated, no server is called, and no payment is integrated.",
     "settings.privacy.title": "Privacy",
     "settings.privacy.description":
       "Hermes local commitments and a visual base for future preferences.",
@@ -382,9 +388,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
   },
   "es-ES": {
     "sidebar.dashboard": "Dashboard",
+    "sidebar.optimize": "Optimizar",
     "sidebar.diagnostic": "Diagnostico",
     "sidebar.antiCheat": "Anti-Cheat",
     "sidebar.recommendations": "Recomendaciones",
+    "sidebar.prepare": "Preparar Ambiente",
     "sidebar.central": "Central de Optimizacion",
     "sidebar.startup": "Inicio",
     "sidebar.clean": "Limpieza",
@@ -456,10 +464,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.license.channel": "Canal actual",
     "settings.license.status": "Estado de licencia",
     "settings.license.activation": "Activacion",
-    "settings.license.devMode": "Modo Desarrollo",
-    "settings.license.notImplemented": "No implementada",
+    "settings.license.devMode": "Congelada para esta release",
+    "settings.license.notImplemented": "Activacion no disponible",
     "settings.license.note.title": "Sin licencia real",
-    "settings.license.note.text": "No se valida clave, no se llama servidor y no se integra pago.",
+    "settings.license.note.text":
+      "La licencia real esta congelada en esta release: no se valida clave, no se llama servidor y no se integra pago.",
     "settings.privacy.title": "Privacidad",
     "settings.privacy.description":
       "Compromisos locales de Hermes y base visual para preferencias futuras.",
@@ -549,7 +558,7 @@ export function HermesPreferencesProvider({ children }: { children: ReactNode })
   const t = useCallback(
     (key: TranslationKey) =>
       translations[preferences.language.current][key] ?? translations["pt-BR"][key],
-    [preferences.language.current],
+    [preferences.language],
   );
 
   const value = useMemo(

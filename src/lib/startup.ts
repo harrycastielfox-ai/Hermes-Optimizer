@@ -1,5 +1,5 @@
-import { forceSafeDryRun } from "@/lib/safe-mode";
 import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
+import { forceSafeDryRun } from "@/lib/safe-mode";
 
 export type StartupImpact = "high" | "medium" | "low";
 export type StartupStatus = "active" | "disabled" | "unknown";
@@ -68,18 +68,13 @@ export const fallbackStartupReport: StartupReport = {
   generatedAt: "0",
   engineVersion: "startup-engine-fallback-v1",
   readOnly: true,
-  totalItems: 4,
+  totalItems: 0,
   disabledItems: 0,
-  highImpactCount: 2,
-  mediumImpactCount: 2,
+  highImpactCount: 0,
+  mediumImpactCount: 0,
   lowImpactCount: 0,
-  items: [
-    fallbackItem("Discord", "AppData\\Local\\Discord\\Update.exe --processStart Discord.exe", "high"),
-    fallbackItem("Steam", "C:\\Program Files (x86)\\Steam\\steam.exe", "high"),
-    fallbackItem("Spotify", "AppData\\Roaming\\Spotify\\Spotify.exe", "medium"),
-    fallbackItem("OneDrive", "C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe", "medium"),
-  ],
-  warnings: [],
+  items: [],
+  warnings: ["Leitura real de inicializacao indisponivel. Nenhum app demonstrativo foi exibido."],
 };
 
 export async function loadStartupReport(): Promise<StartupReport> {
@@ -101,32 +96,20 @@ export async function refreshStartupReport(): Promise<StartupReport> {
     const report = await invoke<StartupReport>("startup_engine_read");
     return writeLocalReportCache("startup-report", report);
   } catch (error) {
-    console.warn("Startup Engine indisponivel, usando fallback local.", error);
+    console.warn("Startup Engine indisponivel, usando fallback indisponivel.", error);
     return fallbackStartupReport;
   }
 }
 
-export async function applyStartupEngine(request: StartupApplyRequest): Promise<StartupApplyResult> {
+export async function applyStartupEngine(
+  request: StartupApplyRequest,
+): Promise<StartupApplyResult> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     throw new Error("Startup Engine exige o backend Tauri.");
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<StartupApplyResult>("startup_engine_apply", { request: forceSafeDryRun(request) });
-}
-
-function fallbackItem(name: string, command: string, impact: StartupImpact): StartupItem {
-  return {
-    id: `fallback-${name.toLowerCase()}`,
-    name,
-    command,
-    location: "Startup demo somente leitura",
-    user: "Usuario atual",
-    impact,
-    status: "active",
-    canDisableLater: true,
-    canEnableLater: false,
-    controllable: false,
-    controlReason: "Fallback somente leitura; nao controlavel.",
-  };
+  return await invoke<StartupApplyResult>("startup_engine_apply", {
+    request: forceSafeDryRun(request),
+  });
 }

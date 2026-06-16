@@ -1060,33 +1060,13 @@ fn fallback_report() -> StartupReport {
     build_report(
         fallback_raw_report(),
         Vec::new(),
-        vec!["Fallback local usado porque a leitura real nao respondeu.".to_string()],
+        vec!["Fallback indisponivel usado porque a leitura real nao respondeu. Nenhum app demonstrativo foi retornado.".to_string()],
     )
 }
 
 fn fallback_raw_report() -> RawStartupReport {
     RawStartupReport {
-        items: Some(vec![
-            fallback_item(
-                "Discord",
-                "AppData\\Local\\Discord\\Update.exe --processStart Discord.exe",
-            ),
-            fallback_item("Steam", "C:\\Program Files (x86)\\Steam\\steam.exe"),
-            fallback_item("Spotify", "AppData\\Roaming\\Spotify\\Spotify.exe"),
-            fallback_item(
-                "OneDrive",
-                "C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe",
-            ),
-        ]),
-    }
-}
-
-fn fallback_item(name: &str, command: &str) -> RawStartupItem {
-    RawStartupItem {
-        name: Some(name.to_string()),
-        command: Some(command.to_string()),
-        location: Some("Startup demo somente leitura".to_string()),
-        user: Some("Usuario atual".to_string()),
+        items: Some(Vec::new()),
     }
 }
 

@@ -95,7 +95,10 @@ function SecurityRecoveryPage() {
   }
 
   const selectedSnapshot = useMemo(
-    () => snapshots?.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ?? snapshots?.snapshots[0] ?? null,
+    () =>
+      snapshots?.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ??
+      snapshots?.snapshots[0] ??
+      null,
     [snapshots, selectedSnapshotId],
   );
 
@@ -202,12 +205,15 @@ function SecurityRecoveryPage() {
         <main className="flex-1 overflow-auto px-5 pt-6 pb-4 xl:px-8 xl:pt-7">
           <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">SEGURANCA E RECUPERACAO</p>
+              <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">
+                SEGURANCA E RECUPERACAO
+              </p>
               <h1 className="text-[clamp(26px,2vw,34px)] font-bold leading-tight tracking-tight text-foreground">
                 Restore Center Hermes
               </h1>
               <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-                Snapshots, rollback, logs locais, historico de alteracoes e exportacao de relatorio sem nuvem.
+                Snapshots, rollback, logs locais, historico de alteracoes e exportacao de relatorio
+                sem nuvem.
               </p>
             </div>
             <button
@@ -260,14 +266,25 @@ function SecurityRecoveryPage() {
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-foreground">Snapshots e rollback</h2>
                   <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                    Toda restauracao passa por validacao antes de aplicar. Em Safe Test Mode, a bridge TypeScript forca dry-run.
+                    Toda restauracao passa por validacao antes de aplicar. Em Safe Test Mode, a
+                    bridge TypeScript forca dry-run.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-                <SecurityActionButton icon={Download} label="Exportar" onClick={exportReport} disabled={isLoading} />
-                <SecurityActionButton icon={Trash2} label="Limpar historico" onClick={prepareHistoryClear} disabled={isLoading || isWorking} />
+                <SecurityActionButton
+                  icon={Download}
+                  label="Exportar"
+                  onClick={exportReport}
+                  disabled={isLoading}
+                />
+                <SecurityActionButton
+                  icon={Trash2}
+                  label="Limpar historico"
+                  onClick={prepareHistoryClear}
+                  disabled={isLoading || isWorking}
+                />
               </div>
             </div>
 
@@ -296,8 +313,12 @@ function SecurityRecoveryPage() {
               <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SNAPSHOTS</h3>
-                    <p className="mt-1 text-[12px] text-muted-foreground">Retencao local maxima de 10 snapshots.</p>
+                    <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+                      SNAPSHOTS
+                    </h3>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Retencao local maxima de 10 snapshots.
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <SecurityActionButton
@@ -327,44 +348,70 @@ function SecurityRecoveryPage() {
                       />
                     ))
                   ) : (
-                    <EmptyState icon={Database} title="Nenhum snapshot local" sub="Os snapshots aparecerao aqui apos a primeira acao com Restore Engine." />
+                    <EmptyState
+                      icon={Database}
+                      title="Nenhum snapshot local"
+                      sub="Os snapshots aparecerao aqui apos a primeira acao com Restore Engine."
+                    />
                   )}
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                  <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">RESTAURAR ALTERACOES</h3>
+                  <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+                    RESTAURAR ALTERACOES
+                  </h3>
                   {selectedSnapshot ? (
                     <div className="mt-3 space-y-3">
                       <SelectedSnapshotDetails snapshot={selectedSnapshot} />
                       {validation && (
                         <ResultBox
-                          title={validation.fullyReversible ? "Snapshot reversivel" : "Snapshot validado com atencao"}
+                          title={
+                            validation.fullyReversible
+                              ? "Snapshot reversivel"
+                              : "Snapshot validado com atencao"
+                          }
                           message={validation.message}
                           tone={validation.fullyReversible ? "success" : "warning"}
                         />
                       )}
                       {restoreResult && (
                         <ResultBox
-                          title={restoreResult.applied ? "Restauracao aplicada" : "Restauracao registrada"}
+                          title={
+                            restoreResult.applied
+                              ? "Restauracao aplicada"
+                              : "Restauracao registrada"
+                          }
                           message={restoreResult.message}
                           tone={restoreResult.applied ? "success" : "warning"}
                         />
                       )}
                     </div>
                   ) : (
-                    <EmptyState icon={RotateCcw} title="Selecione um snapshot" sub="A restauracao real sempre exige confirmacao antes de executar." />
+                    <EmptyState
+                      icon={RotateCcw}
+                      title="Selecione um snapshot"
+                      sub="A restauracao real sempre exige confirmacao antes de executar."
+                    />
                   )}
                 </div>
 
                 <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                  <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">LOGS DO SISTEMA</h3>
+                  <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+                    LOGS DO SISTEMA
+                  </h3>
                   <div className="mt-3 space-y-2">
                     {events?.events.length ? (
-                      events.events.slice(0, 7).map((event) => <EventRow key={event.id} event={event} />)
+                      events.events
+                        .slice(0, 7)
+                        .map((event) => <EventRow key={event.id} event={event} />)
                     ) : (
-                      <EmptyState icon={FileText} title="Sem logs recentes" sub="Eventos de snapshot, validacao e rollback aparecerao aqui." />
+                      <EmptyState
+                        icon={FileText}
+                        title="Sem logs recentes"
+                        sub="Eventos de snapshot, validacao e rollback aparecerao aqui."
+                      />
                     )}
                   </div>
                 </div>
@@ -421,12 +468,18 @@ function StatusCard({
   tone?: "default" | "success" | "warning";
 }) {
   const toneClass =
-    tone === "success" ? "text-success bg-success/10" : tone === "warning" ? "text-warning bg-warning/10" : "text-primary bg-primary-soft";
+    tone === "success"
+      ? "text-success bg-success/10"
+      : tone === "warning"
+        ? "text-warning bg-warning/10"
+        : "text-primary bg-primary-soft";
 
   return (
     <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_-22px_rgba(15,23,42,0.2)]">
       <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneClass}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneClass}`}
+        >
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
@@ -439,13 +492,23 @@ function StatusCard({
   );
 }
 
-function SnapshotRow({ snapshot, selected, onSelect }: { snapshot: RestoreSnapshot; selected: boolean; onSelect: () => void }) {
+function SnapshotRow({
+  snapshot,
+  selected,
+  onSelect,
+}: {
+  snapshot: RestoreSnapshot;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       type="button"
       onClick={onSelect}
       className={`w-full rounded-xl border px-3 py-3 text-left transition ${
-        selected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border/70 bg-card hover:border-primary/35"
+        selected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+          : "border-border/70 bg-card hover:border-primary/35"
       }`}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -454,7 +517,9 @@ function SnapshotRow({ snapshot, selected, onSelect }: { snapshot: RestoreSnapsh
             <p className="truncate text-sm font-bold text-foreground">{snapshot.name}</p>
             <StatusPill status={snapshot.status} />
           </div>
-          <p className="mt-1 line-clamp-2 text-[12px] text-muted-foreground">{snapshot.description}</p>
+          <p className="mt-1 line-clamp-2 text-[12px] text-muted-foreground">
+            {snapshot.description}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-muted-foreground">
           <Clock3 className="h-3.5 w-3.5" />
@@ -492,7 +557,11 @@ function SelectedSnapshotDetails({ snapshot }: { snapshot: RestoreSnapshot }) {
             <span>{action.description}</span>
           </div>
         ))}
-        {snapshot.rollbackManifest.length === 0 && <p className="text-[12px] text-muted-foreground">Snapshot estrutural sem acoes reversiveis registradas.</p>}
+        {snapshot.rollbackManifest.length === 0 && (
+          <p className="text-[12px] text-muted-foreground">
+            Snapshot estrutural sem acoes reversiveis registradas.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -507,13 +576,23 @@ function EventRow({ event }: { event: NonNullable<RestoreEventList["events"][num
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span>{formatTimestamp(event.timestamp)}</span>
-        {event.snapshotId && <span className="max-w-[220px] truncate">Snapshot: {event.snapshotId}</span>}
+        {event.snapshotId && (
+          <span className="max-w-[220px] truncate">Snapshot: {event.snapshotId}</span>
+        )}
       </div>
     </div>
   );
 }
 
-function EmptyState({ icon: Icon, title, sub }: { icon: typeof ShieldCheck; title: string; sub: string }) {
+function EmptyState({
+  icon: Icon,
+  title,
+  sub,
+}: {
+  icon: typeof ShieldCheck;
+  title: string;
+  sub: string;
+}) {
   return (
     <div className="rounded-xl border border-dashed border-border bg-card/70 px-4 py-5 text-center">
       <Icon className="mx-auto h-6 w-6 text-muted-foreground" />
@@ -523,10 +602,22 @@ function EmptyState({ icon: Icon, title, sub }: { icon: typeof ShieldCheck; titl
   );
 }
 
-function ResultBox({ title, message, tone }: { title: string; message: string; tone: "success" | "warning" }) {
+function ResultBox({
+  title,
+  message,
+  tone,
+}: {
+  title: string;
+  message: string;
+  tone: "success" | "warning";
+}) {
   return (
-    <div className={`rounded-xl border px-3 py-3 ${tone === "success" ? "border-success/20 bg-success/10" : "border-warning/25 bg-warning/10"}`}>
-      <p className={`text-sm font-bold ${tone === "success" ? "text-success" : "text-warning"}`}>{title}</p>
+    <div
+      className={`rounded-xl border px-3 py-3 ${tone === "success" ? "border-success/20 bg-success/10" : "border-warning/25 bg-warning/10"}`}
+    >
+      <p className={`text-sm font-bold ${tone === "success" ? "text-success" : "text-warning"}`}>
+        {title}
+      </p>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{message}</p>
     </div>
   );
@@ -549,7 +640,11 @@ function StatusPill({ status }: { status: RestoreSnapshot["status"] }) {
         ? "border-destructive/20 bg-destructive/10 text-destructive"
         : "border-primary/20 bg-primary/10 text-primary";
 
-  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${className}`}>{snapshotStatusLabel(status)}</span>;
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${className}`}>
+      {snapshotStatusLabel(status)}
+    </span>
+  );
 }
 
 function LogLevelPill({ level }: { level: RestoreEventList["events"][number]["level"] }) {
@@ -560,7 +655,11 @@ function LogLevelPill({ level }: { level: RestoreEventList["events"][number]["le
         ? "border-warning/25 bg-warning/10 text-warning"
         : "border-primary/20 bg-primary/10 text-primary";
 
-  return <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${className}`}>{levelLabel(level)}</span>;
+  return (
+    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${className}`}>
+      {levelLabel(level)}
+    </span>
+  );
 }
 
 function snapshotStatusLabel(status: RestoreSnapshot["status"]) {
@@ -597,7 +696,8 @@ function levelLabel(level: RestoreEventList["events"][number]["level"]) {
 
 function formatTimestamp(value: string) {
   const numeric = Number(value);
-  const date = Number.isFinite(numeric) && value.length <= 13 ? new Date(numeric * 1000) : new Date(value);
+  const date =
+    Number.isFinite(numeric) && value.length <= 13 ? new Date(numeric * 1000) : new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return value;

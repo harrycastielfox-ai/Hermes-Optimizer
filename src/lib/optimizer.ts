@@ -76,7 +76,7 @@ function fallbackStage(
     id,
     engine,
     title,
-    description: "Etapa segura preparada para o fluxo Otimizar Agora.",
+    description: "Etapa segura preparada para o fluxo Analisar Agora.",
     status: id === "analysis-quick" || id === "advisor-pro" ? "completed" : "ready",
     readOnly: true,
     willModifySystem: false,
@@ -94,7 +94,7 @@ export async function runOptimizeNowPlan(): Promise<OptimizeNowPlan> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<OptimizeNowPlan>("optimize_now_plan");
   } catch (error) {
-    console.warn("Orquestrador Otimizar Agora indisponivel, usando plano local seguro.", error);
+    console.warn("Orquestrador Analisar Agora indisponivel, usando plano local seguro.", error);
     return fallbackOptimizeNowPlan();
   }
 }

@@ -1,7 +1,12 @@
 import { forceSafeDryRun } from "@/lib/safe-mode";
 import { readLocalReportCache, writeLocalReportCache } from "@/lib/local-read-cache";
 
-export type PerformanceSettingStatus = "enabled" | "disabled" | "optimized" | "balanced" | "unknown";
+export type PerformanceSettingStatus =
+  | "enabled"
+  | "disabled"
+  | "optimized"
+  | "balanced"
+  | "unknown";
 export type PerformanceApplyActionStatus = "dryRun" | "applied" | "skipped" | "failed";
 
 export type PerformanceReport = {
@@ -77,40 +82,23 @@ export const fallbackPerformanceReport: PerformanceReport = {
   readOnly: true,
   willModifySystem: false,
   powerPlan: {
-    activeSchemeName: "Equilibrado",
-    activeSchemeGuid: "381b4222-f694-41f0-9685-ff5bb260df2e",
-    status: "Equilibrado",
+    activeSchemeName: "Indisponivel",
+    activeSchemeGuid: "Indisponivel",
+    status: "Indisponivel",
   },
   gameMode: {
-    available: true,
-    enabled: true,
-    status: "Ativo",
-    gameBarAllowed: true,
-    gameDvrEnabled: false,
+    available: false,
+    status: "Indisponivel",
   },
   visualEffects: {
-    profile: "Windows decide",
-    transparencyEnabled: true,
-    animationsEnabled: true,
-    shadowsEnabled: true,
-    fullWindowDragEnabled: true,
-    rawVisualFxSetting: 0,
-    status: "Visual ativo",
+    profile: "Indisponivel",
+    status: "Indisponivel",
   },
   backgroundApps: {
-    enabled: true,
-    status: "Ativo",
-    powerThrottlingDisabled: false,
+    status: "Indisponivel",
   },
-  settings: [
-    setting("power-plan", "Plano de energia", "Equilibrado", "balanced", "powercfg /GETACTIVESCHEME"),
-    setting("game-mode", "Game Mode", "Ativo", "enabled", "HKCU GameBar/GameConfigStore"),
-    setting("transparency", "Transparencias", "Ativo", "enabled", "HKCU Themes\\Personalize"),
-    setting("animations", "Animacoes", "Ativo", "enabled", "HKCU Desktop/Explorer"),
-    setting("shadows", "Sombras", "Ativo", "enabled", "HKCU Explorer\\Advanced"),
-    setting("background-apps", "Apps em segundo plano", "Ativo", "enabled", "HKCU BackgroundAccessApplications"),
-  ],
-  warnings: [],
+  settings: [],
+  warnings: ["Performance Engine real indisponivel. Nenhum ajuste demonstrativo foi exibido."],
 };
 
 export async function loadPerformanceReport(): Promise<PerformanceReport> {
@@ -145,22 +133,7 @@ export async function applyPerformanceControlled(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<PerformanceApplyResult>("performance_apply_controlled", { request: forceSafeDryRun(request) });
-}
-
-function setting(
-  id: string,
-  label: string,
-  value: string,
-  status: PerformanceSettingStatus,
-  source: string,
-): PerformanceSetting {
-  return {
-    id,
-    label,
-    value,
-    status,
-    source,
-    canOptimizeLater: true,
-  };
+  return await invoke<PerformanceApplyResult>("performance_apply_controlled", {
+    request: forceSafeDryRun(request),
+  });
 }

@@ -62,7 +62,8 @@ const repairActions: RepairAction[] = [
     id: "sfc-scannow",
     title: "Verificador de Arquivos",
     command: "sfc /scannow",
-    description: "Verifica arquivos protegidos do Windows e prepara reparo estrutural quando necessario.",
+    description:
+      "Verifica arquivos protegidos do Windows e prepara reparo estrutural quando necessario.",
     risk: "medium",
     estimatedTime: "10 a 30 min",
     requiresAdmin: true,
@@ -108,7 +109,8 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     title: "chkdsk /f /r automatico",
     description: "Reparo profundo de disco.",
     reason: "Pode demorar bastante, exigir reinicio e travar o volume durante a verificacao.",
-    guidance: "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmacao forte e recomendacao de backup antes de qualquer execucao futura.",
+    guidance:
+      "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmacao forte e recomendacao de backup antes de qualquer execucao futura.",
     mayRequireRestart: true,
   },
   {
@@ -116,7 +118,8 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     title: "winsock reset automatico",
     description: "Reinicializacao de componentes de rede.",
     reason: "Pode afetar conectividade e geralmente pede reinicio para concluir.",
-    guidance: "Quando fizer sentido, deve aparecer como reparo de rede guiado, explicando o impacto antes da confirmacao.",
+    guidance:
+      "Quando fizer sentido, deve aparecer como reparo de rede guiado, explicando o impacto antes da confirmacao.",
     mayRequireRestart: true,
   },
   {
@@ -132,7 +135,8 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     title: "reset do Windows",
     description: "Reinstalacao/restauracao ampla do sistema.",
     reason: "E uma acao estrutural do Windows e pode afetar aplicativos e configuracoes.",
-    guidance: "Fica fora do Hermes automatico. O app pode orientar o usuario, mas nao deve disparar esse fluxo sozinho.",
+    guidance:
+      "Fica fora do Hermes automatico. O app pode orientar o usuario, mas nao deve disparar esse fluxo sozinho.",
   },
 ];
 
@@ -148,11 +152,13 @@ export function HermesRepairCenter() {
   useEffect(() => {
     setHistory(readHistory());
     void runHermesDiagnostic(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const integrity = useMemo(() => buildIntegrityStatus(diagnostic), [diagnostic]);
   const latestHistory = history[0];
-  const selectedRepairAction = repairActions.find((action) => action.id === selectedSection) ?? null;
+  const selectedRepairAction =
+    repairActions.find((action) => action.id === selectedSection) ?? null;
 
   async function runHermesDiagnostic(recordHistory = true) {
     setIsChecking(true);
@@ -160,13 +166,16 @@ export function HermesRepairCenter() {
     setError(null);
 
     try {
-      const nextDiagnostic = recordHistory ? await refreshDiagnosticReport() : await loadDiagnosticReport();
+      const nextDiagnostic = recordHistory
+        ? await refreshDiagnosticReport()
+        : await loadDiagnosticReport();
       setDiagnostic(nextDiagnostic);
 
       if (recordHistory) {
         const snapshot = await createRepairSnapshot({
           title: "Diagnostico Hermes",
-          description: "Snapshot local para auditoria antes do diagnostico de reparo somente leitura.",
+          description:
+            "Snapshot local para auditoria antes do diagnostico de reparo somente leitura.",
           command: "diagnostic_engine_read",
           risk: "low",
         });
@@ -177,7 +186,11 @@ export function HermesRepairCenter() {
           snapshotId: snapshot?.id,
         });
         commitHistory(entry);
-        setNotice(snapshot ? `Diagnostico registrado com snapshot ${snapshot.id}.` : "Diagnostico registrado localmente. Snapshot real exige Tauri.");
+        setNotice(
+          snapshot
+            ? `Diagnostico registrado com snapshot ${snapshot.id}.`
+            : "Diagnostico registrado localmente. Snapshot real exige Tauri.",
+        );
       }
     } catch (nextError) {
       const message = errorMessage(nextError);
@@ -270,7 +283,8 @@ export function HermesRepairCenter() {
             <p className="text-[11px] font-bold tracking-[0.22em] text-primary">PLANO DE REPARO</p>
             <h2 className="mt-1 text-xl font-bold text-foreground">Escolha uma verificacao</h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              O Hermes organiza reparos por etapas. Selecione um card para ver apenas o detalhe necessario.
+              O Hermes organiza reparos por etapas. Selecione um card para ver apenas o detalhe
+              necessario.
             </p>
           </div>
           <button
@@ -336,7 +350,10 @@ export function HermesRepairCenter() {
           onPrepare={() => prepareRepair(selectedRepairAction)}
         />
       ) : selectedSection === "protections" ? (
-        <RepairProtectionsPanel actions={protectedRepairActions} onProtectedAction={registerBlockedAction} />
+        <RepairProtectionsPanel
+          actions={protectedRepairActions}
+          onProtectedAction={registerBlockedAction}
+        />
       ) : selectedSection === "history" ? (
         <RepairHistoryPanel history={history} />
       ) : (
@@ -366,9 +383,12 @@ function RepairProtectionsPanel({
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-bold tracking-[0.22em] text-primary">PROTECOES ATIVAS</p>
-            <h3 className="mt-1 text-xl font-bold text-foreground">Reparos que exigem cuidado extra</h3>
+            <h3 className="mt-1 text-xl font-bold text-foreground">
+              Reparos que exigem cuidado extra
+            </h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Estas funcoes existem no Hermes como protecao obrigatoria: elas nao entram em otimizacao automatica e so devem avancar em fluxo dedicado.
+              Estas funcoes existem no Hermes como protecao obrigatoria: elas nao entram em
+              otimizacao automatica e so devem avancar em fluxo dedicado.
             </p>
           </div>
         </div>
@@ -379,7 +399,11 @@ function RepairProtectionsPanel({
 
       <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
         {actions.map((action) => (
-          <ProtectedRepairCard key={action.id} action={action} onProtectedAction={onProtectedAction} />
+          <ProtectedRepairCard
+            key={action.id}
+            action={action}
+            onProtectedAction={onProtectedAction}
+          />
         ))}
       </div>
     </section>
@@ -412,19 +436,27 @@ function ProtectedRepairCard({
                 </span>
               )}
             </div>
-            <p className="mt-1 text-[12px] font-semibold text-muted-foreground">{action.description}</p>
+            <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
+              {action.description}
+            </p>
           </div>
         </div>
       </div>
 
       <div className="mt-3 grid gap-2 md:grid-cols-2">
         <div className="rounded-xl border border-border/60 bg-background/55 px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Por que exige cuidado</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            Por que exige cuidado
+          </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{action.reason}</p>
         </div>
         <div className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Como o Hermes trata</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{action.guidance}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+            Como o Hermes trata
+          </p>
+          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+            {action.guidance}
+          </p>
         </div>
       </div>
 
@@ -480,17 +512,34 @@ function RepairModeCard({
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
           <Icon className="h-5 w-5" />
         </div>
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>{badge}</span>
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>
+          {badge}
+        </span>
       </div>
       <p className="mt-3 text-[11px] font-bold tracking-[0.18em] text-primary">{eyebrow}</p>
       <h3 className="mt-1 text-base font-bold leading-tight text-foreground">{title}</h3>
-      <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{description}</p>
+      <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+        {description}
+      </p>
     </button>
   );
 }
 
-function RepairActionDetail({ action, busy, onPrepare }: { action: RepairAction; busy: boolean; onPrepare: () => void }) {
-  const cta = action.id === "dism-restorehealth" ? "Preparar reparo" : action.id === "dism-scanhealth" ? "Preparar analise" : "Preparar verificacao";
+function RepairActionDetail({
+  action,
+  busy,
+  onPrepare,
+}: {
+  action: RepairAction;
+  busy: boolean;
+  onPrepare: () => void;
+}) {
+  const cta =
+    action.id === "dism-restorehealth"
+      ? "Preparar reparo"
+      : action.id === "dism-scanhealth"
+        ? "Preparar analise"
+        : "Preparar verificacao";
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
@@ -502,7 +551,9 @@ function RepairActionDetail({ action, busy, onPrepare }: { action: RepairAction;
           <div className="min-w-0">
             <p className="text-[11px] font-bold tracking-[0.22em] text-primary">ACAO SELECIONADA</p>
             <h3 className="mt-1 text-xl font-bold text-foreground">{action.title}</h3>
-            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">{action.description}</p>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {action.description}
+            </p>
           </div>
         </div>
         <button
@@ -524,10 +575,15 @@ function RepairActionDetail({ action, busy, onPrepare }: { action: RepairAction;
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
         <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">COMO O HERMES PROTEGE</p>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">
+            COMO O HERMES PROTEGE
+          </p>
           <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
             {action.notes.slice(0, 3).map((note) => (
-              <div key={note} className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
+              <div
+                key={note}
+                className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground"
+              >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>{note}</span>
               </div>
@@ -536,8 +592,12 @@ function RepairActionDetail({ action, busy, onPrepare }: { action: RepairAction;
         </div>
 
         <details className="rounded-2xl border border-border/70 bg-background/70 p-4 text-[12px]">
-          <summary className="cursor-pointer select-none font-bold text-primary">Ver detalhe tecnico</summary>
-          <code className="mt-3 block break-words rounded-xl bg-muted px-3 py-3 font-semibold text-muted-foreground">{action.command}</code>
+          <summary className="cursor-pointer select-none font-bold text-primary">
+            Ver detalhe tecnico
+          </summary>
+          <code className="mt-3 block break-words rounded-xl bg-muted px-3 py-3 font-semibold text-muted-foreground">
+            {action.command}
+          </code>
         </details>
       </div>
     </section>
@@ -550,7 +610,11 @@ function DiagnosticPanel({
   latestHistory,
 }: {
   diagnostic: DiagnosticReport;
-  integrity: { label: string; description: string; tone: "primary" | "success" | "warning" | "danger" };
+  integrity: {
+    label: string;
+    description: string;
+    tone: "primary" | "success" | "warning" | "danger";
+  };
   latestHistory?: RepairHistoryEntry;
 }) {
   return (
@@ -569,15 +633,31 @@ function DiagnosticPanel({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-4">
-        <StatusCard icon={ShieldCheck} label="ESTADO GERAL" value={integrity.label} sub={integrity.description} tone={integrity.tone} />
+        <StatusCard
+          icon={ShieldCheck}
+          label="ESTADO GERAL"
+          value={integrity.label}
+          sub={integrity.description}
+          tone={integrity.tone}
+        />
         <StatusCard
           icon={Clock3}
           label="ULTIMA VERIFICACAO"
           value={latestHistory ? formatDate(latestHistory.timestamp) : "Nao registrada"}
           sub={latestHistory?.action ?? "Aguardando diagnostico Hermes"}
         />
-        <StatusCard icon={FileSearch} label="ULTIMA ANALISE" value={diagnostic.healthLabel} sub={`Score ${Math.round(diagnostic.healthScore)}/100`} />
-        <StatusCard icon={ShieldAlert} label="INTEGRIDADE" value={repairReadiness(diagnostic)} sub="Baseado em diagnostico local existente" />
+        <StatusCard
+          icon={FileSearch}
+          label="ULTIMA ANALISE"
+          value={diagnostic.healthLabel}
+          sub={`Score ${Math.round(diagnostic.healthScore)}/100`}
+        />
+        <StatusCard
+          icon={ShieldAlert}
+          label="INTEGRIDADE"
+          value={repairReadiness(diagnostic)}
+          sub="Baseado em diagnostico local existente"
+        />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-3">
@@ -586,20 +666,26 @@ function DiagnosticPanel({
           title="Windows Update"
           value={diagnostic.windowsUpdate.status}
           description={`${diagnostic.windowsUpdate.serviceStatus} - ${diagnostic.windowsUpdate.lastHotfixId}`}
-          tone={diagnostic.windowsUpdate.status.toLowerCase().includes("dia") ? "success" : "warning"}
+          tone={
+            diagnostic.windowsUpdate.status.toLowerCase().includes("dia") ? "success" : "warning"
+          }
         />
         <DiagnosticCheck
           icon={ShieldCheck}
           title="Defender"
           value={diagnostic.defender.status}
-          description={diagnostic.defender.active ? "Protecao ativa no diagnostico." : "Revisao recomendada."}
+          description={
+            diagnostic.defender.active ? "Protecao ativa no diagnostico." : "Revisao recomendada."
+          }
           tone={diagnostic.defender.active ? "success" : "danger"}
         />
         <DiagnosticCheck
           icon={ListChecks}
           title="Alertas locais"
           value={diagnostic.warnings.length > 0 ? "Atencao" : "Sem alertas"}
-          description={diagnostic.warnings[0] ?? "Nenhum aviso critico retornado pela Diagnostic Engine."}
+          description={
+            diagnostic.warnings[0] ?? "Nenhum aviso critico retornado pela Diagnostic Engine."
+          }
           tone={diagnostic.warnings.length > 0 ? "warning" : "success"}
         />
       </div>
@@ -617,7 +703,9 @@ function RepairHistoryPanel({ history }: { history: RepairHistoryEntry[] }) {
         <div>
           <p className="text-[11px] font-bold tracking-[0.22em] text-primary">HISTORICO</p>
           <h3 className="mt-1 text-xl font-bold text-foreground">Ultimas preparacoes</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Snapshots, validacoes e bloqueios ficam registrados localmente.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Snapshots, validacoes e bloqueios ficam registrados localmente.
+          </p>
         </div>
       </div>
 
@@ -625,7 +713,11 @@ function RepairHistoryPanel({ history }: { history: RepairHistoryEntry[] }) {
         {history.length > 0 ? (
           history.slice(0, 8).map((entry) => <HistoryRow key={entry.id} entry={entry} />)
         ) : (
-          <EmptyState icon={History} title="Sem historico ainda" sub="Preparacoes, diagnosticos e bloqueios aparecerao aqui." />
+          <EmptyState
+            icon={History}
+            title="Sem historico ainda"
+            sub="Preparacoes, diagnosticos e bloqueios aparecerao aqui."
+          />
         )}
       </div>
     </section>
@@ -648,7 +740,9 @@ function StatusCard({
   return (
     <div className="rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneClass(tone)}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneClass(tone)}`}
+        >
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
@@ -677,7 +771,9 @@ function DiagnosticCheck({
   return (
     <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
       <div className="flex items-start gap-3">
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${toneClass(tone)}`}>
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${toneClass(tone)}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
@@ -696,16 +792,22 @@ function HistoryRow({ entry }: { entry: RepairHistoryEntry }) {
       <span className={`absolute left-0 top-0 h-full w-1 ${historyAccentClass(entry.status)}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-muted-foreground">{formatDate(entry.timestamp)}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            {formatDate(entry.timestamp)}
+          </p>
           <p className="mt-1 text-sm font-bold text-foreground">{entry.action}</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{historyDisplayResult(entry)}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+            {historyDisplayResult(entry)}
+          </p>
           {entry.snapshotId && (
             <p className="mt-2 w-fit max-w-full truncate rounded-lg border border-primary/10 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary">
               Snapshot: {shortSnapshot(entry.snapshotId)}
             </p>
           )}
         </div>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusPillClass(entry.status)}`}>
+        <span
+          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusPillClass(entry.status)}`}
+        >
           {statusLabel(entry.status)}
         </span>
       </div>
@@ -715,7 +817,9 @@ function HistoryRow({ entry }: { entry: RepairHistoryEntry }) {
 
 function Notice({ tone, text }: { tone: "success" | "danger"; text: string }) {
   return (
-    <div className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${tone === "success" ? "border-success/20 bg-success/10 text-success" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+    <div
+      className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${tone === "success" ? "border-success/20 bg-success/10 text-success" : "border-destructive/20 bg-destructive/10 text-destructive"}`}
+    >
       {text}
     </div>
   );
@@ -782,7 +886,11 @@ async function createRepairSnapshot({
   });
 }
 
-function buildIntegrityStatus(report: DiagnosticReport): { label: string; description: string; tone: "primary" | "success" | "warning" | "danger" } {
+function buildIntegrityStatus(report: DiagnosticReport): {
+  label: string;
+  description: string;
+  tone: "primary" | "success" | "warning" | "danger";
+} {
   if (!report.defender.active) {
     return {
       label: "Atencao",

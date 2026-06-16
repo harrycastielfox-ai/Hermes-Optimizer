@@ -173,7 +173,7 @@ fn fallback_report() -> AntiCheatReport {
         read_only: true,
         score: 0,
         status: "Indisponivel".to_string(),
-        summary: "Analise Anti-Cheat ainda nao foi executada neste ambiente.".to_string(),
+        summary: "Analise Anti-Cheat real indisponivel neste ambiente.".to_string(),
         checks: AntiCheatChecks {
             tpm: pending_check("TPM 2.0", 25),
             secure_boot: pending_check("Secure Boot", 25),
@@ -187,7 +187,8 @@ fn fallback_report() -> AntiCheatReport {
             faceit: pending_check("FACEIT Ready", 15),
         },
         warnings: vec![
-            "Fallback seguro usado. Clique em Analisar Anti-Cheat para leitura real.".to_string(),
+            "Fallback indisponivel usado. Nenhum resultado demonstrativo foi retornado."
+                .to_string(),
         ],
     }
 }

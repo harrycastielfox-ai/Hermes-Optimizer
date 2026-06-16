@@ -1,0 +1,1075 @@
+﻿# Monitor P3ninha durante - 2026-06-15 17:09:22
+
+## 17:09:22
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     3396           12268 powershell.exe     15/06/2026 17:09:22
+     9300           12268 powershell.exe     15/06/2026 17:09:22
+
+
+
+
+## 17:09:28
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     1720           11628 powershell.exe     15/06/2026 17:09:27
+     8276           12268 powershell.exe     15/06/2026 17:09:28
+
+
+
+
+## 17:09:33
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     8692           11628 powershell.exe     15/06/2026 17:09:33
+    16192           12268 powershell.exe     15/06/2026 17:09:33
+
+
+
+
+## 17:09:38
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     9956           12268 powershell.exe     15/06/2026 17:09:37
+
+
+
+
+## 17:09:43
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6400           12268 powershell.exe     15/06/2026 17:09:43
+
+
+
+
+## 17:09:49
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+    15188           12268 powershell.exe     15/06/2026 17:09:49
+
+
+
+
+## 17:09:54
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+    14844           12268 powershell.exe     15/06/2026 17:09:54
+
+
+
+
+## 17:09:59
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     3592           12268 powershell.exe     15/06/2026 17:09:59
+
+
+
+
+## 17:10:04
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     3592           11628 powershell.exe     15/06/2026 17:10:03
+    12004           12268 powershell.exe     15/06/2026 17:10:04
+
+
+
+
+## 17:10:09
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     8888           11628 powershell.exe     15/06/2026 17:10:06
+    15616           11628 powershell.exe     15/06/2026 17:10:09
+     4288           12268 powershell.exe     15/06/2026 17:10:09
+
+
+
+
+## 17:10:15
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+    15168           11628 cmd.exe            15/06/2026 17:10:13
+     6796           15168 powershell.exe     15/06/2026 17:10:14
+     8652           12268 powershell.exe     15/06/2026 17:10:14
+
+
+
+
+## 17:10:20
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     6124           12268 powershell.exe     15/06/2026 17:10:19
+
+
+
+
+## 17:10:25
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    11832           12268 powershell.exe     15/06/2026 17:10:25
+    11428           12268 git.exe            15/06/2026 17:10:25
+
+
+
+
+## 17:10:30
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    16484           12268 powershell.exe     15/06/2026 17:10:30
+
+
+
+
+## 17:10:36
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    16788           12268 powershell.exe     15/06/2026 17:10:35
+
+
+
+
+## 17:10:41
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     3016           12268 powershell.exe     15/06/2026 17:10:40
+
+
+
+
+## 17:10:46
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    12800           11628 powershell.exe     15/06/2026 17:10:45
+
+
+
+
+## 17:10:51
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     2684           12268 powershell.exe     15/06/2026 17:10:51
+    15064           11628 powershell.exe     15/06/2026 17:10:51
+
+
+
+
+## 17:10:56
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     8128           12268 powershell.exe     15/06/2026 17:10:56
+
+
+
+
+## 17:11:02
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    15964           12268 powershell.exe     15/06/2026 17:11:01
+
+
+
+
+## 17:11:07
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+
+
+
+
+## 17:11:12
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    16348           12268 powershell.exe     15/06/2026 17:11:12
+
+
+
+
+## 17:11:17
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    12244           12268 powershell.exe     15/06/2026 17:11:17
+
+
+
+
+## 17:11:22
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     1896           11628 powershell.exe     15/06/2026 17:11:21
+     1776           12268 powershell.exe     15/06/2026 17:11:22
+
+
+
+
+## 17:11:28
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     5588           11628 powershell.exe     15/06/2026 17:11:27
+    14260           12268 powershell.exe     15/06/2026 17:11:27
+     2320           12268 git.exe            15/06/2026 17:11:28
+     8128            2320 git.exe            15/06/2026 17:11:28
+
+
+
+
+## 17:11:33
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     7220           12268 powershell.exe     15/06/2026 17:11:32
+     9688           11628 powershell.exe     15/06/2026 17:11:33
+
+
+
+
+## 17:11:38
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     1976           12268 powershell.exe     15/06/2026 17:11:37
+
+
+
+
+## 17:11:43
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    14044           12268 powershell.exe     15/06/2026 17:11:43
+
+
+
+
+## 17:11:49
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+
+
+
+
+## 17:11:54
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     2880           12268 powershell.exe     15/06/2026 17:11:54
+
+
+
+
+## 17:11:59
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    15508           12268 powershell.exe     15/06/2026 17:11:58
+
+
+
+
+## 17:12:04
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    14808           11628 powershell.exe     15/06/2026 17:12:03
+     5652           12268 powershell.exe     15/06/2026 17:12:04
+
+
+
+
+## 17:12:09
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     3016           12268 powershell.exe     15/06/2026 17:12:09
+     9760           11628 powershell.exe     15/06/2026 17:12:09
+
+
+
+
+## 17:12:15
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+    10924           12268 powershell.exe     15/06/2026 17:12:14
+
+
+
+
+## 17:12:20
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+     9580           12268 powershell.exe     15/06/2026 17:12:20
+
+
+
+
+## 17:12:25
+log_bytes=4200 last_write=15:53:48
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+
+ProcessId ParentProcessId Name               CreationDate       
+--------- --------------- ----               ------------       
+     8216             912 P3ninha® V5.0.exe  15/06/2026 15:52:39
+    11628            8216 P3ninha® V5.0.exe  15/06/2026 15:53:00
+     6088           11628 msedgewebview2.exe 15/06/2026 15:53:02
+     6168            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     5136            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     6116            6088 msedgewebview2.exe 15/06/2026 15:53:02
+     3340            6088 msedgewebview2.exe 15/06/2026 15:53:02
+    12920            6088 msedgewebview2.exe 15/06/2026 15:53:07
+    10040            9208 powershell.exe     15/06/2026 17:07:58
+    12596           17068 powershell.exe     15/06/2026 17:09:22
+     6344           11628 cmd.exe            15/06/2026 17:10:18
+    16256            6344 sfc.exe            15/06/2026 17:10:18
+
+
+
+
+# Monitor encerrado 2026-06-15 17:12:30

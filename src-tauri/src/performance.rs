@@ -1014,22 +1014,22 @@ fn setting(
 fn fallback_report() -> PerformanceReport {
     build_report(
         RawPerformanceReport {
-            power_plan_name: Some("Equilibrado".to_string()),
-            power_plan_guid: Some("381b4222-f694-41f0-9685-ff5bb260df2e".to_string()),
-            auto_game_mode_enabled: Some(true),
-            allow_auto_game_mode: Some(true),
-            game_dvr_enabled: Some(false),
-            enable_transparency: Some(1),
-            visual_fx_setting: Some(0),
-            min_animate: Some("1".to_string()),
-            taskbar_animations: Some(1),
-            listview_shadow: Some(1),
-            listview_alpha_select: Some(1),
-            drag_full_windows: Some("1".to_string()),
-            background_apps_global_disabled: Some(0),
-            power_throttling_off: Some(0),
+            power_plan_name: Some("Indisponivel".to_string()),
+            power_plan_guid: Some("Indisponivel".to_string()),
+            auto_game_mode_enabled: None,
+            allow_auto_game_mode: None,
+            game_dvr_enabled: None,
+            enable_transparency: None,
+            visual_fx_setting: None,
+            min_animate: None,
+            taskbar_animations: None,
+            listview_shadow: None,
+            listview_alpha_select: None,
+            drag_full_windows: None,
+            background_apps_global_disabled: None,
+            power_throttling_off: None,
         },
-        vec!["Fallback local usado porque a leitura real nao respondeu.".to_string()],
+        vec!["Fallback indisponivel usado porque a leitura real nao respondeu. Nenhum estado demonstrativo foi retornado.".to_string()],
     )
 }
 

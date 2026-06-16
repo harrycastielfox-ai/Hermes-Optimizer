@@ -1,19 +1,19 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "tanstack_start_ts",
+  "productName": "Hermes Optimizer",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "org.ligahub.hermesoptimizer",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:8080",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeBuildCommand": "npm run build:tauri"
   },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "tanstack_start_ts",
+        "title": "Hermes Optimizer",
         "width": 1366,
         "height": 768,
         "resizable": true,
@@ -22,12 +22,14 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: https://asset.localhost data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost http://localhost:8080 ws://localhost:8080; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["msi", "nsis"],
+    "publisher": "Hermes Optimizer Team",
+    "homepage": "https://play.ligahub.org/hub/hermes/",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -35,6 +37,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "windows": {
+      "wix": {
+        "upgradeCode": "ba037dd5-74ae-5420-ba93-ab16e0357390"
+      }
+    },
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }

@@ -82,14 +82,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Painel central do PC com coleta local somente leitura." },
       { name: "author", content: "Hermes Optimizer" },
       { property: "og:title", content: "Hermes Optimizer" },
-      { property: "og:description", content: "Painel central do PC com coleta local somente leitura." },
+      {
+        property: "og:description",
+        content: "Painel central do PC com coleta local somente leitura.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Hermes Optimizer" },
-      { name: "twitter:description", content: "Painel central do PC com coleta local somente leitura." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dfa7cb30-c4d2-4581-abb4-7a4228ee7bf2/id-preview-4a83988b--24feb702-a7dc-4a9c-97c7-a07f9bfc0b27.lovable.app-1780578962053.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dfa7cb30-c4d2-4581-abb4-7a4228ee7bf2/id-preview-4a83988b--24feb702-a7dc-4a9c-97c7-a07f9bfc0b27.lovable.app-1780578962053.png" },
+      {
+        name: "twitter:description",
+        content: "Painel central do PC com coleta local somente leitura.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dfa7cb30-c4d2-4581-abb4-7a4228ee7bf2/id-preview-4a83988b--24feb702-a7dc-4a9c-97c7-a07f9bfc0b27.lovable.app-1780578962053.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dfa7cb30-c4d2-4581-abb4-7a4228ee7bf2/id-preview-4a83988b--24feb702-a7dc-4a9c-97c7-a07f9bfc0b27.lovable.app-1780578962053.png",
+      },
     ],
     links: [
       {

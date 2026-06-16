@@ -238,9 +238,14 @@ pub async fn advanced_engine_apply_optimize_now(
 pub async fn advanced_set_graphics_high_performance_optimize_now(
     app: AppHandle,
     executable_path: String,
+    dry_run: Option<bool>,
 ) -> Result<AdvancedApplyResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        graphics_preference_apply_blocking(app, executable_path)
+        graphics_preference_apply_blocking(
+            app,
+            executable_path,
+            safe_mode::force_dry_run(dry_run.unwrap_or(false)),
+        )
     })
     .await
     .map_err(|err| format!("Falha ao priorizar Elementos Graficos: {err}"))?
@@ -276,6 +281,7 @@ pub(crate) fn advanced_engine_apply_blocking(
 fn graphics_preference_apply_blocking(
     app: AppHandle,
     executable_path: String,
+    dry_run: bool,
 ) -> Result<AdvancedApplyResult, String> {
     if !cfg!(target_os = "windows") {
         return Err("Elementos Graficos exige Windows.".to_string());
@@ -289,7 +295,7 @@ fn graphics_preference_apply_blocking(
         previous_value,
     )];
     validate_plans_for_apply(&plans, false)?;
-    execute_advanced_plans(app, plans, false)
+    execute_advanced_plans(app, plans, dry_run)
 }
 
 fn execute_advanced_plans(
@@ -392,7 +398,7 @@ pub fn collect_advanced_catalog() -> AdvancedCatalog {
             fallback_state(),
             vec![
                 error,
-                "Fallback local usado porque a leitura real nao respondeu.".to_string(),
+                "Fallback indisponivel usado porque a leitura real nao respondeu. Nenhum estado demonstrativo foi retornado.".to_string(),
             ],
         ),
     }
@@ -1814,19 +1820,19 @@ fn command_output(child: std::process::Child, label: &str) -> Result<String, Str
 
 fn fallback_state() -> RawAdvancedState {
     RawAdvancedState {
-        auto_game_mode_enabled: Some(0),
-        allow_auto_game_mode: Some(0),
-        game_dvr_enabled: Some(1),
-        app_capture_enabled: Some(1),
+        auto_game_mode_enabled: None,
+        allow_auto_game_mode: None,
+        game_dvr_enabled: None,
+        app_capture_enabled: None,
         startup_delay_in_msec: None,
-        enable_transparency: Some(1),
-        min_animate: Some("1".to_string()),
-        taskbar_animations: Some(1),
-        listview_alpha_select: Some(1),
-        listview_shadow: Some(1),
+        enable_transparency: None,
+        min_animate: None,
+        taskbar_animations: None,
+        listview_alpha_select: None,
+        listview_shadow: None,
         visual_fx_setting: None,
-        power_plan_guid: Some(BALANCED_POWER_PLAN_GUID.to_string()),
-        power_plan_name: Some("Equilibrado".to_string()),
+        power_plan_guid: Some("Indisponivel".to_string()),
+        power_plan_name: Some("Indisponivel".to_string()),
     }
 }
 

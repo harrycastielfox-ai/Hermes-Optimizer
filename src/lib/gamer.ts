@@ -155,18 +155,14 @@ export const fallbackGamerReport: GamerReport = {
   },
   gameProfiles: [],
   detectedGames: [],
-  suggestedProcesses: [
-    process(4242, "Discord.exe", 412, "communication", "suggestedClose", "App de comunicacao pode consumir RAM/CPU em segundo plano."),
-    process(4343, "Spotify.exe", 320, "background", "keep", "Mantido por padrao; pode ser necessario para o jogo."),
-    process(4444, "OneDrive.exe", 180, "cloudSync", "suggestedClose", "Sincronizacao pode disputar disco e rede durante jogos."),
-  ],
+  suggestedProcesses: [],
   protectedProcesses: [],
   summary: {
     detectedGames: 0,
-    suggestedToClose: 2,
+    suggestedToClose: 0,
     optionalToClose: 0,
     protectedCount: 0,
-    estimatedRamToFreeMb: 592,
+    estimatedRamToFreeMb: 0,
   },
   safeguards: [
     "Nunca fecha processos criticos do Windows.",
@@ -175,7 +171,7 @@ export const fallbackGamerReport: GamerReport = {
     "Snapshot e log local antes de qualquer aplicacao.",
     "Restauracao pos-jogo usa o Restore Engine.",
   ],
-  warnings: [],
+  warnings: ["Gamer Engine real indisponivel. Nenhum processo demonstrativo foi exibido."],
 };
 
 export async function loadGamerReport(): Promise<GamerReport> {
@@ -198,7 +194,9 @@ export async function applyGamerEngine(request: GamerApplyRequest): Promise<Game
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<GamerApplyResult>("gamer_engine_apply", { request: forceSafeDryRun(request) });
+  return await invoke<GamerApplyResult>("gamer_engine_apply", {
+    request: forceSafeDryRun(request),
+  });
 }
 
 export async function listGamerProfiles(): Promise<GamerProfileList> {
@@ -216,7 +214,9 @@ export async function listGamerProfiles(): Promise<GamerProfileList> {
   return await invoke<GamerProfileList>("gamer_profiles_list");
 }
 
-export async function saveGamerProfile(request: GamerGameProfileSaveRequest): Promise<GamerGameProfile> {
+export async function saveGamerProfile(
+  request: GamerGameProfileSaveRequest,
+): Promise<GamerGameProfile> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     throw new Error("Perfis gamer exigem o backend Tauri.");
   }
@@ -234,32 +234,15 @@ export async function deleteGamerProfile(profileId: string): Promise<GamerProfil
   return await invoke<GamerProfileList>("gamer_profile_delete", { profileId });
 }
 
-export async function restoreGamerSession(request: GamerRestoreSessionRequest): Promise<GamerRestoreSessionResult> {
+export async function restoreGamerSession(
+  request: GamerRestoreSessionRequest,
+): Promise<GamerRestoreSessionResult> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     throw new Error("Restauracao gamer exige o backend Tauri.");
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<GamerRestoreSessionResult>("gamer_restore_session", { request: forceSafeDryRun({ ...request, confirmed: request.confirmed ?? false }) });
-}
-
-function process(
-  pid: number,
-  name: string,
-  memoryMb: number,
-  category: GamerProcessCategory,
-  recommendation: GamerRecommendation,
-  reason: string,
-): GamerProcess {
-  return {
-    pid,
-    name,
-    displayName: name.replace(/\.exe$/i, ""),
-    memoryMb,
-    category,
-    recommendation,
-    reason,
-    canClose: recommendation === "suggestedClose" || recommendation === "optionalClose",
-    rollbackAvailable: true,
-  };
+  return await invoke<GamerRestoreSessionResult>("gamer_restore_session", {
+    request: forceSafeDryRun({ ...request, confirmed: request.confirmed ?? false }),
+  });
 }

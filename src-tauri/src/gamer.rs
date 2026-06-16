@@ -454,7 +454,7 @@ fn collect_gamer_report_with_app(app: Option<&AppHandle>) -> GamerReport {
             let mut report = build_report(fallback_raw_report(), profiles, vec![error]);
             report
                 .warnings
-                .push("Fallback local usado porque a leitura real nao respondeu.".to_string());
+                .push("Fallback indisponivel usado porque a leitura real nao respondeu. Nenhum processo demonstrativo foi retornado.".to_string());
             report
         }
     }
@@ -1552,43 +1552,7 @@ fn background_patterns() -> &'static [&'static str] {
 fn fallback_raw_report() -> RawGamerReport {
     RawGamerReport {
         active_process: None,
-        processes: Some(vec![
-            fallback_process(
-                4242,
-                "Discord.exe",
-                412,
-                "C:\\Users\\demo\\AppData\\Local\\Discord\\app\\Discord.exe",
-            ),
-            fallback_process(
-                4343,
-                "Spotify.exe",
-                320,
-                "C:\\Users\\demo\\AppData\\Roaming\\Spotify\\Spotify.exe",
-            ),
-            fallback_process(
-                4444,
-                "OneDrive.exe",
-                180,
-                "C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe",
-            ),
-            fallback_process(
-                4545,
-                "steam.exe",
-                260,
-                "C:\\Program Files (x86)\\Steam\\steam.exe",
-            ),
-        ]),
-    }
-}
-
-fn fallback_process(pid: u32, name: &str, memory_mb: u64, path: &str) -> RawGamerProcess {
-    RawGamerProcess {
-        pid: Some(pid),
-        name: Some(name.to_string()),
-        executable_path: Some(path.to_string()),
-        command_line: Some(path.to_string()),
-        memory_mb: Some(memory_mb),
-        main_window_title: Some(String::new()),
+        processes: Some(Vec::new()),
     }
 }
 

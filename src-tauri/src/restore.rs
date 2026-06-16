@@ -1571,6 +1571,38 @@ mod tests {
     use super::*;
 
     #[test]
+    fn restores_clean_quarantine_file_backup_in_real_mode() {
+        let root = std::env::temp_dir().join(format!("hermes-restore-test-{}", now_nanos()));
+        let quarantine_dir = root.join("history").join("clean_quarantine").join("temp");
+        let backup = quarantine_dir.join("sample.tmp");
+        let target = root.join("restore-target").join("sample.tmp");
+        fs::create_dir_all(&quarantine_dir).expect("create quarantine test dir");
+        fs::write(&backup, "hermes rollback payload").expect("write quarantine backup");
+
+        let action = RestoreRollbackAction {
+            id: "rollback-clean-file".to_string(),
+            action_type: RestoreRollbackActionType::RestoreFileBackup,
+            target: target.to_string_lossy().to_string(),
+            description: "Restaurar arquivo da quarentena Hermes.".to_string(),
+            previous_value: None,
+            backup_path: Some(backup.to_string_lossy().to_string()),
+            command_preview: Some("Move quarentena Hermes para origem permitida".to_string()),
+            status: RestoreRollbackActionStatus::Pending,
+        };
+
+        let result = restore_file_backup_action(&action);
+
+        assert!(matches!(result.status, RestoreActionResultStatus::Applied));
+        assert_eq!(
+            fs::read_to_string(&target).expect("restored file contents"),
+            "hermes rollback payload"
+        );
+        assert!(!backup.exists());
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
     fn validates_visual_fx_setting_rollback_in_isolation() {
         let action = RestoreRollbackAction {
             id: "rollback-visual-fx-setting".to_string(),

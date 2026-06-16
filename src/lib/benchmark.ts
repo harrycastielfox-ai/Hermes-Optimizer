@@ -29,20 +29,20 @@ export const fallbackBenchmarkReport: BenchmarkReport = {
   generatedAt: "0",
   engineVersion: "benchmark-engine-fallback-v1",
   readOnly: true,
-  score: 78,
+  score: 0,
   previousScore: undefined,
   delta: undefined,
-  verdict: "Primeiro benchmark salvo como base",
+  verdict: "Benchmark indisponivel",
   components: {
-    cpu: component("CPU", 85, "23% em uso durante a leitura", 20),
-    memory: component("RAM", 74, "7.4 GB livres de 15.7 GB", 20),
-    disk: component("Disco", 86, "235 GB livres em C:", 20),
-    startup: component("Inicializacao", 60, "17 itens, 2 de alto impacto", 15),
-    power: component("Energia", 82, "Equilibrado", 15),
-    security: component("Seguranca", 100, "Ativo", 10),
-    antiCheat: component("Anti-Cheat", 0, "Aguardando analise", 10),
+    cpu: component("CPU", 0, "Indisponivel sem leitura real", 20),
+    memory: component("RAM", 0, "Indisponivel sem leitura real", 20),
+    disk: component("Disco", 0, "Indisponivel sem leitura real", 20),
+    startup: component("Inicializacao", 0, "Indisponivel sem leitura real", 15),
+    power: component("Energia", 0, "Indisponivel sem leitura real", 15),
+    security: component("Seguranca", 0, "Indisponivel sem leitura real", 10),
+    antiCheat: component("Anti-Cheat", 0, "Indisponivel sem leitura real", 10),
   },
-  observations: ["Primeiro benchmark salvo como base de comparacao."],
+  observations: ["Benchmark real indisponivel. Nenhum score demonstrativo foi exibido."],
 };
 
 let benchmarkMemoryCache: BenchmarkReport | null = null;
@@ -64,7 +64,7 @@ export async function loadCachedBenchmark(): Promise<BenchmarkReport> {
       return report;
     })
     .catch((error) => {
-      console.warn("Benchmark salvo indisponivel, usando fallback local.", error);
+      console.warn("Benchmark salvo indisponivel, usando fallback indisponivel.", error);
       return fallbackBenchmarkReport;
     })
     .finally(() => {
@@ -85,12 +85,17 @@ export async function runBenchmark(): Promise<BenchmarkReport> {
     benchmarkMemoryCache = report;
     return report;
   } catch (error) {
-    console.warn("Benchmark Engine indisponivel, usando fallback local.", error);
+    console.warn("Benchmark Engine indisponivel, usando fallback indisponivel.", error);
     return fallbackBenchmarkReport;
   }
 }
 
-function component(label: string, score: number, detail: string, weight: number): BenchmarkComponentScore {
+function component(
+  label: string,
+  score: number,
+  detail: string,
+  weight: number,
+): BenchmarkComponentScore {
   return {
     score,
     label,

@@ -1,5 +1,8 @@
 # Hermes Optimizer - Roadmap Funcional
 
+> Documento historico. A direcao oficial do ciclo atual esta em
+> `docs/roadmap-mestre-hermes-30-dias.md`.
+
 Este documento é a memória técnica do Hermes Optimizer. O visual atual é a base oficial e não deve ser alterado sem pedido explícito.
 
 ## Princípios Obrigatórios

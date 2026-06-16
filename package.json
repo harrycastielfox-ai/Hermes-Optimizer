@@ -1,11 +1,15 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "hermes-optimizer",
+  "description": "Hermes Optimizer desktop app",
   "private": true,
   "sideEffects": false,
   "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:tauri": "vite build --config vite.tauri.config.ts",
+    "build:tauri:debug": "tauri build --debug",
+    "build:tauri:signed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-signed-windows.ps1",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",

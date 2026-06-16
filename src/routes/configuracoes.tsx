@@ -7,7 +7,9 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { useHermesTranslation } from "@/lib/preferences";
 
 const HermesAdminSettings = lazy(() =>
-  import("@/components/settings/HermesAdminSettings").then((module) => ({ default: module.HermesAdminSettings })),
+  import("@/components/settings/HermesAdminSettings").then((module) => ({
+    default: module.HermesAdminSettings,
+  })),
 );
 
 export const Route = createFileRoute("/configuracoes")({
@@ -29,11 +31,13 @@ function ConfiguracoesPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 px-5 pt-6 pb-4 overflow-auto xl:px-8 xl:pt-7">
           <div className="mb-5">
-            <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">{t("settings.eyebrow")}</p>
-            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">{t("settings.title")}</h1>
-            <p className="text-[13px] text-muted-foreground mt-1">
-              {t("settings.subtitle")}
+            <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">
+              {t("settings.eyebrow")}
             </p>
+            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
+              {t("settings.title")}
+            </h1>
+            <p className="text-[13px] text-muted-foreground mt-1">{t("settings.subtitle")}</p>
           </div>
 
           <SafeTestModeNotice />
@@ -96,7 +100,16 @@ function DeferredSettingsSection({
   return (
     <section id={shouldMount ? undefined : id} ref={sectionRef} className="scroll-mt-5">
       {shouldMount ? (
-        <Suspense fallback={<SettingsSectionPlaceholder icon={Icon} title={title} description={description} loading />}>
+        <Suspense
+          fallback={
+            <SettingsSectionPlaceholder
+              icon={Icon}
+              title={title}
+              description={description}
+              loading
+            />
+          }
+        >
           {children}
         </Suspense>
       ) : (
@@ -127,8 +140,12 @@ function SettingsSectionPlaceholder({
         </div>
         <div className="min-w-0">
           <h2 className="text-lg font-bold text-foreground">{title}</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">{description}</p>
-          <p className="mt-3 text-[12px] font-semibold text-primary">{loading ? t("settings.placeholder.loading") : t("settings.placeholder.waiting")}</p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
+          <p className="mt-3 text-[12px] font-semibold text-primary">
+            {loading ? t("settings.placeholder.loading") : t("settings.placeholder.waiting")}
+          </p>
         </div>
       </div>
     </div>

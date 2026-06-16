@@ -7,7 +7,10 @@ export const Route = createFileRoute("/manutencao-programada")({
   head: () => ({
     meta: [
       { title: "Hermes Optimizer - Manutencao Programada" },
-      { name: "description", content: "Tarefas locais e conservadoras do Scheduler Engine Hermes." },
+      {
+        name: "description",
+        content: "Tarefas locais e conservadoras do Scheduler Engine Hermes.",
+      },
     ],
   }),
   component: ManutencaoProgramadaPage,

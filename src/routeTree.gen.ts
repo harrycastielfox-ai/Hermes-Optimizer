@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as RepararWindowsRouteImport } from './routes/reparar-windows'
+import { Route as PrepararAmbienteRouteImport } from './routes/preparar-ambiente'
 import { Route as PersonalizadoRouteImport } from './routes/personalizado'
 import { Route as PerfisRouteImport } from './routes/perfis'
 import { Route as OtimizacoesRouteImport } from './routes/otimizacoes'
@@ -31,6 +32,11 @@ const SegurancaRoute = SegurancaRouteImport.update({
 const RepararWindowsRoute = RepararWindowsRouteImport.update({
   id: '/reparar-windows',
   path: '/reparar-windows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrepararAmbienteRoute = PrepararAmbienteRouteImport.update({
+  id: '/preparar-ambiente',
+  path: '/preparar-ambiente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PersonalizadoRoute = PersonalizadoRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
+  '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
+  '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/otimizacoes': typeof OtimizacoesRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
+  '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/otimizacoes'
     | '/perfis'
     | '/personalizado'
+    | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/otimizacoes'
     | '/perfis'
     | '/personalizado'
+    | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/otimizacoes'
     | '/perfis'
     | '/personalizado'
+    | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   OtimizacoesRoute: typeof OtimizacoesRoute
   PerfisRoute: typeof PerfisRoute
   PersonalizadoRoute: typeof PersonalizadoRoute
+  PrepararAmbienteRoute: typeof PrepararAmbienteRoute
   RepararWindowsRoute: typeof RepararWindowsRoute
   SegurancaRoute: typeof SegurancaRoute
 }
@@ -213,6 +226,13 @@ declare module '@tanstack/react-router' {
       path: '/reparar-windows'
       fullPath: '/reparar-windows'
       preLoaderRoute: typeof RepararWindowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preparar-ambiente': {
+      id: '/preparar-ambiente'
+      path: '/preparar-ambiente'
+      fullPath: '/preparar-ambiente'
+      preLoaderRoute: typeof PrepararAmbienteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/personalizado': {
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   OtimizacoesRoute: OtimizacoesRoute,
   PerfisRoute: PerfisRoute,
   PersonalizadoRoute: PersonalizadoRoute,
+  PrepararAmbienteRoute: PrepararAmbienteRoute,
   RepararWindowsRoute: RepararWindowsRoute,
   SegurancaRoute: SegurancaRoute,
 }

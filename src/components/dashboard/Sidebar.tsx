@@ -1,35 +1,9 @@
-import {
-  Beaker,
-  CalendarClock,
-  Gauge,
-  Home,
-  LockKeyhole,
-  Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Sparkles,
-  Stethoscope,
-  Wrench,
-  Zap,
-} from "lucide-react";
+import { Home } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { useHermesTranslation } from "@/lib/preferences";
 
-const items = [
-  { icon: Home, labelKey: "sidebar.dashboard", to: "/" },
-  { icon: Stethoscope, labelKey: "sidebar.diagnostic", to: "/diagnostico" },
-  { icon: LockKeyhole, labelKey: "sidebar.antiCheat", to: "/anti-cheat" },
-  { icon: Sparkles, labelKey: "sidebar.recommendations", to: "/otimizacoes" },
-  { icon: Gauge, labelKey: "sidebar.central", to: "/central" },
-  { icon: Zap, labelKey: "sidebar.startup", to: "/inicializacao" },
-  { icon: Beaker, labelKey: "sidebar.clean", to: "/limpeza" },
-  { icon: ShieldCheck, labelKey: "sidebar.security", to: "/seguranca" },
-  { icon: Wrench, labelKey: "sidebar.repair", to: "/reparar-windows" },
-  { icon: CalendarClock, labelKey: "sidebar.scheduler", to: "/manutencao-programada" },
-  { icon: SlidersHorizontal, labelKey: "sidebar.custom", to: "/personalizado" },
-  { icon: Settings, labelKey: "sidebar.settings", to: "/configuracoes" },
-] as const;
+const items = [{ icon: Home, labelKey: "sidebar.dashboard", to: "/" }] as const;
 
 export function Sidebar() {
   const { pathname } = useLocation();

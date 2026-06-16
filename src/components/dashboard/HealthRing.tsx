@@ -1,6 +1,14 @@
 import { Zap } from "lucide-react";
 
-export function HealthRing({ value = 97, size = 72, stroke = 7 }: { value?: number; size?: number; stroke?: number }) {
+export function HealthRing({
+  value = 97,
+  size = 72,
+  stroke = 7,
+}: {
+  value?: number;
+  size?: number;
+  stroke?: number;
+}) {
   const safeValue = Math.min(100, Math.max(0, value));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -8,10 +16,27 @@ export function HealthRing({ value = 97, size = 72, stroke = 7 }: { value?: numb
   const gradientId = `hermes-health-${size}-${stroke}`;
 
   return (
-    <div className="relative drop-shadow-[0_14px_24px_rgba(37,99,235,0.18)]" style={{ width: size, height: size }}>
+    <div
+      className="relative drop-shadow-[0_14px_24px_rgba(37,99,235,0.18)]"
+      style={{ width: size, height: size }}
+    >
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.92 0.02 250)" strokeWidth={stroke} fill="none" />
-        <circle cx={size / 2} cy={size / 2} r={r - stroke / 1.8} stroke="oklch(0.97 0.01 250)" strokeWidth="1" fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="oklch(0.92 0.02 250)"
+          strokeWidth={stroke}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r - stroke / 1.8}
+          stroke="oklch(0.97 0.01 250)"
+          strokeWidth="1"
+          fill="none"
+        />
         <circle
           cx={size / 2}
           cy={size / 2}

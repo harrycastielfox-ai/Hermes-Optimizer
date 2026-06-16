@@ -31,7 +31,11 @@ export function HermesComputerIcon({ className }: IconProps) {
 export function HermesWindowsIcon({ className }: IconProps) {
   return (
     <BaseIcon className={className}>
-      <path fill="currentColor" stroke="none" d="M3.5 5.2 10.7 4v7.2H3.5V5.2Zm8.2-1.35 8.8-1.45v8.8h-8.8V3.85ZM3.5 12.2h7.2V20l-7.2-1.15V12.2Zm8.2 0h8.8v9.4l-8.8-1.42V12.2Z" />
+      <path
+        fill="currentColor"
+        stroke="none"
+        d="M3.5 5.2 10.7 4v7.2H3.5V5.2Zm8.2-1.35 8.8-1.45v8.8h-8.8V3.85ZM3.5 12.2h7.2V20l-7.2-1.15V12.2Zm8.2 0h8.8v9.4l-8.8-1.42V12.2Z"
+      />
     </BaseIcon>
   );
 }

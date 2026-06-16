@@ -63,7 +63,10 @@ export function HermesAiCenter() {
   const topRecommendations = report.recommendations.slice(0, 5);
 
   return (
-    <section id="hermes-ai" className="relative scroll-mt-5 mt-5 overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
+    <section
+      id="hermes-ai"
+      className="relative scroll-mt-5 mt-5 overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]"
+    >
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute right-[-60px] top-[-70px] h-52 w-52 rounded-full bg-primary/8 blur-3xl" />
         <div className="absolute bottom-10 left-1/4 h-px w-80 rotate-[112deg] bg-gradient-to-r from-transparent via-primary/16 to-transparent" />
@@ -77,9 +80,12 @@ export function HermesAiCenter() {
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-bold tracking-[0.22em] text-primary">HERMES AI</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">Centro de Inteligencia Hermes</h2>
+            <h2 className="mt-1 text-lg font-bold text-foreground">
+              Centro de Inteligencia Hermes
+            </h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Analise local, offline e somente leitura. A Hermes AI explica gargalos e recomenda proximos passos, sem aplicar nada automaticamente.
+              Analise local, offline e somente leitura. A Hermes AI explica gargalos e recomenda
+              proximos passos, sem aplicar nada automaticamente.
             </p>
           </div>
         </div>
@@ -90,7 +96,11 @@ export function HermesAiCenter() {
           disabled={isLoading}
           className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-muted disabled:opacity-60"
         >
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <RefreshCcw className="h-4 w-4 text-primary" />}
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          ) : (
+            <RefreshCcw className="h-4 w-4 text-primary" />
+          )}
           Atualizar analise
         </button>
       </div>
@@ -107,12 +117,28 @@ export function HermesAiCenter() {
             <ScoreRing value={report.hermesScore.value} tone={classification.tone} />
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-bold tracking-[0.18em] text-primary">ESTADO GERAL</p>
-              <h3 className="mt-1 text-2xl font-bold leading-tight text-foreground">{classification.label}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{report.summary.generalState}</p>
+              <h3 className="mt-1 text-2xl font-bold leading-tight text-foreground">
+                {classification.label}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {report.summary.generalState}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Pill icon={ShieldCheck} label={report.offline ? "Offline" : "Online"} tone="success" />
-                <Pill icon={LockKeyhole} label={report.readOnly ? "Read-only" : "Pode alterar"} tone={report.readOnly ? "success" : "warning"} />
-                <Pill icon={Gauge} label={`Confianca ${confidenceLabel(report.summary.confidence)}`} tone={confidenceTone(report.summary.confidence)} />
+                <Pill
+                  icon={ShieldCheck}
+                  label={report.offline ? "Offline" : "Online"}
+                  tone="success"
+                />
+                <Pill
+                  icon={LockKeyhole}
+                  label={report.readOnly ? "Read-only" : "Pode alterar"}
+                  tone={report.readOnly ? "success" : "warning"}
+                />
+                <Pill
+                  icon={Gauge}
+                  label={`Confianca ${confidenceLabel(report.summary.confidence)}`}
+                  tone={confidenceTone(report.summary.confidence)}
+                />
               </div>
             </div>
           </div>
@@ -120,13 +146,22 @@ export function HermesAiCenter() {
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <MiniMetric label="Problemas" value={`${report.summary.problemCount}`} />
             <MiniMetric label="Recomendacoes" value={`${report.summary.recommendationCount}`} />
-            <MiniMetric label="Cobertura" value={`${Math.round(report.hermesScore.coveragePercent)}%`} />
+            <MiniMetric
+              label="Cobertura"
+              value={`${Math.round(report.hermesScore.coveragePercent)}%`}
+            />
           </div>
 
           <div className="mt-4 rounded-xl border border-border/70 bg-card px-3 py-3">
-            <p className="text-[11px] font-bold tracking-[0.16em] text-primary">PERFIL RECOMENDADO</p>
-            <p className="mt-1 text-lg font-bold text-foreground">{report.summary.recommendedProfile ?? "Indisponivel"}</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{report.summary.recommendedProfileReason}</p>
+            <p className="text-[11px] font-bold tracking-[0.16em] text-primary">
+              PERFIL RECOMENDADO
+            </p>
+            <p className="mt-1 text-lg font-bold text-foreground">
+              {report.summary.recommendedProfile ?? "Indisponivel"}
+            </p>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+              {report.summary.recommendedProfileReason}
+            </p>
           </div>
         </div>
 
@@ -143,7 +178,9 @@ export function HermesAiCenter() {
             emptyTitle="Sem recomendacoes agora"
             emptySub="Quando houver sinais suficientes, as recomendacoes aparecem aqui."
             items={topRecommendations}
-            renderItem={(item) => <RecommendationRow key={item.id} item={item} sources={report.sources} />}
+            renderItem={(item) => (
+              <RecommendationRow key={item.id} item={item} sources={report.sources} />
+            )}
           />
         </div>
       </div>
@@ -152,8 +189,12 @@ export function HermesAiCenter() {
         <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">PLANO DE ACAO HERMES</h3>
-              <p className="mt-1 text-[12px] text-muted-foreground">Recomendacao textual. Nenhuma etapa e executada automaticamente.</p>
+              <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+                PLANO DE ACAO HERMES
+              </h3>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Recomendacao textual. Nenhuma etapa e executada automaticamente.
+              </p>
             </div>
             <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary">
               Somente recomendacao
@@ -168,12 +209,18 @@ export function HermesAiCenter() {
         </div>
 
         <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-          <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">FONTES UTILIZADAS</h3>
+          <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+            FONTES UTILIZADAS
+          </h3>
           <div className="mt-3 space-y-2">
             {report.sources.length > 0 ? (
               report.sources.map((source) => <SourceRow key={source.id} source={source} />)
             ) : (
-              <EmptyState icon={Database} title="Fontes indisponiveis" sub={report.unavailableData[0] ?? "Sem fontes reais disponiveis nesta execucao."} />
+              <EmptyState
+                icon={Database}
+                title="Fontes indisponiveis"
+                sub={report.unavailableData[0] ?? "Sem fontes reais disponiveis nesta execucao."}
+              />
             )}
           </div>
         </div>
@@ -181,14 +228,25 @@ export function HermesAiCenter() {
 
       <div className="relative mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-          <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">COMPONENTES DO SCORE</h3>
+          <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
+            COMPONENTES DO SCORE
+          </h3>
           <div className="mt-3 space-y-2">
             {report.hermesScore.components.length > 0 ? (
               report.hermesScore.components.map((component) => (
-                <ScoreComponentRow key={component.id} label={component.label} value={component.value} explanation={component.explanation} />
+                <ScoreComponentRow
+                  key={component.id}
+                  label={component.label}
+                  value={component.value}
+                  explanation={component.explanation}
+                />
               ))
             ) : (
-              <EmptyState icon={CircleGauge} title="Score indisponivel" sub={report.hermesScore.explanation} />
+              <EmptyState
+                icon={CircleGauge}
+                title="Score indisponivel"
+                sub={report.hermesScore.explanation}
+              />
             )}
           </div>
         </div>
@@ -197,13 +255,19 @@ export function HermesAiCenter() {
           <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">TRANSPARENCIA</h3>
           <div className="mt-3 space-y-2">
             {report.safeguards.map((item) => (
-              <div key={item} className="flex items-start gap-2 rounded-xl border border-border/70 bg-card px-3 py-2 text-sm text-foreground">
+              <div
+                key={item}
+                className="flex items-start gap-2 rounded-xl border border-border/70 bg-card px-3 py-2 text-sm text-foreground"
+              >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                 <span>{item}</span>
               </div>
             ))}
             {report.unavailableData.map((item) => (
-              <div key={item} className="flex items-start gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning">
+              <div
+                key={item}
+                className="flex items-start gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning"
+              >
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </div>
@@ -215,12 +279,24 @@ export function HermesAiCenter() {
   );
 }
 
-function ScoreRing({ value, tone }: { value: number | null; tone: "success" | "primary" | "warning" | "danger" }) {
+function ScoreRing({
+  value,
+  tone,
+}: {
+  value: number | null;
+  tone: "success" | "primary" | "warning" | "danger";
+}) {
   const normalized = value == null ? 0 : Math.max(0, Math.min(100, value));
   const circle = 2 * Math.PI * 44;
   const offset = circle - (circle * normalized) / 100;
   const colorClass =
-    tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : tone === "danger" ? "text-destructive" : "text-primary";
+    tone === "success"
+      ? "text-success"
+      : tone === "warning"
+        ? "text-warning"
+        : tone === "danger"
+          ? "text-destructive"
+          : "text-primary";
 
   return (
     <div className="relative h-32 w-32 shrink-0">
@@ -239,7 +315,9 @@ function ScoreRing({ value, tone }: { value: number | null; tone: "success" | "p
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <p className="text-3xl font-bold leading-none text-foreground">{value == null ? "--" : Math.round(value)}</p>
+        <p className="text-3xl font-bold leading-none text-foreground">
+          {value == null ? "--" : Math.round(value)}
+        </p>
         <p className="text-[11px] font-bold text-muted-foreground">/100</p>
       </div>
     </div>
@@ -263,7 +341,11 @@ function InsightPanel<T>({
     <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
       <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">{title}</h3>
       <div className="mt-3 space-y-2">
-        {items.length > 0 ? items.map(renderItem) : <EmptyState icon={Sparkles} title={emptyTitle} sub={emptySub} />}
+        {items.length > 0 ? (
+          items.map(renderItem)
+        ) : (
+          <EmptyState icon={Sparkles} title={emptyTitle} sub={emptySub} />
+        )}
       </div>
     </div>
   );
@@ -275,7 +357,9 @@ function FindingRow({ item, sources }: { item: AdvisorAiFinding; sources: Adviso
   return (
     <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
       <div className="flex items-start gap-3">
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${severityIconClass(item.severity)}`}>
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${severityIconClass(item.severity)}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -283,7 +367,9 @@ function FindingRow({ item, sources }: { item: AdvisorAiFinding; sources: Adviso
             <p className="text-sm font-bold text-foreground">{item.title}</p>
             <SeverityPill severity={item.severity} />
           </div>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{item.explanation}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+            {item.explanation}
+          </p>
           <p className="mt-2 text-[12px] font-semibold text-foreground">{item.impactEstimate}</p>
           <SourceChips ids={item.sourceIds} sources={sources} />
         </div>
@@ -292,13 +378,21 @@ function FindingRow({ item, sources }: { item: AdvisorAiFinding; sources: Adviso
   );
 }
 
-function RecommendationRow({ item, sources }: { item: AdvisorAiRecommendation; sources: AdvisorAiSource[] }) {
+function RecommendationRow({
+  item,
+  sources,
+}: {
+  item: AdvisorAiRecommendation;
+  sources: AdvisorAiSource[];
+}) {
   const Icon = categoryIcon(item.category);
 
   return (
     <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
       <div className="flex items-start gap-3">
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${severityIconClass(item.severity)}`}>
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${severityIconClass(item.severity)}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -306,9 +400,13 @@ function RecommendationRow({ item, sources }: { item: AdvisorAiRecommendation; s
             <p className="text-sm font-bold text-foreground">{item.title}</p>
             <SeverityPill severity={item.severity} />
           </div>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{item.description}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+            {item.description}
+          </p>
           {item.suggestedProfile && (
-            <p className="mt-2 text-[12px] font-semibold text-primary">Perfil sugerido: {item.suggestedProfile}</p>
+            <p className="mt-2 text-[12px] font-semibold text-primary">
+              Perfil sugerido: {item.suggestedProfile}
+            </p>
           )}
           <SourceChips ids={item.sourceIds} sources={sources} />
         </div>
@@ -328,11 +426,15 @@ function SourceRow({ source }: { source: AdvisorAiSource }) {
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{source.detail}</p>
         </div>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${confidenceClass(source.confidence)}`}>
+        <span
+          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${confidenceClass(source.confidence)}`}
+        >
           {confidenceLabel(source.confidence)}
         </span>
       </div>
-      {source.warnings.length > 0 && <p className="mt-2 text-[11px] font-semibold text-warning">{source.warnings[0]}</p>}
+      {source.warnings.length > 0 && (
+        <p className="mt-2 text-[11px] font-semibold text-warning">{source.warnings[0]}</p>
+      )}
     </div>
   );
 }
@@ -349,7 +451,15 @@ function SourceStatusIcon({ status }: { status: AdvisorAiSource["status"] }) {
   return <Info className="h-4 w-4 text-muted-foreground" />;
 }
 
-function ScoreComponentRow({ label, value, explanation }: { label: string; value: number | null; explanation: string }) {
+function ScoreComponentRow({
+  label,
+  value,
+  explanation,
+}: {
+  label: string;
+  value: number | null;
+  explanation: string;
+}) {
   const safeValue = value == null ? 0 : Math.max(0, Math.min(100, value));
 
   return (
@@ -359,7 +469,10 @@ function ScoreComponentRow({ label, value, explanation }: { label: string; value
         <p className="text-sm font-bold text-primary">{value == null ? "--" : Math.round(value)}</p>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-gradient-to-r from-primary to-sky-400" style={{ width: `${safeValue}%` }} />
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-primary to-sky-400"
+          style={{ width: `${safeValue}%` }}
+        />
       </div>
       <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">{explanation}</p>
     </div>
@@ -369,7 +482,9 @@ function ScoreComponentRow({ label, value, explanation }: { label: string; value
 function ActionPlanRow({ index, text }: { index: number; text: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-card px-3 py-3">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">{index}</div>
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+        {index}
+      </div>
       <p className="text-sm font-semibold leading-relaxed text-foreground">{text}</p>
     </div>
   );
@@ -384,11 +499,26 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Pill({ icon: Icon, label, tone }: { icon: LucideIcon; label: string; tone: "success" | "warning" | "primary" }) {
-  const className = tone === "success" ? "bg-success/10 text-success border-success/20" : tone === "warning" ? "bg-warning/10 text-warning border-warning/25" : "bg-primary/10 text-primary border-primary/20";
+function Pill({
+  icon: Icon,
+  label,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  tone: "success" | "warning" | "primary";
+}) {
+  const className =
+    tone === "success"
+      ? "bg-success/10 text-success border-success/20"
+      : tone === "warning"
+        ? "bg-warning/10 text-warning border-warning/25"
+        : "bg-primary/10 text-primary border-primary/20";
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${className}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${className}`}
+    >
       <Icon className="h-3.5 w-3.5" />
       {label}
     </span>
@@ -396,11 +526,19 @@ function Pill({ icon: Icon, label, tone }: { icon: LucideIcon; label: string; to
 }
 
 function SeverityPill({ severity }: { severity: AdvisorAiSeverity }) {
-  return <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${severityPillClass(severity)}`}>{severityLabel(severity)}</span>;
+  return (
+    <span
+      className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${severityPillClass(severity)}`}
+    >
+      {severityLabel(severity)}
+    </span>
+  );
 }
 
 function SourceChips({ ids, sources }: { ids: string[]; sources: AdvisorAiSource[] }) {
-  const labels = ids.map((id) => sources.find((source) => source.id === id)?.label ?? id).slice(0, 3);
+  const labels = ids
+    .map((id) => sources.find((source) => source.id === id)?.label ?? id)
+    .slice(0, 3);
 
   if (labels.length === 0) {
     return null;
@@ -409,7 +547,10 @@ function SourceChips({ ids, sources }: { ids: string[]; sources: AdvisorAiSource
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
       {labels.map((label) => (
-        <span key={label} className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+        <span
+          key={label}
+          className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-muted-foreground"
+        >
           {label}
         </span>
       ))}
@@ -427,7 +568,10 @@ function EmptyState({ icon: Icon, title, sub }: { icon: LucideIcon; title: strin
   );
 }
 
-function classifyScore(report: AdvisorAiReport): { label: string; tone: "success" | "primary" | "warning" | "danger" } {
+function classifyScore(report: AdvisorAiReport): {
+  label: string;
+  tone: "success" | "primary" | "warning" | "danger";
+} {
   const score = report.hermesScore.value;
 
   if (score == null) {
@@ -464,7 +608,9 @@ function buildActionPlan(report: AdvisorAiReport): string[] {
     plan.push("Revisar inicializacao e desativar apenas itens aprovados pelo usuario.");
   }
   if (report.summary.recommendedProfile) {
-    plan.push(`Avaliar aplicacao do Perfil ${report.summary.recommendedProfile} com snapshot e confirmacao.`);
+    plan.push(
+      `Avaliar aplicacao do Perfil ${report.summary.recommendedProfile} com snapshot e confirmacao.`,
+    );
   }
   if (categories.has("benchmark")) {
     plan.push("Executar benchmark novamente para comparar antes e depois.");

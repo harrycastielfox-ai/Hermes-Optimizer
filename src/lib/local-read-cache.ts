@@ -18,10 +18,24 @@ export function readLocalReportCache<T>(key: string): T | null {
     }
 
     const envelope = JSON.parse(raw) as CacheEnvelope<T>;
-    return envelope.version === 1 ? envelope.value : null;
+    if (envelope.version !== 1 || isFallbackValue(envelope.value)) {
+      window.localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+      return null;
+    }
+
+    return envelope.value;
   } catch {
     return null;
   }
+}
+
+function isFallbackValue<T>(value: T): boolean {
+  if (!value || typeof value !== "object" || !("engineVersion" in value)) {
+    return false;
+  }
+
+  const engineVersion = (value as { engineVersion?: unknown }).engineVersion;
+  return typeof engineVersion === "string" && engineVersion.toLowerCase().includes("fallback");
 }
 
 export function writeLocalReportCache<T>(key: string, value: T): T {

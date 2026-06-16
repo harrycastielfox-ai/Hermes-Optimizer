@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   type LucideIcon,
   Activity,
@@ -23,17 +23,6 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { HealthRing } from "@/components/dashboard/HealthRing";
 import { MetricCard, ProgressBar, Sparkline } from "@/components/dashboard/MetricCard";
 import { InfoPanel, InfoRow, HwRow, RecRow } from "@/components/dashboard/InfoPanel";
-import { PremiumOptimizationModal } from "@/components/optimization/PremiumOptimizationModal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   fallbackAdvisorRecommendations,
   loadAdvisorRecommendations,
@@ -75,9 +64,6 @@ function Dashboard() {
   const [recommendations, setRecommendations] = useState<AdvisorRecommendation[]>(
     fallbackAdvisorRecommendations,
   );
-  const [isOptimizeConfirmOpen, setIsOptimizeConfirmOpen] = useState(false);
-  const [isOptimizeModalOpen, setIsOptimizeModalOpen] = useState(false);
-  const [optimizationRunKey, setOptimizationRunKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -107,20 +93,6 @@ function Dashboard() {
     };
   }, []);
 
-  const handleOptimizeNow = useCallback(() => {
-    if (isOptimizeModalOpen) {
-      return;
-    }
-
-    setIsOptimizeConfirmOpen(true);
-  }, [isOptimizeModalOpen]);
-
-  const startOptimization = useCallback(() => {
-    setIsOptimizeConfirmOpen(false);
-    setOptimizationRunKey((current) => current + 1);
-    setIsOptimizeModalOpen(true);
-  }, []);
-
   const healthScore = Math.round(diagnostic.healthScore);
   const healthSub = `${diagnostic.healthLabel} • ${diagnostic.defender.active ? "Sistema protegido" : "Verificar segurança"}`;
   const cpuUsage = Math.round(diagnostic.cpu.usagePercent);
@@ -145,8 +117,8 @@ function Dashboard() {
       <Sidebar />
 
       <div className="flex min-h-0 flex-1 flex-col min-w-0">
-        <main className="min-h-0 flex-1 overflow-hidden px-4 py-4 sm:px-5 xl:px-8 xl:py-6">
-          <div className="mx-auto flex h-full w-full max-w-[1540px] flex-col">
+        <main className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-5 xl:px-8 xl:py-6">
+          <div className="mx-auto flex min-h-full w-full max-w-[1540px] flex-col">
             {/* Header */}
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
@@ -321,9 +293,12 @@ function Dashboard() {
                     />
                   );
                 })}
-                <button className="mt-2 text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                <Link
+                  to="/otimizacoes"
+                  className="mt-2 flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
                   Ver todas as recomendações →
-                </button>
+                </Link>
               </InfoPanel>
             </div>
 
@@ -359,7 +334,7 @@ function Dashboard() {
             </div>
 
             <div className="mt-2 rounded-2xl border border-border/60 bg-card/95 p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-24px_rgba(15,23,42,0.20)]">
-              <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(210px,220px)]">
+              <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <StatusItem
                   icon={Zap}
                   label="INICIALIZAÇÃO"
@@ -384,23 +359,6 @@ function Dashboard() {
                   value={updateStatus}
                   sub={diagnostic.windowsUpdate.lastHotfixId}
                 />
-                <button
-                  aria-busy={isOptimizeModalOpen}
-                  aria-label="Otimizar agora. Análise e segurança engine PRO."
-                  className="optimize-cta group relative h-[56px] w-full min-w-[200px] overflow-hidden rounded-xl text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] xl:ml-auto 2xl:h-[58px] 2xl:w-[220px]"
-                  disabled={isOptimizeModalOpen}
-                  onClick={handleOptimizeNow}
-                >
-                  <span className="sr-only">OTIMIZAR AGORA</span>
-                  <span className="sr-only">Análise e segurança engine PRO</span>
-                  <span
-                    aria-hidden="true"
-                    className="optimize-cta-label relative z-10 flex h-full items-center justify-center gap-2 px-5 text-sm font-black uppercase tracking-[0.08em]"
-                  >
-                    <Zap className="h-5 w-5 fill-current drop-shadow-sm" />
-                    {isOptimizeModalOpen ? "Otimizando..." : "Otimizar"}
-                  </span>
-                </button>
               </div>
             </div>
 
@@ -410,48 +368,6 @@ function Dashboard() {
           </div>
         </main>
       </div>
-      <PremiumOptimizationModal
-        open={isOptimizeModalOpen}
-        runKey={optimizationRunKey}
-        onClose={() => setIsOptimizeModalOpen(false)}
-      />
-      <AlertDialog open={isOptimizeConfirmOpen} onOpenChange={setIsOptimizeConfirmOpen}>
-        <AlertDialogContent className="max-w-xl rounded-3xl border-border/70 p-0 shadow-2xl">
-          <div className="border-b border-border/60 bg-primary/5 px-6 py-5">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-3 text-xl">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                  <Zap className="h-5 w-5 fill-current" />
-                </span>
-                Iniciar Otimizar Agora?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="pt-2 leading-relaxed">
-                O Hermes analisará o computador e moverá temporários e caches elegíveis para uma
-                quarentena reversível. O perfil gamer tem foco principal no Fate Trigger, mantendo
-                suporte secundário para BlueStacks, MSI App Player e outros jogos detectados.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-          </div>
-          <div className="space-y-3 px-6 py-5 text-sm text-muted-foreground">
-            <p>
-              Downloads, Documentos, Desktop, Imagens e Vídeos permanecem protegidos. Inicialização,
-              Modo Jogo e Game DVR poderão ser ajustados para reduzir overhead durante jogos. Jogos
-              e emuladores não serão encerrados.
-            </p>
-            <p className="rounded-xl border border-primary/15 bg-primary/5 px-4 py-3 font-medium text-foreground">
-              Para aplicar o perfil prioritário, abra o Fate Trigger antes de clicar em otimizar.
-              Todas as mudanças criam snapshot, histórico e rollback.
-            </p>
-          </div>
-          <AlertDialogFooter className="px-6 pb-6">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={startOptimization} className="gap-2">
-              <Zap className="h-4 w-4 fill-current" />
-              Analisar e limpar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

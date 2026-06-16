@@ -21,9 +21,12 @@ function RepararWindowsPage() {
         <main className="flex-1 overflow-auto px-5 pt-6 pb-4 xl:px-8 xl:pt-7">
           <div className="mb-5">
             <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">REPARAR WINDOWS</p>
-            <h1 className="text-[clamp(28px,2.4vw,38px)] font-bold leading-tight tracking-tight text-foreground">Reparar Windows</h1>
+            <h1 className="text-[clamp(28px,2.4vw,38px)] font-bold leading-tight tracking-tight text-foreground">
+              Reparar Windows
+            </h1>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Verificacoes de integridade, imagem do sistema e historico de reparos. Nenhum reparo pesado roda automaticamente.
+              Verificacoes de integridade, imagem do sistema e historico de reparos. Nenhum reparo
+              pesado roda automaticamente.
             </p>
           </div>
 

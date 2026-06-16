@@ -1,0 +1,97 @@
+﻿# P3ninha pos-reinicio - 2026-06-15 17:21:32
+
+## Processos P3ninha
+
+   Id ProcessName   MainWindowTitle                                                         CPU WorkingSetMB StartTime 
+   -- -----------   ---------------                                                         --- ------------ --------- 
+14476 P3ninha® V5.0 P3ninha® V5.0   —   © 2026 P3ninha · Todos os Direitos Reservados 11,234375        212,8 15/06/2...
+14820 P3ninha® V5.0                                                                    2,578125          7,4 15/06/2...
+
+
+
+
+## Arquivos locais topo
+
+Name                    Length LastWriteTime      
+----                    ------ -------------      
+autostart.json              33 15/06/2026 15:51:21
+checkout_debug.log         133 15/06/2026 15:24:42
+clips_config.json          215 15/06/2026 15:24:32
+p3ninha_crash.log          126 15/06/2026 15:53:01
+p3ninha_eventos.log       5205 15/06/2026 17:20:29
+session.dat                743 15/06/2026 17:20:24
+setup_fases.json            61 15/06/2026 17:20:25
+vc_install_done.flag        10 15/06/2026 17:18:26
+vc_runtimes.zip      187149412 15/06/2026 15:22:45
+
+
+
+
+## setup_fases.json
+{"estado": 2, "boot": 0, "completo": false, "completo_ts": 0}
+
+## autostart.json
+{"modo": "1", "perguntado": true}
+
+## Log final sanitizado
+2026-06-15 15:16:58 [INFO ] [sessao] ========================================================
+2026-06-15 15:16:58 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:16:58 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:16:58 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:17:18 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:17:21 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:17:26 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:17:26 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:17:26 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:17:32 [INFO ] [clips] config_set: qual=media fps=30 dur=60 res=720
+2026-06-15 15:17:32 [INFO ] [clips] clips: pré-config pela GPU 'Intel(R) Iris(R) Xe Graphics' → 720/30fps/media (fraco)
+2026-06-15 15:17:32 [INFO ] [clips] config_set: qual=media fps=30 dur=60 res=720
+2026-06-15 15:17:32 [INFO ] [clips] clips: pré-config pela GPU 'Intel(R) Iris(R) Xe Graphics' → 720/30fps/media (fraco)
+2026-06-15 15:24:10 [INFO ] [clips] config_set: qual=media fps=60 dur=60 res=720
+2026-06-15 15:24:26 [INFO ] [clips] config_set: qual=alta fps=60 dur=60 res=720
+2026-06-15 15:24:32 [INFO ] [clips] config_set: qual=alta fps=60 dur=60 res=720
+2026-06-15 15:24:35 [INFO ] [clips] rec(disco-restaurado) enc=h264_qsv mic=False jogo=True 12Mbps(teto 17) scale=-2:720
+2026-06-15 15:28:29 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:48:05 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:48:06 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:49:32 [INFO ] [sessao] ========================================================
+2026-06-15 15:49:32 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:49:32 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:49:32 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:49:39 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:49:40 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:49:42 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:49:42 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:49:42 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:51:12 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:12 [INFO ] [autostart] info perguntado=False modo=- completo=False -> setup-em-andamento
+2026-06-15 15:51:12 [INFO ] [autostart] info perguntado=False modo= completo=False registrado=True -> setup-em-andamento
+2026-06-15 15:51:21 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:22 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:22 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:28 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:51:30 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:01 [INFO ] [sessao] ========================================================
+2026-06-15 15:53:01 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 15:53:01 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 15:53:01 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 15:53:07 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 15:53:09 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 15:53:10 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 15:53:10 [INFO ] [autostart] info perguntado=True modo=1 completo=True -> escolha=bandeja
+2026-06-15 15:53:11 [INFO ] [autostart] info perguntado=True modo=1 completo=True registrado=True -> escolha=bandeja
+2026-06-15 15:53:15 [INFO ] [preparar] preparar_jogar iniciado: [email ocultado]
+2026-06-15 15:53:48 [INFO ] [preparar] preparar_jogar concluido (ret=0)
+2026-06-15 17:18:37 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 17:18:38 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 17:18:45 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 17:20:16 [INFO ] [sessao] ========================================================
+2026-06-15 17:20:16 [INFO ] [sessao] P3ninha Otimizacoes v5.0  |  frozen=True
+2026-06-15 17:20:16 [INFO ] [sessao] SO: Windows-10-10.0.26200-SP0  |  Python 3.11.9
+2026-06-15 17:20:16 [INFO ] [inicio] aplicativo iniciado
+2026-06-15 17:20:24 [INFO ] [login] login OK: [email ocultado] | plano=Express | dias=4
+2026-06-15 17:20:26 [INFO ] [seguranca] tpm=ATIVO sb=ATIVO
+2026-06-15 17:20:28 [INFO ] [autostart] garantir(tarefa) tray=True ok=True
+2026-06-15 17:20:28 [INFO ] [autostart] info perguntado=True modo=1 completo=False -> escolha=bandeja
+2026-06-15 17:20:29 [INFO ] [autostart] info perguntado=True modo=1 completo=False registrado=True -> escolha=bandeja
+

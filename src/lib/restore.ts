@@ -38,7 +38,14 @@ export type RestoreRollbackAction = {
 
 export type RestorePreviousState = {
   key: string;
-  category: "registry" | "powerPlan" | "startup" | "visualEffects" | "gameMode" | "file" | "metadata";
+  category:
+    | "registry"
+    | "powerPlan"
+    | "startup"
+    | "visualEffects"
+    | "gameMode"
+    | "file"
+    | "metadata";
   value: string;
   source: string;
   captured: boolean;
@@ -148,7 +155,9 @@ export type RestoreValidationResult = {
   actionResults: RestoreApplyResult["actionResults"];
 };
 
-export async function createRestoreSnapshot(request?: RestoreCreateSnapshotRequest): Promise<RestoreSnapshot> {
+export async function createRestoreSnapshot(
+  request?: RestoreCreateSnapshotRequest,
+): Promise<RestoreSnapshot> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<RestoreSnapshot>("restore_create_snapshot", {
     request: request ?? null,
@@ -170,14 +179,19 @@ export async function listRestoreEvents(): Promise<RestoreEventList> {
   return invoke<RestoreEventList>("restore_list_events");
 }
 
-export async function validateRestoreSnapshot(snapshotId: string): Promise<RestoreValidationResult> {
+export async function validateRestoreSnapshot(
+  snapshotId: string,
+): Promise<RestoreValidationResult> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<RestoreValidationResult>("restore_validate_snapshot", {
     snapshotId,
   });
 }
 
-export async function applyRestoreSnapshot(snapshotId: string, dryRun = true): Promise<RestoreApplyResult> {
+export async function applyRestoreSnapshot(
+  snapshotId: string,
+  dryRun = true,
+): Promise<RestoreApplyResult> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<RestoreApplyResult>("restore_apply_snapshot", {
     snapshotId,

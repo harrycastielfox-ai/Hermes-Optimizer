@@ -1,5 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Archive, CheckCircle2, Database, FileText, FolderOpen, RefreshCcw, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Archive,
+  CheckCircle2,
+  Database,
+  FileText,
+  FolderOpen,
+  RefreshCcw,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SafeTestModeNotice } from "@/components/common/SafeTestModeNotice";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -26,7 +37,9 @@ export const Route = createFileRoute("/limpeza")({
 
 function LimpezaPage() {
   const [report, setReport] = useState<CleanScanReport>(fallbackCleanScanReport);
-  const [selectedIds, setSelectedIds] = useState<string[]>(fallbackCleanScanReport.items.filter((item) => item.selectedByDefault).map((item) => item.id));
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    fallbackCleanScanReport.items.filter((item) => item.selectedByDefault).map((item) => item.id),
+  );
   const [result, setResult] = useState<CleanApplyResult | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +79,16 @@ function LimpezaPage() {
 
       setReport(nextReport);
       setSelectedIds((current) => {
-        const validCurrent = current.filter((id) => nextReport.items.some((item) => item.id === id && item.safeToCleanLater));
+        const validCurrent = current.filter((id) =>
+          nextReport.items.some((item) => item.id === id && item.safeToCleanLater),
+        );
         if (validCurrent.length > 0) {
           return validCurrent;
         }
 
-        return nextReport.items.filter((item) => item.selectedByDefault && item.safeToCleanLater).map((item) => item.id);
+        return nextReport.items
+          .filter((item) => item.selectedByDefault && item.safeToCleanLater)
+          .map((item) => item.id);
       });
     } catch (nextError) {
       if (requestRef.current !== requestId) {
@@ -91,11 +108,17 @@ function LimpezaPage() {
       return;
     }
 
-    setSelectedIds((current) => (current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id]));
+    setSelectedIds((current) =>
+      current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id],
+    );
   }
 
   function selectSafeDefaults() {
-    setSelectedIds(report.items.filter((item) => item.selectedByDefault && item.safeToCleanLater).map((item) => item.id));
+    setSelectedIds(
+      report.items
+        .filter((item) => item.selectedByDefault && item.safeToCleanLater)
+        .map((item) => item.id),
+    );
     setNotice("Itens seguros recomendados foram selecionados.");
     setError(null);
   }
@@ -109,7 +132,9 @@ function LimpezaPage() {
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
         `Confirmar limpeza segura de ${selectedItems.length} categoria(s)?\n\n` +
-          selectedItems.map((item) => `- ${item.label}: ${formatGb(item.estimatedGb)} GB`).join("\n") +
+          selectedItems
+            .map((item) => `- ${item.label}: ${formatGb(item.estimatedGb)} GB`)
+            .join("\n") +
           `\n\nTotal estimado: ${formatGb(selectedGb)} GB.\n\nO Hermes movera arquivos allowlistados para quarentena, criara snapshot/log/rollback e nunca tocara Downloads, Documentos, Desktop, Imagens ou Videos.`,
       );
 
@@ -118,7 +143,9 @@ function LimpezaPage() {
         return;
       }
     } else if (!dryRun && HERMES_SAFE_TEST_MODE) {
-      setNotice("Modo Seguro de Teste ativo: a limpeza sera validada em dry-run, sem mover arquivos.");
+      setNotice(
+        "Modo Seguro de Teste ativo: a limpeza sera validada em dry-run, sem mover arquivos.",
+      );
     }
 
     setIsWorking(true);
@@ -150,9 +177,12 @@ function LimpezaPage() {
           <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">CLEAN ENGINE</p>
-              <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">Limpeza segura</h1>
+              <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
+                Limpeza segura
+              </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
-                Primeiro escaneia, depois limpa apenas categorias allowlistadas com quarentena, snapshot, log e rollback.
+                Primeiro escaneia, depois limpa apenas categorias allowlistadas com quarentena,
+                snapshot, log e rollback.
               </p>
             </div>
             <button
@@ -173,7 +203,9 @@ function LimpezaPage() {
               icon={Sparkles}
               label="A LIBERAR"
               value={`${formatGb(selectedGb || report.totalGb)} GB`}
-              sub={selectedItems.length > 0 ? "Selecionados para limpeza" : "Disponiveis para limpeza"}
+              sub={
+                selectedItems.length > 0 ? "Selecionados para limpeza" : "Disponiveis para limpeza"
+              }
             />
             <SummaryCard
               icon={CheckCircle2}
@@ -192,14 +224,25 @@ function LimpezaPage() {
           <section className="rounded-2xl bg-card border border-border/60 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
             <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">ITENS ENCONTRADOS</h2>
+                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+                  ITENS ENCONTRADOS
+                </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  {formatGb(report.totalGb)} GB encontrados no scan. Limpeza real sempre exige confirmacao final.
+                  {formatGb(report.totalGb)} GB encontrados no scan. Limpeza real sempre exige
+                  confirmacao final.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <ControlButton label="Selecionar seguros" onClick={selectSafeDefaults} disabled={isWorking} />
-                <ControlButton label="Validar" onClick={() => runClean(true)} disabled={selectedItems.length === 0 || isWorking} />
+                <ControlButton
+                  label="Selecionar seguros"
+                  onClick={selectSafeDefaults}
+                  disabled={isWorking}
+                />
+                <ControlButton
+                  label="Validar"
+                  onClick={() => runClean(true)}
+                  disabled={selectedItems.length === 0 || isWorking}
+                />
                 <ControlButton
                   label={HERMES_SAFE_TEST_MODE ? "Validar seguro" : "Limpar agora"}
                   onClick={() => runClean(false)}
@@ -217,7 +260,8 @@ function LimpezaPage() {
                   Snapshot: <span className="text-primary">{result.snapshotId}</span>
                 </p>
                 <p className="mt-1">
-                  Planejados: {result.plannedEntries} | Quarentena: {result.quarantinedEntries} | Ignorados: {result.skippedEntries} | Falhas: {result.failedEntries}
+                  Planejados: {result.plannedEntries} | Quarentena: {result.quarantinedEntries} |
+                  Ignorados: {result.skippedEntries} | Falhas: {result.failedEntries}
                 </p>
                 <p className="mt-1 flex items-center gap-1 text-primary">
                   <Archive className="h-3.5 w-3.5" />
@@ -244,7 +288,8 @@ function LimpezaPage() {
                 Protegido: {report.protectedLocations.join(", ")}.
               </p>
               <p className="text-sm font-semibold text-foreground">
-                Total selecionado: <span className="text-primary">{formatGb(bytesToGb(selectedBytes))} GB</span>
+                Total selecionado:{" "}
+                <span className="text-primary">{formatGb(bytesToGb(selectedBytes))} GB</span>
               </p>
             </div>
 
@@ -260,14 +305,26 @@ function LimpezaPage() {
   );
 }
 
-function ControlButton({ label, onClick, disabled, primary }: { label: string; onClick: () => void; disabled?: boolean; primary?: boolean }) {
+function ControlButton({
+  label,
+  onClick,
+  disabled,
+  primary,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       className={`inline-flex h-9 items-center justify-center rounded-xl px-3 text-[12px] font-bold transition disabled:opacity-50 ${
-        primary ? "bg-primary text-primary-foreground hover:bg-primary/95" : "border border-border bg-background text-foreground hover:bg-muted"
+        primary
+          ? "bg-primary text-primary-foreground hover:bg-primary/95"
+          : "border border-border bg-background text-foreground hover:bg-muted"
       }`}
     >
       {label}
@@ -276,17 +333,36 @@ function ControlButton({ label, onClick, disabled, primary }: { label: string; o
 }
 
 function ResultBox({ tone, message }: { tone: "success" | "danger"; message: string }) {
-  const className = tone === "success" ? "border-success/20 bg-success/10 text-success" : "border-destructive/20 bg-destructive/10 text-destructive";
+  const className =
+    tone === "success"
+      ? "border-success/20 bg-success/10 text-success"
+      : "border-destructive/20 bg-destructive/10 text-destructive";
 
   return (
-    <div className={`mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-[12px] font-semibold ${className}`}>
-      {tone === "success" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
+    <div
+      className={`mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-[12px] font-semibold ${className}`}
+    >
+      {tone === "success" ? (
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+      ) : (
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+      )}
       <span>{message}</span>
     </div>
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, sub }: { icon: typeof Sparkles; label: string; value: string; sub: string }) {
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Sparkles;
+  label: string;
+  value: string;
+  sub: string;
+}) {
   return (
     <div className="rounded-2xl bg-card border border-border/60 p-4 flex items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
       <div className="w-11 h-11 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
@@ -314,7 +390,8 @@ function CleanRow({
   disabled: boolean;
   onToggle: () => void;
 }) {
-  const percent = totalBytes > 0 ? Math.max(4, Math.round((item.estimatedBytes / totalBytes) * 100)) : 0;
+  const percent =
+    totalBytes > 0 ? Math.max(4, Math.round((item.estimatedBytes / totalBytes) * 100)) : 0;
   const Icon = getIcon(item.id);
 
   return (
@@ -343,7 +420,10 @@ function CleanRow({
         <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
       </div>
       {item.paths.length > 0 && (
-        <p className="mt-2 truncate text-[11px] text-muted-foreground" title={item.paths.join(" | ")}>
+        <p
+          className="mt-2 truncate text-[11px] text-muted-foreground"
+          title={item.paths.join(" | ")}
+        >
           {item.paths[0]}
         </p>
       )}

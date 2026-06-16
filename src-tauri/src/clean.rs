@@ -473,46 +473,10 @@ fn build_item(raw: RawCleanScanItem) -> CleanScanItem {
 fn fallback_report() -> CleanScanReport {
     build_report(
         RawCleanScanReport {
-            items: Some(vec![
-                fallback_item(
-                    "temp",
-                    "TEMP",
-                    "Arquivos temporarios do usuario e Windows",
-                    1.4,
-                ),
-                fallback_item(
-                    "cache",
-                    "Cache",
-                    "Caches seguros de apps e navegadores",
-                    0.9,
-                ),
-                fallback_item("logs", "Logs", "Logs antigos do sistema", 0.4),
-                fallback_item(
-                    "thumbnails",
-                    "Miniaturas",
-                    "Cache de miniaturas do Explorer",
-                    0.2,
-                ),
-                fallback_item(
-                    "windows-update-cache",
-                    "Windows Update Cache",
-                    "Pacotes baixados pelo Windows Update",
-                    1.7,
-                ),
-            ]),
+            items: Some(Vec::new()),
         },
-        vec!["Fallback local usado porque o scan real nao respondeu.".to_string()],
+        vec!["Fallback indisponivel usado porque o scan real nao respondeu. Nenhum tamanho demonstrativo foi retornado.".to_string()],
     )
-}
-
-fn fallback_item(id: &str, label: &str, description: &str, gb: f64) -> RawCleanScanItem {
-    RawCleanScanItem {
-        id: Some(id.to_string()),
-        label: Some(label.to_string()),
-        description: Some(description.to_string()),
-        estimated_bytes: Some(gb * 1024.0 * 1024.0 * 1024.0),
-        paths: Some(Vec::new()),
-    }
 }
 
 fn selected_clean_items(

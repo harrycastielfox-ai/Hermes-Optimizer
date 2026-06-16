@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+build
 dist
 dist-ssr
 .output
@@ -15,6 +16,8 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.release/
+src-tauri/tauri.windows.signing.local.json
 
 # Wrangler / Cloudflare
 .wrangler/

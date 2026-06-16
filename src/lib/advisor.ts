@@ -40,64 +40,40 @@ export type AdvisorInput = {
 
 export const currentDashboardInput: AdvisorInput = {
   diagnostic: {
-    healthScore: 97,
-    cpuUsagePercent: 23,
-    ramUsedGb: 8.3,
-    ramTotalGb: 15.7,
-    diskFreeGb: 235,
-    diskTotalGb: 456,
-    startupItemsCount: 17,
-    startupHighImpactCount: 2,
-    bootTimeSeconds: 154,
-    securityActive: true,
-    temporaryFilesGb: 4.2,
-    powerPlanName: "Equilibrado",
+    healthScore: 0,
+    cpuUsagePercent: 0,
+    ramUsedGb: 0,
+    ramTotalGb: 0,
+    diskFreeGb: 0,
+    diskTotalGb: 0,
+    startupItemsCount: 0,
+    startupHighImpactCount: 0,
+    bootTimeSeconds: 0,
+    securityActive: false,
+    temporaryFilesGb: 0,
+    powerPlanName: "Indisponivel",
   },
   benchmark: {
-    score: 970,
+    score: 0,
   },
 };
 
 export const fallbackAdvisorRecommendations: AdvisorRecommendation[] = [
   {
-    id: "fallback-system-healthy",
-    title: "Seu sistema está saudável",
-    description: "Todos os componentes principais estão dentro dos parâmetros normais.",
-    severity: "success",
-    category: "systemHealth",
-    priority: 10,
-    source: "diagnóstico local",
-  },
-  {
-    id: "fallback-startup-items",
-    title: "Muitos itens na inicialização",
-    description: "17 programas iniciam com o Windows. Impacto estimado: +11s no boot.",
-    severity: "info",
-    category: "startup",
-    priority: 30,
-    source: "diagnóstico local",
-  },
-  {
-    id: "fallback-disk-space",
-    title: "Espaço em disco",
-    description: "Seu disco está com 49% de uso. Mantenha acima de 20% livre para máximo desempenho.",
+    id: "fallback-advisor-unavailable",
+    title: "Recomendacoes indisponiveis",
+    description:
+      "O Advisor Pro precisa de diagnostico real do backend Tauri. Nenhuma recomendacao demonstrativa foi exibida.",
     severity: "warning",
-    category: "disk",
-    priority: 60,
-    source: "diagnóstico local",
-  },
-  {
-    id: "fallback-integrated-gpu",
-    title: "GPU integrada detectada",
-    description: "Para melhor desempenho em jogos, considere GPU dedicada no futuro.",
-    severity: "info",
-    category: "hardware",
-    priority: 80,
-    source: "diagnóstico local",
+    category: "unavailable",
+    priority: 10,
+    source: "fallback indisponivel",
   },
 ];
 
-export async function loadAdvisorRecommendations(input: AdvisorInput = currentDashboardInput): Promise<AdvisorRecommendation[]> {
+export async function loadAdvisorRecommendations(
+  input: AdvisorInput = currentDashboardInput,
+): Promise<AdvisorRecommendation[]> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return fallbackAdvisorRecommendations;
   }
@@ -108,9 +84,11 @@ export async function loadAdvisorRecommendations(input: AdvisorInput = currentDa
       input,
     });
 
-    return report.recommendations.length > 0 ? report.recommendations : fallbackAdvisorRecommendations;
+    return report.recommendations.length > 0
+      ? report.recommendations
+      : fallbackAdvisorRecommendations;
   } catch (error) {
-    console.warn("Advisor Pro local indisponível, usando fallback estático.", error);
+    console.warn("Advisor Pro local indisponivel, usando fallback indisponivel.", error);
     return fallbackAdvisorRecommendations;
   }
 }

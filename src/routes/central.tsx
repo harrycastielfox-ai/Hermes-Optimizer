@@ -78,7 +78,12 @@ const levels: OptimizationLevel[] = [
     icon: ShieldCheck,
     tone: "safe",
     risk: "Baixo",
-    guarantees: ["Somente leitura.", "Simulacao ativa.", "Sem alterar Windows.", "Ideal como primeiro passo."],
+    guarantees: [
+      "Somente leitura.",
+      "Simulacao ativa.",
+      "Sem alterar Windows.",
+      "Ideal como primeiro passo.",
+    ],
     actions: [
       {
         title: "Analisar PC",
@@ -131,7 +136,12 @@ const levels: OptimizationLevel[] = [
     icon: BrushCleaning,
     tone: "clean",
     risk: "Baixo",
-    guarantees: ["Analise antes.", "Confirmacao obrigatoria.", "Quarentena quando aplicavel.", "Nao toca arquivos pessoais."],
+    guarantees: [
+      "Analise antes.",
+      "Confirmacao obrigatoria.",
+      "Quarentena quando aplicavel.",
+      "Nao toca arquivos pessoais.",
+    ],
     actions: [
       {
         title: "Clean Scan",
@@ -176,7 +186,12 @@ const levels: OptimizationLevel[] = [
     icon: Gauge,
     tone: "performance",
     risk: "Medio",
-    guarantees: ["Ponto de seguranca quando preciso.", "Reversao quando suportada.", "Nao altera tema.", "Nunca remove programas."],
+    guarantees: [
+      "Ponto de seguranca quando preciso.",
+      "Reversao quando suportada.",
+      "Nao altera tema.",
+      "Nunca remove programas.",
+    ],
     actions: [
       {
         title: "Plano de energia",
@@ -221,7 +236,12 @@ const levels: OptimizationLevel[] = [
     icon: Gamepad2,
     tone: "gamer",
     risk: "Medio",
-    guarantees: ["Nada fecha sozinho.", "Processos criticos protegidos.", "Reversao pos-jogo.", "Overlays apenas sugeridos."],
+    guarantees: [
+      "Nada fecha sozinho.",
+      "Processos criticos protegidos.",
+      "Reversao pos-jogo.",
+      "Overlays apenas sugeridos.",
+    ],
     actions: [
       {
         title: "Preparacao para jogos",
@@ -258,7 +278,12 @@ const levels: OptimizationLevel[] = [
     icon: Terminal,
     tone: "advanced",
     risk: "Extremo",
-    guarantees: ["Comando livre bloqueado.", "Lista segura obrigatoria.", "Confirmacao forte.", "Estado Base recomendado."],
+    guarantees: [
+      "Comando livre bloqueado.",
+      "Lista segura obrigatoria.",
+      "Confirmacao forte.",
+      "Estado Base recomendado.",
+    ],
     technicalDetails: [
       "HKCU: leituras e alteracoes somente em chaves permitidas.",
       "VisualFXSetting: deve ter captura e reversao antes de ajuste visual.",
@@ -306,7 +331,8 @@ const recommendationContextMap: Record<
 > = {
   system: {
     title: "Desempenho do Sistema",
-    summary: "Recomendacao criada a partir do plano de energia e dos ajustes de performance detectados.",
+    summary:
+      "Recomendacao criada a partir do plano de energia e dos ajustes de performance detectados.",
     levelId: "performance",
   },
   startup: {
@@ -321,7 +347,8 @@ const recommendationContextMap: Record<
   },
   visual: {
     title: "Efeitos Visuais",
-    summary: "Recomendacao para ajustes visuais opcionais sem alterar tema do Windows ou navegadores.",
+    summary:
+      "Recomendacao para ajustes visuais opcionais sem alterar tema do Windows ou navegadores.",
     levelId: "performance",
   },
   network: {
@@ -337,9 +364,17 @@ const recommendationContextMap: Record<
 };
 
 export const Route = createFileRoute("/central")({
-  validateSearch: (search: Record<string, unknown>): { nivel?: OptimizationLevelId; recomendacao?: RecommendationContextId } => {
-    const nivel = typeof search.nivel === "string" && isOptimizationLevelId(search.nivel) ? search.nivel : undefined;
-    const recomendacao = typeof search.recomendacao === "string" && isRecommendationContextId(search.recomendacao) ? search.recomendacao : undefined;
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { nivel?: OptimizationLevelId; recomendacao?: RecommendationContextId } => {
+    const nivel =
+      typeof search.nivel === "string" && isOptimizationLevelId(search.nivel)
+        ? search.nivel
+        : undefined;
+    const recomendacao =
+      typeof search.recomendacao === "string" && isRecommendationContextId(search.recomendacao)
+        ? search.recomendacao
+        : undefined;
     return { nivel, recomendacao };
   },
   head: () => ({
@@ -355,9 +390,14 @@ function CentralPage() {
   const search = Route.useSearch();
   const [selectedId, setSelectedId] = useState<OptimizationLevelId>(search.nivel ?? levels[0].id);
   const [notice, setNotice] = useState<string | null>(null);
-  const selectedLevel = useMemo(() => levels.find((level) => level.id === selectedId) ?? levels[0], [selectedId]);
+  const selectedLevel = useMemo(
+    () => levels.find((level) => level.id === selectedId) ?? levels[0],
+    [selectedId],
+  );
   const selectedBundle = useMemo(() => buildLevelBundle(selectedLevel), [selectedLevel]);
-  const recommendationContext = search.recomendacao ? recommendationContextMap[search.recomendacao] : null;
+  const recommendationContext = search.recomendacao
+    ? recommendationContextMap[search.recomendacao]
+    : null;
 
   useEffect(() => {
     if (search.nivel) {
@@ -367,7 +407,9 @@ function CentralPage() {
   }, [search.nivel]);
 
   function handleValidate() {
-    setNotice(`${selectedLevel.title}: pacote seguro validado em dry-run. Nenhuma alteracao real foi aplicada.`);
+    setNotice(
+      `${selectedLevel.title}: pacote seguro validado em dry-run. Nenhuma alteracao real foi aplicada.`,
+    );
   }
 
   return (
@@ -377,12 +419,15 @@ function CentralPage() {
         <main className="flex-1 overflow-auto px-5 pt-6 pb-4 xl:px-8 xl:pt-7">
           <div className="mb-5">
             <div className="max-w-4xl">
-              <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">CENTRAL DE OTIMIZACAO</p>
+              <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">
+                CENTRAL DE OTIMIZACAO
+              </p>
               <h1 className="text-[clamp(28px,2.4vw,38px)] font-bold leading-tight tracking-tight text-foreground">
                 Acoes do Hermes organizadas por nivel
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                Cada nivel inclui os anteriores. Escolha ate onde o Hermes deve preparar o fluxo, sempre em SAFE_TEST_MODE nesta etapa.
+                Cada nivel inclui os anteriores. Escolha ate onde o Hermes deve preparar o fluxo,
+                sempre em SAFE_TEST_MODE nesta etapa.
               </p>
             </div>
           </div>
@@ -420,7 +465,11 @@ function CentralPage() {
             ))}
           </section>
 
-          <SelectedLevelPanel key={selectedLevel.id} bundle={selectedBundle} onValidate={handleValidate} />
+          <SelectedLevelPanel
+            key={selectedLevel.id}
+            bundle={selectedBundle}
+            onValidate={handleValidate}
+          />
         </main>
       </div>
     </div>
@@ -443,10 +492,13 @@ function RecommendationContextPanel({
     <section className="mb-4 rounded-2xl border border-primary/25 bg-blue-50/55 p-4 shadow-[0_16px_44px_-32px_rgba(37,99,235,0.75),0_0_0_1px_rgba(37,99,235,0.08)_inset]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold tracking-[0.22em] text-primary">RECOMENDACAO RECEBIDA</p>
+          <p className="text-[10px] font-bold tracking-[0.22em] text-primary">
+            RECOMENDACAO RECEBIDA
+          </p>
           <h2 className="mt-1 text-lg font-bold text-foreground">{context.title}</h2>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            {context.summary} Voce pode olhar o nivel recomendado ou trocar para outro nivel pelos cards abaixo.
+            {context.summary} Voce pode olhar o nivel recomendado ou trocar para outro nivel pelos
+            cards abaixo.
           </p>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <ContextStat label="Nivel recomendado" value={recommendedLevel.title} />
@@ -472,13 +524,23 @@ function RecommendationContextPanel({
 function ContextStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-primary/10 bg-white/70 px-3 py-2">
-      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-[12px] font-bold text-foreground">{value}</p>
     </div>
   );
 }
 
-function LevelSelectCard({ level, selected, onSelect }: { level: OptimizationLevel; selected: boolean; onSelect: () => void }) {
+function LevelSelectCard({
+  level,
+  selected,
+  onSelect,
+}: {
+  level: OptimizationLevel;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const Icon = level.icon;
 
   return (
@@ -486,20 +548,28 @@ function LevelSelectCard({ level, selected, onSelect }: { level: OptimizationLev
       type="button"
       onClick={onSelect}
       className={`min-h-[126px] rounded-2xl border bg-card p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_-22px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/5 ${
-        selected ? "border-primary bg-primary/5 ring-1 ring-primary/25 shadow-[0_16px_42px_-30px_rgba(37,99,235,0.95)]" : "border-border/60"
+        selected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/25 shadow-[0_16px_42px_-30px_rgba(37,99,235,0.95)]"
+          : "border-border/60"
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${levelTone(level.tone)}`}>
+        <div
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${levelTone(level.tone)}`}
+        >
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <p className="text-[10px] font-bold tracking-[0.18em] text-primary">{level.eyebrow}</p>
           <h2 className="mt-1 text-sm font-bold leading-tight text-foreground">{level.title}</h2>
-          <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{riskDisplay(level.risk)}</p>
+          <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
+            {riskDisplay(level.risk)}
+          </p>
         </div>
       </div>
-      <p className="mt-3 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{level.summary}</p>
+      <p className="mt-3 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+        {level.summary}
+      </p>
     </button>
   );
 }
@@ -519,28 +589,42 @@ function buildLevelBundle(level: OptimizationLevel): LevelBundle {
     level,
     includedLevels,
     actions: includedLevels.flatMap((includedLevel) => includedLevel.actions),
-    guarantees: Array.from(new Set(includedLevels.flatMap((includedLevel) => includedLevel.guarantees))),
+    guarantees: Array.from(
+      new Set(includedLevels.flatMap((includedLevel) => includedLevel.guarantees)),
+    ),
   };
 }
 
-function SelectedLevelPanel({ bundle, onValidate }: { bundle: LevelBundle; onValidate: () => void }) {
+function SelectedLevelPanel({
+  bundle,
+  onValidate,
+}: {
+  bundle: LevelBundle;
+  onValidate: () => void;
+}) {
   const { level } = bundle;
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const Icon = level.icon;
-  const includedNames = bundle.includedLevels.map((includedLevel) => includedLevel.title).join(" + ");
+  const includedNames = bundle.includedLevels
+    .map((includedLevel) => includedLevel.title)
+    .join(" + ");
   const hasTechnicalDetails = level.id === "avancado" && Boolean(level.technicalDetails?.length);
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-22px_rgba(15,23,42,0.16)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
-          <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${levelTone(level.tone)}`}>
+          <div
+            className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${levelTone(level.tone)}`}
+          >
             <Icon className="h-7 w-7" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-bold text-foreground">{level.title}</h2>
-              <span className={`rounded-full border px-3 py-1 text-[11px] font-bold ${riskTone(level.risk)}`}>
+              <span
+                className={`rounded-full border px-3 py-1 text-[11px] font-bold ${riskTone(level.risk)}`}
+              >
                 {riskDisplay(level.risk)}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
@@ -602,7 +686,10 @@ function SelectedLevelPanel({ bundle, onValidate }: { bundle: LevelBundle; onVal
                 {showTechnicalDetails && (
                   <div className="mt-3 space-y-2">
                     {level.technicalDetails?.map((detail) => (
-                      <div key={detail} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-[11px] font-semibold text-muted-foreground">
+                      <div
+                        key={detail}
+                        className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-[11px] font-semibold text-muted-foreground"
+                      >
                         {detail}
                       </div>
                     ))}
@@ -629,11 +716,15 @@ function ActionCard({ action }: { action: OptimizationAction }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-bold text-foreground">{action.title}</h3>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskTone(action.risk)}`}>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskTone(action.risk)}`}
+            >
               {riskDisplay(action.risk)}
             </span>
           </div>
-          <p className="mt-1 line-clamp-1 text-[11px] leading-relaxed text-muted-foreground">{action.description}</p>
+          <p className="mt-1 line-clamp-1 text-[11px] leading-relaxed text-muted-foreground">
+            {action.description}
+          </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {action.badges.map((badge) => (
               <ActionBadgePill key={badge} badge={badge} />
@@ -681,7 +772,11 @@ function WarningBox({ text }: { text: string }) {
 }
 
 function ActionBadgePill({ badge }: { badge: ActionBadge }) {
-  return <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{badge}</span>;
+  return (
+    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+      {badge}
+    </span>
+  );
 }
 
 function levelTone(tone: OptimizationLevel["tone"]) {

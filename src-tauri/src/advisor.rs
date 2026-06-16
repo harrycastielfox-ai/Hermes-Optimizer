@@ -24,18 +24,18 @@ pub struct DiagnosticSnapshot {
 impl Default for DiagnosticSnapshot {
     fn default() -> Self {
         Self {
-            health_score: 97,
-            cpu_usage_percent: 23.0,
-            ram_used_gb: 8.3,
-            ram_total_gb: 15.7,
-            disk_free_gb: 235.0,
-            disk_total_gb: 456.0,
-            startup_items_count: 17,
-            startup_high_impact_count: 2,
-            boot_time_seconds: Some(154),
-            security_active: true,
-            temporary_files_gb: Some(4.2),
-            power_plan_name: Some("Equilibrado".to_string()),
+            health_score: 0,
+            cpu_usage_percent: 0.0,
+            ram_used_gb: 0.0,
+            ram_total_gb: 0.0,
+            disk_free_gb: 0.0,
+            disk_total_gb: 0.0,
+            startup_items_count: 0,
+            startup_high_impact_count: 0,
+            boot_time_seconds: None,
+            security_active: false,
+            temporary_files_gb: None,
+            power_plan_name: Some("Indisponivel".to_string()),
         }
     }
 }
@@ -59,7 +59,7 @@ impl Default for AdvisorInput {
         Self {
             diagnostic: DiagnosticSnapshot::default(),
             benchmark: Some(BenchmarkSnapshot {
-                score: 970,
+                score: 0,
                 previous_score: None,
             }),
         }

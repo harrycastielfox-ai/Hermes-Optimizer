@@ -31,7 +31,12 @@ import {
   type AdvancedMethod,
   type AdvancedRisk,
 } from "@/lib/advanced";
-import { fallbackPerformanceReport, loadPerformanceReport, type PerformanceReport, type PerformanceSetting } from "@/lib/performance";
+import {
+  fallbackPerformanceReport,
+  loadPerformanceReport,
+  type PerformanceReport,
+  type PerformanceSetting,
+} from "@/lib/performance";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 
 export const Route = createFileRoute("/otimizacoes")({
@@ -47,7 +52,8 @@ export const Route = createFileRoute("/otimizacoes")({
 function OtimizacoesPage() {
   const [report, setReport] = useState<PerformanceReport>(fallbackPerformanceReport);
   const [advancedCatalog, setAdvancedCatalog] = useState<AdvancedCatalog>(fallbackAdvancedCatalog);
-  const [selectedRecommendationId, setSelectedRecommendationId] = useState<OptimizationRecommendationId>("system");
+  const [selectedRecommendationId, setSelectedRecommendationId] =
+    useState<OptimizationRecommendationId>("system");
   const [showAdvancedView, setShowAdvancedView] = useState(false);
   const recommendationDetailRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +82,8 @@ function OtimizacoesPage() {
   }, []);
 
   const recommendations = buildOptimizationRecommendations(report, advancedCatalog);
-  const selectedRecommendation = recommendations.find((item) => item.id === selectedRecommendationId) ?? recommendations[0];
+  const selectedRecommendation =
+    recommendations.find((item) => item.id === selectedRecommendationId) ?? recommendations[0];
 
   function selectRecommendation(recommendationId: OptimizationRecommendationId) {
     setSelectedRecommendationId(recommendationId);
@@ -91,11 +98,15 @@ function OtimizacoesPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 px-5 pt-6 pb-4 overflow-auto xl:px-8 xl:pt-7">
           <div className="mb-6">
-            <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">OTIMIZACOES RECOMENDADAS</p>
-            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">Otimizacoes</h1>
+            <p className="text-xs font-bold tracking-[0.22em] text-primary mb-2">
+              OTIMIZACOES RECOMENDADAS
+            </p>
+            <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
+              Otimizacoes
+            </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Com base no diagnostico do seu PC, o Hermes organizou ajustes que podem melhorar desempenho,
-              inicializacao e experiencia geral, mantendo reversao e modo seguro.
+              Com base no diagnostico do seu PC, o Hermes organizou ajustes que podem melhorar
+              desempenho, inicializacao e experiencia geral, mantendo reversao e modo seguro.
             </p>
           </div>
 
@@ -104,9 +115,12 @@ function OtimizacoesPage() {
           <section className="rounded-2xl bg-card border border-border/60 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">O QUE O HERMES RECOMENDA</h2>
+                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+                  O QUE O HERMES RECOMENDA
+                </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Primeira camada em linguagem simples. Os detalhes tecnicos continuam disponiveis abaixo.
+                  Primeira camada em linguagem simples. Os detalhes tecnicos continuam disponiveis
+                  abaixo.
                 </p>
               </div>
               <ModePill />
@@ -135,31 +149,61 @@ function OtimizacoesPage() {
               className="flex w-full items-center justify-between gap-4 text-left"
             >
               <div>
-                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">COMO O HERMES FAZ ISSO</h2>
+                <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+                  COMO O HERMES FAZ ISSO
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Performance Engine, Advanced Engine, comandos, valores e acoes bloqueadas ficam recolhidos por padrao.
+                  Performance Engine, Advanced Engine, comandos, valores e acoes bloqueadas ficam
+                  recolhidos por padrao.
                 </p>
               </div>
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-primary">
-                {showAdvancedView ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                {showAdvancedView ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
               </span>
             </button>
 
             {showAdvancedView && (
               <div className="mt-4 space-y-4">
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-                  <SummaryCard icon={Power} label="ENERGIA" value={report.powerPlan.status} sub={report.powerPlan.activeSchemeName} />
-                  <SummaryCard icon={Gamepad2} label="MODO JOGO" value={report.gameMode.status} sub="Configuracao do Windows" />
-                  <SummaryCard icon={Palette} label="EFEITOS VISUAIS" value={report.visualEffects.status} sub={report.visualEffects.profile} />
-                  <SummaryCard icon={MonitorCog} label="SEGUNDO PLANO" value={report.backgroundApps.status} sub="Apps em background" />
+                  <SummaryCard
+                    icon={Power}
+                    label="ENERGIA"
+                    value={report.powerPlan.status}
+                    sub={report.powerPlan.activeSchemeName}
+                  />
+                  <SummaryCard
+                    icon={Gamepad2}
+                    label="MODO JOGO"
+                    value={report.gameMode.status}
+                    sub="Configuracao do Windows"
+                  />
+                  <SummaryCard
+                    icon={Palette}
+                    label="EFEITOS VISUAIS"
+                    value={report.visualEffects.status}
+                    sub={report.visualEffects.profile}
+                  />
+                  <SummaryCard
+                    icon={MonitorCog}
+                    label="SEGUNDO PLANO"
+                    value={report.backgroundApps.status}
+                    sub="Apps em background"
+                  />
                 </div>
 
                 <section className="rounded-2xl border border-border/60 bg-background/55 p-4">
                   <div className="flex flex-col gap-1 mb-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h2 className="text-sm font-bold tracking-[0.18em] text-primary">AJUSTES DETECTADOS</h2>
+                      <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+                        AJUSTES DETECTADOS
+                      </h2>
                       <p className="text-[12px] text-muted-foreground mt-1">
-                        Leitura local das configuracoes que influenciam desempenho. Detalhes tecnicos ficam recolhidos.
+                        Leitura local das configuracoes que influenciam desempenho. Detalhes
+                        tecnicos ficam recolhidos.
                       </p>
                     </div>
                     <span className="inline-flex w-fit items-center rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-semibold text-success">
@@ -181,15 +225,16 @@ function OtimizacoesPage() {
                 </section>
 
                 <section className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <h2 className="text-sm font-bold tracking-[0.18em] text-primary">PREPARADO PARA REVERSAO</h2>
+                  <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+                    PREPARADO PARA REVERSAO
+                  </h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    A Performance Engine ja esta separada para criar um ponto de seguranca antes de qualquer ajuste real futuro.
+                    A Performance Engine ja esta separada para criar um ponto de seguranca antes de
+                    qualquer ajuste real futuro.
                   </p>
                 </section>
 
-                <AdvancedEnginePanel
-                  catalog={advancedCatalog}
-                />
+                <AdvancedEnginePanel catalog={advancedCatalog} />
               </div>
             )}
           </section>
@@ -199,7 +244,13 @@ function OtimizacoesPage() {
   );
 }
 
-type OptimizationRecommendationId = "system" | "startup" | "gamer" | "visual" | "network" | "advanced";
+type OptimizationRecommendationId =
+  | "system"
+  | "startup"
+  | "gamer"
+  | "visual"
+  | "network"
+  | "advanced";
 type CentralLevelId = "seguro" | "limpeza" | "performance" | "gamer" | "avancado";
 
 type OptimizationRecommendation = {
@@ -216,7 +267,10 @@ type OptimizationRecommendation = {
   detail: string;
 };
 
-function buildOptimizationRecommendations(report: PerformanceReport, catalog: AdvancedCatalog): OptimizationRecommendation[] {
+function buildOptimizationRecommendations(
+  report: PerformanceReport,
+  catalog: AdvancedCatalog,
+): OptimizationRecommendation[] {
   const startupDelay = findAction(catalog, "disable-startup-delay");
   const dnsFlush = findAction(catalog, "flush-dns-cache");
   const highPerformance = findAction(catalog, "set-high-performance-power-plan");
@@ -229,7 +283,9 @@ function buildOptimizationRecommendations(report: PerformanceReport, catalog: Ad
       icon: Power,
       title: "Desempenho do Sistema",
       state: report.powerPlan.status,
-      recommendation: highPerformance ? "Preparar ajuste controlado do plano de energia." : "Manter leitura do plano de energia atual.",
+      recommendation: highPerformance
+        ? "Preparar ajuste controlado do plano de energia."
+        : "Manter leitura do plano de energia atual.",
       impact: "Pode melhorar resposta geral, com possivel aumento de consumo.",
       level: "medium",
       rollback: "Disponivel",
@@ -247,7 +303,8 @@ function buildOptimizationRecommendations(report: PerformanceReport, catalog: Ad
       level: startupDelay ? "medium" : "low",
       rollback: "Disponivel",
       mode: safeModeLabel(),
-      detail: "A recomendacao principal e validar primeiro. O Hermes nao remove programas e nao apaga executaveis.",
+      detail:
+        "A recomendacao principal e validar primeiro. O Hermes nao remove programas e nao apaga executaveis.",
     },
     {
       id: "gamer",
@@ -255,12 +312,15 @@ function buildOptimizationRecommendations(report: PerformanceReport, catalog: Ad
       icon: Gamepad2,
       title: "Experiencia Gamer",
       state: report.gameMode.status,
-      recommendation: gameDvr ? "Verificar Modo Jogo e captura em segundo plano." : "Validar Modo Jogo antes de aplicar perfil gamer.",
+      recommendation: gameDvr
+        ? "Verificar Modo Jogo e captura em segundo plano."
+        : "Validar Modo Jogo antes de aplicar perfil gamer.",
       impact: "Pode melhorar foco em jogos e reduzir tarefas desnecessarias durante partidas.",
       level: "medium",
       rollback: "Disponivel",
       mode: safeModeLabel(),
-      detail: "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmacao, preservando processos protegidos.",
+      detail:
+        "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmacao, preservando processos protegidos.",
     },
     {
       id: "visual",
@@ -268,12 +328,14 @@ function buildOptimizationRecommendations(report: PerformanceReport, catalog: Ad
       icon: Palette,
       title: "Efeitos Visuais",
       state: report.visualEffects.profile,
-      recommendation: "Reduzir apenas efeitos opcionais, sem alterar tema do Windows ou navegadores.",
+      recommendation:
+        "Reduzir apenas efeitos opcionais, sem alterar tema do Windows ou navegadores.",
       impact: "Pode melhorar fluidez em maquinas intermediarias.",
       level: "low",
       rollback: "Disponivel",
       mode: safeModeLabel(),
-      detail: "Transparencias, animacoes e sombras devem continuar opt-in, reversiveis e explicadas antes de qualquer mudanca real.",
+      detail:
+        "Transparencias, animacoes e sombras devem continuar opt-in, reversiveis e explicadas antes de qualquer mudanca real.",
     },
     {
       id: "network",
@@ -294,12 +356,15 @@ function buildOptimizationRecommendations(report: PerformanceReport, catalog: Ad
       icon: Terminal,
       title: "Avancado",
       state: `${catalog.actions.length} acoes seguras`,
-      recommendation: "Manter recursos avancados disponiveis apenas para validacao e detalhes tecnicos.",
-      impact: "Permite auditar CMD, PowerShell e Registro sem expor complexidade na primeira camada.",
+      recommendation:
+        "Manter recursos avancados disponiveis apenas para validacao e detalhes tecnicos.",
+      impact:
+        "Permite auditar CMD, PowerShell e Registro sem expor complexidade na primeira camada.",
       level: "high",
       rollback: "Conforme acao",
       mode: safeModeLabel(),
-      detail: "Acoes bloqueadas continuam bloqueadas. Comandos profundos exigem confirmacao forte em Reparar Windows.",
+      detail:
+        "Acoes bloqueadas continuam bloqueadas. Comandos profundos exigem confirmacao forte em Reparar Windows.",
     },
   ];
 }
@@ -339,8 +404,12 @@ function RecommendationCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-bold leading-tight text-foreground">{recommendation.title}</h3>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(recommendation.level)}`}>
+            <h3 className="text-base font-bold leading-tight text-foreground">
+              {recommendation.title}
+            </h3>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(recommendation.level)}`}
+            >
               {riskLabel(recommendation.level)}
             </span>
           </div>
@@ -352,7 +421,16 @@ function RecommendationCard({
         <MiniFact label="Estado" value={recommendation.state} />
         <MiniFact label="Modo" value={recommendation.mode} />
         <MiniFact label="Reversao" value={recommendation.rollback} />
-        <MiniFact label="Impacto" value={recommendation.level === "high" ? "Avancado" : recommendation.level === "medium" ? "Medio" : "Leve"} />
+        <MiniFact
+          label="Impacto"
+          value={
+            recommendation.level === "high"
+              ? "Avancado"
+              : recommendation.level === "medium"
+                ? "Medio"
+                : "Leve"
+          }
+        />
       </div>
 
       <button
@@ -385,7 +463,9 @@ function RecommendationDetail({ recommendation }: { recommendation: Optimization
             <Icon className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-[0.2em] text-primary">RECOMENDACAO SELECIONADA</p>
+            <p className="text-[10px] font-bold tracking-[0.2em] text-primary">
+              RECOMENDACAO SELECIONADA
+            </p>
             <h3 className="mt-1 text-lg font-bold text-foreground">{recommendation.title}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{recommendation.detail}</p>
             <p className="mt-2 text-sm font-semibold text-primary">{recommendation.impact}</p>
@@ -408,7 +488,9 @@ function RecommendationDetail({ recommendation }: { recommendation: Optimization
 function MiniFact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/70 bg-card/70 px-3 py-2">
-      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 truncate text-[12px] font-bold text-foreground">{value}</p>
     </div>
   );
@@ -430,18 +512,17 @@ function findAction(catalog: AdvancedCatalog, id: string) {
   return catalog.actions.find((action) => action.id === id);
 }
 
-function AdvancedEnginePanel({
-  catalog,
-}: {
-  catalog: AdvancedCatalog;
-}) {
+function AdvancedEnginePanel({ catalog }: { catalog: AdvancedCatalog }) {
   return (
     <section className="mt-4 rounded-2xl bg-card border border-border/60 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-sm font-bold tracking-[0.18em] text-primary">ACOES AVANCADAS PREPARADAS</h2>
+          <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
+            ACOES AVANCADAS PREPARADAS
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Recursos importantes continuam disponiveis, mas os comandos e chaves tecnicas ficam recolhidos por padrao.
+            Recursos importantes continuam disponiveis, mas os comandos e chaves tecnicas ficam
+            recolhidos por padrao.
           </p>
         </div>
         <div className="flex shrink-0">
@@ -464,7 +545,9 @@ function AdvancedEnginePanel({
       <div className="mt-4 rounded-xl border border-border/70 bg-background/70 px-4 py-3">
         <div className="flex items-center gap-2">
           <LockKeyhole className="w-4 h-4 text-primary" />
-          <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">BLOQUEADOS NESTA FASE</h3>
+          <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">
+            BLOQUEADOS NESTA FASE
+          </h3>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-2 xl:grid-cols-2">
           {catalog.blockedActions.map((item) => (
@@ -492,7 +575,9 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-foreground">{presentation.title}</p>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(action.risk)}`}>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(action.risk)}`}
+            >
               {riskLabel(action.risk)}
             </span>
             {action.reversible && <StatusBadge label="Reversivel" />}
@@ -504,8 +589,12 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         </div>
         <div className="shrink-0 text-left sm:text-right">
           <p className="text-[11px] text-muted-foreground">Estado</p>
-          <p className="text-sm font-semibold text-foreground">{action.persistent ? "Reversivel" : "Temporario"}</p>
-          <p className="mt-1 text-[11px] font-semibold text-primary">{HERMES_SAFE_TEST_MODE ? "Preparado" : "Confirmacao exigida"}</p>
+          <p className="text-sm font-semibold text-foreground">
+            {action.persistent ? "Reversivel" : "Temporario"}
+          </p>
+          <p className="mt-1 text-[11px] font-semibold text-primary">
+            {HERMES_SAFE_TEST_MODE ? "Preparado" : "Confirmacao exigida"}
+          </p>
         </div>
       </div>
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
@@ -530,7 +619,9 @@ function BlockedActionRow({ item }: { item: AdvancedBlockedAction }) {
       <div className="flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-warning" />
         <p className="text-sm font-semibold text-foreground">{presentation.title}</p>
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(item.risk)}`}>
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${riskVisual(item.risk)}`}
+        >
           {riskLabel(item.risk)}
         </span>
       </div>
@@ -546,7 +637,17 @@ function BlockedActionRow({ item }: { item: AdvancedBlockedAction }) {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, sub }: { icon: typeof Power; label: string; value: string; sub: string }) {
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Power;
+  label: string;
+  value: string;
+  sub: string;
+}) {
   return (
     <div className="rounded-2xl bg-card border border-border/60 p-4 flex items-center gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]">
       <div className="w-11 h-11 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
@@ -651,7 +752,13 @@ function advancedPresentation(action: AdvancedAction) {
     },
   };
 
-  return map[action.id] ?? { title: action.title, description: action.description, impact: "Impacto: preparado com confirmacao e dry-run." };
+  return (
+    map[action.id] ?? {
+      title: action.title,
+      description: action.description,
+      impact: "Impacto: preparado com confirmacao e dry-run.",
+    }
+  );
 }
 
 function blockedPresentation(item: AdvancedBlockedAction) {
@@ -776,16 +883,31 @@ function SettingRow({ item }: { item: PerformanceSetting }) {
         <TechnicalLine label="Fonte" value={item.source} />
         <TechnicalLine label="Valor lido" value={item.value} />
         <TechnicalLine label="Estado interno" value={item.status} />
-        <TechnicalLine label="Otimizavel futuramente" value={item.canOptimizeLater ? "sim" : "nao"} />
+        <TechnicalLine
+          label="Otimizavel futuramente"
+          value={item.canOptimizeLater ? "sim" : "nao"}
+        />
       </TechnicalDetails>
     </div>
   );
 }
 
-function TechnicalDetails({ open, onToggle, children }: { open: boolean; onToggle: () => void; children: ReactNode }) {
+function TechnicalDetails({
+  open,
+  onToggle,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
   return (
     <div className="mt-3 border-t border-border/70 pt-3">
-      <button type="button" onClick={onToggle} className="text-[12px] font-bold text-primary transition hover:text-primary/80">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="text-[12px] font-bold text-primary transition hover:text-primary/80"
+      >
         {open ? "Ocultar detalhes tecnicos" : "Ver detalhes tecnicos"}
       </button>
       {open && <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">{children}</div>}
@@ -797,7 +919,9 @@ function TechnicalLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
       <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-[12px] font-semibold text-foreground">{value || "indisponivel"}</p>
+      <p className="mt-1 break-words text-[12px] font-semibold text-foreground">
+        {value || "indisponivel"}
+      </p>
     </div>
   );
 }
@@ -806,7 +930,9 @@ function StatusBadge({ label, tone = "default" }: { label: string; tone?: "defau
   return (
     <span
       className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-        tone === "warning" ? "border-warning/25 bg-warning/10 text-warning" : "border-primary/20 bg-primary/10 text-primary"
+        tone === "warning"
+          ? "border-warning/25 bg-warning/10 text-warning"
+          : "border-primary/20 bg-primary/10 text-primary"
       }`}
     >
       {label}

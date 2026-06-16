@@ -163,6 +163,7 @@ export function HermesSchedulerCenter() {
     if (onOpenTasks.length > 0) {
       void runTaskQueue(onOpenTasks, "Execucao ao abrir a central");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pendingTasks = useMemo(

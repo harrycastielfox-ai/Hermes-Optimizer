@@ -66,37 +66,140 @@ export type ProfileApplyResult = {
   message: string;
 };
 
+const fallbackSafeguards = [
+  "Snapshot obrigatorio antes de aplicar.",
+  "Log local obrigatorio.",
+  "Rollback pelo Restore Engine.",
+  "Sem telemetria ou processo residente.",
+];
+
+const fallbackProfiles: HermesProfile[] = [
+  {
+    id: "seguro",
+    name: "Seguro",
+    summary: "Maxima estabilidade com plano equilibrado.",
+    risk: "low",
+    status: "previewOnly",
+    reversible: true,
+    requiresConfirmation: true,
+    requiresExtraConfirmation: false,
+    performanceActionIds: ["set-balanced-power-plan"],
+    cleanItemIds: [],
+    startupAction: undefined,
+    startupImpacts: [],
+    gamerEnabled: false,
+    advancedActionIds: ["list-power-plans"],
+    expectedImpact: [
+      "Mantem o Windows em modo equilibrado.",
+      "Evita ajustes agressivos.",
+      "Apenas registra planos de energia disponiveis.",
+    ],
+    safeguards: fallbackSafeguards,
+  },
+  {
+    id: "trabalho",
+    name: "Trabalho",
+    summary: "Equilibrio para produtividade diaria.",
+    risk: "low",
+    status: "previewOnly",
+    reversible: true,
+    requiresConfirmation: true,
+    requiresExtraConfirmation: false,
+    performanceActionIds: ["set-balanced-power-plan"],
+    cleanItemIds: ["temp", "cache"],
+    startupAction: undefined,
+    startupImpacts: [],
+    gamerEnabled: false,
+    advancedActionIds: ["flush-dns-cache"],
+    expectedImpact: [
+      "Mantem ajustes visuais separados e opt-in.",
+      "Mantem energia equilibrada.",
+      "Limpa temporarios/cache seguros com quarentena.",
+    ],
+    safeguards: fallbackSafeguards,
+  },
+  {
+    id: "gamer",
+    name: "Gamer",
+    summary: "Prioriza resposta e desempenho sob demanda.",
+    risk: "medium",
+    status: "previewOnly",
+    reversible: true,
+    requiresConfirmation: true,
+    requiresExtraConfirmation: false,
+    performanceActionIds: ["set-high-performance-power-plan"],
+    cleanItemIds: ["temp", "cache", "thumbnails"],
+    startupAction: "disable",
+    startupImpacts: ["high"],
+    gamerEnabled: true,
+    advancedActionIds: ["enable-game-mode", "disable-game-dvr", "flush-dns-cache"],
+    expectedImpact: [
+      "Nao altera tema ou efeitos visuais automaticamente.",
+      "Ativa Alto Desempenho quando disponivel.",
+      "Sugere fechamento seguro de overlays/apps secundarios.",
+      "Desabilita inicializacao de alto impacto quando controlavel.",
+    ],
+    safeguards: fallbackSafeguards,
+  },
+  {
+    id: "economia",
+    name: "Economia",
+    summary: "Reduz consumo e animacoes nao essenciais.",
+    risk: "low",
+    status: "previewOnly",
+    reversible: true,
+    requiresConfirmation: true,
+    requiresExtraConfirmation: false,
+    performanceActionIds: ["set-power-saver-power-plan"],
+    cleanItemIds: ["temp"],
+    startupAction: "disable",
+    startupImpacts: ["high"],
+    gamerEnabled: false,
+    advancedActionIds: ["disable-game-dvr", "flush-dns-cache"],
+    expectedImpact: [
+      "Nao altera tema ou efeitos visuais automaticamente.",
+      "Ativa Economia de Energia quando disponivel.",
+      "Reduz inicializacao pesada quando seguro.",
+    ],
+    safeguards: fallbackSafeguards,
+  },
+  {
+    id: "extremo",
+    name: "Extremo",
+    summary: "Desempenho maximo com confirmacao extra.",
+    risk: "high",
+    status: "previewOnly",
+    reversible: true,
+    requiresConfirmation: true,
+    requiresExtraConfirmation: true,
+    performanceActionIds: ["set-high-performance-power-plan"],
+    cleanItemIds: ["temp", "cache", "logs", "thumbnails", "windows-update-cache"],
+    startupAction: "disable",
+    startupImpacts: ["high", "medium"],
+    gamerEnabled: true,
+    advancedActionIds: [
+      "enable-game-mode",
+      "disable-game-dvr",
+      "disable-startup-delay",
+      "flush-dns-cache",
+      "list-power-plans",
+    ],
+    expectedImpact: [
+      "Aplica apenas ajustes nao visuais desta fase.",
+      "Exige confirmacao extra antes da aplicacao real.",
+      "Usa Clean, Startup, Gamer e Advanced em modo allowlist.",
+    ],
+    safeguards: fallbackSafeguards,
+  },
+];
+
 export const fallbackProfilesCatalog: ProfilesCatalog = {
   generatedAt: "0",
   engineVersion: "profiles-engine-fallback-v1",
   readOnly: true,
   telemetry: false,
   residentProcess: false,
-  profiles: [
-    profile("seguro", "Seguro", "Maxima estabilidade com plano equilibrado.", "low", ["set-balanced-power-plan"], [], undefined, [], false, ["list-power-plans"]),
-    profile("trabalho", "Trabalho", "Equilibrio para produtividade diaria.", "low", [
-      "set-balanced-power-plan",
-    ], ["temp", "cache"], undefined, [], false, ["flush-dns-cache"]),
-    profile("gamer", "Gamer", "Prioriza resposta e desempenho sob demanda.", "medium", [
-      "set-high-performance-power-plan",
-    ], ["temp", "cache", "thumbnails"], "disable", ["high"], true, [
-      "enable-game-mode",
-      "disable-game-dvr",
-      "flush-dns-cache",
-    ]),
-    profile("economia", "Economia", "Reduz consumo e animacoes nao essenciais.", "low", [
-      "set-power-saver-power-plan",
-    ], ["temp"], "disable", ["high"], false, ["disable-game-dvr", "flush-dns-cache"]),
-    profile("extremo", "Extremo", "Desempenho maximo com confirmacao extra.", "high", [
-      "set-high-performance-power-plan",
-    ], ["temp", "cache", "logs", "thumbnails", "windows-update-cache"], "disable", ["high", "medium"], true, [
-      "enable-game-mode",
-      "disable-game-dvr",
-      "disable-startup-delay",
-      "flush-dns-cache",
-      "list-power-plans",
-    ], true),
-  ],
+  profiles: fallbackProfiles,
 };
 
 export async function loadProfilesCatalog(): Promise<ProfilesCatalog> {
@@ -113,44 +216,13 @@ export async function loadProfilesCatalog(): Promise<ProfilesCatalog> {
   }
 }
 
-export async function applyHermesProfile(request: ProfileApplyRequest): Promise<ProfileApplyResult> {
+export async function applyHermesProfile(
+  request: ProfileApplyRequest,
+): Promise<ProfileApplyResult> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     throw new Error("Profiles Engine exige o backend Tauri.");
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
   return await invoke<ProfileApplyResult>("profiles_apply", { request: forceSafeDryRun(request) });
-}
-
-function profile(
-  id: string,
-  name: string,
-  summary: string,
-  risk: ProfileRisk,
-  performanceActionIds: string[],
-  cleanItemIds: string[] = [],
-  startupAction?: StartupApplyAction,
-  startupImpacts: StartupImpact[] = [],
-  gamerEnabled = false,
-  advancedActionIds: string[] = [],
-  requiresExtraConfirmation = false,
-): HermesProfile {
-  return {
-    id,
-    name,
-    summary,
-    risk,
-    status: "ready",
-    reversible: true,
-    requiresConfirmation: true,
-    requiresExtraConfirmation,
-    performanceActionIds,
-    cleanItemIds,
-    startupAction,
-    startupImpacts,
-    gamerEnabled,
-    advancedActionIds,
-    expectedImpact: ["Snapshot obrigatorio", "Rollback disponivel"],
-    safeguards: ["Sem telemetria", "Sem servico residente", "Log local"],
-  };
 }
