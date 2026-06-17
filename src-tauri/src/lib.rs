@@ -12,6 +12,7 @@ mod profiles;
 mod restore;
 mod safe_mode;
 mod startup;
+mod system;
 
 use tauri::Manager;
 
@@ -81,6 +82,8 @@ pub fn run() {
             restore::restore_validate_snapshot,
             startup::startup_engine_apply,
             startup::startup_engine_read,
+            system::system_relaunch_as_admin,
+            system::system_security_context_read,
             hermes_window_minimize
         ])
         .run(tauri::generate_context!())

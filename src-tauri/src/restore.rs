@@ -186,6 +186,7 @@ pub enum RestoreRollbackActionType {
     RestoreStartupEntry,
     RestoreVisualEffects,
     RestoreGameMode,
+    RemoveDefenderExclusion,
     RestoreFileBackup,
     Custom,
 }
@@ -670,6 +671,9 @@ fn build_action_results(
                     restore_visual_effects_action(action)
                 }
                 RestoreRollbackActionType::RestoreGameMode => restore_game_mode_action(action),
+                RestoreRollbackActionType::RemoveDefenderExclusion => {
+                    restore_defender_exclusion_action(action)
+                }
                 RestoreRollbackActionType::RestoreFileBackup => restore_file_backup_action(action),
                 RestoreRollbackActionType::Custom => restore_custom_action(action),
             }
@@ -741,6 +745,9 @@ fn validate_rollback_action(action: &RestoreRollbackAction) -> RestoreActionResu
             is_allowed_game_mode_registry_path,
             &["dword", "string"],
         ),
+        RestoreRollbackActionType::RemoveDefenderExclusion => {
+            validate_defender_exclusion_action(action)
+        }
         RestoreRollbackActionType::RestoreFileBackup => validate_file_backup_action(action),
         RestoreRollbackActionType::Custom => {
             if action.command_preview.as_deref() != Some("Start-Process") {
@@ -893,6 +900,60 @@ fn restore_game_mode_action(action: &RestoreRollbackAction) -> RestoreActionResu
         is_allowed_game_mode_registry_path,
         &["dword", "string"],
     )
+}
+
+fn restore_defender_exclusion_action(action: &RestoreRollbackAction) -> RestoreActionResult {
+    let validation = validate_defender_exclusion_action(action);
+    if !matches!(validation.status, RestoreActionResultStatus::DryRun) {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: validation.status,
+            message: validation.message,
+        };
+    }
+
+    let target_arg = ps_escape(&action.target);
+    let script = format!(
+        "$ErrorActionPreference = 'Stop'; $path = '{target_arg}'; $prefs = Get-MpPreference; if (@($prefs.ExclusionPath) -contains $path) {{ Remove-MpPreference -ExclusionPath $path; 'removed' }} else {{ 'not-present' }}"
+    );
+
+    match run_powershell(&script) {
+        Ok(_) => RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Applied,
+            message: "Exclusao do Hermes removida do Windows Defender.".to_string(),
+        },
+        Err(error) => RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: format!("Falha ao remover exclusao do Defender: {error}"),
+        },
+    }
+}
+
+fn validate_defender_exclusion_action(action: &RestoreRollbackAction) -> RestoreActionResult {
+    if action.command_preview.as_deref() != Some("Remove-MpPreference -ExclusionPath") {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Unsupported,
+            message: "Rollback do Defender nao reconhecido pelo Hermes.".to_string(),
+        };
+    }
+
+    if is_allowed_defender_exclusion_path(&action.target) {
+        RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::DryRun,
+            message: "Exclusao especifica do Hermes validada para rollback.".to_string(),
+        }
+    } else {
+        RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Rollback bloqueado: exclusao do Defender fora do executavel Hermes."
+                .to_string(),
+        }
+    }
 }
 
 fn restore_scoped_registry_value_action(
@@ -1114,6 +1175,15 @@ fn validate_file_backup_action(action: &RestoreRollbackAction) -> RestoreActionR
     }
 }
 
+fn is_allowed_defender_exclusion_path(path: &str) -> bool {
+    let normalized = path.trim().replace('/', "\\").to_ascii_lowercase();
+    let bytes = normalized.as_bytes();
+    normalized.ends_with("\\hermes-optimizer.exe")
+        && bytes.len() > "\\hermes-optimizer.exe".len() + 3
+        && bytes.get(1) == Some(&b':')
+        && bytes.get(2) == Some(&b'\\')
+}
+
 fn restore_message(
     dry_run: bool,
     applied_count: usize,
@@ -1254,6 +1324,7 @@ fn parse_registry_target(target: &str) -> Option<(String, String, String)> {
 fn is_allowed_registry_path(path: &str) -> bool {
     let normalized = path.replace('/', "\\").to_ascii_lowercase();
     normalized.starts_with("hkcu:\\software\\microsoft\\")
+        || normalized.starts_with("hkcu:\\software\\policies\\microsoft\\")
         || normalized.starts_with("hkcu:\\system\\gameconfigstore\\")
         || normalized.starts_with("hkcu:\\control panel\\")
         || normalized.starts_with("hklm:\\system\\currentcontrolset\\control\\power\\")

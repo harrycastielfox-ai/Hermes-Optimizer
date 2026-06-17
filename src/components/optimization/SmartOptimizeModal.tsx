@@ -132,6 +132,7 @@ export function SmartOptimizeModal({
     [phases],
   );
   const progress = Math.round((processed / phases.length) * 100);
+  const remainingProgress = Math.max(0, 100 - progress);
   const completedActionCount = phases
     .filter((item) => item.status === "completed" || item.status === "unavailable")
     .reduce((total, item) => total + item.plannedActions, 0);
@@ -189,6 +190,7 @@ export function SmartOptimizeModal({
         }
         if (result.gameTargets) {
           setGameTargets(result.gameTargets);
+          setSelectedGameTarget((current) => current ?? result.gameTargets?.[0] ?? null);
         }
         setReports({ ...nextReports });
 
@@ -331,8 +333,8 @@ export function SmartOptimizeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/25 px-3 py-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/94 shadow-[0_30px_90px_-40px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-3 py-4 backdrop-blur-sm">
+      <div className="relative flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-border/80 bg-card/95 text-card-foreground shadow-[0_30px_90px_-40px_rgba(15,23,42,0.55)] backdrop-blur-xl">
         <header className="flex items-start justify-between gap-4 border-b border-border/70 px-5 py-4 lg:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_16px_34px_-22px_rgba(37,99,235,0.9)]">
@@ -341,7 +343,7 @@ export function SmartOptimizeModal({
             <div className="min-w-0">
               <p className="text-[11px] font-bold tracking-[0.22em] text-primary">MODO SIMPLES</p>
               <h2 className="mt-1 text-2xl font-black leading-tight text-foreground">
-                Resolver Agora
+                Otimizar Tudo
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {activePhase?.title ?? currentStatus}
@@ -353,8 +355,8 @@ export function SmartOptimizeModal({
             type="button"
             onClick={onClose}
             disabled={!canClose}
-            aria-label="Fechar Resolver Agora"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white/80 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+            aria-label="Fechar Otimizar Tudo"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background/80 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
           >
             <X className="h-4 w-4" />
           </button>
@@ -397,12 +399,11 @@ export function SmartOptimizeModal({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <p className="text-sm font-bold">
-                  O Hermes avalia 150 acoes, mas o modo teste ainda nao executa alteracoes reais.
+                  O Hermes mira 150 acoes, mas executa apenas o que ja existe no motor.
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  Quando o modo real for liberado, este botao deve executar apenas as funcoes que ja
-                  estiverem implementadas no Hermes. O que ainda nao existir ficara como
-                  indisponivel.
+                  O modo teste ainda nao aplica alteracoes reais. Acoes ainda nao implementadas
+                  ficam como planejamento ou indisponiveis, sem fingir execucao.
                 </p>
               </div>
             </div>
@@ -419,19 +420,20 @@ export function SmartOptimizeModal({
                 />
               )}
 
-              <div className="rounded-2xl border border-border/70 bg-white/72 p-4">
+              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-bold text-foreground">{currentStatus}</h3>
                     <p className="mt-1 text-[12px] text-muted-foreground">
-                      Inspirado em setup por fases, com Central e ferramentas manuais por baixo.
+                      Fase atual: {activePhase?.title ?? "Finalizando"}.
                     </p>
                   </div>
-                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[12px] font-bold text-primary">
-                    {progress}%
-                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-right">
+                    <ProgressStat label="Concluido" value={`${progress}%`} />
+                    <ProgressStat label="Falta" value={`${remainingProgress}%`} />
+                  </div>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-primary transition-all duration-500"
                     style={{ width: `${progress}%` }}
@@ -447,7 +449,7 @@ export function SmartOptimizeModal({
             </div>
 
             <aside className="space-y-4">
-              <div className="rounded-2xl border border-border/70 bg-white/72 p-4">
+              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">
                   PLANO DO PC
                 </h3>
@@ -458,13 +460,13 @@ export function SmartOptimizeModal({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border/70 bg-white/72 p-4">
+              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">LOG</h3>
                 <div className="mt-3 space-y-2">
                   {logs.length > 0 ? (
                     logs.map((item) => <LogRow key={item.id} item={item} />)
                   ) : (
-                    <p className="rounded-xl border border-dashed border-border bg-white/60 px-3 py-4 text-sm text-muted-foreground">
+                    <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
                       Aguardando primeira fase.
                     </p>
                   )}
@@ -474,7 +476,7 @@ export function SmartOptimizeModal({
           </div>
         </div>
 
-        <footer className="flex flex-col gap-3 border-t border-border/70 bg-white/78 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+        <footer className="flex flex-col gap-3 border-t border-border/70 bg-background/78 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-success" />
             {HERMES_SAFE_TEST_MODE
@@ -486,7 +488,7 @@ export function SmartOptimizeModal({
               <button
                 type="button"
                 onClick={requestCancel}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
               >
                 Cancelar
               </button>
@@ -621,14 +623,28 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
     });
   }
 
+  const componentCmds = reports.advanced?.actions.filter((action) => action.id.startsWith("dism-"));
   actions.push({
     id: "components",
-    title: "Componentes essenciais",
-    detail: "VC++, DirectX e dependencias ainda serao modulo dedicado.",
-    status: "unavailable",
+    title: "Componentes CMD/DISM",
+    detail: componentCmds?.length
+      ? `${componentCmds.length} comando(s): limpeza de componentes, NetFx3 e DirectPlay.`
+      : "Aguardando mapeamento de componentes do Windows.",
+    status: componentCmds?.length ? "ready" : "pending",
   });
 
   return actions;
+}
+
+function ProgressStat({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded-xl border border-primary/20 bg-primary/10 px-3 py-1.5">
+      <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+        {label}
+      </span>
+      <span className="block text-sm font-black text-foreground">{value}</span>
+    </span>
+  );
 }
 
 function SummaryCard({
@@ -643,7 +659,7 @@ function SummaryCard({
   sub: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-white/72 px-4 py-3">
+    <div className="rounded-2xl border border-border/70 bg-background/72 px-4 py-3">
       <div className="flex items-center gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
           <Icon className="h-5 w-5" />
@@ -676,14 +692,14 @@ function GameTargetPicker({
           <p className="text-[11px] font-bold tracking-[0.18em] text-primary">SESSAO GAMER</p>
           <h3 className="mt-1 text-xl font-black text-foreground">Escolha o jogo alvo</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            O Hermes usa esse alvo para montar o plano focado: jogo protegido, Discord preservado,
-            overlays avaliados e perfil de performance ajustado para a engine detectada.
+            Fate Trigger via Steam/UE5 e a prioridade Hermes. O alvo escolhido protege o jogo,
+            preserva Steam/Discord, avalia overlays e ajusta o perfil para a engine detectada.
           </p>
         </div>
         <button
           type="button"
           onClick={onSkip}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
         >
           Continuar sem alvo
         </button>
@@ -700,12 +716,14 @@ function GameTargetPicker({
               className={`group flex min-h-24 items-center gap-3 rounded-2xl border p-4 text-left transition ${
                 active
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border/70 bg-white/82 hover:border-primary/40 hover:bg-white"
+                  : "border-border/70 bg-background/82 hover:border-primary/40 hover:bg-background"
               }`}
             >
               <span
                 className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${
-                  active ? "bg-white/18 text-white" : "bg-primary/10 text-primary"
+                  active
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-primary/10 text-primary"
                 }`}
               >
                 {target.label.toLowerCase().includes("fate") ? (
@@ -720,7 +738,7 @@ function GameTargetPicker({
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
                       active
-                        ? "border-white/30 bg-white/15 text-white"
+                        ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
                         : "border-primary/20 bg-primary/10 text-primary"
                     }`}
                   >
@@ -730,23 +748,36 @@ function GameTargetPicker({
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
                         active
-                          ? "border-white/30 bg-white/15 text-white"
+                          ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
                           : "border-success/20 bg-success/10 text-success"
                       }`}
                     >
                       {target.engineHint}
                     </span>
                   )}
+                  {target.id === "preset-fate-trigger-ue5" && (
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+                        active
+                          ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
+                          : "border-warning/25 bg-warning/10 text-warning"
+                      }`}
+                    >
+                      PRIORIDADE STEAM
+                    </span>
+                  )}
                 </span>
                 <span
                   className={`mt-1 block text-[12px] leading-relaxed ${
-                    active ? "text-white/80" : "text-muted-foreground"
+                    active ? "text-primary-foreground/80" : "text-muted-foreground"
                   }`}
                 >
                   {target.detail}
                 </span>
               </span>
-              <Play className={`h-5 w-5 shrink-0 ${active ? "text-white" : "text-primary"}`} />
+              <Play
+                className={`h-5 w-5 shrink-0 ${active ? "text-primary-foreground" : "text-primary"}`}
+              />
             </button>
           );
         })}
@@ -757,7 +788,7 @@ function GameTargetPicker({
 
 function PlanActionRow({ item }: { item: PlanAction }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-white/70 px-3 py-2">
+    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2">
       <div className="flex items-start gap-2">
         <span
           className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${planStatusDot(item.status)}`}
@@ -785,7 +816,7 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
     phase.status === "running" ? Loader2 : phase.status === "completed" ? CheckCircle2 : phase.icon;
 
   return (
-    <article className="rounded-2xl border border-border/70 bg-white/72 p-4">
+    <article className="rounded-2xl border border-border/70 bg-background/72 p-4">
       <div className="flex items-start gap-3">
         <span
           className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${phaseIconClass(phase.status)}`}
@@ -817,7 +848,7 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
               {phase.outputs.slice(0, 3).map((output) => (
                 <p
                   key={output}
-                  className="rounded-lg border border-border/60 bg-slate-50/80 px-2.5 py-1.5 text-[11px] font-medium text-foreground"
+                  className="rounded-lg border border-border/60 bg-muted/45 px-2.5 py-1.5 text-[11px] font-medium text-foreground"
                 >
                   {output}
                 </p>
@@ -839,7 +870,7 @@ function LogRow({ item }: { item: LogItem }) {
         : "border-primary/20 bg-primary/10 text-primary";
 
   return (
-    <div className="rounded-xl border border-border/60 bg-white/70 px-3 py-2">
+    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2">
       <div className="flex items-start gap-2">
         <HardDrive className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <p className="flex-1 text-[12px] leading-relaxed text-foreground">{item.message}</p>

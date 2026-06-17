@@ -18,6 +18,7 @@ dist-ssr
 *.local
 .release/
 src-tauri/tauri.windows.signing.local.json
+diagnostics/
 
 # Wrangler / Cloudflare
 .wrangler/

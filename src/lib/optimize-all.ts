@@ -95,6 +95,37 @@ export type OptimizeAllPhaseResult = {
   requiresGameSelection?: boolean;
 };
 
+export const HERMES_PREPARE_ADVANCED_ACTION_IDS = [
+  "enable-game-mode",
+  "disable-game-dvr",
+  "set-visual-effects-gamer-minimal",
+  "disable-startup-delay",
+  "disable-advertising-id",
+  "disable-tailored-experiences",
+  "disable-consumer-features",
+  "disable-activity-history",
+  "disable-location-tracking",
+  "disable-recall-user",
+  "flush-dns-cache",
+  "dism-start-component-cleanup",
+  "dism-check-netfx3",
+  "dism-check-directplay",
+] as const;
+
+const HERMES_COMPONENT_CMD_ACTION_IDS = [
+  "dism-start-component-cleanup",
+  "dism-check-netfx3",
+  "dism-check-directplay",
+  "dism-enable-directplay",
+] as const;
+
+const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
+  ...HERMES_PREPARE_ADVANCED_ACTION_IDS,
+  "dism-enable-directplay",
+  "set-high-performance-power-plan",
+  "disable-storage-sense-auto-cleanup",
+] as const;
+
 export async function runOptimizeAllPhase(
   phaseId: OptimizeAllPhaseId,
   context: OptimizeAllPhaseContext,
@@ -114,13 +145,7 @@ export async function runOptimizeAllPhase(
   }
 
   if (phaseId === "components") {
-    return {
-      outputs: [
-        "VC++ e DirectX mapeados como modulo dedicado",
-        "Instalacao automatica ainda nao foi ligada",
-        "Dependencias aparecem como modulo futuro no plano",
-      ],
-    };
+    return runComponentsPhase();
   }
 
   if (phaseId === "cleanup") {
@@ -228,6 +253,36 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
   };
 }
 
+async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
+  const advanced = await refreshAdvancedCatalog();
+  const availableIds = new Set(advanced.actions.map((action) => action.id));
+  const actionIds = HERMES_COMPONENT_CMD_ACTION_IDS.filter((id) => availableIds.has(id));
+  const result = await tryRun(() =>
+    actionIds.length
+      ? applyAdvancedActions({
+          confirmed: false,
+          dryRun: true,
+          actionIds,
+          extremeMode: false,
+        })
+      : Promise.resolve(null),
+  );
+
+  return {
+    reports: {
+      advanced,
+      advancedResult: result.value ?? undefined,
+    },
+    outputs: [
+      `${actionIds.length} comando(s) CMD/DISM mapeados`,
+      "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
+      result.value
+        ? `${result.value.appliedActions.length} comando(s) validados no modo teste`
+        : (result.message ?? "Componentes ainda nao disponiveis neste PC"),
+    ],
+  };
+}
+
 async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseResult> {
   const performance = await refreshPerformanceReport();
   const actionIds = pickPerformanceActionIds(performance, profileId);
@@ -269,7 +324,7 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
       outputs: [
         `${gameTargets.length} alvo(s) de jogo encontrados`,
         "Escolha o jogo para o Hermes montar o plano focado",
-        "Fate Trigger/UE5 aparece como alvo prioritario quando disponivel",
+        "Fate Trigger via Steam/UE5 fica como prioridade Hermes",
       ],
     };
   }
@@ -312,7 +367,7 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
     outputs: [
       target ? `Jogo alvo: ${target.label}` : "Jogo alvo nao selecionado",
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
-      `${gamer.summary.protectedCount} processo(s) protegido(s)`,
+      `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo Steam/Discord quando detectados`,
       result.value
         ? `${result.value.closedProcesses.length} processo(s) validados pela Gamer Engine`
         : (result.message ?? "Selecao manual de jogo sera necessaria"),
@@ -352,10 +407,12 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
 
 async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
   const advanced = await refreshAdvancedCatalog();
-  const actionIds = advanced.actions
-    .filter((action) => !action.requiresExtreme && action.risk !== "high")
-    .slice(0, 6)
-    .map((action) => action.id);
+  const availableIds = new Set(
+    advanced.actions
+      .filter((action) => !action.requiresExtreme && action.risk !== "high")
+      .map((action) => action.id),
+  );
+  const actionIds = HERMES_OPTIMIZE_ADVANCED_ACTION_IDS.filter((id) => availableIds.has(id));
   const result = await tryRun(() =>
     actionIds.length
       ? applyAdvancedActions({
@@ -416,11 +473,11 @@ function pickProfile(reports: OptimizeAllReports, availableProfiles: string[]) {
 function pickPerformanceActionIds(report: PerformanceReport, profileId: string) {
   const ids = report.settings
     .filter((item) => item.canOptimizeLater)
-    .map((item) => item.id)
-    .filter(Boolean);
+    .map((item) => performanceSettingToActionId(item.id, profileId))
+    .filter((item): item is string => Boolean(item));
 
   if (ids.length > 0) {
-    return ids.slice(0, 5);
+    return [...new Set(ids)].slice(0, 5);
   }
 
   if (profileId === "economia") {
@@ -432,6 +489,18 @@ function pickPerformanceActionIds(report: PerformanceReport, profileId: string) 
   }
 
   return ["set-high-performance-power-plan"];
+}
+
+function performanceSettingToActionId(settingId: string, profileId: string) {
+  if (settingId === "power-plan") {
+    if (profileId === "economia") return "set-power-saver-power-plan";
+    if (profileId === "seguro" || profileId === "trabalho") return "set-balanced-power-plan";
+    return "set-high-performance-power-plan";
+  }
+  if (settingId === "transparency") return "disable-transparency";
+  if (settingId === "animations") return "disable-window-animations";
+  if (settingId === "shadows") return "disable-visual-shadows";
+  return undefined;
 }
 
 function buildGameTargets(report: GamerReport): OptimizeAllGameTarget[] {
@@ -464,9 +533,9 @@ function buildGameTargets(report: GamerReport): OptimizeAllGameTarget[] {
   targets.push({
     id: "preset-fate-trigger-ue5",
     label: "Fate Trigger",
-    detail: "Preset para Fate Trigger em Unreal Engine 5.",
+    detail: "Prioridade Hermes: Fate Trigger via Steam em Unreal Engine 5.",
     source: "preset",
-    confidence: "medium",
+    confidence: "high",
     executable: "FateTrigger-Win64-Shipping.exe",
     engineHint: "Unreal Engine 5",
   });
@@ -517,8 +586,16 @@ function dedupeGameTargets(targets: OptimizeAllGameTarget[]) {
 }
 
 function gameTargetRank(target: OptimizeAllGameTarget) {
-  const text = normalizeGameKey(`${target.label} ${target.executable ?? ""}`);
-  if (text.includes("fatetrigger") || text.includes("fatetriggerwin64shipping")) return 0;
+  const text = normalizeGameKey(
+    `${target.label} ${target.detail ?? ""} ${target.executable ?? ""}`,
+  );
+  if (
+    text.includes("fatetrigger") ||
+    text.includes("fatetriggerwin64shipping") ||
+    (text.includes("fate") && text.includes("trigger"))
+  ) {
+    return 0;
+  }
   if (target.source === "active") return 1;
   if (target.source === "detected") return 2;
   if (target.source === "profile") return 3;

@@ -173,11 +173,28 @@ enum AdvancedOperation {
         previous_guid: Option<String>,
         previous_name: Option<String>,
     },
+    DnsProvider {
+        provider_id: String,
+        provider_label: String,
+        servers: Vec<String>,
+        previous_interfaces: Vec<DnsInterfaceState>,
+    },
+    DefenderPathExclusion {
+        path: String,
+        already_excluded: bool,
+    },
     Cmd {
         program: String,
         args: Vec<String>,
         transient: bool,
     },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct DnsInterfaceState {
+    interface_alias: String,
+    server_addresses: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -188,14 +205,36 @@ struct RawAdvancedState {
     game_dvr_enabled: Option<i64>,
     app_capture_enabled: Option<i64>,
     startup_delay_in_msec: Option<i64>,
+    advertising_info_enabled: Option<i64>,
+    tailored_experiences_enabled: Option<i64>,
+    content_delivery_allowed: Option<i64>,
+    oem_preinstalled_apps_enabled: Option<i64>,
+    preinstalled_apps_enabled: Option<i64>,
+    silent_installed_apps_enabled: Option<i64>,
+    system_pane_suggestions_enabled: Option<i64>,
+    subscribed_content_338388_enabled: Option<i64>,
+    subscribed_content_338389_enabled: Option<i64>,
+    publish_user_activities: Option<i64>,
+    upload_user_activities: Option<i64>,
+    location_consent_value: Option<String>,
+    storage_sense_enabled: Option<i64>,
+    recall_disable_ai_data_analysis: Option<i64>,
     enable_transparency: Option<i64>,
     min_animate: Option<String>,
+    drag_full_windows: Option<String>,
+    font_smoothing: Option<String>,
     taskbar_animations: Option<i64>,
+    icons_only: Option<i64>,
     listview_alpha_select: Option<i64>,
     listview_shadow: Option<i64>,
+    enable_aero_peek: Option<i64>,
     visual_fx_setting: Option<i64>,
+    #[serde(default)]
+    dns_interfaces: Vec<DnsInterfaceState>,
     power_plan_guid: Option<String>,
     power_plan_name: Option<String>,
+    #[serde(default)]
+    defender_exclusion_paths: Vec<String>,
 }
 
 #[tauri::command]
@@ -273,7 +312,7 @@ pub(crate) fn advanced_engine_apply_blocking(
     if plans.is_empty() {
         return Err("Nenhuma acao avancada segura foi selecionada.".to_string());
     }
-    validate_plans_for_apply(&plans, request.extreme_mode.unwrap_or(false))?;
+    validate_plans_for_apply(&plans, request.extreme_mode.unwrap_or(false), dry_run)?;
 
     execute_advanced_plans(app, plans, dry_run)
 }
@@ -294,7 +333,7 @@ fn graphics_preference_apply_blocking(
         &executable_path,
         previous_value,
     )];
-    validate_plans_for_apply(&plans, false)?;
+    validate_plans_for_apply(&plans, false, dry_run)?;
     execute_advanced_plans(app, plans, dry_run)
 }
 
@@ -441,7 +480,51 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "disable-game-dvr" => Some(disable_game_dvr_plan(state)),
             "enable-game-dvr" => Some(enable_game_dvr_plan(state)),
             "disable-startup-delay" => Some(disable_startup_delay_plan(state)),
+            "disable-advertising-id" => Some(disable_advertising_id_plan(state)),
+            "disable-tailored-experiences" => Some(disable_tailored_experiences_plan(state)),
+            "disable-consumer-features" => Some(disable_consumer_features_plan(state)),
+            "disable-activity-history" => Some(disable_activity_history_plan(state)),
+            "disable-location-tracking" => Some(disable_location_tracking_plan(state)),
+            "disable-storage-sense-auto-cleanup" => {
+                Some(disable_storage_sense_auto_cleanup_plan(state))
+            }
+            "disable-recall-user" => Some(disable_recall_user_plan(state)),
             "flush-dns-cache" => Some(flush_dns_cache_plan()),
+            "dism-start-component-cleanup" => Some(dism_start_component_cleanup_plan()),
+            "dism-check-netfx3" => Some(dism_check_netfx3_plan()),
+            "dism-check-directplay" => Some(dism_check_directplay_plan()),
+            "dism-enable-directplay" => Some(dism_enable_directplay_plan()),
+            "allow-hermes-defender-exclusion" => allow_hermes_defender_exclusion_plan(state),
+            "set-dns-cloudflare" => Some(set_dns_provider_plan(
+                state,
+                "set-dns-cloudflare",
+                "Cloudflare",
+                &["1.1.1.1", "1.0.0.1"],
+            )),
+            "set-dns-google" => Some(set_dns_provider_plan(
+                state,
+                "set-dns-google",
+                "Google",
+                &["8.8.8.8", "8.8.4.4"],
+            )),
+            "set-dns-opendns" => Some(set_dns_provider_plan(
+                state,
+                "set-dns-opendns",
+                "OpenDNS",
+                &["208.67.222.222", "208.67.220.220"],
+            )),
+            "set-dns-quad9" => Some(set_dns_provider_plan(
+                state,
+                "set-dns-quad9",
+                "Quad9",
+                &["9.9.9.9", "149.112.112.112"],
+            )),
+            "set-dns-adguard" => Some(set_dns_provider_plan(
+                state,
+                "set-dns-adguard",
+                "AdGuard",
+                &["94.140.14.14", "94.140.15.15"],
+            )),
             "list-power-plans" => Some(list_power_plans_plan(state)),
             "set-high-performance-power-plan" => Some(set_power_plan_plan(
                 state,
@@ -471,6 +554,9 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "disable-window-animations" => Some(disable_window_animations_plan(state)),
             "disable-visual-shadows" => Some(disable_visual_shadows_plan(state)),
             "set-visual-effects-custom" => Some(set_visual_effects_custom_plan(state)),
+            "set-visual-effects-gamer-minimal" => {
+                Some(set_visual_effects_gamer_minimal_plan(state))
+            }
             "open-performance-options" => Some(open_performance_options_plan()),
             _ => None,
         })
@@ -664,6 +750,266 @@ fn disable_startup_delay_plan(state: &RawAdvancedState) -> AdvancedPlan {
     }
 }
 
+fn registry_dword_tweak_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    risk: AdvancedRisk,
+    path: &str,
+    name: &str,
+    value: i64,
+    previous: Option<i64>,
+    requires_restart: bool,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Registry,
+            risk,
+            false,
+            false,
+            true,
+            true,
+            requires_restart,
+            display_optional(previous),
+            &format!("Definir {name} como {value}"),
+            &format!("PowerShell New-ItemProperty em {path}"),
+        ),
+        operations: vec![registry_dword(
+            path,
+            name,
+            value,
+            previous,
+            RestoreRollbackActionType::RestoreRegistryValue,
+        )],
+    }
+}
+
+fn registry_string_tweak_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    risk: AdvancedRisk,
+    path: &str,
+    name: &str,
+    value: &str,
+    previous: Option<String>,
+    requires_restart: bool,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Registry,
+            risk,
+            false,
+            false,
+            true,
+            true,
+            requires_restart,
+            display_optional_string(previous.as_deref()),
+            &format!("Definir {name} como {value}"),
+            &format!("PowerShell New-ItemProperty em {path}"),
+        ),
+        operations: vec![registry_string(
+            path,
+            name,
+            value,
+            previous,
+            RestoreRollbackActionType::RestoreRegistryValue,
+        )],
+    }
+}
+
+fn disable_advertising_id_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_dword_tweak_plan(
+        "disable-advertising-id",
+        "Desativar ID de publicidade",
+        "Desativa o identificador de publicidade do usuario para reduzir rastreamento local.",
+        AdvancedRisk::Low,
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+        "Enabled",
+        0,
+        state.advertising_info_enabled,
+        false,
+    )
+}
+
+fn disable_tailored_experiences_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_dword_tweak_plan(
+        "disable-tailored-experiences",
+        "Desativar experiencias personalizadas",
+        "Impede sugestoes personalizadas baseadas em dados de diagnostico do Windows.",
+        AdvancedRisk::Low,
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+        "TailoredExperiencesWithDiagnosticDataEnabled",
+        0,
+        state.tailored_experiences_enabled,
+        false,
+    )
+}
+
+fn disable_consumer_features_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "disable-consumer-features",
+            "Reduzir sugestoes e apps promovidos",
+            "Desativa sugestoes, instalacoes silenciosas e conteudo promovido no usuario atual.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "ContentDelivery={}, SilentInstalledApps={}, Suggestions={}",
+                display_optional(state.content_delivery_allowed),
+                display_optional(state.silent_installed_apps_enabled),
+                display_optional(state.system_pane_suggestions_enabled)
+            ),
+            "Definir recursos promovidos como 0",
+            "PowerShell New-ItemProperty em HKCU ContentDeliveryManager",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "ContentDeliveryAllowed",
+                0,
+                state.content_delivery_allowed,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "OemPreInstalledAppsEnabled",
+                0,
+                state.oem_preinstalled_apps_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "PreInstalledAppsEnabled",
+                0,
+                state.preinstalled_apps_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "SilentInstalledAppsEnabled",
+                0,
+                state.silent_installed_apps_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "SystemPaneSuggestionsEnabled",
+                0,
+                state.system_pane_suggestions_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "SubscribedContent-338388Enabled",
+                0,
+                state.subscribed_content_338388_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                "SubscribedContent-338389Enabled",
+                0,
+                state.subscribed_content_338389_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
+fn disable_activity_history_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "disable-activity-history",
+            "Desativar historico de atividades",
+            "Desativa publicacao e envio de atividades do usuario no Windows.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "PublishUserActivities={}, UploadUserActivities={}",
+                display_optional(state.publish_user_activities),
+                display_optional(state.upload_user_activities)
+            ),
+            "Definir PublishUserActivities e UploadUserActivities como 0",
+            "PowerShell New-ItemProperty em HKCU Policies\\Microsoft\\Windows\\System",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Policies\\Microsoft\\Windows\\System",
+                "PublishUserActivities",
+                0,
+                state.publish_user_activities,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Policies\\Microsoft\\Windows\\System",
+                "UploadUserActivities",
+                0,
+                state.upload_user_activities,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
+fn disable_location_tracking_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_string_tweak_plan(
+        "disable-location-tracking",
+        "Bloquear localizacao para apps",
+        "Define consentimento de localizacao do usuario como Deny.",
+        AdvancedRisk::Medium,
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location",
+        "Value",
+        "Deny",
+        state.location_consent_value.clone(),
+        false,
+    )
+}
+
+fn disable_storage_sense_auto_cleanup_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_dword_tweak_plan(
+        "disable-storage-sense-auto-cleanup",
+        "Desativar Storage Sense automatico",
+        "Desativa limpeza automatica do Storage Sense para evitar remocoes inesperadas durante jogos.",
+        AdvancedRisk::Low,
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\StorageSense\\Parameters\\StoragePolicy",
+        "01",
+        0,
+        state.storage_sense_enabled,
+        false,
+    )
+}
+
+fn disable_recall_user_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_dword_tweak_plan(
+        "disable-recall-user",
+        "Desativar Recall no usuario",
+        "Aplica politica de usuario para impedir analise local do Recall quando disponivel.",
+        AdvancedRisk::Medium,
+        "HKCU:\\Software\\Policies\\Microsoft\\Windows\\WindowsAI",
+        "DisableAIDataAnalysis",
+        1,
+        state.recall_disable_ai_data_analysis,
+        true,
+    )
+}
+
 fn flush_dns_cache_plan() -> AdvancedPlan {
     AdvancedPlan {
         action: action(
@@ -685,6 +1031,172 @@ fn flush_dns_cache_plan() -> AdvancedPlan {
             program: "ipconfig".to_string(),
             args: vec!["/flushdns".to_string()],
             transient: true,
+        }],
+    }
+}
+
+fn dism_start_component_cleanup_plan() -> AdvancedPlan {
+    dism_cmd_plan(
+        "dism-start-component-cleanup",
+        "Limpar componentes do Windows Update",
+        "Executa DISM StartComponentCleanup para remover residuos antigos de atualizacoes do Windows.",
+        AdvancedRisk::Medium,
+        &["/online", "/cleanup-image", "/startcomponentcleanup"],
+        "DISM limpa o armazenamento de componentes",
+        "cmd: dism /online /cleanup-image /startcomponentcleanup",
+        true,
+    )
+}
+
+fn dism_check_netfx3_plan() -> AdvancedPlan {
+    dism_cmd_plan(
+        "dism-check-netfx3",
+        "Verificar .NET Framework 3.5",
+        "Consulta o estado do recurso NetFx3, usado por jogos e dependencias antigas.",
+        AdvancedRisk::Low,
+        &["/online", "/get-featureinfo", "/featurename:NetFx3"],
+        "DISM consulta NetFx3",
+        "cmd: dism /online /get-featureinfo /featurename:NetFx3",
+        false,
+    )
+}
+
+fn dism_check_directplay_plan() -> AdvancedPlan {
+    dism_cmd_plan(
+        "dism-check-directplay",
+        "Verificar DirectPlay",
+        "Consulta o estado do DirectPlay antes de preparar dependencias legadas de jogos.",
+        AdvancedRisk::Low,
+        &["/online", "/get-featureinfo", "/featurename:DirectPlay"],
+        "DISM consulta DirectPlay",
+        "cmd: dism /online /get-featureinfo /featurename:DirectPlay",
+        false,
+    )
+}
+
+fn dism_enable_directplay_plan() -> AdvancedPlan {
+    dism_cmd_plan(
+        "dism-enable-directplay",
+        "Ativar DirectPlay",
+        "Ativa o recurso DirectPlay para compatibilidade de jogos quando o Windows permitir.",
+        AdvancedRisk::Medium,
+        &[
+            "/online",
+            "/enable-feature",
+            "/featurename:DirectPlay",
+            "/all",
+            "/norestart",
+        ],
+        "DISM habilita DirectPlay sem reiniciar automaticamente",
+        "cmd: dism /online /enable-feature /featurename:DirectPlay /all /norestart",
+        true,
+    )
+}
+
+fn dism_cmd_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    risk: AdvancedRisk,
+    args: &[&str],
+    planned_change: &str,
+    command_preview: &str,
+    requires_restart: bool,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Cmd,
+            risk,
+            false,
+            false,
+            true,
+            false,
+            requires_restart,
+            "Estado sera validado pelo DISM".to_string(),
+            planned_change,
+            command_preview,
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "dism".to_string(),
+            args: args.iter().map(|item| item.to_string()).collect(),
+            transient: true,
+        }],
+    }
+}
+
+fn allow_hermes_defender_exclusion_plan(state: &RawAdvancedState) -> Option<AdvancedPlan> {
+    let executable_path = current_hermes_executable_path().ok()?;
+    if !is_allowed_hermes_executable_path(&executable_path) {
+        return None;
+    }
+
+    let already_excluded = state
+        .defender_exclusion_paths
+        .iter()
+        .any(|item| paths_equal_ignore_case(item, &executable_path));
+    let current_value = if already_excluded {
+        "Hermes ja esta nas exclusoes do Defender"
+    } else {
+        "Hermes ainda nao esta nas exclusoes do Defender"
+    };
+
+    Some(AdvancedPlan {
+        action: action(
+            "allow-hermes-defender-exclusion",
+            "Liberar Hermes no Defender",
+            "Adiciona somente o executavel atual do Hermes as exclusoes do Windows Defender para evitar falso positivo.",
+            AdvancedMethod::PowerShell,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            false,
+            current_value,
+            "Adicionar exclusao ExclusionPath apenas para hermes-optimizer.exe",
+            "PowerShell Add-MpPreference -ExclusionPath <Hermes>",
+        ),
+        operations: vec![AdvancedOperation::DefenderPathExclusion {
+            path: executable_path,
+            already_excluded,
+        }],
+    })
+}
+
+fn set_dns_provider_plan(
+    state: &RawAdvancedState,
+    id: &str,
+    provider_label: &str,
+    servers: &[&str],
+) -> AdvancedPlan {
+    let server_list = servers
+        .iter()
+        .map(|item| item.to_string())
+        .collect::<Vec<_>>();
+    AdvancedPlan {
+        action: action(
+            id,
+            &format!("Aplicar DNS {provider_label}"),
+            "Define DNS IPv4 nos adaptadores ativos com gateway e limpa o cache DNS.",
+            AdvancedMethod::PowerShell,
+            AdvancedRisk::Medium,
+            false,
+            false,
+            true,
+            true,
+            false,
+            current_dns_state(state),
+            &format!("Definir DNS para {}", server_list.join(", ")),
+            "PowerShell Set-DnsClientServerAddress + ipconfig /flushdns",
+        ),
+        operations: vec![AdvancedOperation::DnsProvider {
+            provider_id: id.to_string(),
+            provider_label: provider_label.to_string(),
+            servers: server_list,
+            previous_interfaces: state.dns_interfaces.clone(),
         }],
     }
 }
@@ -902,6 +1414,103 @@ fn set_visual_effects_custom_plan(state: &RawAdvancedState) -> AdvancedPlan {
             state.visual_fx_setting,
             RestoreRollbackActionType::RestoreVisualEffects,
         )],
+    }
+}
+
+fn set_visual_effects_gamer_minimal_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-visual-effects-gamer-minimal",
+            "Visual Gamer minimo",
+            "Replica o preset visual recomendado: somente conteudo ao arrastar, miniaturas e fontes suaves ficam ativos.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "DragFullWindows={}, IconsOnly={}, FontSmoothing={}",
+                display_optional_string(state.drag_full_windows.as_deref()),
+                display_optional(state.icons_only),
+                display_optional_string(state.font_smoothing.as_deref())
+            ),
+            "Manter 3 efeitos ativos e desligar animacoes/transparencias/sombras",
+            "PowerShell New-ItemProperty em HKCU Desktop/Explorer/DWM",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects",
+                "VisualFXSetting",
+                3,
+                state.visual_fx_setting,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                "EnableTransparency",
+                0,
+                state.enable_transparency,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_string(
+                "HKCU:\\Control Panel\\Desktop",
+                "DragFullWindows",
+                "1",
+                state.drag_full_windows.clone(),
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_string(
+                "HKCU:\\Control Panel\\Desktop",
+                "FontSmoothing",
+                "2",
+                state.font_smoothing.clone(),
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_string(
+                "HKCU:\\Control Panel\\Desktop\\WindowMetrics",
+                "MinAnimate",
+                "0",
+                state.min_animate.clone(),
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                "IconsOnly",
+                0,
+                state.icons_only,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                "TaskbarAnimations",
+                0,
+                state.taskbar_animations,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                "ListviewAlphaSelect",
+                0,
+                state.listview_alpha_select,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                "ListviewShadow",
+                0,
+                state.listview_shadow,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\DWM",
+                "EnableAeroPeek",
+                0,
+                state.enable_aero_peek,
+                RestoreRollbackActionType::RestoreVisualEffects,
+            ),
+        ],
     }
 }
 
@@ -1143,9 +1752,21 @@ fn default_action_ids() -> Vec<String> {
         "enable-game-mode".to_string(),
         "disable-game-dvr".to_string(),
         "disable-startup-delay".to_string(),
+        "disable-advertising-id".to_string(),
+        "disable-tailored-experiences".to_string(),
+        "disable-consumer-features".to_string(),
+        "disable-activity-history".to_string(),
+        "disable-location-tracking".to_string(),
+        "disable-recall-user".to_string(),
         "flush-dns-cache".to_string(),
+        "dism-start-component-cleanup".to_string(),
+        "dism-check-netfx3".to_string(),
+        "dism-check-directplay".to_string(),
+        "set-dns-cloudflare".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
+        "disable-storage-sense-auto-cleanup".to_string(),
+        "set-visual-effects-gamer-minimal".to_string(),
         "disable-transparency".to_string(),
         "disable-window-animations".to_string(),
         "disable-visual-shadows".to_string(),
@@ -1160,11 +1781,29 @@ fn allowed_action_ids() -> Vec<String> {
         "disable-game-dvr".to_string(),
         "enable-game-dvr".to_string(),
         "disable-startup-delay".to_string(),
+        "disable-advertising-id".to_string(),
+        "disable-tailored-experiences".to_string(),
+        "disable-consumer-features".to_string(),
+        "disable-activity-history".to_string(),
+        "disable-location-tracking".to_string(),
+        "disable-storage-sense-auto-cleanup".to_string(),
+        "disable-recall-user".to_string(),
         "flush-dns-cache".to_string(),
+        "dism-start-component-cleanup".to_string(),
+        "dism-check-netfx3".to_string(),
+        "dism-check-directplay".to_string(),
+        "dism-enable-directplay".to_string(),
+        "allow-hermes-defender-exclusion".to_string(),
+        "set-dns-cloudflare".to_string(),
+        "set-dns-google".to_string(),
+        "set-dns-opendns".to_string(),
+        "set-dns-quad9".to_string(),
+        "set-dns-adguard".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
         "set-balanced-power-plan".to_string(),
         "set-power-saver-power-plan".to_string(),
+        "set-visual-effects-gamer-minimal".to_string(),
         "disable-transparency".to_string(),
         "disable-window-animations".to_string(),
         "disable-visual-shadows".to_string(),
@@ -1196,11 +1835,15 @@ fn build_snapshot_request(plans: &[AdvancedPlan], dry_run: bool) -> RestoreCreat
     }
 }
 
-fn validate_plans_for_apply(plans: &[AdvancedPlan], extreme_mode: bool) -> Result<(), String> {
+fn validate_plans_for_apply(
+    plans: &[AdvancedPlan],
+    extreme_mode: bool,
+    dry_run: bool,
+) -> Result<(), String> {
     for plan in plans {
-        if plan.action.requires_admin {
+        if plan.action.requires_admin && !dry_run && !is_process_elevated() {
             return Err(format!(
-                "{} exige administrador e deve ser executada em fluxo dedicado.",
+                "{} exige administrador. Abra o Hermes como administrador para aplicar esta acao.",
                 plan.action.title
             ));
         }
@@ -1261,6 +1904,20 @@ fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
             }
             Ok(())
         }
+        AdvancedOperation::DnsProvider { servers, .. } => {
+            if is_allowed_dns_servers(servers) {
+                Ok(())
+            } else {
+                Err("Provedor DNS fora da allowlist Hermes.".to_string())
+            }
+        }
+        AdvancedOperation::DefenderPathExclusion { path, .. } => {
+            if is_allowed_hermes_executable_path(path) {
+                Ok(())
+            } else {
+                Err("Exclusao do Defender fora da allowlist Hermes.".to_string())
+            }
+        }
         AdvancedOperation::Cmd { program, args, .. } => {
             if is_allowed_native_command(program, args) {
                 Ok(())
@@ -1292,10 +1949,72 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
                 "startupdelayinmsec"
             )
             | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\advertisinginfo",
+                "enabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\privacy",
+                "tailoredexperienceswithdiagnosticdataenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "contentdeliveryallowed"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "oempreinstalledappsenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "preinstalledappsenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "silentinstalledappsenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "systempanesuggestionsenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "subscribedcontent-338388enabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\contentdeliverymanager",
+                "subscribedcontent-338389enabled"
+            )
+            | (
+                "hkcu:\\software\\policies\\microsoft\\windows\\system",
+                "publishuseractivities"
+            )
+            | (
+                "hkcu:\\software\\policies\\microsoft\\windows\\system",
+                "uploaduseractivities"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\capabilityaccessmanager\\consentstore\\location",
+                "value"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\storagesense\\parameters\\storagepolicy",
+                "01"
+            )
+            | (
+                "hkcu:\\software\\policies\\microsoft\\windows\\windowsai",
+                "disableaidataanalysis"
+            )
+            | (
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
                 "enabletransparency"
             )
+            | ("hkcu:\\control panel\\desktop", "dragfullwindows")
+            | ("hkcu:\\control panel\\desktop", "fontsmoothing")
             | ("hkcu:\\control panel\\desktop\\windowmetrics", "minanimate")
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
+                "iconsonly"
+            )
             | (
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\advanced",
                 "taskbaranimations"
@@ -1312,6 +2031,7 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\visualeffects",
                 "visualfxsetting"
             )
+            | ("hkcu:\\software\\microsoft\\windows\\dwm", "enableaeropeek")
     )
 }
 
@@ -1400,6 +2120,59 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                     command_preview: Some("No-op".to_string()),
                     status: RestoreRollbackActionStatus::Pending,
                 }),
+            AdvancedOperation::DnsProvider {
+                provider_label,
+                servers,
+                previous_interfaces,
+                ..
+            } => RestoreRollbackAction {
+                id: format!("rollback-{}-{}", plan.action.id, index + 1),
+                action_type: RestoreRollbackActionType::Custom,
+                target: "dns-active-adapters".to_string(),
+                description: format!(
+                    "Restaurar DNS anterior apos aplicar {provider_label}. Interfaces capturadas: {}.",
+                    previous_interfaces.len()
+                ),
+                previous_value: Some(previous_dns_state(previous_interfaces)),
+                backup_path: None,
+                command_preview: Some(format!(
+                    "Set-DnsClientServerAddress -ServerAddresses {}",
+                    servers.join(",")
+                )),
+                status: RestoreRollbackActionStatus::Pending,
+            },
+            AdvancedOperation::DefenderPathExclusion {
+                path,
+                already_excluded,
+            } => {
+                if *already_excluded {
+                    RestoreRollbackAction {
+                        id: format!("rollback-{}-{}", plan.action.id, index + 1),
+                        action_type: RestoreRollbackActionType::Noop,
+                        target: path.clone(),
+                        description:
+                            "Exclusao do Defender ja existia antes do Hermes executar a acao."
+                                .to_string(),
+                        previous_value: Some("already-excluded".to_string()),
+                        backup_path: None,
+                        command_preview: Some("No-op".to_string()),
+                        status: RestoreRollbackActionStatus::Pending,
+                    }
+                } else {
+                    RestoreRollbackAction {
+                        id: format!("rollback-{}-{}", plan.action.id, index + 1),
+                        action_type: RestoreRollbackActionType::RemoveDefenderExclusion,
+                        target: path.clone(),
+                        description:
+                            "Remover a exclusao do executavel Hermes no Windows Defender."
+                                .to_string(),
+                        previous_value: Some("not-excluded".to_string()),
+                        backup_path: None,
+                        command_preview: Some("Remove-MpPreference -ExclusionPath".to_string()),
+                        status: RestoreRollbackActionStatus::Pending,
+                    }
+                }
+            }
             AdvancedOperation::Cmd { transient, .. } => RestoreRollbackAction {
                 id: format!("rollback-{}-{}", plan.action.id, index + 1),
                 action_type: RestoreRollbackActionType::Noop,
@@ -1475,6 +2248,31 @@ fn plan_to_previous_state(plan: &AdvancedPlan) -> Vec<RestorePreviousState> {
                 source: "powercfg /GETACTIVESCHEME".to_string(),
                 captured: previous_guid.is_some(),
             },
+            AdvancedOperation::DnsProvider {
+                provider_id,
+                previous_interfaces,
+                ..
+            } => RestorePreviousState {
+                key: format!("{}:dns", plan.action.id),
+                category: RestorePreviousStateCategory::Metadata,
+                value: previous_dns_state(previous_interfaces),
+                source: format!("Get-DnsClientServerAddress antes de {provider_id}"),
+                captured: !previous_interfaces.is_empty(),
+            },
+            AdvancedOperation::DefenderPathExclusion {
+                path,
+                already_excluded,
+            } => RestorePreviousState {
+                key: format!("{}:defender-exclusion", plan.action.id),
+                category: RestorePreviousStateCategory::Metadata,
+                value: if *already_excluded {
+                    "already-excluded".to_string()
+                } else {
+                    "not-excluded".to_string()
+                },
+                source: format!("Get-MpPreference ExclusionPath para {path}"),
+                captured: true,
+            },
             AdvancedOperation::Cmd { program, args, .. } => RestorePreviousState {
                 key: format!("{}:cmd:{}", plan.action.id, index + 1),
                 category: RestorePreviousStateCategory::Metadata,
@@ -1499,6 +2297,8 @@ fn previous_state_category_for_operation(
             _ => RestorePreviousStateCategory::Registry,
         },
         AdvancedOperation::PowerPlan { .. } => RestorePreviousStateCategory::PowerPlan,
+        AdvancedOperation::DnsProvider { .. } => RestorePreviousStateCategory::Metadata,
+        AdvancedOperation::DefenderPathExclusion { .. } => RestorePreviousStateCategory::Metadata,
         AdvancedOperation::Cmd { .. } => RestorePreviousStateCategory::Metadata,
     }
 }
@@ -1578,6 +2378,11 @@ fn apply_operation(operation: &AdvancedOperation) -> Result<(), String> {
         AdvancedOperation::PowerPlan { guid, .. } => {
             run_native_command("powercfg", &["/S".to_string(), guid.clone()]).map(|_| ())
         }
+        AdvancedOperation::DnsProvider { servers, .. } => set_dns_provider(servers),
+        AdvancedOperation::DefenderPathExclusion {
+            path,
+            already_excluded,
+        } => set_defender_path_exclusion(path, *already_excluded),
         AdvancedOperation::Cmd { program, args, .. } => {
             run_native_command(program, args).map(|_| ())
         }
@@ -1603,6 +2408,46 @@ fn set_registry_string(path: &str, name: &str, value: &str) -> Result<(), String
     run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS).map(|_| ())
 }
 
+fn set_dns_provider(servers: &[String]) -> Result<(), String> {
+    if !is_allowed_dns_servers(servers) {
+        return Err("Provedor DNS fora da allowlist Hermes.".to_string());
+    }
+
+    let server_args = servers
+        .iter()
+        .map(|server| format!("'{}'", ps_escape(server)))
+        .collect::<Vec<_>>()
+        .join(",");
+    let script = format!(
+        r#"$ErrorActionPreference = 'Stop'
+$servers = @({server_args})
+$adapters = @(Get-NetIPConfiguration | Where-Object {{ $_.IPv4DefaultGateway -ne $null }} | Select-Object -ExpandProperty InterfaceAlias -Unique)
+if ($adapters.Count -eq 0) {{ throw 'Nenhum adaptador ativo com gateway foi encontrado.' }}
+foreach ($alias in $adapters) {{
+  Set-DnsClientServerAddress -InterfaceAlias $alias -ServerAddresses $servers
+}}
+ipconfig /flushdns | Out-Null
+'ok'"#
+    );
+    run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS).map(|_| ())
+}
+
+fn set_defender_path_exclusion(path: &str, already_excluded: bool) -> Result<(), String> {
+    if !is_allowed_hermes_executable_path(path) {
+        return Err("Exclusao do Defender bloqueada: alvo nao e o executavel Hermes.".to_string());
+    }
+
+    if already_excluded {
+        return Ok(());
+    }
+
+    let path_arg = ps_escape(path);
+    let script = format!(
+        "$ErrorActionPreference = 'Stop'; $path = '{path_arg}'; if (!(Test-Path -LiteralPath $path)) {{ throw 'Executavel Hermes nao encontrado' }}; $prefs = Get-MpPreference; if (@($prefs.ExclusionPath) -contains $path) {{ 'already' }} else {{ Add-MpPreference -ExclusionPath $path; 'ok' }}"
+    );
+    run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS).map(|_| ())
+}
+
 fn read_registry_string(path: &str, name: &str) -> Result<Option<String>, String> {
     let path_arg = ps_escape(path);
     let name_arg = ps_escape(name);
@@ -1615,6 +2460,47 @@ fn read_registry_string(path: &str, name: &str) -> Result<Option<String>, String
     } else {
         Ok(Some(output))
     }
+}
+
+fn is_allowed_dns_servers(servers: &[String]) -> bool {
+    let normalized = servers
+        .iter()
+        .map(|item| item.trim().to_string())
+        .collect::<Vec<_>>();
+    matches!(
+        normalized.as_slice(),
+        [a, b]
+            if (a == "1.1.1.1" && b == "1.0.0.1")
+                || (a == "8.8.8.8" && b == "8.8.4.4")
+                || (a == "208.67.222.222" && b == "208.67.220.220")
+                || (a == "9.9.9.9" && b == "149.112.112.112")
+                || (a == "94.140.14.14" && b == "94.140.15.15")
+    )
+}
+
+fn current_dns_state(state: &RawAdvancedState) -> String {
+    if state.dns_interfaces.is_empty() {
+        return "DNS atual nao capturado".to_string();
+    }
+    previous_dns_state(&state.dns_interfaces)
+}
+
+fn previous_dns_state(interfaces: &[DnsInterfaceState]) -> String {
+    if interfaces.is_empty() {
+        return "Nenhuma interface ativa capturada".to_string();
+    }
+    interfaces
+        .iter()
+        .map(|item| {
+            let servers = if item.server_addresses.is_empty() {
+                "automatico/DHCP".to_string()
+            } else {
+                item.server_addresses.join(",")
+            };
+            format!("{}={servers}", item.interface_alias)
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn run_native_command(program: &str, args: &[String]) -> Result<String, String> {
@@ -1660,6 +2546,34 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
                             && is_allowed_power_plan_guid(guid)
                 )
         }
+        "dism" | "dism.exe" => {
+            normalized_args
+                == [
+                    "/online".to_string(),
+                    "/cleanup-image".to_string(),
+                    "/startcomponentcleanup".to_string(),
+                ]
+                || normalized_args
+                    == [
+                        "/online".to_string(),
+                        "/get-featureinfo".to_string(),
+                        "/featurename:netfx3".to_string(),
+                    ]
+                || normalized_args
+                    == [
+                        "/online".to_string(),
+                        "/get-featureinfo".to_string(),
+                        "/featurename:directplay".to_string(),
+                    ]
+                || normalized_args
+                    == [
+                        "/online".to_string(),
+                        "/enable-feature".to_string(),
+                        "/featurename:directplay".to_string(),
+                        "/all".to_string(),
+                        "/norestart".to_string(),
+                    ]
+        }
         "rundll32.exe" => {
             normalized_args
                 == [
@@ -1679,6 +2593,40 @@ fn is_allowed_power_plan_guid(guid: &str) -> bool {
     ]
     .iter()
     .any(|allowed| guid.eq_ignore_ascii_case(allowed))
+}
+
+fn current_hermes_executable_path() -> Result<String, String> {
+    let path = std::env::current_exe()
+        .map_err(|err| format!("Nao foi possivel localizar o executavel Hermes: {err}"))?;
+    Ok(path.to_string_lossy().replace('/', "\\"))
+}
+
+fn is_allowed_hermes_executable_path(path: &str) -> bool {
+    let normalized = path.trim().replace('/', "\\").to_ascii_lowercase();
+    let bytes = normalized.as_bytes();
+    normalized.ends_with("\\hermes-optimizer.exe")
+        && bytes.len() > "\\hermes-optimizer.exe".len() + 3
+        && bytes.get(1) == Some(&b':')
+        && bytes.get(2) == Some(&b'\\')
+}
+
+fn paths_equal_ignore_case(left: &str, right: &str) -> bool {
+    left.trim()
+        .replace('/', "\\")
+        .eq_ignore_ascii_case(&right.trim().replace('/', "\\"))
+}
+
+fn is_process_elevated() -> bool {
+    if !cfg!(target_os = "windows") {
+        return false;
+    }
+
+    let script = r#"$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = [Security.Principal.WindowsPrincipal]::new($identity)
+if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { 'true' } else { 'false' }"#;
+    run_powershell(script, ADVANCED_COMMAND_TIMEOUT_SECONDS)
+        .map(|output| output.trim().eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
 }
 
 fn normalize_graphics_preference_path(path: &str) -> Result<String, String> {
@@ -1825,14 +2773,34 @@ fn fallback_state() -> RawAdvancedState {
         game_dvr_enabled: None,
         app_capture_enabled: None,
         startup_delay_in_msec: None,
+        advertising_info_enabled: None,
+        tailored_experiences_enabled: None,
+        content_delivery_allowed: None,
+        oem_preinstalled_apps_enabled: None,
+        preinstalled_apps_enabled: None,
+        silent_installed_apps_enabled: None,
+        system_pane_suggestions_enabled: None,
+        subscribed_content_338388_enabled: None,
+        subscribed_content_338389_enabled: None,
+        publish_user_activities: None,
+        upload_user_activities: None,
+        location_consent_value: None,
+        storage_sense_enabled: None,
+        recall_disable_ai_data_analysis: None,
         enable_transparency: None,
         min_animate: None,
+        drag_full_windows: None,
+        font_smoothing: None,
         taskbar_animations: None,
+        icons_only: None,
         listview_alpha_select: None,
         listview_shadow: None,
+        enable_aero_peek: None,
         visual_fx_setting: None,
+        dns_interfaces: Vec::new(),
         power_plan_guid: Some("Indisponivel".to_string()),
         power_plan_name: Some("Indisponivel".to_string()),
+        defender_exclusion_paths: Vec::new(),
     }
 }
 
@@ -1893,14 +2861,31 @@ function Get-Dword($path, $name) {
   } catch { return $null }
 }
 
+function Get-StringValue($path, $name) {
+  try {
+    $item = Get-ItemProperty -Path $path -Name $name -ErrorAction SilentlyContinue
+    if ($null -eq $item) { return $null }
+    return [string]$item.$name
+  } catch { return $null }
+}
+
 $gameBarPath = 'HKCU:\Software\Microsoft\GameBar'
 $gameConfigPath = 'HKCU:\System\GameConfigStore'
 $gameDvrPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR'
 $serializePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize'
+$advertisingPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
+$privacyPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy'
+$contentDeliveryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+$activityHistoryPath = 'HKCU:\Software\Policies\Microsoft\Windows\System'
+$locationConsentPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
+$storageSensePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy'
+$windowsAiPath = 'HKCU:\Software\Policies\Microsoft\Windows\WindowsAI'
 $personalizePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+$desktopPath = 'HKCU:\Control Panel\Desktop'
 $windowMetricsPath = 'HKCU:\Control Panel\Desktop\WindowMetrics'
 $advancedPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $visualFxPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects'
+$dwmPath = 'HKCU:\Software\Microsoft\Windows\DWM'
 
 $powerPlanGuid = $null
 $powerPlanName = $null
@@ -1911,6 +2896,32 @@ try {
     $powerPlanName = $matches[2]
   }
 } catch {}
+
+$dnsInterfaces = @()
+try {
+  $dnsInterfaces = @(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null } | ForEach-Object {
+    $alias = [string]$_.InterfaceAlias
+    $servers = @()
+    try {
+      $servers = @((Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses)
+    } catch {
+      $servers = @()
+    }
+    [pscustomobject]@{
+      interfaceAlias = $alias
+      serverAddresses = $servers
+    }
+  })
+} catch {
+  $dnsInterfaces = @()
+}
+
+$defenderExclusionPaths = @()
+try {
+  $defenderExclusionPaths = @((Get-MpPreference).ExclusionPath)
+} catch {
+  $defenderExclusionPaths = @()
+}
 
 $minAnimateValue = $null
 try {
@@ -1925,14 +2936,34 @@ try {
   gameDvrEnabled = Get-Dword $gameConfigPath 'GameDVR_Enabled'
   appCaptureEnabled = Get-Dword $gameDvrPath 'AppCaptureEnabled'
   startupDelayInMsec = Get-Dword $serializePath 'StartupDelayInMSec'
+  advertisingInfoEnabled = Get-Dword $advertisingPath 'Enabled'
+  tailoredExperiencesEnabled = Get-Dword $privacyPath 'TailoredExperiencesWithDiagnosticDataEnabled'
+  contentDeliveryAllowed = Get-Dword $contentDeliveryPath 'ContentDeliveryAllowed'
+  oemPreinstalledAppsEnabled = Get-Dword $contentDeliveryPath 'OemPreInstalledAppsEnabled'
+  preinstalledAppsEnabled = Get-Dword $contentDeliveryPath 'PreInstalledAppsEnabled'
+  silentInstalledAppsEnabled = Get-Dword $contentDeliveryPath 'SilentInstalledAppsEnabled'
+  systemPaneSuggestionsEnabled = Get-Dword $contentDeliveryPath 'SystemPaneSuggestionsEnabled'
+  subscribedContent338388Enabled = Get-Dword $contentDeliveryPath 'SubscribedContent-338388Enabled'
+  subscribedContent338389Enabled = Get-Dword $contentDeliveryPath 'SubscribedContent-338389Enabled'
+  publishUserActivities = Get-Dword $activityHistoryPath 'PublishUserActivities'
+  uploadUserActivities = Get-Dword $activityHistoryPath 'UploadUserActivities'
+  locationConsentValue = Get-StringValue $locationConsentPath 'Value'
+  storageSenseEnabled = Get-Dword $storageSensePath '01'
+  recallDisableAiDataAnalysis = Get-Dword $windowsAiPath 'DisableAIDataAnalysis'
   enableTransparency = Get-Dword $personalizePath 'EnableTransparency'
   minAnimate = $minAnimateValue
+  dragFullWindows = Get-StringValue $desktopPath 'DragFullWindows'
+  fontSmoothing = Get-StringValue $desktopPath 'FontSmoothing'
   taskbarAnimations = Get-Dword $advancedPath 'TaskbarAnimations'
+  iconsOnly = Get-Dword $advancedPath 'IconsOnly'
   listviewAlphaSelect = Get-Dword $advancedPath 'ListviewAlphaSelect'
   listviewShadow = Get-Dword $advancedPath 'ListviewShadow'
+  enableAeroPeek = Get-Dword $dwmPath 'EnableAeroPeek'
   visualFxSetting = Get-Dword $visualFxPath 'VisualFXSetting'
+  dnsInterfaces = $dnsInterfaces
   powerPlanGuid = $powerPlanGuid
   powerPlanName = $powerPlanName
+  defenderExclusionPaths = $defenderExclusionPaths
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
 

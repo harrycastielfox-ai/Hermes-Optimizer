@@ -751,6 +751,12 @@ fn recommendation_for(
     if is_critical_process(&normalized) {
         return GamerRecommendation::NeverClose;
     }
+    if is_primary_discord_process(&normalized) {
+        return GamerRecommendation::NeverClose;
+    }
+    if is_primary_steam_process(&normalized) {
+        return GamerRecommendation::NeverClose;
+    }
 
     match category {
         GamerProcessCategory::Game | GamerProcessCategory::System => {
@@ -777,6 +783,17 @@ fn recommendation_for(
             GamerRecommendation::Keep
         }
     }
+}
+
+fn is_primary_discord_process(normalized_name: &str) -> bool {
+    matches!(normalized_name, "discord.exe" | "discord")
+}
+
+fn is_primary_steam_process(normalized_name: &str) -> bool {
+    matches!(
+        normalized_name,
+        "steam.exe" | "steam" | "steamwebhelper.exe" | "steamwebhelper"
+    )
 }
 
 fn reason_for(category: &GamerProcessCategory, recommendation: &GamerRecommendation) -> String {
@@ -1344,6 +1361,8 @@ fn looks_like_game_path(executable_path: Option<&str>) -> bool {
             "\\ubisoft\\",
             "\\unrealengine\\",
             "\\unreal engine\\",
+            "\\steamapps\\common\\fate trigger\\",
+            "\\steamapps\\common\\fatetrigger\\",
             "\\fatetrigger\\",
             "\\fate trigger\\",
         ],
@@ -1452,6 +1471,8 @@ fn game_patterns() -> &'static [&'static str] {
         "fatetrigger",
         "fate_trigger",
         "fate-trigger",
+        "steamapps\\common\\fate trigger",
+        "steamapps\\common\\fatetrigger",
         "fatetrigger-win64-shipping",
         "fate_trigger-win64-shipping",
         "unrealengine",
