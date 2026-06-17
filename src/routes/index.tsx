@@ -126,8 +126,8 @@ function Dashboard() {
                   Dashboard Hermes
                 </h1>
                 <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
-                  Status central do PC com coleta local. Ações reais exigem confirmação, snapshot e
-                  rollback.
+                  Status central do PC com coleta local. O Dashboard acompanha a maquina; a area
+                  Otimizar cuida do plano guiado.
                 </p>
               </div>
               <div className="relative flex w-full max-w-[340px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-border/60 bg-card/95 px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_34px_-24px_rgba(37,99,235,0.28)] xl:w-[330px]">

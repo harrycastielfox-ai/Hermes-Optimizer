@@ -10,7 +10,7 @@ import {
   Gauge,
   HardDrive,
   Loader2,
-  RotateCcw,
+  Play,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -20,28 +20,18 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { refreshAdvisorAiReport, type AdvisorAiReport } from "@/lib/advisor-ai";
-import { refreshCleanScanReport, type CleanScanReport } from "@/lib/clean";
-import { refreshDiagnosticReport, type DiagnosticReport } from "@/lib/diagnostic";
-import { loadGamerReport, type GamerReport } from "@/lib/gamer";
-import { runOptimizeNowPlan, type OptimizeNowPlan } from "@/lib/optimizer";
-import { refreshPerformanceReport, type PerformanceReport } from "@/lib/performance";
-import { applyHermesProfile, loadProfilesCatalog, type ProfileApplyResult } from "@/lib/profiles";
+import {
+  runOptimizeAllPhase,
+  type OptimizeAllGameSelection,
+  type OptimizeAllGameTarget,
+  type OptimizeAllPhaseId,
+  type OptimizeAllReports,
+} from "@/lib/optimize-all";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
-import { refreshStartupReport, type StartupReport } from "@/lib/startup";
 
-type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
+type RunStatus = "idle" | "running" | "awaitingGame" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "failed" | "cancelled";
-type PhaseId =
-  | "plan"
-  | "safety"
-  | "components"
-  | "cleanup"
-  | "startup"
-  | "performance"
-  | "gamer"
-  | "profile"
-  | "manual";
+type PhaseId = OptimizeAllPhaseId;
 
 type OptimizePhase = {
   id: PhaseId;
@@ -59,27 +49,31 @@ type LogItem = {
   message: string;
 };
 
-type Reports = {
-  diagnostic?: DiagnosticReport;
-  clean?: CleanScanReport;
-  startup?: StartupReport;
-  performance?: PerformanceReport;
-  gamer?: GamerReport;
-  advisor?: AdvisorAiReport;
-  plan?: OptimizeNowPlan;
-  profileResult?: ProfileApplyResult;
+type PlanActionStatus = "ready" | "ok" | "pending" | "unavailable";
+
+type PlanAction = {
+  id: string;
+  title: string;
+  detail: string;
+  status: PlanActionStatus;
 };
 
 const phaseTemplates: OptimizePhase[] = [
   phase("plan", "Plano inteligente", "Orquestrador + Hermes IA", BrainCircuit, 14),
-  phase("safety", "Seguranca e rollback", "Snapshot, logs e travas", ShieldCheck, 10),
+  phase("safety", "Permissoes e confirmacao", "Modo teste, logs e controle", ShieldCheck, 10),
   phase("components", "Componentes essenciais", "VC++, DirectX e dependencias", Wrench, 18),
   phase("cleanup", "Limpeza segura", "Temporarios, cache e logs", BrushCleaning, 26),
   phase("startup", "Inicializacao", "Apps de alto impacto", Zap, 18),
   phase("performance", "Performance", "Energia, Game Mode e rede", Gauge, 22),
   phase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", Gamepad2, 18),
   phase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", Cpu, 16),
-  phase("manual", "Ferramentas manuais", "Central, Reparo e Personalizado", SlidersHorizontal, 8),
+  phase(
+    "manual",
+    "Avancado guiado",
+    "Comandos allowlistados e ajustes finos",
+    SlidersHorizontal,
+    8,
+  ),
 ];
 
 const TOTAL_PLANNED_ACTIONS = phaseTemplates.reduce(
@@ -98,12 +92,20 @@ export function SmartOptimizeModal({
 }) {
   const [phases, setPhases] = useState<OptimizePhase[]>(() => resetPhases());
   const [logs, setLogs] = useState<LogItem[]>([]);
-  const [reports, setReports] = useState<Reports>({});
+  const [reports, setReports] = useState<OptimizeAllReports>({});
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
   const [currentStatus, setCurrentStatus] = useState("Aguardando otimizacao.");
   const [recommendedProfileId, setRecommendedProfileId] = useState("seguro");
+  const [gameTargets, setGameTargets] = useState<OptimizeAllGameTarget[]>([]);
+  const [selectedGameTarget, setSelectedGameTarget] = useState<OptimizeAllGameTarget | null>(null);
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
+  const resumeState = useRef<{
+    runId: number;
+    phaseIndex: number;
+    reports: OptimizeAllReports;
+    recommendedProfileId: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -116,6 +118,9 @@ export function SmartOptimizeModal({
     setPhases(resetPhases());
     setLogs([]);
     setReports({});
+    setGameTargets([]);
+    setSelectedGameTarget(null);
+    resumeState.current = null;
     setRunStatus("running");
     setCurrentStatus("Preparando plano unico do Hermes.");
     void runSmartOptimization(runId);
@@ -131,157 +136,122 @@ export function SmartOptimizeModal({
     .filter((item) => item.status === "completed" || item.status === "unavailable")
     .reduce((total, item) => total + item.plannedActions, 0);
   const activePhase = phases.find((item) => item.status === "running");
-  const canCancel = runStatus === "running" && !cancelRequested.current;
-  const canClose = runStatus !== "running" || cancelRequested.current;
+  const canCancel =
+    (runStatus === "running" || runStatus === "awaitingGame") && !cancelRequested.current;
+  const canClose =
+    (runStatus !== "running" && runStatus !== "awaitingGame") || cancelRequested.current;
+  const planActions = useMemo(
+    () => buildOptimizationPlan(reports, recommendedProfileId),
+    [reports, recommendedProfileId],
+  );
 
   async function runSmartOptimization(runId: number) {
-    const nextReports: Reports = {};
-
     try {
-      await executePhase(runId, "plan", async () => {
-        const [plan, advisor, diagnostic] = await Promise.all([
-          runOptimizeNowPlan(),
-          refreshAdvisorAiReport(),
-          refreshDiagnosticReport(),
-        ]);
-
-        nextReports.plan = plan;
-        nextReports.advisor = advisor;
-        nextReports.diagnostic = diagnostic;
-        setReports({ ...nextReports });
-
-        return [
-          `${plan.summary.totalStages} etapa(s) do orquestrador local`,
-          `${advisor.recommendations.length} recomendacao(oes) da Hermes IA`,
-          `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "safety", async () => [
-        HERMES_SAFE_TEST_MODE
-          ? "Modo atual: DRY-RUN bloqueado"
-          : "Modo atual: real com confirmacao",
-        "Snapshot e rollback obrigatorios antes de alteracoes reais",
-        "Sem telemetria, nuvem ou processo residente",
-      ]);
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "components", async () => [
-        "VC++ 2005/2010/2015+ entram como verificacao guiada",
-        "Dependencias so instalam quando ausentes ou corrompidas",
-        "Nada baixa ou instala no modo seguro atual",
-      ]);
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "cleanup", async () => {
-        const clean = await refreshCleanScanReport();
-        nextReports.clean = clean;
-        setReports({ ...nextReports });
-
-        return [
-          `${formatGb(clean.totalGb)} GB candidatos a revisao`,
-          `${clean.items.length} area(s) mapeada(s)`,
-          "Downloads, Desktop e documentos protegidos",
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "startup", async () => {
-        const startup = await refreshStartupReport();
-        nextReports.startup = startup;
-        setReports({ ...nextReports });
-
-        return [
-          `${startup.totalItems} item(ns) de inicializacao`,
-          `${startup.highImpactCount} alto impacto`,
-          "Desativacao real exige confirmacao e reversao",
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "performance", async () => {
-        const performance = await refreshPerformanceReport();
-        nextReports.performance = performance;
-        setReports({ ...nextReports });
-
-        return [
-          `Plano atual: ${performance.powerPlan.activeSchemeName}`,
-          `Modo Jogo: ${performance.gameMode.status}`,
-          "Rede/Winsock ficam em ferramentas guiadas",
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "gamer", async () => {
-        const gamer = await loadGamerReport();
-        nextReports.gamer = gamer;
-        setReports({ ...nextReports });
-
-        return [
-          `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
-          `${gamer.summary.protectedCount} processo(s) protegido(s)`,
-          "Discord, launcher e processos criticos ficam protegidos",
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "profile", async () => {
-        const catalog = await loadProfilesCatalog();
-        const profileId = pickProfile(
-          nextReports,
-          catalog.profiles.map((item) => item.id),
-        );
-        setRecommendedProfileId(profileId);
-
-        const profileResult = await tryApplyProfileDryRun(profileId);
-        if (profileResult) {
-          nextReports.profileResult = profileResult;
-          setReports({ ...nextReports });
-        }
-
-        return [
-          `Perfil sugerido: ${profileLabel(profileId)}`,
-          profileResult
-            ? `${profileResult.engineResults.length} engine(s) validadas`
-            : "Aplicacao simulada indisponivel fora do backend Tauri",
-          HERMES_SAFE_TEST_MODE
-            ? "Nenhuma alteracao real aplicada"
-            : "Pronto para confirmacao real",
-        ];
-      });
-
-      if (shouldStop(runId)) return;
-
-      await executePhase(runId, "manual", async () => [
-        "Central de Otimizacao pronta para ajustes finos",
-        "Limpeza, Inicializacao, Gamer e Reparo seguem acessiveis",
-        "Usuario avancado ainda controla cada ferramenta manual",
-      ]);
-
-      if (activeRun.current !== runId) {
-        return;
-      }
-
-      setRunStatus("completed");
-      setCurrentStatus("Plano unico concluido. Nenhuma alteracao real foi aplicada.");
-      appendLog("info", "Resolver Agora finalizado com seguranca.");
+      await runPhases(runId, 0, {}, recommendedProfileId);
     } catch (error) {
       if (activeRun.current !== runId) {
         return;
       }
 
       setRunStatus("failed");
-      setCurrentStatus("Otimizacao interrompida antes de qualquer alteracao real.");
+      setCurrentStatus("Otimizacao interrompida em modo teste.");
       appendLog("error", errorMessage(error));
     }
+  }
+
+  async function runPhases(
+    runId: number,
+    startIndex: number,
+    initialReports: OptimizeAllReports,
+    initialRecommendedProfileId: string,
+    gameSelection?: OptimizeAllGameSelection,
+  ) {
+    let nextReports: OptimizeAllReports = initialReports;
+    let nextRecommendedProfileId = initialRecommendedProfileId;
+
+    for (let index = startIndex; index < phaseTemplates.length; index += 1) {
+      const template = phaseTemplates[index];
+      let pausedForGame = false;
+
+      if (shouldStop(runId)) return;
+
+      await executePhase(runId, template.id, async () => {
+        const result = await runOptimizeAllPhase(template.id, {
+          reports: nextReports,
+          recommendedProfileId: nextRecommendedProfileId,
+          gameSelection: template.id === "gamer" ? gameSelection : undefined,
+        });
+
+        nextReports = { ...nextReports, ...result.reports };
+        if (result.recommendedProfileId) {
+          nextRecommendedProfileId = result.recommendedProfileId;
+          setRecommendedProfileId(result.recommendedProfileId);
+        }
+        if (result.gameTargets) {
+          setGameTargets(result.gameTargets);
+        }
+        setReports({ ...nextReports });
+
+        if (result.requiresGameSelection && result.gameTargets?.length) {
+          pausedForGame = true;
+          resumeState.current = {
+            runId,
+            phaseIndex: index,
+            reports: nextReports,
+            recommendedProfileId: nextRecommendedProfileId,
+          };
+          setRunStatus("awaitingGame");
+          setCurrentStatus("Escolha o jogo alvo para continuar.");
+          appendLog("info", "Aguardando escolha do jogo alvo.");
+        }
+
+        return result.outputs;
+      });
+
+      if (pausedForGame || shouldStop(runId)) {
+        return;
+      }
+    }
+
+    if (activeRun.current !== runId) {
+      return;
+    }
+
+    setRunStatus("completed");
+    setCurrentStatus("Plano unico concluido. Modo teste mantido.");
+    appendLog("info", "Otimizar Tudo finalizado em modo teste.");
+  }
+
+  function chooseGameTarget(target: OptimizeAllGameTarget) {
+    const resume = resumeState.current;
+    if (!resume) {
+      return;
+    }
+
+    resumeState.current = null;
+    setSelectedGameTarget(target);
+    setRunStatus("running");
+    setCurrentStatus(`Montando plano Gamer para ${target.label}.`);
+    appendLog("info", `Jogo alvo escolhido: ${target.label}.`);
+    void runPhases(resume.runId, resume.phaseIndex, resume.reports, resume.recommendedProfileId, {
+      target,
+    });
+  }
+
+  function skipGameSelection() {
+    const resume = resumeState.current;
+    if (!resume) {
+      return;
+    }
+
+    resumeState.current = null;
+    setSelectedGameTarget(null);
+    setRunStatus("running");
+    setCurrentStatus("Continuando sem alvo Gamer especifico.");
+    appendLog("warning", "Selecao de jogo ignorada.");
+    void runPhases(resume.runId, resume.phaseIndex, resume.reports, resume.recommendedProfileId, {
+      skip: true,
+    });
   }
 
   async function executePhase(
@@ -318,6 +288,7 @@ export function SmartOptimizeModal({
 
   function requestCancel() {
     cancelRequested.current = true;
+    resumeState.current = null;
     setRunStatus("cancelled");
     setCurrentStatus("Cancelamento solicitado. O Hermes nao iniciara novas fases.");
     setPhases((current) =>
@@ -405,15 +376,19 @@ export function SmartOptimizeModal({
             />
             <SummaryCard
               icon={Cpu}
-              label="Perfil"
-              value={profileLabel(recommendedProfileId)}
-              sub={reports.advisor?.summary.recommendedProfileReason ?? "Auto"}
+              label="Alvo"
+              value={selectedGameTarget?.label ?? profileLabel(recommendedProfileId)}
+              sub={
+                selectedGameTarget?.engineHint ??
+                reports.advisor?.summary.recommendedProfileReason ??
+                "Auto"
+              }
             />
             <SummaryCard
               icon={ShieldCheck}
               label="Modo"
-              value={HERMES_SAFE_TEST_MODE ? "Dry-run" : "Real"}
-              sub="Snapshot antes de mudar"
+              value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}
+              sub="Modo teste ativo"
             />
           </section>
 
@@ -422,12 +397,12 @@ export function SmartOptimizeModal({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <p className="text-sm font-bold">
-                  O Hermes avalia 150 acoes, mas nao aplica mudancas cegas.
+                  O Hermes avalia 150 acoes, mas o modo teste ainda nao executa alteracoes reais.
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  No modo atual, tudo roda como validacao segura. Quando o modo real for liberado,
-                  este mesmo botao deve pedir confirmacao final e criar rollback antes de qualquer
-                  alteracao.
+                  Quando o modo real for liberado, este botao deve executar apenas as funcoes que ja
+                  estiverem implementadas no Hermes. O que ainda nao existir ficara como
+                  indisponivel.
                 </p>
               </div>
             </div>
@@ -435,6 +410,15 @@ export function SmartOptimizeModal({
 
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
             <div className="space-y-3">
+              {runStatus === "awaitingGame" && (
+                <GameTargetPicker
+                  targets={gameTargets}
+                  selectedTarget={selectedGameTarget}
+                  onSelect={chooseGameTarget}
+                  onSkip={skipGameSelection}
+                />
+              )}
+
               <div className="rounded-2xl border border-border/70 bg-white/72 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -465,20 +449,12 @@ export function SmartOptimizeModal({
             <aside className="space-y-4">
               <div className="rounded-2xl border border-border/70 bg-white/72 p-4">
                 <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">
-                  CAMINHOS MANUAIS
+                  PLANO DO PC
                 </h3>
                 <div className="mt-3 space-y-2">
-                  <ManualLink icon={Gauge} title="Central completa" to="/central" />
-                  <ManualLink
-                    icon={Gamepad2}
-                    title="Perfil Gamer"
-                    to="/perfis"
-                    search={{ perfil: "gamer" }}
-                  />
-                  <ManualLink icon={BrushCleaning} title="Limpeza" to="/limpeza" />
-                  <ManualLink icon={Wrench} title="Reparar Windows" to="/reparar-windows" />
-                  <ManualLink icon={RotateCcw} title="Rollback" to="/reparar-windows" />
-                  <ManualLink icon={SlidersHorizontal} title="Personalizado" to="/personalizado" />
+                  {planActions.map((item) => (
+                    <PlanActionRow key={item.id} item={item} />
+                  ))}
                 </div>
               </div>
 
@@ -503,7 +479,7 @@ export function SmartOptimizeModal({
             <ShieldCheck className="h-4 w-4 text-success" />
             {HERMES_SAFE_TEST_MODE
               ? "Modo de teste: nenhuma alteracao real sera aplicada."
-              : "Modo real: confirmar antes de aplicar e salvar rollback."}
+              : "Modo real: executa funcoes implementadas com confirmacao."}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             {canCancel && (
@@ -534,7 +510,11 @@ export function SmartOptimizeModal({
               ) : (
                 <CheckCircle2 className="h-4 w-4" />
               )}
-              {runStatus === "running" ? "Executando" : "Concluir"}
+              {runStatus === "awaitingGame"
+                ? "Escolha o jogo"
+                : runStatus === "running"
+                  ? "Executando"
+                  : "Concluir"}
             </button>
           </div>
         </footer>
@@ -543,49 +523,112 @@ export function SmartOptimizeModal({
   );
 }
 
-async function tryApplyProfileDryRun(profileId: string) {
-  try {
-    return await applyHermesProfile({
-      profileId,
-      confirmed: false,
-      dryRun: true,
-      extremeConfirmed: false,
+function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): PlanAction[] {
+  const actions: PlanAction[] = [];
+
+  if (reports.diagnostic) {
+    actions.push({
+      id: "diagnostic",
+      title: "Diagnostico do PC",
+      detail: `Saude ${Math.round(reports.diagnostic.healthScore)}/100 analisada.`,
+      status: "ok",
     });
-  } catch (error) {
-    console.warn("Perfil recomendado indisponivel para dry-run.", error);
-    return null;
+  } else {
+    actions.push({
+      id: "diagnostic",
+      title: "Diagnostico do PC",
+      detail: "Aguardando coleta inicial.",
+      status: "pending",
+    });
   }
-}
 
-function pickProfile(reports: Reports, availableProfiles: string[]) {
-  const raw = reports.advisor?.summary.recommendedProfile?.toLowerCase() ?? "";
-  const candidates = [
-    ["extremo", "extremo"],
-    ["gamer", "gamer"],
-    ["jogo", "gamer"],
-    ["economia", "economia"],
-    ["trabalho", "trabalho"],
-    ["seguro", "seguro"],
-  ] as const;
-
-  for (const [needle, profileId] of candidates) {
-    if (raw.includes(needle) && availableProfiles.includes(profileId)) {
-      return profileId;
+  if (reports.clean) {
+    let detail = "Sem volume relevante encontrado.";
+    if (reports.cleanResult) {
+      detail = `${reports.cleanResult.plannedEntries} item(ns) validados pela engine.`;
+    } else if (reports.clean.totalGb > 0) {
+      detail = `${formatGb(reports.clean.totalGb)} GB encontrados para revisar.`;
     }
+
+    actions.push({
+      id: "cleanup",
+      title: "Limpeza segura",
+      detail,
+      status: reports.cleanResult || reports.clean.totalGb > 0 ? "ready" : "ok",
+    });
   }
 
-  if ((reports.gamer?.summary.detectedGames ?? 0) > 0 && availableProfiles.includes("gamer")) {
-    return "gamer";
+  if (reports.startup) {
+    let detail = `${reports.startup.totalItems} item(ns) monitorados.`;
+    if (reports.startupResult) {
+      detail = `${reports.startupResult.selectedItems} item(ns) validados pela engine.`;
+    } else if (reports.startup.highImpactCount > 0) {
+      detail = `${reports.startup.highImpactCount} item(ns) de alto impacto.`;
+    }
+
+    actions.push({
+      id: "startup",
+      title: "Inicializacao",
+      detail,
+      status: reports.startupResult || reports.startup.highImpactCount > 0 ? "ready" : "ok",
+    });
   }
 
-  if (
-    ((reports.startup?.highImpactCount ?? 0) > 0 || (reports.clean?.totalGb ?? 0) > 1) &&
-    availableProfiles.includes("trabalho")
-  ) {
-    return "trabalho";
+  if (reports.performance) {
+    actions.push({
+      id: "performance",
+      title: "Performance",
+      detail: reports.performanceResult
+        ? `${reports.performanceResult.appliedActions.length} ajuste(s) validados pela engine.`
+        : `Plano atual: ${reports.performance.powerPlan.activeSchemeName}.`,
+      status: "ready",
+    });
   }
 
-  return availableProfiles.includes("seguro") ? "seguro" : (availableProfiles[0] ?? "seguro");
+  if (reports.gamer) {
+    let detail = "Sem jogo alvo aberto. Selecao manual sera necessaria.";
+    if (reports.gamerResult) {
+      detail = `${reports.gamerResult.closedProcesses.length} processo(s) validados pela engine.`;
+    } else if (reports.gamer.summary.detectedGames > 0) {
+      detail = `${reports.gamer.summary.detectedGames} jogo(s) detectado(s).`;
+    }
+
+    actions.push({
+      id: "gamer",
+      title: "Sessao Gamer",
+      detail,
+      status: reports.gamerResult || reports.gamer.summary.detectedGames > 0 ? "ready" : "pending",
+    });
+  }
+
+  actions.push({
+    id: "profile",
+    title: "Perfil recomendado",
+    detail: reports.profileResult
+      ? `${reports.profileResult.engineResults.length} engine(s) do perfil validadas.`
+      : `${profileLabel(profileId)} sera usado como base do plano.`,
+    status: "ready",
+  });
+
+  if (reports.advanced) {
+    actions.push({
+      id: "advanced",
+      title: "Avancado guiado",
+      detail: reports.advancedResult
+        ? `${reports.advancedResult.appliedActions.length} comando(s) validados.`
+        : `${reports.advanced.actions.length} comando(s) mapeados.`,
+      status: reports.advancedResult ? "ready" : "pending",
+    });
+  }
+
+  actions.push({
+    id: "components",
+    title: "Componentes essenciais",
+    detail: "VC++, DirectX e dependencias ainda serao modulo dedicado.",
+    status: "unavailable",
+  });
+
+  return actions;
 }
 
 function SummaryCard({
@@ -609,6 +652,128 @@ function SummaryCard({
           <p className="text-[10px] font-bold tracking-[0.14em] text-muted-foreground">{label}</p>
           <p className="truncate text-base font-bold text-foreground">{value}</p>
           <p className="truncate text-[11px] text-muted-foreground">{sub}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GameTargetPicker({
+  targets,
+  selectedTarget,
+  onSelect,
+  onSkip,
+}: {
+  targets: OptimizeAllGameTarget[];
+  selectedTarget: OptimizeAllGameTarget | null;
+  onSelect: (target: OptimizeAllGameTarget) => void;
+  onSkip: () => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-[0_18px_42px_-34px_rgba(37,99,235,0.7)]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">SESSAO GAMER</p>
+          <h3 className="mt-1 text-xl font-black text-foreground">Escolha o jogo alvo</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            O Hermes usa esse alvo para montar o plano focado: jogo protegido, Discord preservado,
+            overlays avaliados e perfil de performance ajustado para a engine detectada.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onSkip}
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
+        >
+          Continuar sem alvo
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {targets.map((target) => {
+          const active = selectedTarget?.id === target.id;
+          return (
+            <button
+              key={target.id}
+              type="button"
+              onClick={() => onSelect(target)}
+              className={`group flex min-h-24 items-center gap-3 rounded-2xl border p-4 text-left transition ${
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border/70 bg-white/82 hover:border-primary/40 hover:bg-white"
+              }`}
+            >
+              <span
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${
+                  active ? "bg-white/18 text-white" : "bg-primary/10 text-primary"
+                }`}
+              >
+                {target.label.toLowerCase().includes("fate") ? (
+                  <Sparkles className="h-5 w-5" />
+                ) : (
+                  <Gamepad2 className="h-5 w-5" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-base font-black">{target.label}</span>
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+                      active
+                        ? "border-white/30 bg-white/15 text-white"
+                        : "border-primary/20 bg-primary/10 text-primary"
+                    }`}
+                  >
+                    {gameSourceLabel(target)}
+                  </span>
+                  {target.engineHint && (
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+                        active
+                          ? "border-white/30 bg-white/15 text-white"
+                          : "border-success/20 bg-success/10 text-success"
+                      }`}
+                    >
+                      {target.engineHint}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`mt-1 block text-[12px] leading-relaxed ${
+                    active ? "text-white/80" : "text-muted-foreground"
+                  }`}
+                >
+                  {target.detail}
+                </span>
+              </span>
+              <Play className={`h-5 w-5 shrink-0 ${active ? "text-white" : "text-primary"}`} />
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function PlanActionRow({ item }: { item: PlanAction }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-white/70 px-3 py-2">
+      <div className="flex items-start gap-2">
+        <span
+          className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${planStatusDot(item.status)}`}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-[12px] font-bold text-foreground">{item.title}</p>
+            <span
+              className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${planStatusPill(
+                item.status,
+              )}`}
+            >
+              {planStatusLabel(item.status)}
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p>
         </div>
       </div>
     </div>
@@ -644,7 +809,7 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
               {phase.plannedActions} acoes
             </span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-              Reversivel quando aplicavel
+              Engine real
             </span>
           </div>
           {phase.outputs.length > 0 && (
@@ -662,32 +827,6 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
         </div>
       </div>
     </article>
-  );
-}
-
-function ManualLink({
-  icon: Icon,
-  title,
-  to,
-  search,
-}: {
-  icon: LucideIcon;
-  title: string;
-  to: "/central" | "/perfis" | "/limpeza" | "/reparar-windows" | "/personalizado";
-  search?: { perfil: string };
-}) {
-  return (
-    <Link
-      to={to}
-      search={search}
-      className="flex min-h-11 items-center gap-3 rounded-xl border border-border/70 bg-white/70 px-3 py-2 text-sm font-bold text-foreground transition hover:border-primary/35 hover:bg-primary/5"
-    >
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="min-w-0 flex-1 truncate">{title}</span>
-      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-    </Link>
   );
 }
 
@@ -765,12 +904,40 @@ function phaseStatusLabel(status: PhaseStatus) {
   return "Pendente";
 }
 
+function planStatusDot(status: PlanActionStatus) {
+  if (status === "ready") return "bg-primary";
+  if (status === "ok") return "bg-success";
+  if (status === "pending") return "bg-warning";
+  return "bg-muted-foreground";
+}
+
+function planStatusPill(status: PlanActionStatus) {
+  if (status === "ready") return "border-primary/20 bg-primary/10 text-primary";
+  if (status === "ok") return "border-success/20 bg-success/10 text-success";
+  if (status === "pending") return "border-warning/25 bg-warning/10 text-warning";
+  return "border-border bg-muted text-muted-foreground";
+}
+
+function planStatusLabel(status: PlanActionStatus) {
+  if (status === "ready") return "Pronto";
+  if (status === "ok") return "Ok";
+  if (status === "pending") return "Pendente";
+  return "Modulo";
+}
+
 function profileLabel(profileId: string) {
   if (profileId === "gamer") return "Gamer";
   if (profileId === "trabalho") return "Trabalho";
   if (profileId === "economia") return "Economia";
   if (profileId === "extremo") return "Extremo";
   return "Seguro";
+}
+
+function gameSourceLabel(target: OptimizeAllGameTarget) {
+  if (target.source === "active") return "Ativo";
+  if (target.source === "detected") return "Detectado";
+  if (target.source === "profile") return "Perfil";
+  return target.confidence === "high" ? "Preset" : "Sugerido";
 }
 
 function formatGb(value: number) {

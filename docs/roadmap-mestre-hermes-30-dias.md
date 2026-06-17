@@ -6,6 +6,8 @@ Periodo: 15 de junho de 2026 a 15 de julho de 2026.
 
 Documento anterior: `docs/roadmap-funcional.md` permanece como memoria tecnica e historica.
 
+Fonte complementar: `docs/prompt-hermes-ai-optimizer-v1-analise.md` consolida o prompt antigo do Hermes AI Optimizer V1 e separa o que continua valido do que mudou na direcao atual.
+
 ## 1. Meta do ciclo
 
 Entregar o Hermes 0.2 como Beta/Release Candidate confiavel, simples e coerente:
@@ -51,12 +53,12 @@ Mesmo quando precisar de mais seguranca, o fluxo deve continuar simples: poucas 
 
 ## 1.2 Decisao de modo simples
 
-O Dashboard passa a priorizar dois botoes grandes:
+O Dashboard permanece como painel de leitura, status e recomendacoes. A otimizacao passa a viver em uma area propria chamada `Otimizar`, com dois botoes grandes:
 
 1. `Analisar PC`: diagnostico global, somente leitura, persistente e com recomendacoes.
 2. `Otimizar Tudo`: orquestrador guiado que avalia 150 acoes em fases, escolhe perfil recomendado e encaminha para ferramentas/perfis quando houver risco ou necessidade de confirmacao.
 
-O `Otimizar Tudo` nao substitui as ferramentas manuais. Ele e a entrada simples para o usuario comum, enquanto Central, Gamer, Limpeza, Reparo, Componentes e Personalizado continuam como controle avancado.
+O `Otimizar Tudo` nao substitui as ferramentas manuais. Ele e a entrada simples para o usuario comum, enquanto Central, Gamer, Limpeza, Reparo, Componentes e Personalizado continuam como controle avancado dentro do fluxo guiado.
 
 Enquanto o produto estiver em modo seguro, o `Otimizar Tudo` deve operar como dry-run: validar, classificar, explicar e encaminhar, sem aplicar mudancas reais.
 
@@ -140,8 +142,18 @@ Exibe:
 - Perfil ativo, quando houver.
 - Recomendacoes prioritarias.
 - Comparacao resumida com o diagnostico anterior.
-- Botoes principais `Analisar PC` e `Otimizar Tudo`.
-- Atalhos para Central, Gamer, Preparar Ambiente, Rollback, Limpeza e Personalizado.
+- Link de navegacao para a area `Otimizar`.
+
+### Otimizar
+
+Exibe:
+
+- Botao `Analisar PC`.
+- Botao `Otimizar Tudo`.
+- Estado do modo seguro/dry-run.
+- Plano de 150 acoes.
+- Avisos de snapshot, rollback e confirmacao.
+- Fluxo guiado para Central, Gamer, Componentes, Limpeza, Reparo e Personalizado quando necessario.
 
 ### Recomendacoes
 
@@ -448,9 +460,9 @@ Acao: abrir Ferramenta de Inicializacao.
 - Fallbacks indisponiveis em vez de dados ficticios.
 - Build Tauri para MSI e NSIS.
 - Documentacao de QA, assinatura e release.
-- Modo simples no Dashboard com `Analisar PC` e `Otimizar Tudo`.
+- Area `Otimizar` separada do Dashboard com `Analisar PC` e `Otimizar Tudo`.
 - Modal `Otimizar Tudo` em dry-run com 150 acoes agrupadas em 9 fases.
-- Atalhos manuais para Central, Gamer, Preparar Ambiente, Rollback, Limpeza e Personalizado.
+- Sidebar enxuta com Dashboard, Otimizar, Anti-Cheat, Manutencao Programada e Configuracoes.
 
 ### Existe parcialmente
 

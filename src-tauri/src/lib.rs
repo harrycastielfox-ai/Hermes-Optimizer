@@ -15,17 +15,6 @@ mod startup;
 
 use tauri::Manager;
 
-fn force_fullscreen(window: &tauri::WebviewWindow) {
-    if window.is_fullscreen().unwrap_or(false) {
-        return;
-    }
-
-    if let Err(error) = window.set_fullscreen(true) {
-        log::warn!("Nao foi possivel manter o Hermes em tela cheia: {error}");
-        let _ = window.maximize();
-    }
-}
-
 #[tauri::command]
 fn hermes_window_minimize(app: tauri::AppHandle) -> Result<(), String> {
     let window = app
@@ -53,20 +42,6 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
-            }
-            if let Some(window) = app.get_webview_window("main") {
-                force_fullscreen(&window);
-
-                let restore_window = window.clone();
-                window.on_window_event(move |event| {
-                    if matches!(event, tauri::WindowEvent::Focused(true)) {
-                        let window = restore_window.clone();
-                        std::thread::spawn(move || {
-                            std::thread::sleep(std::time::Duration::from_millis(160));
-                            force_fullscreen(&window);
-                        });
-                    }
-                });
             }
             Ok(())
         })

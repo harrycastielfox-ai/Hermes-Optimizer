@@ -608,9 +608,7 @@ function buildActionPlan(report: AdvisorAiReport): string[] {
     plan.push("Revisar inicializacao e desativar apenas itens aprovados pelo usuario.");
   }
   if (report.summary.recommendedProfile) {
-    plan.push(
-      `Avaliar aplicacao do Perfil ${report.summary.recommendedProfile} com snapshot e confirmacao.`,
-    );
+    plan.push(`Avaliar o Perfil ${report.summary.recommendedProfile} antes de aplicar ajustes.`);
   }
   if (categories.has("benchmark")) {
     plan.push("Executar benchmark novamente para comparar antes e depois.");
@@ -619,7 +617,7 @@ function buildActionPlan(report: AdvisorAiReport): string[] {
     plan.push("Validar Performance Engine e Game Mode antes de aplicar ajustes.");
   }
 
-  plan.push("Consultar o Centro de Seguranca e Recuperacao antes de qualquer rollback.");
+  plan.push("Abrir a area Otimizar para seguir o plano guiado com menos cliques.");
 
   return Array.from(new Set(plan)).slice(0, 6);
 }

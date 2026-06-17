@@ -1342,6 +1342,10 @@ fn looks_like_game_path(executable_path: Option<&str>) -> bool {
             "\\ea games\\",
             "\\battle.net\\",
             "\\ubisoft\\",
+            "\\unrealengine\\",
+            "\\unreal engine\\",
+            "\\fatetrigger\\",
+            "\\fate trigger\\",
         ],
     )
 }
@@ -1447,6 +1451,13 @@ fn game_patterns() -> &'static [&'static str] {
         "fate trigger",
         "fatetrigger",
         "fate_trigger",
+        "fate-trigger",
+        "fatetrigger-win64-shipping",
+        "fate_trigger-win64-shipping",
+        "unrealengine",
+        "unreal engine",
+        "ue5",
+        "win64-shipping",
         "hd-player",
         "bluestacks",
         "bstk",
@@ -1668,6 +1679,8 @@ $interesting = @(
   'gamebar','xboxgamebar','gamebarftserver','nvidia share','geforce experience',
   'nvcontainer','nvsphelper','overwolf','razer','medal','msiafterburner','rtss',
   'photoshop','illustrator','premiere','afterfx','lightroom',
+  'fate trigger','fatetrigger','fate_trigger','fate-trigger','fatetrigger-win64-shipping',
+  'unrealengine','unreal engine','ue5','win64-shipping',
   'valorant','leagueclient','r5apex','fortniteclient','cs2','dota2',
   'destiny2','eldenring','cyberpunk2077','gta5','minecraft','robloxplayerbeta',
   'fivem','overwatch','rocketleague','forza','witcher3','starfield'
