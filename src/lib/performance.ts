@@ -56,7 +56,7 @@ export type PerformanceSetting = {
 export type PerformanceApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  actionIdsó: string[];
+  actionIds: string[];
   reason?: string;
 };
 

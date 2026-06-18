@@ -106,7 +106,7 @@ function OtimizacoesPage() {
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
               Com base no diagnóstico do seu PC, o Hermes organizou ajustes que podem melhorar
-              desempenho, inicialização e experiência geral, mantendo reversao e modo seguro.
+              desempenho, inicialização e experiência geral, mantendo reversão e modo seguro.
             </p>
           </div>
 
@@ -119,7 +119,7 @@ function OtimizacoesPage() {
                   O QUE O HERMES RECOMENDA
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Primeira camada em linguagem simples. Os detalhes tecnicos continuam disponiveis
+                  Primeira camada em linguagem simples. Os detalhes técnicos continuam disponiveis
                   abaixo.
                 </p>
               </div>
@@ -320,7 +320,7 @@ function buildOptimizationRecommendations(
       rollback: "Disponível",
       mode: safeModeLabel(),
       detail:
-        "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmacao, preservando processos protegidos.",
+        "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmação, preservando processos protegidos.",
     },
     {
       id: "visual",
@@ -330,7 +330,7 @@ function buildOptimizationRecommendations(
       state: report.visualEffects.profile,
       recommendation:
         "Reduzir apenas efeitos opcionais, sem alterar tema do Windows ou navegadores.",
-      impact: "Pode melhorar fluidez em maquinas intermediarias.",
+      impact: "Pode melhorar fluidez em máquinas intermediárias.",
       level: "low",
       rollback: "Disponível",
       mode: safeModeLabel(),
@@ -339,32 +339,32 @@ function buildOptimizationRecommendations(
     },
     {
       id: "network",
-      centralLevel: "avançado",
+      centralLevel: "avancado",
       icon: Wifi,
       title: "Rede/DNS",
       state: dnsFlush ? "Cache local detectado" : "Sem ação indicada",
-      recommendation: "Limpar cache DNS apenas se houver lentidao ou falha de navegacao.",
-      impact: "Pode resolver problemas temporários de resolucao de nomes.",
+      recommendation: "Limpar cache DNS apenas se houver lentidão ou falha de navegação.",
+      impact: "Pode resolver problemas temporários de resolução de nomes.",
       level: "low",
       rollback: "Não necessário",
       mode: safeModeLabel(),
-      detail: "Esta e uma ação temporaria. Não muda configurações permanentes de rede.",
+      detail: "Esta é uma ação temporária. Não muda configurações permanentes de rede.",
     },
     {
       id: "advanced",
-      centralLevel: "avançado",
+      centralLevel: "avancado",
       icon: Terminal,
       title: "Avançado",
-      state: `${catalog.actions.length} acoes seguras`,
+      state: `${catalog.actions.length} ações seguras`,
       recommendation:
-        "Manter recursos avancados disponiveis apenas para validação e detalhes tecnicos.",
+        "Manter recursos avançados disponíveis apenas para validação e detalhes técnicos.",
       impact:
         "Permite auditar CMD, PowerShell e Registro sem expor complexidade na primeira camada.",
       level: "high",
       rollback: "Conforme ação",
       mode: safeModeLabel(),
       detail:
-        "Ações bloqueadas continuam bloqueadas. Comandos profundos exigem confirmacao forte em Reparar Windows.",
+        "Ações bloqueadas continuam bloqueadas. Comandos profundos exigem confirmação forte em Reparar Windows.",
     },
   ];
 }
@@ -427,7 +427,7 @@ function RecommendationCard({
             recommendation.level === "high"
               ? "Avançado"
               : recommendation.level === "medium"
-                ? "Medio"
+                ? "Médio"
                 : "Leve"
           }
         />
@@ -505,7 +505,7 @@ function ModePill() {
 }
 
 function safeModeLabel() {
-  return HERMES_SAFE_TEST_MODE ? "Dry-run ativo" : "Confirmacao exigida";
+  return HERMES_SAFE_TEST_MODE ? "Dry-run ativo" : "Confirmação exigida";
 }
 
 function findAction(catalog: AdvancedCatalog, id: string) {
@@ -521,7 +521,7 @@ function AdvancedEnginePanel({ catalog }: { catalog: AdvancedCatalog }) {
             ACOES AVANCADAS PREPARADAS
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Recursos importantes continuam disponiveis, mas os comandos e chaves tecnicas ficam
+            Recursos importantes continuam disponiveis, mas os comandos e chaves técnicas ficam
             recolhidos por padrão.
           </p>
         </div>
@@ -580,7 +580,7 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
             >
               {riskLabel(action.risk)}
             </span>
-            {action.reversible && <StatusBadge label="Reversível" />}
+            {action.reversible && <StatusBadge label="Reversivel" />}
             {action.requiresAdmin && <StatusBadge label="Admin" tone="warning" />}
             {!action.persistent && <StatusBadge label="Temporario" />}
           </div>
@@ -590,10 +590,10 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         <div className="shrink-0 text-left sm:text-right">
           <p className="text-[11px] text-muted-foreground">Estado</p>
           <p className="text-sm font-semibold text-foreground">
-            {action.persistent ? "Reversível" : "Temporario"}
+            {action.persistent ? "Reversivel" : "Temporario"}
           </p>
           <p className="mt-1 text-[11px] font-semibold text-primary">
-            {HERMES_SAFE_TEST_MODE ? "Preparado" : "Confirmacao exigida"}
+            {HERMES_SAFE_TEST_MODE ? "Preparado" : "Confirmação exigida"}
           </p>
         </div>
       </div>
@@ -604,7 +604,7 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         <TechnicalLine label="Mudanca planejada" value={action.plannedChange} />
         <TechnicalLine label="Preview técnico" value={action.commandPreview} />
         <TechnicalLine label="Persistente" value={action.persistent ? "sim" : "não"} />
-        <TechnicalLine label="Reversível" value={action.reversible ? "sim" : "não"} />
+        <TechnicalLine label="Reversivel" value={action.reversible ? "sim" : "não"} />
       </TechnicalDetails>
     </div>
   );
@@ -680,7 +680,7 @@ function riskLabel(risk: AdvancedRisk) {
   }
 
   if (risk === "medium") {
-    return "Medio";
+    return "Médio";
   }
 
   return "Baixo";
@@ -718,7 +718,7 @@ function advancedPresentation(action: AdvancedAction) {
     "flush-dns-cache": {
       title: "Limpar cache DNS",
       description: "Limpa o cache local de nomes de rede.",
-      impact: "Impacto: pode resolver lentidao ou falhas de navegacao. Temporario.",
+      impact: "Impacto: pode resolver lentidão ou falhas de navegação. Temporario.",
     },
     "list-power-plans": {
       title: "Ver planos de energia",
@@ -747,7 +747,7 @@ function advancedPresentation(action: AdvancedAction) {
     },
     "set-visual-effects-custom": {
       title: "Efeitos visuais do Windows",
-      description: "Marca os efeitos como personalizados apenas com confirmacao clara.",
+      description: "Marca os efeitos como personalizados apenas com confirmação clara.",
       impact: "Impacto: aparência/desempenho. Opt-in e reversível.",
     },
   };
@@ -756,7 +756,7 @@ function advancedPresentation(action: AdvancedAction) {
     map[action.id] ?? {
       title: action.title,
       description: action.description,
-      impact: "Impacto: preparado com confirmacao e dry-run.",
+      impact: "Impacto: preparado com confirmação e dry-run.",
     }
   );
 }
@@ -801,11 +801,11 @@ function blockedPresentation(item: AdvancedBlockedAction) {
     },
     "sfc-scan-now": {
       title: "Verificador de arquivos do Windows",
-      reason: "Preparado para Reparar Windows com confirmacao forte.",
+      reason: "Preparado para Reparar Windows com confirmação forte.",
     },
     "dism-restore-health": {
       title: "Reparo da imagem do Windows",
-      reason: "Preparado para Reparar Windows com confirmacao forte.",
+      reason: "Preparado para Reparar Windows com confirmação forte.",
     },
   };
 
@@ -908,7 +908,7 @@ function TechnicalDetails({
         onClick={onToggle}
         className="text-[12px] font-bold text-primary transition hover:text-primary/80"
       >
-        {open ? "Ocultar detalhes tecnicos" : "Ver detalhes tecnicos"}
+        {open ? "Ocultar detalhes técnicos" : "Ver detalhes técnicos"}
       </button>
       {open && <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">{children}</div>}
     </div>

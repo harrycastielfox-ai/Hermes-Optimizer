@@ -96,8 +96,8 @@ function SecurityRecoveryPage() {
 
   const selectedSnapshot = useMemo(
     () =>
-      snapshotsó.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ??
-      snapshotsó.snapshots[0] ??
+      snapshots?.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ??
+      snapshots?.snapshots[0] ??
       null,
     [snapshots, selectedSnapshotId],
   );
@@ -122,7 +122,7 @@ function SecurityRecoveryPage() {
 
   async function runRestore(snapshot: RestoreSnapshot) {
     const dryRunConfirmed = window.confirm(
-      `Validar snapshot antes de restaurar?\n\n${snapshot.name}\n${snapshot.id}\n\nNenhuma alteracao sera aplicada nesta validacao.`,
+      `Validar snapshot antes de restaurar?\n\n${snapshot.name}\n${snapshot.id}\n\nNenhuma alteração sera aplicada nesta validacao.`,
     );
     if (!dryRunConfirmed) {
       return;
@@ -142,7 +142,7 @@ function SecurityRecoveryPage() {
         `Restaurar este snapshot agora?\n\n${snapshot.name}\nAcoes reversiveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executara apenas rollback suportado pelo manifesto seguro.`,
       );
       if (!restoreConfirmed) {
-        setNotice("Restauracao cancelada após validação segura.");
+        setNotice("Restauração cancelada após validação segura.");
         await loadSecurityCenter();
         return;
       }
@@ -187,9 +187,7 @@ function SecurityRecoveryPage() {
 
   function prepareHistoryClear() {
     const confirmation = window.prompt(
-      "Limpar histórico local exigira uma bridge segura em fase futura.
-
-Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
+      "Limpar histórico local exigirá uma bridge segura em fase futura.\n\nDigite LIMPAR HISTORICO para registrar sua confirmação sem apagar nada agora.",
     );
 
     if (confirmation !== "LIMPAR HISTORICO") {
@@ -197,7 +195,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
       return;
     }
 
-    setNotice("Confirmacao forte recebida. Nenhum histórico foi apagado nesta etapa.");
+    setNotice("Confirmação forte recebida. Nenhum histórico foi apagado nesta etapa.");
   }
 
   return (
@@ -236,7 +234,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
               icon={Database}
               label="SNAPSHOTS"
               value={status ? `${status.totalSnapshots}/${status.maxSnapshots}` : "--"}
-              sub={statusó.retentionPolicy ?? "Carregando histórico local"}
+              sub={status?.retentionPolicy ?? "Carregando histórico local"}
             />
             <StatusCard
               icon={History}
@@ -268,7 +266,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-foreground">Snapshots e rollback</h2>
                   <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                    Toda restauracao passa por validação antes de aplicar. Em Safe Test Mode, a
+                    Toda restauração passa por validação antes de aplicar. Em Safe Test Mode, a
                     bridge TypeScript forca dry-run.
                   </p>
                 </div>
@@ -290,7 +288,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
               </div>
             </div>
 
-            {statusó.warnings && status.warnings.length > 0 && (
+            {status?.warnings && status.warnings.length > 0 && (
               <div className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-4 py-3 text-sm text-warning">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -340,7 +338,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  {snapshotsó.snapshots.length ? (
+                  {snapshots?.snapshots.length ? (
                     snapshots.snapshots.map((snapshot) => (
                       <SnapshotRow
                         key={snapshot.id}
@@ -382,8 +380,8 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                         <ResultBox
                           title={
                             restoreResult.applied
-                              ? "Restauracao aplicada"
-                              : "Restauracao registrada"
+                              ? "Restauração aplicada"
+                              : "Restauração registrada"
                           }
                           message={restoreResult.message}
                           tone={restoreResult.applied ? "success" : "warning"}
@@ -394,7 +392,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                     <EmptyState
                       icon={RotateCcw}
                       title="Selecione um snapshot"
-                      sub="A restauracao real sempre exige confirmacao antes de executar."
+                      sub="A restauração real sempre exige confirmação antes de executar."
                     />
                   )}
                 </div>
@@ -404,7 +402,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                     LOGS DO SISTEMA
                   </h3>
                   <div className="mt-3 space-y-2">
-                    {eventsó.events.length ? (
+                    {events?.events.length ? (
                       events.events
                         .slice(0, 7)
                         .map((event) => <EventRow key={event.id} event={event} />)

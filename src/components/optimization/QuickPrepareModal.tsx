@@ -136,7 +136,7 @@ export function QuickPrepareModal({
       }
 
       setRunStatus("completed");
-      setCurrentStatus("Preparo concluido. Reinicie o PC antes do Botao 2.");
+      setCurrentStatus("Preparo concluído. Reinicie o PC antes do Botão 2.");
       onCompleted?.(
         nextReports,
         buildExecutionReport({
@@ -145,7 +145,7 @@ export function QuickPrepareModal({
           safeMode: HERMES_SAFE_TEST_MODE,
           actions: reportActions.current,
           notes: [
-            "Botao 1 concluido antes da Fase 2.",
+            "Botão 1 concluído antes da Fase 2.",
             HERMES_SAFE_TEST_MODE
               ? "Modo teste: nenhuma alteração real foi aplicada."
               : "Modo real: ajustes implementados foram executados.",
@@ -199,7 +199,7 @@ export function QuickPrepareModal({
       : "running";
 
     setCompletedTasks(update.taskIndex + 1);
-    if (update.reportsó.diagnostic) {
+    if (update.reports?.diagnostic) {
       onDiagnostic?.(update.reports.diagnostic);
     }
     upsertReportAction(update);
@@ -422,8 +422,8 @@ export function QuickPrepareModal({
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-success" />
             {HERMES_SAFE_TEST_MODE
-              ? "Modo teste: ao terminar, reinicie antes do Botao 2."
-              : "Modo real: reinicie o PC antes de executar o Botao 2."}
+              ? "Modo teste: ao terminar, reinicie antes do Botão 2."
+              : "Modo real: reinicie o PC antes de executar o Botão 2."}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             {canCancel && (

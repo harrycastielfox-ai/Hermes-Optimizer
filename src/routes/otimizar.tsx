@@ -187,7 +187,7 @@ function OtimizarPage() {
       phase: "optimize",
       createdAt: new Date().toISOString(),
       safeMode: HERMES_SAFE_TEST_MODE,
-      message: "Reinicio final recomendado para consolidar o plano aplicado.",
+      message: "Reinício final recomendado para consolidar o plano aplicado.",
     };
     setRestartRecommendation(nextRestart);
     writeRestartRecommendation(nextRestart);
@@ -460,7 +460,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
               ? "Converter planejadas em motor real"
               : report.summary.missingToTarget === 0
                 ? "Auditoria completa"
-                : "Aumentar catalogo real"}
+                : "Aumentar catálogo real"}
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
             {report.summary.plannedOnlyActions > 0
@@ -587,7 +587,7 @@ function methodLabel(method: string) {
 function riskLabel(risk: ExecutionReportRisk) {
   if (risk === "info") return "Info";
   if (risk === "low") return "Baixo";
-  if (risk === "medium") return "Medio";
+  if (risk === "medium") return "Médio";
   return "Alto";
 }
 

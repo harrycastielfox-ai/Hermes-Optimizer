@@ -9,14 +9,14 @@ export type SystemBootContext = {
   isWindows: boolean;
   available: boolean;
   currentBootId?: string;
-  bootedAté: string;
+  bootedAt: string;
   warnings: string[];
 };
 
 export type SystemRestartRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  delaySecondsó: number;
+  delaySeconds: number;
 };
 
 export type SystemRestartResult = {

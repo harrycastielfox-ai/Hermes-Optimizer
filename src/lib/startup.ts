@@ -39,7 +39,7 @@ export type StartupApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
   action: StartupApplyAction;
-  itemIdsó: string[];
+  itemIds: string[];
   impactsó: StartupImpact[];
 };
 

@@ -30,7 +30,7 @@ export type CleanQuarantinePurgeStatus = "dryRun" | "purged" | "skipped" | "fail
 export type CleanApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  itemIdsó: string[];
+  itemIds: string[];
 };
 
 export type CleanQuarantinePurgeRequest = {

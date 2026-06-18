@@ -229,7 +229,7 @@ function LimpezaPage() {
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
                   {formatGb(report.totalGb)} GB encontrados no scan. Limpeza real sempre exige
-                  confirmacao final.
+                  confirmação final.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">

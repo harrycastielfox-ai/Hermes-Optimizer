@@ -244,7 +244,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.language.interface": "Idioma da interface",
     "settings.language.note.title": "Idioma aplicado localmente",
     "settings.language.note.text":
-      "Nesta etapa, Configurações e a navegacao principal já respondem ao idioma escolhido.",
+      "Nesta etapa, Configurações e a navegação principal já respondem ao idioma escolhido.",
     "settings.license.title": "Licença",
     "settings.license.description":
       "Area comercial preparada sem ativacao, servidor, pagamento ou validação real.",
@@ -261,9 +261,9 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.privacy.description":
       "Compromissos locais do Hermes e base visual para preferencias futuras.",
     "settings.privacy.local": "Hermes funciona localmente.",
-    "settings.privacy.noTelemetry": "Sem telemetria obrigatoria.",
+    "settings.privacy.noTelemetry": "Sem telemetria obrigatória.",
     "settings.privacy.noUpload": "Sem envio automático de dados.",
-    "settings.privacy.noCloud": "Sem nuvem obrigatoria, conta ou login.",
+    "settings.privacy.noCloud": "Sem nuvem obrigatória, conta ou login.",
     "settings.privacy.share.title": "Compartilhar dados anonimos",
     "settings.privacy.share.description":
       "Opção futura. Desativada por padrão e sem qualquer coleta nesta fase.",

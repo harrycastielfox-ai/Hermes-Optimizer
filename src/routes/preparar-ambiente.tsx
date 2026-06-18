@@ -267,7 +267,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       to: cleanupGb > 0 ? "/limpeza" : "/inicializacao",
       icon: HardDrive,
       bullets: [
-        `${formatGb(cleanupGb)} GB candidatos a revisao`,
+        `${formatGb(cleanupGb)} GB candidatos à revisão`,
         `${startupItems} item(ns) de inicializacao`,
         "Downloads e documentos continuam protegidos",
       ],

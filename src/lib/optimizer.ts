@@ -38,7 +38,7 @@ const fallbackOptimizeNowPlan = (): OptimizeNowPlan => {
     fallbackStage("clean-scan", "clean-engine", "Scan de limpeza segura", true),
     fallbackStage("startup-scan", "startup-engine", "Scan de inicialização", true),
     fallbackStage("performance-check", "performance-engine", "Validação de desempenho", true),
-    fallbackStage("restore-check", "restore-engine", "Garantia de reversao", true),
+    fallbackStage("restore-check", "restore-engine", "Garantia de reversão", true),
   ];
 
   return {
@@ -61,7 +61,7 @@ const fallbackOptimizeNowPlan = (): OptimizeNowPlan => {
       "Sem telemetria, nuvem ou login.",
       "Sem servico residente ou monitoramento permanente.",
       "Sem alteração no Windows durante o plano inicial.",
-      "Ações reais só depois de mostrar impacto e pedir confirmacao.",
+      "Ações reais só depois de mostrar impacto e pedir confirmação.",
     ],
   };
 };

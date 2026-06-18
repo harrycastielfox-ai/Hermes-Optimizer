@@ -121,7 +121,7 @@ export type RestoreEngineStatus = {
 export type RestoreCreateSnapshotRequest = {
   name?: string;
   description?: string;
-  plannedActionsó: RestorePlannedAction[];
+  plannedActions: RestorePlannedAction[];
   rollbackManifest?: RestoreRollbackAction[];
   previousState?: RestorePreviousState[];
 };

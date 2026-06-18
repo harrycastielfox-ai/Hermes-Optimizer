@@ -97,7 +97,7 @@ const repairActions: RepairAction[] = [
     requiresAdmin: true,
     notes: [
       "Pode depender de fontes locais ou Windows Update em fase futura.",
-      "Sempre exigira confirmacao forte antes de executar.",
+      "Sempre exigira confirmação forte antes de executar.",
       "Não e executado automaticamente pelo Hermes.",
     ],
   },
@@ -110,7 +110,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     description: "Reparo profundo de disco.",
     reason: "Pode demorar bastante, exigir reinicio e travar o volume durante a verificacao.",
     guidance:
-      "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmacao forte e recomendação de backup antes de qualquer execução futura.",
+      "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmação forte e recomendação de backup antes de qualquer execução futura.",
     mayRequireRestart: true,
   },
   {
@@ -119,7 +119,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     description: "Reinicializacao de componentes de rede.",
     reason: "Pode afetar conectividade e geralmente pede reinicio para concluir.",
     guidance:
-      "Quando fizer sentido, deve aparecer como reparo de rede guiado, explicando o impacto antes da confirmacao.",
+      "Quando fizer sentido, deve aparecer como reparo de rede guiado, explicando o impacto antes da confirmação.",
     mayRequireRestart: true,
   },
   {
@@ -133,7 +133,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
   {
     id: "windows-reset",
     title: "reset do Windows",
-    description: "Reinstalacao/restauracao ampla do sistema.",
+    description: "Reinstalacao/restauração ampla do sistema.",
     reason: "E uma ação estrutural do Windows e pode afetar aplicativos e configurações.",
     guidance:
       "Fica fora do Hermes automático. O app pode orientar o usuário, mas não deve disparar esse fluxo sozinho.",
@@ -181,14 +181,14 @@ export function HermesRepairCenter() {
         });
         const entry = buildHistoryEntry({
           action: "Diagnóstico Hermes",
-          result: `Diagnostico concluido: ${nextDiagnostic.healthLabel}, Defender ${nextDiagnostic.defender.status}, Windows Update ${nextDiagnostic.windowsUpdate.status}.`,
+          result: `Diagnóstico concluído: ${nextDiagnostic.healthLabel}, Defender ${nextDiagnostic.defender.status}, Windows Update ${nextDiagnostic.windowsUpdate.status}.`,
           status: "checked",
           snapshotId: snapshot?.id,
         });
         commitHistory(entry);
         setNotice(
           snapshot
-            ? `Diagnostico registrado com snapshot ${snapshot.id}.`
+            ? `Diagnóstico registrado com snapshot ${snapshot.id}.`
             : "Diagnóstico registrado localmente. Snapshot real exige Tauri.",
         );
       }
@@ -227,7 +227,7 @@ export function HermesRepairCenter() {
         risk: action.risk,
       });
       const result = snapshot
-        ? `Acao preparada com snapshot ${snapshot.id}. Comando nao executado.`
+        ? `Ação preparada com snapshot ${snapshot.id}. Comando não executado.`
         : "Ação preparada em histórico local. Snapshot real exige Tauri.";
 
       commitHistory(
@@ -387,7 +387,7 @@ function RepairProtectionsPanel({
               Reparos que exigem cuidado extra
             </h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Estas funcoes existem no Hermes como proteção obrigatoria: elas não entram em
+              Estas funcoes existem no Hermes como proteção obrigatória: elas não entram em
               otimização automática e só devem avancar em fluxo dedicado.
             </p>
           </div>
@@ -1000,7 +1000,7 @@ function statusLabel(status: RepairHistoryStatus) {
 
 function riskLabel(risk: RepairAction["risk"] | "low") {
   if (risk === "high") return "Alto";
-  if (risk === "medium") return "Medio";
+  if (risk === "medium") return "Médio";
   return "Baixo";
 }
 

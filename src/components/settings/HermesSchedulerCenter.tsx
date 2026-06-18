@@ -52,8 +52,8 @@ type SchedulerTask = {
   frequency: SchedulerFrequency;
   enabled: boolean;
   createdAt: string;
-  lastRunAté: string;
-  nextRunAté: string;
+  lastRunAt: string;
+  nextRunAt: string;
 };
 
 type SchedulerHistoryEntry = {
@@ -724,7 +724,7 @@ async function executeTask(
     const report = await runBenchmark();
     return {
       status: "success",
-      message: `Benchmark concluido: score ${report.score}/100. ${report.verdict}`,
+      message: `Benchmark concluído: score ${report.score}/100. ${report.verdict}`,
     };
   }
 
@@ -732,7 +732,7 @@ async function executeTask(
     const report = await refreshDiagnosticReport();
     return {
       status: "success",
-      message: `Diagnostico concluido: ${report.healthLabel}, score ${Math.round(report.healthScore)}/100.`,
+      message: `Diagnóstico concluído: ${report.healthLabel}, score ${Math.round(report.healthScore)}/100.`,
     };
   }
 
@@ -740,7 +740,7 @@ async function executeTask(
     const report = await refreshCleanScanReport();
     return {
       status: "success",
-      message: `Clean Scan concluido: ${formatGb(report.totalGb)} GB candidatos. Nada foi apagado.`,
+      message: `Clean Scan concluído: ${formatGb(report.totalGb)} GB candidatos. Nada foi apagado.`,
     };
   }
 
@@ -748,7 +748,7 @@ async function executeTask(
     const report = await refreshStartupReport();
     return {
       status: "success",
-      message: `Inicializacao verificada: ${report.totalItems} item(ns), ${report.highImpactCount} alto impacto.`,
+      message: `Inicialização verificada: ${report.totalItems} item(ns), ${report.highImpactCount} alto impacto.`,
     };
   }
 
@@ -1238,7 +1238,7 @@ function readNotificationPreferences(): NotificationPreferences {
       return fallback;
     }
 
-    const parsed = JSON.parse(raw) as { notificationsó: Partial<NotificationPreferences> };
+    const parsed = JSON.parse(raw) as { notifications: Partial<NotificationPreferences> };
     return {
       ...fallback,
       ...parsed.notifications,

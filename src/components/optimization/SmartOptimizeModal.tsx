@@ -70,7 +70,7 @@ type PlanAction = {
 
 const phaseTemplates: OptimizePhase[] = [
   phase("plan", "Plano inteligente", "Orquestrador + Hermes IA", BrainCircuit, 14),
-  phase("safety", "Permissoes e confirmacao", "Modo teste, logs e controle", ShieldCheck, 10),
+  phase("safety", "Permissoes e confirmação", "Modo teste, logs e controle", ShieldCheck, 10),
   phase("components", "Componentes essenciais", "VC++, DirectX e dependências", Wrench, 18),
   phase("cleanup", "Limpeza segura", "Temporários, cache e logs", BrushCleaning, 26),
   phase("startup", "Inicialização", "Apps de alto impacto", Zap, 18),
@@ -133,7 +133,7 @@ export function SmartOptimizeModal({
     reportActions.current = [];
     resumeState.current = null;
     setRunStatus("running");
-    setCurrentStatus("Preparando plano unico do Hermes.");
+    setCurrentStatus("Preparando plano único do Hermes.");
     void runSmartOptimization(runId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, runKey]);
@@ -201,11 +201,11 @@ export function SmartOptimizeModal({
         }
         if (result.gameTargets) {
           setGameTargets(result.gameTargets);
-          setSelectedGameTarget((current) => current ?? result.gameTargetsó.[0] ?? null);
+          setSelectedGameTarget((current) => current ?? result.gameTargets?.[0] ?? null);
         }
         setReports({ ...nextReports });
 
-        if (result.requiresGameSelection && result.gameTargetsó.length) {
+        if (result.requiresGameSelection && result.gameTargets?.length) {
           pausedForGame = true;
           resumeState.current = {
             runId,
@@ -231,7 +231,7 @@ export function SmartOptimizeModal({
     }
 
     setRunStatus("completed");
-    setCurrentStatus("Plano unico concluido. Modo teste mantido.");
+    setCurrentStatus("Plano único concluído. Modo teste mantido.");
     appendLog("info", "Otimizar Tudo finalizado em modo teste.");
     onCompleted?.(
       buildExecutionReport({
@@ -240,7 +240,7 @@ export function SmartOptimizeModal({
         safeMode: HERMES_SAFE_TEST_MODE,
         actions: reportActions.current,
         notes: [
-          "Botao 2 concluido em fluxo guiado.",
+          "Botão 2 concluído em fluxo guiado.",
           "A meta de 150 ações e contabilizada por fases do plano Hermes.",
           HERMES_SAFE_TEST_MODE
             ? "Modo teste: nenhuma alteração real foi aplicada."
@@ -304,7 +304,7 @@ export function SmartOptimizeModal({
 
       updatePhase(phaseId, { status: "completed", outputs });
       upsertReportAction(phaseId, "completed", outputs);
-      appendLog("info", `${template?.title ?? phaseId}: concluido.`);
+      appendLog("info", `${template?.title ?? phaseId}: concluído.`);
     } catch (error) {
       const message = errorMessage(error);
       updatePhase(phaseId, {
@@ -539,7 +539,7 @@ export function SmartOptimizeModal({
             <ShieldCheck className="h-4 w-4 text-success" />
             {HERMES_SAFE_TEST_MODE
               ? "Modo de teste: nenhuma alteração real será aplicada."
-              : "Modo real: executa funcoes implementadas com confirmacao."}
+              : "Modo real: executa funcoes implementadas com confirmação."}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             {canCancel && (
@@ -685,10 +685,10 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   actions.push({
     id: "components",
     title: "Componentes CMD/DISM",
-    detail: componentCmdsó.length
+    detail: componentCmds?.length
       ? `${componentCmds.length} comando(s): limpeza de componentes, NetFx3 e DirectPlay.`
       : "Aguardando mapeamento de componentes do Windows.",
-    status: componentCmdsó.length ? "ready" : "pending",
+    status: componentCmds?.length ? "ready" : "pending",
   });
 
   return actions;
@@ -750,7 +750,7 @@ function GameTargetPicker({
           <p className="text-[11px] font-bold tracking-[0.18em] text-primary">SESSAO GAMER</p>
           <h3 className="mt-1 text-xl font-black text-foreground">Escolha o jogo alvo</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Fate Trigger via Steam/UE5 e a prioridade Hermes. O alvo escolhido protege o jogo,
+            Fate Trigger via Steam/UE5 é a prioridade Hermes. O alvo escolhido protege o jogo,
             preserva Steam/Discord, avalia overlays e ajusta o perfil para a engine detectada.
           </p>
         </div>

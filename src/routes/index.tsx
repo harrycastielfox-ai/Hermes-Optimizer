@@ -489,7 +489,7 @@ function formatTemperatureSub(temperature: DiagnosticReport["temperature"]) {
   return temperature.status;
 }
 
-function formatPing(pingMsó: number) {
+function formatPing(pingMs: number) {
   if (typeof pingMs !== "number" || pingMs < 0) {
     return "Indisp.";
   }

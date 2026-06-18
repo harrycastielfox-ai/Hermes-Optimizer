@@ -17,7 +17,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
   const [restartResult, setRestartResult] = useState<SystemRestartResult | null>(null);
 
   const isPrepare = phase === "prepare";
-  const title = isPrepare ? "Reinicie antes do Botao 2" : "Reinicio final recomendado";
+  const title = isPrepare ? "Reinicie antes do Botão 2" : "Reinício final recomendado";
   const description = isPrepare
     ? "A Fase 1 prepara Windows, DNS, visual gamer e servicos. Reiniciar deixa a Fase 2 rodar em cima do estado limpo."
     : "A Fase 2 termina componentes, rede, perfil e Gamer. Reiniciar ajuda o Windows a consolidar os ajustes.";
@@ -79,7 +79,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
               <ShieldCheck className="h-4 w-4 text-success" />
               {HERMES_SAFE_TEST_MODE
                 ? "Modo teste: o Hermes valida o comando, mas não reinicia o computador."
-                : "Modo real: o Windows reinicia em 60 segundos depois da confirmacao."}
+                : "Modo real: o Windows reinicia em 60 segundos depois da confirmação."}
             </p>
           </div>
         </div>

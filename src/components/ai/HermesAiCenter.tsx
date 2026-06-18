@@ -663,7 +663,7 @@ function severityPillClass(severity: AdvisorAiSeverity) {
 function severityLabel(severity: AdvisorAiSeverity) {
   if (severity === "critical") return "Crítico";
   if (severity === "high") return "Alto";
-  if (severity === "medium") return "Medio";
+  if (severity === "medium") return "Médio";
   if (severity === "low") return "Baixo";
   return "Info";
 }

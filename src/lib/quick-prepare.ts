@@ -99,7 +99,7 @@ export type QuickPrepareReports = {
 
 export type QuickPreparePhaseResult = {
   outputs: string[];
-  reportsó: Partial<QuickPrepareReports>;
+  reports: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareContext = {
@@ -125,7 +125,7 @@ export type QuickPrepareTaskUpdate = {
   totalTasks: number;
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reportsó: Partial<QuickPrepareReports>;
+  reports: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareExecutorCallbacks = {
@@ -253,7 +253,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "apply-startup",
       "startup",
       "Validar inicialização",
-      "Desativa alto impacto controlavel.",
+      "Desativa alto impacto controlável.",
       "userSafe",
     ),
     ...QUICK_PREPARE_PERFORMANCE_ACTION_IDS.map((id) =>
@@ -341,7 +341,7 @@ async function runQuickPrepareTask(
 ): Promise<{
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reportsó: Partial<QuickPrepareReports>;
+  reports: Partial<QuickPrepareReports>;
 }> {
   try {
     if (step.id === "check-admin") {
@@ -406,7 +406,7 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { clean },
         outputs: [
-          `${formatGb(clean.totalGb)} GB temporarios mapeados`,
+          `${formatGb(clean.totalGb)} GB temporários mapeados`,
           `${state.selectedCleanItemIds.length} area(s) seguras selecionadas`,
         ],
       };
@@ -451,7 +451,7 @@ async function runQuickPrepareTask(
         reports: { startup },
         outputs: [
           `${startup.totalItems} item(ns) de inicializacao`,
-          `${state.selectedStartupItemIds.length} alto impacto controlavel`,
+          `${state.selectedStartupItemIds.length} alto impacto controlável`,
         ],
       };
     }
@@ -460,7 +460,7 @@ async function runQuickPrepareTask(
       if (state.selectedStartupItemIds.length === 0) {
         return {
           status: "completed",
-          outputs: ["Sem inicialização de alto impacto controlavel."],
+          outputs: ["Sem inicialização de alto impacto controlável."],
         };
       }
 
@@ -507,7 +507,7 @@ async function runQuickPrepareTask(
       if (available === false) {
         return {
           status: "unavailable",
-          outputs: [`${actionId} indisponivel neste catalogo.`],
+          outputs: [`${actionId} indisponível neste catálogo.`],
         };
       }
 
@@ -693,7 +693,7 @@ async function runCleanupPhase(): Promise<QuickPreparePhaseResult> {
   return {
     reports: { clean, cleanResult: result.value ?? undefined },
     outputs: [
-      `${formatGb(clean.totalGb)} GB temporarios mapeados`,
+      `${formatGb(clean.totalGb)} GB temporários mapeados`,
       `${itemIds.length} area(s) seguras selecionadas`,
       result.value
         ? `${result.value.plannedEntries} item(ns) validados para limpeza`
@@ -726,7 +726,7 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados para desativar`
-        : (result.message ?? "Sem inicialização de alto impacto controlavel"),
+        : (result.message ?? "Sem inicialização de alto impacto controlável"),
     ],
   };
 }

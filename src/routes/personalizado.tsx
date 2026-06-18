@@ -237,10 +237,10 @@ function PersonalizadoPage() {
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
-                  ACOES DE NIVEL ALTO
+                  ACOES DE NÍVEL ALTO
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Opções individuais avançadas com explicacao, confirmacao e validação guiada.
+                  Opções individuais avançadas com explicacao, confirmação e validação guiada.
                 </p>
               </div>
               <span className="inline-flex w-fit rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-[11px] font-bold text-destructive">
@@ -303,7 +303,7 @@ function CustomActionCard({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-bold text-foreground">{presentation.title}</h3>
             <Badge tone={action.risk}>{riskLabel(action.risk)}</Badge>
-            {action.reversible && <SmallPill text="Reversível" />}
+            {action.reversible && <SmallPill text="Reversivel" />}
             {!action.persistent && <SmallPill text="Temporario" />}
             {action.requiresAdmin && <SmallPill text="Admin" tone="warning" />}
           </div>
@@ -501,7 +501,7 @@ function TechnicalDetails({
         className="inline-flex items-center gap-1 text-[12px] font-bold text-primary transition hover:text-primary/80"
       >
         {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        {open ? "Ocultar detalhes tecnicos" : "Ver detalhes tecnicos"}
+        {open ? "Ocultar detalhes técnicos" : "Ver detalhes técnicos"}
       </button>
       {open && <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">{children}</div>}
     </div>
@@ -565,7 +565,7 @@ function customPresentation(action: AdvancedAction) {
     "flush-dns-cache": {
       title: "Limpar cache DNS",
       description: "Atualiza o cache local de nomes de rede.",
-      impact: "Impacto: pode resolver lentidao ou falha de navegacao.",
+      impact: "Impacto: pode resolver lentidão ou falha de navegação.",
     },
     "list-power-plans": {
       title: "Ver planos de energia",
@@ -594,7 +594,7 @@ function customPresentation(action: AdvancedAction) {
     },
     "set-visual-effects-custom": {
       title: "Efeitos visuais personalizados",
-      description: "Marca efeitos visuais como personalizados com confirmacao clara.",
+      description: "Marca efeitos visuais como personalizados com confirmação clara.",
       impact: "Impacto: organizacao dos ajustes visuais. Reversível.",
     },
   };
@@ -633,11 +633,11 @@ function highLevelDescription(action: AdvancedBlockedAction) {
     "defrag-optimize":
       "Analisa a otimização de disco considerando o tipo de unidade antes de qualquer ação.",
     "winsock-reset":
-      "Prepara uma restauracao de componentes de rede quando houver falhas persistentes de conexao.",
+      "Prepara uma restauração de componentes de rede quando houver falhas persistentes de conexao.",
     "disable-windows-update":
       "Controla ajustes de atualização apenas em fluxo guiado, sem reduzir segurança de forma permanente.",
     "disable-defender":
-      "Mantem a proteção do Windows sob controle explicito e com confirmacao dedicada.",
+      "Mantem a proteção do Windows sob controle explicito e com confirmação dedicada.",
     "delete-user-files":
       "Arquivos pessoais continuam fora das rotinas automáticas; qualquer ação manual precisa ser clara e isolada.",
     "remove-programs":
@@ -645,7 +645,7 @@ function highLevelDescription(action: AdvancedBlockedAction) {
     "free-registry-delete":
       "Chaves fora da lista segura exigem revisao técnica antes de qualquer alteração.",
     "hklm-multimedia-tweaks":
-      "Ajustes profundos de desempenho exigem permissao elevada, backup e confirmacao forte.",
+      "Ajustes profundos de desempenho exigem permissao elevada, backup e confirmação forte.",
     "sfc-scan-now":
       "Verifica arquivos do Windows em Reparar Windows com acompanhamento do resultado.",
     "dism-restore-health":
@@ -680,7 +680,7 @@ function riskLabel(risk: AdvancedRisk) {
   }
 
   if (risk === "medium") {
-    return "Medio";
+    return "Médio";
   }
 
   return "Baixo";

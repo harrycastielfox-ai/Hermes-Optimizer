@@ -57,13 +57,13 @@ export type DiagnosticReport = {
     adapterName: string;
     signalPercent?: number;
     gateway: string;
-    pingMsó: number;
+    pingMs: number;
     pingStatus: string;
     status: string;
   };
   temperature: {
     available: boolean;
-    celsiusó: number;
+    celsius: number;
     status: string;
   };
   defender: {

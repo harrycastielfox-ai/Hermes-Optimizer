@@ -123,9 +123,7 @@ function InicializacaoPage() {
       const confirmed = window.confirm(
         `Confirmar ${actionLabel} ${applicableItems.length} item(ns) de inicializacao?\n\n` +
           applicableItems.map((item) => `- ${item.name}`).join("\n") +
-          "
-
-O Hermes não remove programas, não apaga executaveis e criara snapshot/log/rollback antes da ação.",
+          "\n\nO Hermes não remove programas, não apaga executáveis e criará snapshot/log/rollback antes da ação.",
       );
 
       if (!confirmed) {
@@ -205,7 +203,7 @@ O Hermes não remove programas, não apaga executaveis e criara snapshot/log/rol
               icon={Zap}
               label="ALTO IMPACTO"
               value={`${report.highImpactCount}`}
-              sub="Prioridade de revisao"
+              sub="Prioridade de revisão"
             />
             <SummaryCard
               icon={Clock}
@@ -229,7 +227,7 @@ O Hermes não remove programas, não apaga executaveis e criara snapshot/log/rol
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
                   Selecione os programas e use Desativar ou Reativar. Ações reais exigem
-                  confirmacao, snapshot, log e rollback.
+                  confirmação, snapshot, log e rollback.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -286,7 +284,7 @@ O Hermes não remove programas, não apaga executaveis e criara snapshot/log/rol
                       className="flex items-center"
                       title={
                         isItemControllable(item)
-                          ? "Item controlavel pelo Hermes."
+                          ? "Item controlável pelo Hermes."
                           : item.controlReason
                       }
                     >
@@ -414,7 +412,7 @@ function SummaryCard({
 function ImpactBadge({ impact }: { impact: StartupImpact }) {
   const config = {
     high: { label: "Alto", className: "bg-warning/15 text-warning border-warning/25" },
-    medium: { label: "Medio", className: "bg-info/15 text-info border-info/25" },
+    medium: { label: "Médio", className: "bg-info/15 text-info border-info/25" },
     low: { label: "Baixo", className: "bg-success/15 text-success border-success/25" },
   }[impact];
 

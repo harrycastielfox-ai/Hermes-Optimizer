@@ -130,7 +130,7 @@ export function GlobalAnalysisModal({
         assertReadOnly("Diagnostic Engine", diagnostic.readOnly);
         onDiagnostic(diagnostic);
 
-        nextHighlights.push(`${Math.round(diagnostic.healthScore)}/100 de saude geral`);
+        nextHighlights.push(`${Math.round(diagnostic.healthScore)}/100 de saúde geral`);
         nextHighlights.push(
           `${formatGb(diagnostic.disk.freeGb)} GB livres no disco ${diagnostic.disk.mount}`,
         );
@@ -143,7 +143,7 @@ export function GlobalAnalysisModal({
             `CPU: ${Math.round(diagnostic.cpu.usagePercent)}%`,
             `RAM: ${Math.round(diagnostic.ram.usedPercent)}% em uso`,
             `Disco: ${Math.round(diagnostic.disk.usedPercent)}% em uso`,
-            `Seguranca: ${diagnostic.defender.status}`,
+            `Segurança: ${diagnostic.defender.status}`,
           ],
         );
       });
@@ -172,7 +172,7 @@ export function GlobalAnalysisModal({
       await executeStage(runId, "cleanup", async () => {
         const clean = await refreshCleanScanReport();
         assertCleanScanOnly(clean);
-        nextHighlights.push(`${formatGb(clean.totalGb)} GB candidatos a revisao`);
+        nextHighlights.push(`${formatGb(clean.totalGb)} GB candidatos à revisão`);
         setHighlights([...nextHighlights]);
 
         return resultFromAvailability(
@@ -219,7 +219,7 @@ export function GlobalAnalysisModal({
           [
             `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
             `${gamer.summary.protectedCount} processo(s) protegido(s)`,
-            `${gamer.summary.suggestedToClose} sugestao(oes) para futura revisao`,
+            `${gamer.summary.suggestedToClose} sugestão(ões) para futura revisão`,
           ],
         );
       });

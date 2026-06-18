@@ -166,7 +166,7 @@ const fallbackProfiles: HermesProfile[] = [
   {
     id: "extremo",
     name: "Extremo",
-    summary: "Desempenho maximo com confirmacao extra.",
+    summary: "Desempenho maximo com confirmação extra.",
     risk: "high",
     status: "previewOnly",
     reversible: true,
@@ -186,7 +186,7 @@ const fallbackProfiles: HermesProfile[] = [
     ],
     expectedImpact: [
       "Aplica apenas ajustes não visuais desta fase.",
-      "Exige confirmacao extra antes da aplicação real.",
+      "Exige confirmação extra antes da aplicação real.",
       "Usa Clean, Startup, Gamer e Advanced em modo allowlist.",
     ],
     safeguards: fallbackSafeguards,

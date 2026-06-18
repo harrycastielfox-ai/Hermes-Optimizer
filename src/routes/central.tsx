@@ -38,7 +38,7 @@ type RouteTo =
   | "/personalizado"
   | "/configuracoes";
 
-type ActionRisk = "Baixo" | "Medio" | "Alto" | "Extremo";
+type ActionRisk = "Baixo" | "Médio" | "Alto" | "Extremo";
 
 type ActionBadge = "Leitura" | "Dry-run" | "Reversivel" | "Confirmacao" | "Admin";
 
@@ -64,14 +64,14 @@ type OptimizationLevel = {
   tone: "safe" | "clean" | "performance" | "gamer" | "advanced";
   risk: ActionRisk;
   guarantees: string[];
-  technicalDetailsó: string[];
+  technicalDetails: string[];
   actions: OptimizationAction[];
 };
 
 const levels: OptimizationLevel[] = [
   {
     id: "seguro",
-    eyebrow: "NIVEL 1",
+    eyebrow: "NÍVEL 1",
     title: "Seguro",
     summary: "Analise e recomenda sem mudar o Windows.",
     detail: "Entenda o estado do PC antes de qualquer ajuste.",
@@ -129,16 +129,16 @@ const levels: OptimizationLevel[] = [
   },
   {
     id: "limpeza",
-    eyebrow: "NIVEL 2",
+    eyebrow: "NÍVEL 2",
     title: "Limpeza",
     summary: "Temporários, cache, logs e quarentena.",
-    detail: "Limpeza segura por lista segura, sempre com confirmacao.",
+    detail: "Limpeza segura por lista segura, sempre com confirmação.",
     icon: BrushCleaning,
     tone: "clean",
     risk: "Baixo",
     guarantees: [
       "Analise antes.",
-      "Confirmacao obrigatoria.",
+      "Confirmação obrigatória.",
       "Quarentena quando aplicável.",
       "Não toca arquivos pessoais.",
     ],
@@ -157,7 +157,7 @@ const levels: OptimizationLevel[] = [
         icon: BrushCleaning,
         to: "/limpeza",
         risk: "Baixo",
-        badges: ["Dry-run", "Confirmacao", "Reversível"],
+        badges: ["Dry-run", "Confirmacao", "Reversivel"],
       },
       {
         title: "Temporários e cache",
@@ -172,20 +172,20 @@ const levels: OptimizationLevel[] = [
         description: "Recuperacao antes da expiracao.",
         icon: RefreshCcw,
         to: "/limpeza",
-        risk: "Medio",
-        badges: ["Reversível", "Confirmacao"],
+        risk: "Médio",
+        badges: ["Reversivel", "Confirmacao"],
       },
     ],
   },
   {
     id: "performance",
-    eyebrow: "NIVEL 3",
+    eyebrow: "NÍVEL 3",
     title: "Performance",
     summary: "Energia, inicialização e Modo Jogo seguro.",
     detail: "Performance reversível sem mexer em tema ou navegadores.",
     icon: Gauge,
     tone: "performance",
-    risk: "Medio",
+    risk: "Médio",
     guarantees: [
       "Ponto de segurança quando preciso.",
       "Reversao quando suportada.",
@@ -195,47 +195,47 @@ const levels: OptimizationLevel[] = [
     actions: [
       {
         title: "Plano de energia",
-        description: "Troca controlada com reversao.",
+        description: "Troca controlada com reversão.",
         icon: Power,
         to: "/otimizacoes",
-        risk: "Medio",
-        badges: ["Dry-run", "Reversível", "Confirmacao"],
+        risk: "Médio",
+        badges: ["Dry-run", "Reversivel", "Confirmacao"],
       },
       {
         title: "Inicialização",
         description: "Desativa ou reativa sem remover.",
         icon: Zap,
         to: "/inicializacao",
-        risk: "Medio",
-        badges: ["Dry-run", "Reversível", "Confirmacao"],
+        risk: "Médio",
+        badges: ["Dry-run", "Reversivel", "Confirmacao"],
       },
       {
         title: "Modo Jogo",
         description: "Ajuste reversível e seguro para jogos.",
         icon: Gamepad2,
         to: "/otimizacoes",
-        risk: "Medio",
-        badges: ["Dry-run", "Reversível"],
+        risk: "Médio",
+        badges: ["Dry-run", "Reversivel"],
       },
       {
         title: "Performance segura",
         description: "Fluxo protegido, histórico local e bloqueios.",
         icon: MonitorCog,
         to: "/otimizacoes",
-        risk: "Medio",
+        risk: "Médio",
         badges: ["Dry-run", "Confirmacao"],
       },
     ],
   },
   {
     id: "gamer",
-    eyebrow: "NIVEL 4",
+    eyebrow: "NÍVEL 4",
     title: "Gamer",
-    summary: "Jogos, overlays e restauracao pos-jogo.",
+    summary: "Jogos, overlays e restauração pos-jogo.",
     detail: "Prepara o PC para jogar sem fechar nada sozinho.",
     icon: Gamepad2,
     tone: "gamer",
-    risk: "Medio",
+    risk: "Médio",
     guarantees: [
       "Nada fecha sozinho.",
       "Processos críticos protegidos.",
@@ -248,49 +248,49 @@ const levels: OptimizationLevel[] = [
         description: "Fluxo Gamer em modo seguro.",
         icon: Gamepad2,
         to: "/perfis",
-        risk: "Medio",
-        badges: ["Dry-run", "Reversível", "Confirmacao"],
+        risk: "Médio",
+        badges: ["Dry-run", "Reversivel", "Confirmacao"],
       },
       {
         title: "Overlays e launchers",
         description: "Detecta e sugere, sem fechar sozinho.",
         icon: Layers3,
         to: "/perfis",
-        risk: "Medio",
+        risk: "Médio",
         badges: ["Dry-run", "Confirmacao"],
       },
       {
-        title: "Restauracao pos-jogo",
+        title: "Restauração pos-jogo",
         description: "Prepara retorno ao estado anterior.",
         icon: RefreshCcw,
         to: "/perfis",
-        risk: "Medio",
-        badges: ["Dry-run", "Reversível"],
+        risk: "Médio",
+        badges: ["Dry-run", "Reversivel"],
       },
     ],
   },
   {
-    id: "avançado",
-    eyebrow: "NIVEL 5",
+    id: "avancado",
+    eyebrow: "NÍVEL 5",
     title: "Avançado",
-    summary: "Automacoes avançadas e reparo forte.",
-    detail: "Recursos poderosos com aviso forte e confirmacao reforcada.",
+    summary: "Automações avançadas e reparo forte.",
+    detail: "Recursos poderosos com aviso forte e confirmação reforcada.",
     icon: Terminal,
     tone: "advanced",
     risk: "Extremo",
     guarantees: [
       "Comando livre bloqueado.",
-      "Lista segura obrigatoria.",
-      "Confirmacao forte.",
+      "Lista segura obrigatória.",
+      "Confirmação forte.",
       "Estado Base recomendado.",
     ],
     technicalDetails: [
-      "HKCU: leituras e alteracoes somente em chaves permitidas.",
-      "VisualFXSetting: deve ter captura e reversao antes de ajuste visual.",
+      "HKCU: leituras e alterações somente em chaves permitidas.",
+      "VisualFXSetting: deve ter captura e reversão antes de ajuste visual.",
       "StartupDelayInMSec: usado apenas por ação allowlistada e reversível.",
       "GameConfigStore: usado para Game Mode/Game DVR quando permitido.",
       "PowerShell/CMD: sem comando livre digitado pelo usuário.",
-      "SFC/DISM: preparado apenas para reparo avançado com confirmacao forte.",
+      "SFC/DISM: preparado apenas para reparo avançado com confirmação forte.",
     ],
     actions: [
       {
@@ -302,16 +302,16 @@ const levels: OptimizationLevel[] = [
         badges: ["Dry-run", "Confirmacao", "Admin"],
       },
       {
-        title: "Automacoes do Windows",
+        title: "Automações do Windows",
         description: "Ajustes permitidos em componentes avancados.",
         icon: LockKeyhole,
         to: "/personalizado",
         risk: "Alto",
-        badges: ["Dry-run", "Reversível", "Admin"],
+        badges: ["Dry-run", "Reversivel", "Admin"],
       },
       {
         title: "Reparo avançado",
-        description: "Verificacao profunda do Windows com confirmacao forte.",
+        description: "Verificacao profunda do Windows com confirmação forte.",
         icon: AlertTriangle,
         to: "/reparar-windows",
         risk: "Extremo",
@@ -342,7 +342,7 @@ const recommendationContextMap: Record<
   },
   gamer: {
     title: "Experiência Gamer",
-    summary: "Recomendação para preparar jogos, overlays e restauracao pos-jogo com confirmacao.",
+    summary: "Recomendação para preparar jogos, overlays e restauração pos-jogo com confirmação.",
     levelId: "gamer",
   },
   visual: {
@@ -353,13 +353,13 @@ const recommendationContextMap: Record<
   },
   network: {
     title: "Rede/DNS",
-    summary: "Recomendação para validar ações temporarias de rede apenas quando fizer sentido.",
-    levelId: "avançado",
+    summary: "Recomendação para validar ações temporárias de rede apenas quando fizer sentido.",
+    levelId: "avancado",
   },
   advanced: {
     title: "Avançado",
-    summary: "Recomendação para olhar automacoes tecnicas em area guiada e com confirmacao forte.",
-    levelId: "avançado",
+    summary: "Recomendação para olhar automações técnicas em area guiada e com confirmação forte.",
+    levelId: "avancado",
   },
 };
 
@@ -408,7 +408,7 @@ function CentralPage() {
 
   function handleValidate() {
     setNotice(
-      `${selectedLevel.title}: pacote seguro validado em dry-run. Nenhuma alteracao real foi aplicada.`,
+      `${selectedLevel.title}: pacote seguro validado em dry-run. Nenhuma alteração real foi aplicada.`,
     );
   }
 
@@ -608,7 +608,7 @@ function SelectedLevelPanel({
   const includedNames = bundle.includedLevels
     .map((includedLevel) => includedLevel.title)
     .join(" + ");
-  const hasTechnicalDetails = level.id === "avançado" && Boolean(level.technicalDetailsó.length);
+  const hasTechnicalDetails = level.id === "avancado" && Boolean(level.technicalDetails?.length);
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-22px_rgba(15,23,42,0.16)]">
@@ -668,11 +668,11 @@ function SelectedLevelPanel({
             {bundle.guarantees.map((item) => (
               <GuaranteeRow key={item} text={item} />
             ))}
-            {(level.id === "performance" || level.id === "gamer" || level.id === "avançado") && (
+            {(level.id === "performance" || level.id === "gamer" || level.id === "avancado") && (
               <WarningBox text="Performance e Gamer não alteram tema do Windows, modo claro/escuro ou navegadores automaticamente." />
             )}
-            {level.id === "avançado" && (
-              <WarningBox text="Recursos avancados usam lista segura, confirmacao forte, ponto de segurança e reversao quando o modo real for liberado." />
+            {level.id === "avancado" && (
+              <WarningBox text="Recursos avançados usam lista segura, confirmação forte, ponto de segurança e reversão quando o modo real for liberado." />
             )}
             {hasTechnicalDetails && (
               <div className="mt-3 rounded-xl border border-border/70 bg-card px-3 py-3">
@@ -681,11 +681,11 @@ function SelectedLevelPanel({
                   onClick={() => setShowTechnicalDetails((current) => !current)}
                   className="text-[12px] font-bold text-primary transition hover:text-primary/80"
                 >
-                  {showTechnicalDetails ? "Ocultar detalhes tecnicos" : "Ver detalhes tecnicos"}
+                  {showTechnicalDetails ? "Ocultar detalhes técnicos" : "Ver detalhes técnicos"}
                 </button>
                 {showTechnicalDetails && (
                   <div className="mt-3 space-y-2">
-                    {level.technicalDetailsó.map((detail) => (
+                    {level.technicalDetails?.map((detail) => (
                       <div
                         key={detail}
                         className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-[11px] font-semibold text-muted-foreground"
@@ -802,7 +802,7 @@ function riskTone(risk: ActionRisk) {
   switch (risk) {
     case "Baixo":
       return "border-success/20 bg-success/10 text-success";
-    case "Medio":
+    case "Médio":
       return "border-warning/20 bg-warning/10 text-warning";
     case "Alto":
       return "border-orange-200 bg-orange-50 text-orange-700";

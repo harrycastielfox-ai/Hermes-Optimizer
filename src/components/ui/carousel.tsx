@@ -11,8 +11,8 @@ type CarouselOptions = UseCarouselParameters[0];
 type CarouselPlugin = UseCarouselParameters[1];
 
 type CarouselProps = {
-  optsó: CarouselOptions;
-  pluginsó: CarouselPlugin;
+  opts: CarouselOptions;
+  plugins: CarouselPlugin;
   orientation?: "horizontal" | "vertical";
   setApi?: (api: CarouselApi) => void;
 };
@@ -110,7 +110,7 @@ const Carousel = React.forwardRef<
         carouselRef,
         api: api,
         opts,
-        orientation: orientation || (optsó.axis === "y" ? "vertical" : "horizontal"),
+        orientation: orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
         scrollPrev,
         scrollNext,
         canScrollPrev,

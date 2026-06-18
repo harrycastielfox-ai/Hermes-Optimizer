@@ -156,7 +156,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       true,
     ),
   ]),
-  auditPhase("safety", "Permissoes e confirmacao", "Modo teste, logs e controle", [
+  auditPhase("safety", "Permissoes e confirmação", "Modo teste, logs e controle", [
     a(
       "safe-test-lock",
       "Bloqueio de modo teste",
@@ -485,7 +485,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "rollback-manifest-check",
-      "Validar manifesto de reversao",
+      "Validar manifesto de reversão",
       "Restore.Manifest.Validate",
       "restore_validate_snapshot",
       "engine",
@@ -617,7 +617,7 @@ function cleanupSeeds(): AuditSeed[] {
 function startupSeeds(): AuditSeed[] {
   return [
     "Mapear apps ativos",
-    "Desativar alto impacto controlavel",
+    "Desativar alto impacto controlável",
     "Preservar antivirus",
     "Preservar drivers de GPU",
     "Preservar audio essencial",

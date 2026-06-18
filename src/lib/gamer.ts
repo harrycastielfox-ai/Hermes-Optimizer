@@ -83,7 +83,7 @@ export type GamerReport = {
 export type GamerApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  processIdsó: number[];
+  processIds: number[];
   includePerformanceProfile?: boolean;
   gameProfileId?: string;
 };
@@ -166,10 +166,10 @@ export const fallbackGamerReport: GamerReport = {
   },
   safeguards: [
     "Nunca fecha processos críticos do Windows.",
-    "Fechamento real exige confirmacao.",
+    "Fechamento real exige confirmação.",
     "Usa CloseMainWindow; não usa kill forcado.",
     "Snapshot e log local antes de qualquer aplicação.",
-    "Restauracao pos-jogo usa o Restore Engine.",
+    "Restauração pos-jogo usa o Restore Engine.",
   ],
   warnings: ["Gamer Engine real indisponível. Nenhum processo demonstrativo foi exibido."],
 };
@@ -238,7 +238,7 @@ export async function restoreGamerSession(
   request: GamerRestoreSessionRequest,
 ): Promise<GamerRestoreSessionResult> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
-    throw new Error("Restauracao gamer exige o backend Tauri.");
+    throw new Error("Restauração gamer exige o backend Tauri.");
   }
 
   const { invoke } = await import("@tauri-apps/api/core");

@@ -122,7 +122,7 @@ function PerfisPage() {
 
       if (profile.requiresExtraConfirmation) {
         const extremeConfirmed = window.confirm(
-          "Perfil Extremo exige confirmacao extra. Continuar?",
+          "Perfil Extremo exige confirmação extra. Continuar?",
         );
         if (!extremeConfirmed) {
           return;
@@ -197,7 +197,7 @@ function PerfisPage() {
               Perfis
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Perfis locais com ponto de segurança, histórico e reversao antes de ajustes reais.
+              Perfis locais com ponto de segurança, histórico e reversão antes de ajustes reais.
             </p>
           </div>
 
@@ -335,7 +335,7 @@ function GamerEnginePanel({
           <h2 className="text-sm font-bold tracking-[0.18em] text-primary">MODO GAMER HERMES</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Analisa jogos, sobreposicoes e apps em segundo plano. Fechamento real sempre exige
-            confirmacao.
+            confirmação.
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -388,7 +388,7 @@ function GamerEnginePanel({
           <div>
             <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">APPS SUGERIDOS</h3>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              Somente apps com reversao disponível entram na aplicação automática.
+              Somente apps com reversão disponível entram na aplicação automática.
             </p>
           </div>
           <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
@@ -556,7 +556,7 @@ function riskLabel(risk: ProfileRisk) {
   }
 
   if (risk === "medium") {
-    return "Medio";
+    return "Médio";
   }
 
   return "Baixo";

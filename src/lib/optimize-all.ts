@@ -89,9 +89,9 @@ export type OptimizeAllPhaseContext = {
 
 export type OptimizeAllPhaseResult = {
   outputs: string[];
-  reportsó: Partial<OptimizeAllReports>;
+  reports: Partial<OptimizeAllReports>;
   recommendedProfileId?: string;
-  gameTargetsó: OptimizeAllGameTarget[];
+  gameTargets: OptimizeAllGameTarget[];
   requiresGameSelection?: boolean;
 };
 
@@ -221,7 +221,7 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
       cleanResult: result.value ?? undefined,
     },
     outputs: [
-      `${formatGb(clean.totalGb)} GB candidatos a revisao`,
+      `${formatGb(clean.totalGb)} GB candidatos à revisão`,
       `${clean.items.length} area(s) mapeada(s)`,
       result.value
         ? `${result.value.plannedEntries} item(ns) validados pela Clean Engine`
@@ -263,7 +263,7 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
       `${startup.highImpactCount} alto impacto`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados pela Startup Engine`
-        : (result.message ?? "Sem item de alto impacto controlavel agora"),
+        : (result.message ?? "Sem item de alto impacto controlável agora"),
     ],
   };
 }
@@ -414,7 +414,7 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
       `Perfil sugerido: ${profileLabel(profileId)}`,
       result.value
         ? `${result.value.engineResults.length} engine(s) validadas pelo perfil`
-        : (result.message ?? "Perfil disponível para revisao manual"),
+        : (result.message ?? "Perfil disponível para revisão manual"),
       HERMES_SAFE_TEST_MODE ? "Nenhuma alteração real aplicada" : "Perfil aplicado no modo real",
     ],
   };

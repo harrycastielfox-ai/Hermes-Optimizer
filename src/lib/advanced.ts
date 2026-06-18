@@ -46,7 +46,7 @@ export type AdvancedCatalog = {
 export type AdvancedApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  actionIdsó: string[];
+  actionIds: string[];
   extremeMode?: boolean;
 };
 
@@ -74,7 +74,7 @@ export const fallbackAdvancedCatalog: AdvancedCatalog = {
   residentProcess: false,
   actions: [],
   blockedActions: [],
-  warnings: ["Advanced Engine real indisponível. Nenhum catalogo demonstrativo foi exibido."],
+  warnings: ["Advanced Engine real indisponível. Nenhum catálogo demonstrativo foi exibido."],
 };
 
 export async function loadAdvancedCatalog(): Promise<AdvancedCatalog> {
