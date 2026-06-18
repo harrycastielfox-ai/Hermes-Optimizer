@@ -26,14 +26,14 @@ export function Sidebar() {
       await invoke("hermes_window_minimize");
     } catch (commandError) {
       console.warn(
-        "Comando nativo de minimizar indispon?vel, tentando API de janela.",
+        "Comando nativo de minimizar indisponível, tentando API de janela.",
         commandError,
       );
       try {
         const { getCurrentWindow } = await import("@tauri-apps/api/window");
         await getCurrentWindow().minimize();
       } catch (error) {
-        console.warn("N?o foi poss?vel minimizar a janela do Hermes.", error);
+        console.warn("Não foi possível minimizar a janela do Hermes.", error);
       }
     }
   }, []);

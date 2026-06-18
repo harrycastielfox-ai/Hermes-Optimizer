@@ -67,7 +67,7 @@ export const Route = createFileRoute("/otimizar")({
       { title: "Hermes Optimizer - Otimizar" },
       {
         name: "description",
-        content: "Area de otimiza??o guiada do Hermes Optimizer.",
+        content: "Area de otimização guiada do Hermes Optimizer.",
       },
     ],
   }),
@@ -170,7 +170,7 @@ function OtimizarPage() {
           phase: "prepare",
           createdAt: completedAt,
           safeMode: HERMES_SAFE_TEST_MODE,
-          message: "Reinicie o PC antes de executar a Otimiza??o Avan?ada.",
+          message: "Reinicie o PC antes de executar a Otimização Avançada.",
           bootIdAtCreated: bootContext.currentBootId,
         };
         setRestartRecommendation(nextRestart);
@@ -197,8 +197,8 @@ function OtimizarPage() {
 
   const healthScore = Math.round(diagnostic.healthScore);
   const projectStats = [
-    { label: "Sa?de", value: `${healthScore}/100` },
-    { label: "Meta", value: "150 a??es" },
+    { label: "Saúde", value: `${healthScore}/100` },
+    { label: "Meta", value: "150 ações" },
     { label: "Modo", value: HERMES_SAFE_TEST_MODE ? "Teste" : "Real" },
   ];
   const machineFacts = [
@@ -207,13 +207,13 @@ function OtimizarPage() {
     { icon: Gamepad2, label: "GPU", value: compactValue(diagnostic.gpu.name) },
   ];
   const projectPhases = [
-    { icon: Activity, title: "Diagn?stico", text: "Entende o PC antes de qualquer decis?o." },
+    { icon: Activity, title: "Diagnóstico", text: "Entende o PC antes de qualquer decisão." },
     {
       icon: Wrench,
       title: "Componentes",
-      text: "VC++, DirectX e depend?ncias entram como modulo.",
+      text: "VC++, DirectX e dependências entram como modulo.",
     },
-    { icon: Gauge, title: "Performance", text: "Energia, inicializa??o, limpeza e modo gamer." },
+    { icon: Gauge, title: "Performance", text: "Energia, inicialização, limpeza e modo gamer." },
   ];
   const optimizeLocked =
     !quickPrepareGate ||
@@ -239,7 +239,7 @@ function OtimizarPage() {
                 </h1>
                 <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
                   O Dashboard acompanha o PC. Esta area concentra a parte que resolve: analisar,
-                  montar o plano e preparar a otimiza??o em fases.
+                  montar o plano e preparar a otimização em fases.
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 self-end">
@@ -420,8 +420,8 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             <h2 className="mt-1 text-lg font-black text-foreground">{report.title}</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.safeMode
-                ? "Modo teste: a??es contabilizadas como leitura ou simulacao."
-                : "Modo real: a??es implementadas contabilizadas como aplicadas."}
+                ? "Modo teste: ações contabilizadas como leitura ou simulacao."
+                : "Modo real: ações implementadas contabilizadas como aplicadas."}
             </p>
           </div>
         </div>
@@ -449,7 +449,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             visibleActions.map((action) => <ExecutionActionRow key={action.id} action={action} />)
           ) : (
             <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
-              Nenhuma a??o registrada ainda.
+              Nenhuma ação registrada ainda.
             </p>
           )}
         </div>
@@ -466,8 +466,8 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             {report.summary.plannedOnlyActions > 0
               ? `${report.summary.plannedOnlyActions} acao(oes) ja estao desenhadas, mas ainda nao devem ser tratadas como executadas. O proximo passo e implementar esses itens no motor allowlistado.`
               : report.summary.missingToTarget === 0
-                ? "As 150 a??es estao mapeadas como itens tecnicos auditaveis. Agora o refinamento e aumentar a parte aplicada no modo real."
-                : "A Fase 1 ainda mostra a distancia at? 150. O caminho e converter mais ajustes seguros em a??es reais do motor Hermes."}
+                ? "As 150 ações estao mapeadas como itens tecnicos auditaveis. Agora o refinamento e aumentar a parte aplicada no modo real."
+                : "A Fase 1 ainda mostra a distancia até 150. O caminho e converter mais ajustes seguros em ações reais do motor Hermes."}
           </p>
           {report.notes.length > 0 && (
             <div className="mt-3 space-y-1">
@@ -649,13 +649,13 @@ function OptimizationPhaseBoard({
           <p className="text-xs font-bold tracking-[0.22em] text-primary">FASES DE OTIMIZACAO</p>
           <p className="mt-1 text-[12px] text-muted-foreground">
             Faca na ordem. Conclua a preparacao, reinicie quando o Hermes pedir e depois rode a fase
-            avan?ada.
+            avançada.
           </p>
         </div>
         <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/70 bg-card/85 px-4 py-2">
           <PhaseStepperItem index="1" label="Preparacao" active />
           <span className="h-px w-8 bg-border" />
-          <PhaseStepperItem index="2" label="Avan?ada" active={!optimizeLocked} />
+          <PhaseStepperItem index="2" label="Avançada" active={!optimizeLocked} />
         </div>
       </div>
 
@@ -727,11 +727,11 @@ function OptimizationPhaseBoard({
               {phase2StatusLabel}
             </span>
           </div>
-          <h2 className="text-base font-black text-foreground">Otimiza??o Avan?ada</h2>
+          <h2 className="text-base font-black text-foreground">Otimização Avançada</h2>
           <div className="mt-3 space-y-2">
             <PhaseActionRow
               index="1"
-              label="Aplicar cache e limpeza avan?ada"
+              label="Aplicar cache e limpeza avançada"
               ready={!optimizeLocked}
             />
             <PhaseActionRow
@@ -764,7 +764,7 @@ function OptimizationPhaseBoard({
                 {isSmartOptimizeOpen
                   ? "Otimizando..."
                   : prepareRebootStatus === "confirmed"
-                    ? "Iniciar Otimiza??o Avan?ada"
+                    ? "Iniciar Otimização Avançada"
                     : "Iniciar mesmo assim"}
               </button>
               <p className="mt-2 text-center text-[12px] font-bold text-muted-foreground">
@@ -794,12 +794,12 @@ function Phase2RebootReadiness({
     ? "Reinicio detectado"
     : isPending
       ? "Aguardando reinicio"
-      : "Reinicio n?o verificado";
+      : "Reinicio não verificado";
   const text = isConfirmed
     ? "O Windows iniciou de novo depois da Fase 1. A Fase 2 esta no ponto ideal."
     : isPending
       ? "A Fase 1 foi concluida nesta mesma sessao do Windows. Reiniciar antes da Fase 2 tende a render melhor."
-      : "No app instalado o Hermes detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indispon?vel.";
+      : "No app instalado o Hermes detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indisponível.";
   const colorClass = isConfirmed
     ? "border-success/25 bg-success/10 text-success"
     : isPending
@@ -865,7 +865,7 @@ function RestartRecommendationNotice({
   const Icon = rebootConfirmed ? CheckCircle2 : Power;
   const title = rebootConfirmed ? "Reinicio detectado" : "Reinicio recomendado";
   const message = rebootConfirmed
-    ? "O Windows reiniciou depois da Fase 1. A Otimiza??o Avan?ada esta no estado ideal."
+    ? "O Windows reiniciou depois da Fase 1. A Otimização Avançada esta no estado ideal."
     : recommendation.message;
   const panelClass = rebootConfirmed
     ? "border-success/25 bg-success/10"
@@ -1045,7 +1045,7 @@ function TrustCard({ icon: Icon, title, text }: { icon: LucideIcon; title: strin
 
 function compactValue(value: string) {
   if (!value || /indispon/i.test(value)) {
-    return "Indispon?vel";
+    return "Indisponível";
   }
 
   return value.length > 34 ? `${value.slice(0, 34).trim()}...` : value;

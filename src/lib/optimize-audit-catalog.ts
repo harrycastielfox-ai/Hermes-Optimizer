@@ -31,7 +31,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
   auditPhase("plan", "Plano inteligente", "Orquestrador + Hermes IA", [
     a(
       "diagnostic-health-score",
-      "Ler sa?de geral",
+      "Ler saúde geral",
       "diagnostic.healthScore",
       "diagnostic_engine_read_cached",
       "analysis",
@@ -76,7 +76,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "advisor-recommendations",
-      "Gerar recomenda??es",
+      "Gerar recomendações",
       "advisor.recommendations",
       "advisor_ai_engine_analyze",
       "analysis",
@@ -112,7 +112,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "restart-policy",
-      "Avaliar reinicio necess?rio",
+      "Avaliar reinicio necessário",
       "restart.policy",
       "system_boot_context_read",
       "analysis",
@@ -148,7 +148,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "execution-report",
-      "Preparar relat?rio",
+      "Preparar relatório",
       "execution.report",
       "buildExecutionReport",
       "analysis",
@@ -213,7 +213,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "execution-log",
-      "Registrar log da execu??o",
+      "Registrar log da execução",
       "execution.log",
       "localStorage hermes.execution.report.v1",
       "engine",
@@ -231,7 +231,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "boot-verification",
-      "Detectar boot ap?s Fase 1",
+      "Detectar boot após Fase 1",
       "system.boot.currentBootId",
       "Win32_OperatingSystem.LastBootUpTime",
       "powershell",
@@ -248,7 +248,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       true,
     ),
   ]),
-  auditPhase("components", "Componentes essenciais", "VC++, DirectX e depend?ncias", [
+  auditPhase("components", "Componentes essenciais", "VC++, DirectX e dependências", [
     a(
       "dism-analyze-component-store",
       "Analisar Component Store",
@@ -287,7 +287,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "dism-enable-directplay",
-      "Habilitar DirectPlay quando necess?rio",
+      "Habilitar DirectPlay quando necessário",
       "DISM.DirectPlay.Enable",
       "DISM /Online /Enable-Feature /FeatureName:DirectPlay",
       "cmd",
@@ -412,14 +412,14 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       false,
     ),
   ]),
-  auditPhase("cleanup", "Limpeza segura", "Tempor?rios, cache e logs", [...cleanupSeeds()]),
-  auditPhase("startup", "Inicializa??o", "Apps de alto impacto", [...startupSeeds()]),
+  auditPhase("cleanup", "Limpeza segura", "Temporários, cache e logs", [...cleanupSeeds()]),
+  auditPhase("startup", "Inicialização", "Apps de alto impacto", [...startupSeeds()]),
   auditPhase("performance", "Performance", "Energia, Game Mode e rede", [...performanceSeeds()]),
   auditPhase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
   auditPhase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", [
     ...profileSeeds(),
   ]),
-  auditPhase("manual", "Avan?ado guiado", "Comandos allowlistados e ajustes finos", [
+  auditPhase("manual", "Avançado guiado", "Comandos allowlistados e ajustes finos", [
     a(
       "winsock-reset",
       "Resetar Winsock",
@@ -622,7 +622,7 @@ function startupSeeds(): AuditSeed[] {
     "Preservar drivers de GPU",
     "Preservar audio essencial",
     "Preservar Discord se Gamer",
-    "Atraso de inicializa??o OFF",
+    "Atraso de inicialização OFF",
     "Startup Run key review",
     "Startup folder review",
     "Scheduled startup tasks",
@@ -675,7 +675,7 @@ function performanceSeeds(): AuditSeed[] {
     ["game-dvr-off", "GameDVR OFF", "GameDVR.AppCapture", "HKCU GameDVR AppCaptureEnabled=0", true],
     [
       "visual-gamer-minimal",
-      "Visual gamer m?nimo",
+      "Visual gamer mínimo",
       "Visual.PerformancePreset",
       "SystemPropertiesPerformance.exe preset",
       true,
@@ -749,7 +749,7 @@ function performanceSeeds(): AuditSeed[] {
     ],
     [
       "notifications-off",
-      "Notifica??es foco gamer",
+      "Notificações foco gamer",
       "Notifications.Gamer",
       "HKCU PushNotifications",
       false,
@@ -809,7 +809,7 @@ function profileSeeds(): AuditSeed[] {
     "Perfil Trabalho",
     "Perfil Economia",
     "Perfil Criacao",
-    "Perfil Avan?ado",
+    "Perfil Avançado",
     "Perfil Extremo bloqueado",
     "Aplicar energia do perfil",
     "Aplicar startup do perfil",
@@ -818,7 +818,7 @@ function profileSeeds(): AuditSeed[] {
     "Validar conflito entre perfis",
     "Sugerir perfil por IA local",
     "Persistir perfil recomendado",
-    "Relat?rio do perfil aplicado",
+    "Relatório do perfil aplicado",
   ].map((title, index) =>
     a(
       `profile-${index + 1}`,

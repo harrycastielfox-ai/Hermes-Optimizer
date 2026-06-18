@@ -71,15 +71,15 @@ type PlanAction = {
 const phaseTemplates: OptimizePhase[] = [
   phase("plan", "Plano inteligente", "Orquestrador + Hermes IA", BrainCircuit, 14),
   phase("safety", "Permissoes e confirmacao", "Modo teste, logs e controle", ShieldCheck, 10),
-  phase("components", "Componentes essenciais", "VC++, DirectX e depend?ncias", Wrench, 18),
-  phase("cleanup", "Limpeza segura", "Tempor?rios, cache e logs", BrushCleaning, 26),
-  phase("startup", "Inicializa??o", "Apps de alto impacto", Zap, 18),
+  phase("components", "Componentes essenciais", "VC++, DirectX e dependências", Wrench, 18),
+  phase("cleanup", "Limpeza segura", "Temporários, cache e logs", BrushCleaning, 26),
+  phase("startup", "Inicialização", "Apps de alto impacto", Zap, 18),
   phase("performance", "Performance", "Energia, Game Mode e rede", Gauge, 22),
   phase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", Gamepad2, 18),
   phase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", Cpu, 16),
   phase(
     "manual",
-    "Avan?ado guiado",
+    "Avançado guiado",
     "Comandos allowlistados e ajustes finos",
     SlidersHorizontal,
     8,
@@ -103,7 +103,7 @@ export function SmartOptimizeModal({
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [reports, setReports] = useState<OptimizeAllReports>({});
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
-  const [currentStatus, setCurrentStatus] = useState("Aguardando otimiza??o.");
+  const [currentStatus, setCurrentStatus] = useState("Aguardando otimização.");
   const [recommendedProfileId, setRecommendedProfileId] = useState("seguro");
   const [gameTargets, setGameTargets] = useState<OptimizeAllGameTarget[]>([]);
   const [selectedGameTarget, setSelectedGameTarget] = useState<OptimizeAllGameTarget | null>(null);
@@ -166,7 +166,7 @@ export function SmartOptimizeModal({
       }
 
       setRunStatus("failed");
-      setCurrentStatus("Otimiza??o interrompida em modo teste.");
+      setCurrentStatus("Otimização interrompida em modo teste.");
       appendLog("error", errorMessage(error));
     }
   }
@@ -201,11 +201,11 @@ export function SmartOptimizeModal({
         }
         if (result.gameTargets) {
           setGameTargets(result.gameTargets);
-          setSelectedGameTarget((current) => current ?? result.gameTargets?.[0] ?? null);
+          setSelectedGameTarget((current) => current ?? result.gameTargetsó.[0] ?? null);
         }
         setReports({ ...nextReports });
 
-        if (result.requiresGameSelection && result.gameTargets?.length) {
+        if (result.requiresGameSelection && result.gameTargetsó.length) {
           pausedForGame = true;
           resumeState.current = {
             runId,
@@ -236,14 +236,14 @@ export function SmartOptimizeModal({
     onCompleted?.(
       buildExecutionReport({
         phase: "optimize",
-        title: "Otimiza??o Avan?ada",
+        title: "Otimização Avançada",
         safeMode: HERMES_SAFE_TEST_MODE,
         actions: reportActions.current,
         notes: [
           "Botao 2 concluido em fluxo guiado.",
-          "A meta de 150 a??es e contabilizada por fases do plano Hermes.",
+          "A meta de 150 ações e contabilizada por fases do plano Hermes.",
           HERMES_SAFE_TEST_MODE
-            ? "Modo teste: nenhuma altera??o real foi aplicada."
+            ? "Modo teste: nenhuma alteração real foi aplicada."
             : "Modo real: fases implementadas foram executadas.",
         ],
       }),
@@ -276,7 +276,7 @@ export function SmartOptimizeModal({
     setSelectedGameTarget(null);
     setRunStatus("running");
     setCurrentStatus("Continuando sem alvo Gamer especifico.");
-    appendLog("warning", "Sele??o de jogo ignorada.");
+    appendLog("warning", "Seleção de jogo ignorada.");
     void runPhases(resume.runId, resume.phaseIndex, resume.reports, resume.recommendedProfileId, {
       skip: true,
     });
@@ -293,7 +293,7 @@ export function SmartOptimizeModal({
 
     const template = phaseTemplates.find((item) => item.id === phaseId);
     setCurrentStatus(template?.title ?? "Executando fase.");
-    updatePhase(phaseId, { status: "running", outputs: ["Executando valida??o local."] });
+    updatePhase(phaseId, { status: "running", outputs: ["Executando validação local."] });
     appendLog("info", `Iniciando: ${template?.title ?? phaseId}.`);
 
     try {
@@ -343,15 +343,15 @@ export function SmartOptimizeModal({
     cancelRequested.current = true;
     resumeState.current = null;
     setRunStatus("cancelled");
-    setCurrentStatus("Cancelamento solicitado. O Hermes n?o iniciara novas fases.");
+    setCurrentStatus("Cancelamento solicitado. O Hermes não iniciara novas fases.");
     setPhases((current) =>
       current.map((item) =>
         item.status === "pending"
-          ? { ...item, status: "cancelled", outputs: ["Cancelado pelo usu?rio."] }
+          ? { ...item, status: "cancelled", outputs: ["Cancelado pelo usuário."] }
           : item,
       ),
     );
-    appendLog("warning", "Usu?rio cancelou o fluxo Resolver Agora.");
+    appendLog("warning", "Usuário cancelou o fluxo Resolver Agora.");
   }
 
   function shouldStop(runId: number) {
@@ -417,7 +417,7 @@ export function SmartOptimizeModal({
           <section className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
             <SummaryCard
               icon={Zap}
-              label="A??es avaliadas"
+              label="Ações avaliadas"
               value={`${TOTAL_PLANNED_ACTIONS}`}
               sub={`Agrupadas em ${phaseTemplates.length} fases`}
             />
@@ -441,7 +441,7 @@ export function SmartOptimizeModal({
               icon={ShieldCheck}
               label="Modo"
               value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}
-              sub={HERMES_SAFE_TEST_MODE ? "Modo teste ativo" : "Execu??o real liberada"}
+              sub={HERMES_SAFE_TEST_MODE ? "Modo teste ativo" : "Execução real liberada"}
             />
           </section>
 
@@ -450,12 +450,12 @@ export function SmartOptimizeModal({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <p className="text-sm font-bold">
-                  O Hermes mira 150 a??es, mas executa apenas o que j? existe no motor.
+                  O Hermes mira 150 ações, mas executa apenas o que já existe no motor.
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
                   {HERMES_SAFE_TEST_MODE
-                    ? "O modo teste ainda n?o aplica altera??es reais. A??es ainda n?o implementadas ficam como planejamento ou indisponiveis, sem fingir execu??o."
-                    : "Modo real ligado: o Hermes aplica apenas as a??es implementadas, allowlistadas e confirmadas pelo motor."}
+                    ? "O modo teste ainda não aplica alterações reais. Ações ainda não implementadas ficam como planejamento ou indisponiveis, sem fingir execução."
+                    : "Modo real ligado: o Hermes aplica apenas as ações implementadas, allowlistadas e confirmadas pelo motor."}
                 </p>
               </div>
             </div>
@@ -538,7 +538,7 @@ export function SmartOptimizeModal({
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-success" />
             {HERMES_SAFE_TEST_MODE
-              ? "Modo de teste: nenhuma altera??o real ser? aplicada."
+              ? "Modo de teste: nenhuma alteração real será aplicada."
               : "Modo real: executa funcoes implementadas com confirmacao."}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -589,14 +589,14 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   if (reports.diagnostic) {
     actions.push({
       id: "diagnostic",
-      title: "Diagn?stico do PC",
+      title: "Diagnóstico do PC",
       detail: `Saude ${Math.round(reports.diagnostic.healthScore)}/100 analisada.`,
       status: "ok",
     });
   } else {
     actions.push({
       id: "diagnostic",
-      title: "Diagn?stico do PC",
+      title: "Diagnóstico do PC",
       detail: "Aguardando coleta inicial.",
       status: "pending",
     });
@@ -628,7 +628,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
 
     actions.push({
       id: "startup",
-      title: "Inicializa??o",
+      title: "Inicialização",
       detail,
       status: reports.startupResult || reports.startup.highImpactCount > 0 ? "ready" : "ok",
     });
@@ -646,7 +646,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   }
 
   if (reports.gamer) {
-    let detail = "Sem jogo alvo aberto. Sele??o manual ser? necess?ria.";
+    let detail = "Sem jogo alvo aberto. Seleção manual será necessária.";
     if (reports.gamerResult) {
       detail = `${reports.gamerResult.closedProcesses.length} processo(s) validados pela engine.`;
     } else if (reports.gamer.summary.detectedGames > 0) {
@@ -673,7 +673,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   if (reports.advanced) {
     actions.push({
       id: "advanced",
-      title: "Avan?ado guiado",
+      title: "Avançado guiado",
       detail: reports.advancedResult
         ? `${reports.advancedResult.appliedActions.length} comando(s) validados.`
         : `${reports.advanced.actions.length} comando(s) mapeados.`,
@@ -685,10 +685,10 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   actions.push({
     id: "components",
     title: "Componentes CMD/DISM",
-    detail: componentCmds?.length
+    detail: componentCmdsó.length
       ? `${componentCmds.length} comando(s): limpeza de componentes, NetFx3 e DirectPlay.`
       : "Aguardando mapeamento de componentes do Windows.",
-    status: componentCmds?.length ? "ready" : "pending",
+    status: componentCmdsó.length ? "ready" : "pending",
   });
 
   return actions;
@@ -895,7 +895,7 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-              {phase.plannedActions} a??es
+              {phase.plannedActions} ações
             </span>
             <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
               Engine real

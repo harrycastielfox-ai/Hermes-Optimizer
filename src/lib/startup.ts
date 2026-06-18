@@ -39,8 +39,8 @@ export type StartupApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
   action: StartupApplyAction;
-  itemIds?: string[];
-  impacts?: StartupImpact[];
+  itemIdsó: string[];
+  impactsó: StartupImpact[];
 };
 
 export type StartupApplyResult = {
@@ -74,7 +74,7 @@ export const fallbackStartupReport: StartupReport = {
   mediumImpactCount: 0,
   lowImpactCount: 0,
   items: [],
-  warnings: ["Leitura real de inicializa??o indispon?vel. Nenhum app demonstrativo foi exibido."],
+  warnings: ["Leitura real de inicialização indisponível. Nenhum app demonstrativo foi exibido."],
 };
 
 export async function loadStartupReport(): Promise<StartupReport> {
@@ -96,7 +96,7 @@ export async function refreshStartupReport(): Promise<StartupReport> {
     const report = await invoke<StartupReport>("startup_engine_read");
     return writeLocalReportCache("startup-report", report);
   } catch (error) {
-    console.warn("Startup Engine indispon?vel, usando fallback indispon?vel.", error);
+    console.warn("Startup Engine indisponível, usando fallback indisponível.", error);
     return fallbackStartupReport;
   }
 }

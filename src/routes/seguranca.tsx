@@ -34,7 +34,7 @@ import {
 export const Route = createFileRoute("/seguranca")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Seguran?a e Recuperacao" },
+      { title: "Hermes Optimizer - Segurança e Recuperacao" },
       { name: "description", content: "Snapshots, logs e rollback local do Hermes Optimizer." },
     ],
   }),
@@ -96,8 +96,8 @@ function SecurityRecoveryPage() {
 
   const selectedSnapshot = useMemo(
     () =>
-      snapshots?.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ??
-      snapshots?.snapshots[0] ??
+      snapshotsó.snapshots.find((snapshot) => snapshot.id === selectedSnapshotId) ??
+      snapshotsó.snapshots[0] ??
       null,
     [snapshots, selectedSnapshotId],
   );
@@ -142,7 +142,7 @@ function SecurityRecoveryPage() {
         `Restaurar este snapshot agora?\n\n${snapshot.name}\nAcoes reversiveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executara apenas rollback suportado pelo manifesto seguro.`,
       );
       if (!restoreConfirmed) {
-        setNotice("Restauracao cancelada ap?s valida??o segura.");
+        setNotice("Restauracao cancelada após validação segura.");
         await loadSecurityCenter();
         return;
       }
@@ -164,7 +164,7 @@ function SecurityRecoveryPage() {
     try {
       const payload = {
         generatedAt: new Date().toISOString(),
-        source: "Hermes Optimizer - Seguran?a e Recuperacao",
+        source: "Hermes Optimizer - Segurança e Recuperacao",
         localOnly: true,
         status,
         snapshots,
@@ -179,7 +179,7 @@ function SecurityRecoveryPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setNotice("Relat?rio local exportado com snapshots, logs e status do Restore Engine.");
+      setNotice("Relatório local exportado com snapshots, logs e status do Restore Engine.");
     } catch (nextError) {
       setError(errorMessage(nextError));
     }
@@ -187,17 +187,17 @@ function SecurityRecoveryPage() {
 
   function prepareHistoryClear() {
     const confirmation = window.prompt(
-      "Limpar hist?rico local exigira uma bridge segura em fase futura.
+      "Limpar histórico local exigira uma bridge segura em fase futura.
 
 Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
     );
 
     if (confirmation !== "LIMPAR HISTORICO") {
-      setNotice("Limpeza de hist?rico cancelada.");
+      setNotice("Limpeza de histórico cancelada.");
       return;
     }
 
-    setNotice("Confirmacao forte recebida. Nenhum hist?rico foi apagado nesta etapa.");
+    setNotice("Confirmacao forte recebida. Nenhum histórico foi apagado nesta etapa.");
   }
 
   return (
@@ -214,7 +214,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 Restore Center Hermes
               </h1>
               <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-                Snapshots, rollback, logs locais, hist?rico de altera??es e exportacao de relat?rio
+                Snapshots, rollback, logs locais, histórico de alterações e exportacao de relatório
                 sem nuvem.
               </p>
             </div>
@@ -236,7 +236,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
               icon={Database}
               label="SNAPSHOTS"
               value={status ? `${status.totalSnapshots}/${status.maxSnapshots}` : "--"}
-              sub={status?.retentionPolicy ?? "Carregando hist?rico local"}
+              sub={statusó.retentionPolicy ?? "Carregando histórico local"}
             />
             <StatusCard
               icon={History}
@@ -248,7 +248,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
               icon={RotateCcw}
               label="ROLLBACK"
               value={status ? `${status.snapshotsWithRollback}` : "--"}
-              sub="Snapshots com manifesto revers?vel"
+              sub="Snapshots com manifesto reversível"
             />
             <StatusCard
               icon={LockKeyhole}
@@ -268,7 +268,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-foreground">Snapshots e rollback</h2>
                   <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                    Toda restauracao passa por valida??o antes de aplicar. Em Safe Test Mode, a
+                    Toda restauracao passa por validação antes de aplicar. Em Safe Test Mode, a
                     bridge TypeScript forca dry-run.
                   </p>
                 </div>
@@ -283,14 +283,14 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 />
                 <SecurityActionButton
                   icon={Trash2}
-                  label="Limpar hist?rico"
+                  label="Limpar histórico"
                   onClick={prepareHistoryClear}
                   disabled={isLoading || isWorking}
                 />
               </div>
             </div>
 
-            {status?.warnings && status.warnings.length > 0 && (
+            {statusó.warnings && status.warnings.length > 0 && (
               <div className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-4 py-3 text-sm text-warning">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -340,7 +340,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  {snapshots?.snapshots.length ? (
+                  {snapshotsó.snapshots.length ? (
                     snapshots.snapshots.map((snapshot) => (
                       <SnapshotRow
                         key={snapshot.id}
@@ -353,7 +353,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                     <EmptyState
                       icon={Database}
                       title="Nenhum snapshot local"
-                      sub="Os snapshots aparecerao aqui ap?s a primeira a??o com Restore Engine."
+                      sub="Os snapshots aparecerao aqui após a primeira ação com Restore Engine."
                     />
                   )}
                 </div>
@@ -371,7 +371,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                         <ResultBox
                           title={
                             validation.fullyReversible
-                              ? "Snapshot revers?vel"
+                              ? "Snapshot reversível"
                               : "Snapshot validado com atencao"
                           }
                           message={validation.message}
@@ -404,7 +404,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                     LOGS DO SISTEMA
                   </h3>
                   <div className="mt-3 space-y-2">
-                    {events?.events.length ? (
+                    {eventsó.events.length ? (
                       events.events
                         .slice(0, 7)
                         .map((event) => <EventRow key={event.id} event={event} />)
@@ -412,7 +412,7 @@ Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
                       <EmptyState
                         icon={FileText}
                         title="Sem logs recentes"
-                        sub="Eventos de snapshot, valida??o e rollback aparecerao aqui."
+                        sub="Eventos de snapshot, validação e rollback aparecerao aqui."
                       />
                     )}
                   </div>
@@ -529,7 +529,7 @@ function SnapshotRow({
         </div>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
-        <MiniStat label="A??es" value={`${snapshot.plannedActions.length}`} />
+        <MiniStat label="Ações" value={`${snapshot.plannedActions.length}`} />
         <MiniStat label="Rollback" value={`${snapshot.rollbackManifest.length}`} />
         <MiniStat label="Estado" value={`${snapshot.previousState.length}`} />
       </div>
@@ -561,7 +561,7 @@ function SelectedSnapshotDetails({ snapshot }: { snapshot: RestoreSnapshot }) {
         ))}
         {snapshot.rollbackManifest.length === 0 && (
           <p className="text-[12px] text-muted-foreground">
-            Snapshot estrutural sem a??es reversiveis registradas.
+            Snapshot estrutural sem ações reversiveis registradas.
           </p>
         )}
       </div>

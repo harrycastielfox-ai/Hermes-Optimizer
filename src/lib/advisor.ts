@@ -51,7 +51,7 @@ export const currentDashboardInput: AdvisorInput = {
     bootTimeSeconds: 0,
     securityActive: false,
     temporaryFilesGb: 0,
-    powerPlanName: "Indispon?vel",
+    powerPlanName: "Indisponível",
   },
   benchmark: {
     score: 0,
@@ -61,13 +61,13 @@ export const currentDashboardInput: AdvisorInput = {
 export const fallbackAdvisorRecommendations: AdvisorRecommendation[] = [
   {
     id: "fallback-advisor-unavailable",
-    title: "Recomenda??es indisponiveis",
+    title: "Recomendações indisponiveis",
     description:
-      "O Advisor Pro precisa de diagn?stico real do backend Tauri. Nenhuma recomenda??o demonstrativa foi exibida.",
+      "O Advisor Pro precisa de diagnóstico real do backend Tauri. Nenhuma recomendação demonstrativa foi exibida.",
     severity: "warning",
     category: "unavailable",
     priority: 10,
-    source: "fallback indispon?vel",
+    source: "fallback indisponível",
   },
 ];
 
@@ -88,7 +88,7 @@ export async function loadAdvisorRecommendations(
       ? report.recommendations
       : fallbackAdvisorRecommendations;
   } catch (error) {
-    console.warn("Advisor Pro local indispon?vel, usando fallback indispon?vel.", error);
+    console.warn("Advisor Pro local indisponível, usando fallback indisponível.", error);
     return fallbackAdvisorRecommendations;
   }
 }

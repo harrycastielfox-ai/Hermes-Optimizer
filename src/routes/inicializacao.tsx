@@ -29,10 +29,10 @@ import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 export const Route = createFileRoute("/inicializacao")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Inicializa??o" },
+      { title: "Hermes Optimizer - Inicialização" },
       {
         name: "description",
-        content: "Leitura local dos programas de inicializa??o do Hermes Optimizer.",
+        content: "Leitura local dos programas de inicialização do Hermes Optimizer.",
       },
     ],
   }),
@@ -125,16 +125,16 @@ function InicializacaoPage() {
           applicableItems.map((item) => `- ${item.name}`).join("\n") +
           "
 
-O Hermes n?o remove programas, n?o apaga executaveis e criara snapshot/log/rollback antes da a??o.",
+O Hermes não remove programas, não apaga executaveis e criara snapshot/log/rollback antes da ação.",
       );
 
       if (!confirmed) {
-        setNotice("A??o de inicializa??o cancelada antes de alterar o Windows.");
+        setNotice("Ação de inicialização cancelada antes de alterar o Windows.");
         return;
       }
     } else {
       setNotice(
-        "Modo Seguro de Teste ativo: esta a??o ser? executada como dry-run, sem alterar inicializa??o.",
+        "Modo Seguro de Teste ativo: esta ação será executada como dry-run, sem alterar inicialização.",
       );
     }
 
@@ -174,7 +174,7 @@ O Hermes n?o remove programas, n?o apaga executaveis e criara snapshot/log/rollb
                 STARTUP ENGINE
               </p>
               <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
-                Inicializa??o
+                Inicialização
               </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Controle seguro dos programas que iniciam com o Windows. O Hermes nunca remove
@@ -228,7 +228,7 @@ O Hermes n?o remove programas, n?o apaga executaveis e criara snapshot/log/rollb
                   PROGRAMAS DE INICIALIZACAO
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Selecione os programas e use Desativar ou Reativar. A??es reais exigem
+                  Selecione os programas e use Desativar ou Reativar. Ações reais exigem
                   confirmacao, snapshot, log e rollback.
                 </p>
               </div>
@@ -318,7 +318,7 @@ O Hermes n?o remove programas, n?o apaga executaveis e criara snapshot/log/rollb
 
                 {report.items.length === 0 && (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhum programa de inicializa??o foi encontrado pela leitura local.
+                    Nenhum programa de inicialização foi encontrado pela leitura local.
                   </div>
                 )}
               </div>

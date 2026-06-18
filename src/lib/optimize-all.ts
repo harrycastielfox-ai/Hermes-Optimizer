@@ -89,9 +89,9 @@ export type OptimizeAllPhaseContext = {
 
 export type OptimizeAllPhaseResult = {
   outputs: string[];
-  reports?: Partial<OptimizeAllReports>;
+  reportsó: Partial<OptimizeAllReports>;
   recommendedProfileId?: string;
-  gameTargets?: OptimizeAllGameTarget[];
+  gameTargetsó: OptimizeAllGameTarget[];
   requiresGameSelection?: boolean;
 };
 
@@ -225,7 +225,7 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
       `${clean.items.length} area(s) mapeada(s)`,
       result.value
         ? `${result.value.plannedEntries} item(ns) validados pela Clean Engine`
-        : (result.message ?? "Sem item seguro selecionado para valida??o"),
+        : (result.message ?? "Sem item seguro selecionado para validação"),
     ],
   };
 }
@@ -293,7 +293,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
       result.value
         ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
-        : (result.message ?? "Componentes ainda n?o disponiveis neste PC"),
+        : (result.message ?? "Componentes ainda não disponiveis neste PC"),
     ],
   };
 }
@@ -322,7 +322,7 @@ async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseR
       `Modo Jogo: ${performance.gameMode.status}`,
       result.value
         ? `${result.value.appliedActions.length} ajuste(s) validados pela Performance Engine`
-        : (result.message ?? "Sem ajuste controlado dispon?vel agora"),
+        : (result.message ?? "Sem ajuste controlado disponível agora"),
     ],
   };
 }
@@ -350,8 +350,8 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
       gameTargets,
       outputs: [
         `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
-        "Sele??o de jogo ignorada pelo usu?rio",
-        "Plano Gamer n?o foi aplicado nesta execu??o",
+        "Seleção de jogo ignorada pelo usuário",
+        "Plano Gamer não foi aplicado nesta execução",
       ],
     };
   }
@@ -380,12 +380,12 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
     },
     gameTargets,
     outputs: [
-      target ? `Jogo alvo: ${target.label}` : "Jogo alvo n?o selecionado",
+      target ? `Jogo alvo: ${target.label}` : "Jogo alvo não selecionado",
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
       `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo Steam/Discord quando detectados`,
       result.value
         ? `${result.value.closedProcesses.length} processo(s) validados pela Gamer Engine`
-        : (result.message ?? "Sele??o manual de jogo ser? necess?ria"),
+        : (result.message ?? "Seleção manual de jogo será necessária"),
     ],
   };
 }
@@ -414,8 +414,8 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
       `Perfil sugerido: ${profileLabel(profileId)}`,
       result.value
         ? `${result.value.engineResults.length} engine(s) validadas pelo perfil`
-        : (result.message ?? "Perfil dispon?vel para revisao manual"),
-      HERMES_SAFE_TEST_MODE ? "Nenhuma altera??o real aplicada" : "Perfil aplicado no modo real",
+        : (result.message ?? "Perfil disponível para revisao manual"),
+      HERMES_SAFE_TEST_MODE ? "Nenhuma alteração real aplicada" : "Perfil aplicado no modo real",
     ],
   };
 }
@@ -449,7 +449,7 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
       `${advanced.blockedActions.length} acao(oes) bloqueadas por criterio`,
       result.value
         ? `${result.value.appliedActions.length} comando(s) validados pela Advanced Engine`
-        : (result.message ?? "Sem comando avan?ado liberado para valida??o"),
+        : (result.message ?? "Sem comando avançado liberado para validação"),
     ],
   };
 }

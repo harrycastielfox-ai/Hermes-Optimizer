@@ -125,8 +125,8 @@ function PrepararAmbientePage() {
                 Menos de 4 cliques para resolver
               </h1>
               <p className="mt-2 max-w-4xl text-sm leading-relaxed text-muted-foreground">
-                O Hermes mistura diagn?stico, preparacao, sessao Gamer e ferramentas sem esconder
-                risco. Esta tela monta o caminho certo e leva cada a??o para o modulo seguro.
+                O Hermes mistura diagnóstico, preparacao, sessao Gamer e ferramentas sem esconder
+                risco. Esta tela monta o caminho certo e leva cada ação para o modulo seguro.
               </p>
             </div>
 
@@ -183,7 +183,7 @@ function PrepararAmbientePage() {
                 </p>
               </div>
               <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
-                Diagn?stico separado de altera??es
+                Diagnóstico separado de alterações
               </span>
             </div>
 
@@ -198,12 +198,12 @@ function PrepararAmbientePage() {
             <PrincipleCard
               icon={ShieldCheck}
               title="Sem surpresa"
-              description="Analisar Agora continua somente leitura. Toda altera??o vai para Perfil ou Ferramenta."
+              description="Analisar Agora continua somente leitura. Toda alteração vai para Perfil ou Ferramenta."
             />
             <PrincipleCard
               icon={RotateCcw}
               title="Voltar atras"
-              description="Perfis e ferramentas precisam de snapshot, hist?rico ou rotulo claro de irreversivel."
+              description="Perfis e ferramentas precisam de snapshot, histórico ou rotulo claro de irreversivel."
             />
             <PrincipleCard
               icon={Gamepad2}
@@ -227,7 +227,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
     {
       id: "diagnostic",
       title: "Analisar Agora",
-      description: "Coleta completa, score, hardware e recomenda??es sem alterar o Windows.",
+      description: "Coleta completa, score, hardware e recomendações sem alterar o Windows.",
       status: hasDiagnostic ? "ready" : "unavailable",
       risk: "baixo",
       time: "1 clique",
@@ -235,7 +235,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       to: "/",
       icon: ListChecks,
       bullets: [
-        hasDiagnostic ? "Diagn?stico real dispon?vel" : "Aguardando backend Tauri",
+        hasDiagnostic ? "Diagnóstico real disponível" : "Aguardando backend Tauri",
         `Saude atual: ${Math.round(report.diagnostic.healthScore)}/100`,
         "Sem limpeza, sem tweak, sem reboot",
       ],
@@ -243,7 +243,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
     {
       id: "environment",
       title: "Preparar Ambiente",
-      description: "Agrupa reparo, componentes, limpeza e configura??es pesadas em modulos claros.",
+      description: "Agrupa reparo, componentes, limpeza e configurações pesadas em modulos claros.",
       status: "manual",
       risk: "alto",
       time: "2 a 10 min",
@@ -252,18 +252,18 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       icon: Wrench,
       bullets: [
         "Componentes, energia e rede ficam aqui",
-        "SFC/DISM nunca rodam no diagn?stico r?pido",
+        "SFC/DISM nunca rodam no diagnóstico rápido",
         "Pode exigir administrador e reinicio",
       ],
     },
     {
       id: "cleanup-startup",
-      title: "Limpeza e Inicializa??o",
+      title: "Limpeza e Inicialização",
       description: "Remove excesso com preview e reduz peso do boot sem apagar pastas pessoais.",
       status: cleanupGb > 0 || startupItems > 0 ? "attention" : "safe",
       risk: "medio",
-      time: "at? 3 cliques",
-      cta: cleanupGb > 0 ? "Abrir Limpeza" : "Abrir Inicializa??o",
+      time: "até 3 cliques",
+      cta: cleanupGb > 0 ? "Abrir Limpeza" : "Abrir Inicialização",
       to: cleanupGb > 0 ? "/limpeza" : "/inicializacao",
       icon: HardDrive,
       bullets: [
@@ -421,7 +421,7 @@ function statusLabel(status: PrepStatus) {
   if (status === "attention") return "Revisar";
   if (status === "manual") return "Guiado";
   if (status === "safe") return "Ok";
-  return "Indispon?vel";
+  return "Indisponível";
 }
 
 function fallbackEnvironmentReport(): EnvironmentReport {

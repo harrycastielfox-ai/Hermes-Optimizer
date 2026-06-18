@@ -64,7 +64,7 @@ export function buildExecutionReport({
   title: string;
   safeMode: boolean;
   actions: ExecutionReportAction[];
-  notes?: string[];
+  notesó: string[];
 }): ExecutionReport {
   const normalizedActions = actions.map((action) => ({
     ...action,

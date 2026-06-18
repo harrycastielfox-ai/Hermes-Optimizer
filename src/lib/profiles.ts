@@ -114,7 +114,7 @@ const fallbackProfiles: HermesProfile[] = [
     expectedImpact: [
       "Mantem ajustes visuais separados e opt-in.",
       "Mantem energia equilibrada.",
-      "Limpa tempor?rios/cache seguros com quarentena.",
+      "Limpa temporários/cache seguros com quarentena.",
     ],
     safeguards: fallbackSafeguards,
   },
@@ -134,17 +134,17 @@ const fallbackProfiles: HermesProfile[] = [
     gamerEnabled: true,
     advancedActionIds: ["enable-game-mode", "disable-game-dvr", "flush-dns-cache"],
     expectedImpact: [
-      "N?o altera tema ou efeitos visuais automaticamente.",
-      "Ativa Alto Desempenho quando dispon?vel.",
+      "Não altera tema ou efeitos visuais automaticamente.",
+      "Ativa Alto Desempenho quando disponível.",
       "Sugere fechamento seguro de overlays/apps secundarios.",
-      "Desabilita inicializa??o de alto impacto quando controlavel.",
+      "Desabilita inicialização de alto impacto quando controlavel.",
     ],
     safeguards: fallbackSafeguards,
   },
   {
     id: "economia",
     name: "Economia",
-    summary: "Reduz consumo e animacoes n?o essenciais.",
+    summary: "Reduz consumo e animacoes não essenciais.",
     risk: "low",
     status: "previewOnly",
     reversible: true,
@@ -157,9 +157,9 @@ const fallbackProfiles: HermesProfile[] = [
     gamerEnabled: false,
     advancedActionIds: ["disable-game-dvr", "flush-dns-cache"],
     expectedImpact: [
-      "N?o altera tema ou efeitos visuais automaticamente.",
-      "Ativa Economia de Energia quando dispon?vel.",
-      "Reduz inicializa??o pesada quando seguro.",
+      "Não altera tema ou efeitos visuais automaticamente.",
+      "Ativa Economia de Energia quando disponível.",
+      "Reduz inicialização pesada quando seguro.",
     ],
     safeguards: fallbackSafeguards,
   },
@@ -185,8 +185,8 @@ const fallbackProfiles: HermesProfile[] = [
       "list-power-plans",
     ],
     expectedImpact: [
-      "Aplica apenas ajustes n?o visuais desta fase.",
-      "Exige confirmacao extra antes da aplica??o real.",
+      "Aplica apenas ajustes não visuais desta fase.",
+      "Exige confirmacao extra antes da aplicação real.",
       "Usa Clean, Startup, Gamer e Advanced em modo allowlist.",
     ],
     safeguards: fallbackSafeguards,
@@ -211,7 +211,7 @@ export async function loadProfilesCatalog(): Promise<ProfilesCatalog> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<ProfilesCatalog>("profiles_list");
   } catch (error) {
-    console.warn("Profiles Engine indispon?vel, usando fallback local.", error);
+    console.warn("Profiles Engine indisponível, usando fallback local.", error);
     return fallbackProfilesCatalog;
   }
 }

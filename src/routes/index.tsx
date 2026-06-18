@@ -483,13 +483,13 @@ function formatTemperatureValue(temperature: DiagnosticReport["temperature"]) {
 
 function formatTemperatureSub(temperature: DiagnosticReport["temperature"]) {
   if (!temperature.available) {
-    return "Sensor indispon?vel";
+    return "Sensor indisponível";
   }
 
   return temperature.status;
 }
 
-function formatPing(pingMs?: number) {
+function formatPing(pingMsó: number) {
   if (typeof pingMs !== "number" || pingMs < 0) {
     return "Indisp.";
   }

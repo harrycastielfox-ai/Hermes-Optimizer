@@ -57,13 +57,13 @@ export type DiagnosticReport = {
     adapterName: string;
     signalPercent?: number;
     gateway: string;
-    pingMs?: number;
+    pingMsó: number;
     pingStatus: string;
     status: string;
   };
   temperature: {
     available: boolean;
-    celsius?: number;
+    celsiusó: number;
     status: string;
   };
   defender: {
@@ -109,20 +109,20 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
   engineVersion: "diagnostic-engine-fallback-v1",
   readOnly: true,
   healthScore: 0,
-  healthLabel: "Indispon?vel",
+  healthLabel: "Indisponível",
   system: {
-    computerName: "Indispon?vel",
-    osName: "Indispon?vel",
-    osVersion: "Indispon?vel",
-    osBuild: "Indispon?vel",
-    architecture: "Indispon?vel",
-    manufacturer: "Indispon?vel",
-    model: "Indispon?vel",
-    motherboardManufacturer: "Indispon?vel",
-    motherboardModel: "Indispon?vel",
+    computerName: "Indisponível",
+    osName: "Indisponível",
+    osVersion: "Indisponível",
+    osBuild: "Indisponível",
+    architecture: "Indisponível",
+    manufacturer: "Indisponível",
+    model: "Indisponível",
+    motherboardManufacturer: "Indisponível",
+    motherboardModel: "Indisponível",
   },
   cpu: {
-    name: "Indispon?vel",
+    name: "Indisponível",
     usagePercent: 0,
     physicalCores: 0,
     logicalProcessors: 0,
@@ -136,34 +136,34 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
     usedPercent: 0,
   },
   disk: {
-    mount: "Indispon?vel",
-    volumeName: "Indispon?vel",
-    physicalName: "Indispon?vel",
-    mediaType: "Indispon?vel",
-    healthStatus: "Indispon?vel",
+    mount: "Indisponível",
+    volumeName: "Indisponível",
+    physicalName: "Indisponível",
+    mediaType: "Indisponível",
+    healthStatus: "Indisponível",
     totalGb: 0,
     freeGb: 0,
     usedGb: 0,
     usedPercent: 0,
   },
   gpu: {
-    name: "Indispon?vel",
-    driverVersion: "Indispon?vel",
+    name: "Indisponível",
+    driverVersion: "Indisponível",
   },
   display: {
-    resolution: "Indispon?vel",
-    status: "Indispon?vel",
+    resolution: "Indisponível",
+    status: "Indisponível",
   },
   network: {
-    ssid: "Indispon?vel",
-    adapterName: "Indispon?vel",
-    gateway: "Indispon?vel",
-    pingStatus: "Indispon?vel",
-    status: "Indispon?vel",
+    ssid: "Indisponível",
+    adapterName: "Indisponível",
+    gateway: "Indisponível",
+    pingStatus: "Indisponível",
+    status: "Indisponível",
   },
   temperature: {
     available: false,
-    status: "Indispon?vel",
+    status: "Indisponível",
   },
   defender: {
     available: false,
@@ -171,13 +171,13 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
     antivirusEnabled: false,
     antispywareEnabled: false,
     realtimeProtectionEnabled: false,
-    status: "Indispon?vel",
+    status: "Indisponível",
   },
   windowsUpdate: {
-    serviceStatus: "Indispon?vel",
-    lastHotfixId: "Indispon?vel",
-    lastInstalledOn: "Indispon?vel",
-    status: "Indispon?vel",
+    serviceStatus: "Indisponível",
+    lastHotfixId: "Indisponível",
+    lastInstalledOn: "Indisponível",
+    status: "Indisponível",
   },
   startup: {
     totalItems: 0,
@@ -186,9 +186,9 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
     lowImpactCount: 0,
   },
   powerPlan: {
-    activeSchemeName: "Indispon?vel",
-    activeSchemeGuid: "Indispon?vel",
-    status: "Indispon?vel",
+    activeSchemeName: "Indisponível",
+    activeSchemeGuid: "Indisponível",
+    status: "Indisponível",
   },
   temporaryFiles: {
     estimatedGb: 0,
@@ -198,7 +198,7 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
   },
   uptime: {
     seconds: 0,
-    label: "Indispon?vel",
+    label: "Indisponível",
   },
   warnings: ["Dados reais indisponiveis. Fallback sem valores demonstrativos."],
 };
@@ -225,7 +225,7 @@ export async function loadDiagnosticReport(): Promise<DiagnosticReport> {
       return report;
     })
     .catch((error) => {
-      console.warn("Diagn?stico salvo indispon?vel, usando fallback estatico.", error);
+      console.warn("Diagnóstico salvo indisponível, usando fallback estatico.", error);
       return fallbackDiagnosticReport;
     })
     .finally(() => {
@@ -247,7 +247,7 @@ export async function refreshDiagnosticReport(): Promise<DiagnosticReport> {
     diagnosticLiveRefreshedAt = Date.now();
     return report;
   } catch (error) {
-    console.warn("Atualiza??o real do diagn?stico indispon?vel, usando fallback estatico.", error);
+    console.warn("Atualização real do diagnóstico indisponível, usando fallback estatico.", error);
     return fallbackDiagnosticReport;
   }
 }
@@ -274,7 +274,7 @@ export async function refreshLiveDiagnosticReport(force = false): Promise<Diagno
       return report;
     })
     .catch((error) => {
-      console.warn("Atualiza??o leve do diagn?stico indispon?vel; mantendo dados salvos.", error);
+      console.warn("Atualização leve do diagnóstico indisponível; mantendo dados salvos.", error);
       return diagnosticMemoryCache ?? fallbackDiagnosticReport;
     })
     .finally(() => {

@@ -99,7 +99,7 @@ export type QuickPrepareReports = {
 
 export type QuickPreparePhaseResult = {
   outputs: string[];
-  reports?: Partial<QuickPrepareReports>;
+  reportsó: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareContext = {
@@ -125,7 +125,7 @@ export type QuickPrepareTaskUpdate = {
   totalTasks: number;
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reports?: Partial<QuickPrepareReports>;
+  reportsó: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareExecutorCallbacks = {
@@ -161,21 +161,21 @@ const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "enable-game-mode": "Game Mode ON",
   "disable-game-dvr": "GameDVR OFF",
   "disable-xbox-game-bar-deep": "Xbox Game Bar e captura OFF",
-  "set-visual-effects-gamer-minimal": "Visual gamer m?nimo",
+  "set-visual-effects-gamer-minimal": "Visual gamer mínimo",
   "disable-hibernation": "Hibernacao OFF",
-  "disable-startup-delay": "Inicializa??o sem atraso",
+  "disable-startup-delay": "Inicialização sem atraso",
   "disable-advertising-id": "ID de publicidade OFF",
   "disable-tailored-experiences": "Experiencias personalizadas OFF",
   "disable-consumer-features": "Apps e sugestoes promovidas OFF",
-  "disable-activity-history": "Hist?rico de atividades OFF",
+  "disable-activity-history": "Histórico de atividades OFF",
   "disable-location-tracking": "Localizacao de apps bloqueada",
-  "disable-recall-user": "Recall bloqueado no usu?rio",
+  "disable-recall-user": "Recall bloqueado no usuário",
   "flush-dns-cache": "Cache DNS limpo",
   "dism-analyze-component-store": "CMD DISM: analisar componentes",
   "dism-start-component-cleanup": "CMD DISM: limpar componentes",
   "dism-check-netfx3": "CMD DISM: verificar NetFx3",
   "dism-check-directplay": "CMD DISM: verificar DirectPlay",
-  "check-gamer-dependencies": "Depend?ncias gamer verificadas",
+  "check-gamer-dependencies": "Dependências gamer verificadas",
   "set-diagtrack-service-manual": "Servico de telemetria em manual",
   "set-mapsbroker-service-manual": "Servico de mapas em manual",
 };
@@ -210,8 +210,8 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-diagnostic",
       "scan",
-      "Diagn?stico local",
-      "Leitura de sa?de e hardware.",
+      "Diagnóstico local",
+      "Leitura de saúde e hardware.",
       "scanOnly",
     ),
     task(
@@ -231,7 +231,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-clean",
       "cleanup",
-      "Mapear tempor?rios",
+      "Mapear temporários",
       "Cache, logs e limpeza segura.",
       "scanOnly",
     ),
@@ -245,14 +245,14 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-startup",
       "startup",
-      "Mapear inicializa??o",
+      "Mapear inicialização",
       "Apps ativos e impacto no boot.",
       "scanOnly",
     ),
     task(
       "apply-startup",
       "startup",
-      "Validar inicializa??o",
+      "Validar inicialização",
       "Desativa alto impacto controlavel.",
       "userSafe",
     ),
@@ -307,7 +307,7 @@ export async function runQuickPrepareExecutor(
 
   for (const [index, step] of steps.entries()) {
     if (callbacks.shouldCancel?.()) {
-      throw new Error("Preparar PC cancelado pelo usu?rio.");
+      throw new Error("Preparar PC cancelado pelo usuário.");
     }
 
     callbacks.onTaskStart?.({
@@ -341,7 +341,7 @@ async function runQuickPrepareTask(
 ): Promise<{
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reports?: Partial<QuickPrepareReports>;
+  reportsó: Partial<QuickPrepareReports>;
 }> {
   try {
     if (step.id === "check-admin") {
@@ -354,7 +354,7 @@ async function runQuickPrepareTask(
           system.isElevated
             ? "Administrador confirmado."
             : "Sem administrador: modo teste continua validando a fila.",
-          system.username ? `Usuario: ${system.username}` : "Usu?rio n?o informado pelo Windows.",
+          system.username ? `Usuario: ${system.username}` : "Usuário não informado pelo Windows.",
         ],
       };
     }
@@ -366,7 +366,7 @@ async function runQuickPrepareTask(
         reports: { diagnostic },
         outputs: [
           `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
-          "Diagn?stico local salvo para o Dashboard.",
+          "Diagnóstico local salvo para o Dashboard.",
         ],
       };
     }
@@ -430,7 +430,7 @@ async function runQuickPrepareTask(
         reports: { cleanResult },
         outputs: [
           `${cleanResult.plannedEntries} item(ns) validados`,
-          cleanResult.dryRun ? "Modo teste: limpeza n?o removeu arquivos." : cleanResult.message,
+          cleanResult.dryRun ? "Modo teste: limpeza não removeu arquivos." : cleanResult.message,
         ],
       };
     }
@@ -460,7 +460,7 @@ async function runQuickPrepareTask(
       if (state.selectedStartupItemIds.length === 0) {
         return {
           status: "completed",
-          outputs: ["Sem inicializa??o de alto impacto controlavel."],
+          outputs: ["Sem inicialização de alto impacto controlavel."],
         };
       }
 
@@ -476,7 +476,7 @@ async function runQuickPrepareTask(
         outputs: [
           `${startupResult.selectedItems} item(ns) validados`,
           startupResult.dryRun
-            ? "Modo teste: inicializa??o n?o foi alterada."
+            ? "Modo teste: inicialização não foi alterada."
             : startupResult.message,
         ],
       };
@@ -726,7 +726,7 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados para desativar`
-        : (result.message ?? "Sem inicializa??o de alto impacto controlavel"),
+        : (result.message ?? "Sem inicialização de alto impacto controlavel"),
     ],
   };
 }

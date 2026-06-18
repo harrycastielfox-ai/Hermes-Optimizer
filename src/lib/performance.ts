@@ -56,7 +56,7 @@ export type PerformanceSetting = {
 export type PerformanceApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  actionIds?: string[];
+  actionIdsó: string[];
   reason?: string;
 };
 
@@ -82,23 +82,23 @@ export const fallbackPerformanceReport: PerformanceReport = {
   readOnly: true,
   willModifySystem: false,
   powerPlan: {
-    activeSchemeName: "Indispon?vel",
-    activeSchemeGuid: "Indispon?vel",
-    status: "Indispon?vel",
+    activeSchemeName: "Indisponível",
+    activeSchemeGuid: "Indisponível",
+    status: "Indisponível",
   },
   gameMode: {
     available: false,
-    status: "Indispon?vel",
+    status: "Indisponível",
   },
   visualEffects: {
-    profile: "Indispon?vel",
-    status: "Indispon?vel",
+    profile: "Indisponível",
+    status: "Indisponível",
   },
   backgroundApps: {
-    status: "Indispon?vel",
+    status: "Indisponível",
   },
   settings: [],
-  warnings: ["Performance Engine real indispon?vel. Nenhum ajuste demonstrativo foi exibido."],
+  warnings: ["Performance Engine real indisponível. Nenhum ajuste demonstrativo foi exibido."],
 };
 
 export async function loadPerformanceReport(): Promise<PerformanceReport> {
@@ -120,7 +120,7 @@ export async function refreshPerformanceReport(): Promise<PerformanceReport> {
     const report = await invoke<PerformanceReport>("performance_engine_read");
     return writeLocalReportCache("performance-report", report);
   } catch (error) {
-    console.warn("Performance Engine indispon?vel, usando fallback local.", error);
+    console.warn("Performance Engine indisponível, usando fallback local.", error);
     return fallbackPerformanceReport;
   }
 }

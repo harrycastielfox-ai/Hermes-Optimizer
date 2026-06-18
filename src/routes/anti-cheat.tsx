@@ -112,7 +112,7 @@ function AntiCheatCard({
           <div className="mt-3 flex flex-wrap gap-2">
             <SafetyBadge label="Leitura" />
             <SafetyBadge label="Seguro" />
-            <SafetyBadge label="Sem altera??es" />
+            <SafetyBadge label="Sem alterações" />
           </div>
         </div>
 
@@ -151,7 +151,7 @@ function AntiCheatCard({
             Guia seguro
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            O Hermes mostra o caminho recomendado sem alterar BIOS, drivers, jogos ou configura??es
+            O Hermes mostra o caminho recomendado sem alterar BIOS, drivers, jogos ou configurações
             do Windows.
           </p>
           <div className="mt-3 space-y-2">
@@ -238,11 +238,11 @@ function buildActivationItems(report: AntiCheatReport) {
     },
     {
       check: report.checks.coreIsolation,
-      guidance: "Abra Seguran?a do Windows > Seguran?a do dispositivo > Isolamento do n?cleo.",
+      guidance: "Abra Segurança do Windows > Segurança do dispositivo > Isolamento do núcleo.",
     },
     {
       check: report.checks.driverSignature,
-      guidance: "Prefira atualizar drivers pelo fabricante quando houver driver n?o assinado.",
+      guidance: "Prefira atualizar drivers pelo fabricante quando houver driver não assinado.",
     },
     {
       check: report.services.riotVanguard,
@@ -258,7 +258,7 @@ function buildActivationItems(report: AntiCheatReport) {
     },
     {
       check: report.services.battleye,
-      guidance: "Abra o jogo ou launcher e permita a inicializa??o oficial do BattlEye.",
+      guidance: "Abra o jogo ou launcher e permita a inicialização oficial do BattlEye.",
     },
   ];
 

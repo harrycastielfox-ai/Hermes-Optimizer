@@ -34,9 +34,9 @@ export const fallbackAntiCheatReport: AntiCheatReport = {
   engineVersion: "anti-cheat-fallback-v1",
   readOnly: true,
   score: 0,
-  status: "Indispon?vel",
+  status: "Indisponível",
   summary:
-    "Anti-Cheat real indispon?vel fora do backend Tauri. Nenhum resultado demonstrativo foi exibido.",
+    "Anti-Cheat real indisponível fora do backend Tauri. Nenhum resultado demonstrativo foi exibido.",
   checks: {
     tpm: pendingCheck("TPM 2.0", 25),
     secureBoot: pendingCheck("Secure Boot", 25),
@@ -49,7 +49,7 @@ export const fallbackAntiCheatReport: AntiCheatReport = {
     battleye: pendingCheck("BattlEye Ready", 15),
     faceit: pendingCheck("FACEIT Ready", 15),
   },
-  warnings: ["Leitura Anti-Cheat real indispon?vel."],
+  warnings: ["Leitura Anti-Cheat real indisponível."],
 };
 
 export async function analyzeAntiCheat(): Promise<AntiCheatReport> {
@@ -62,12 +62,12 @@ export async function analyzeAntiCheat(): Promise<AntiCheatReport> {
     const report = await invoke<AntiCheatReport>("anti_cheat_engine_read");
     return writeLocalReportCache("anti-cheat-report", report);
   } catch (error) {
-    console.warn("Anti-Cheat read-only indispon?vel, usando fallback seguro.", error);
+    console.warn("Anti-Cheat read-only indisponível, usando fallback seguro.", error);
     return {
       ...fallbackAntiCheatReport,
-      status: "Indispon?vel",
+      status: "Indisponível",
       summary:
-        "N?o foi poss?vel concluir a leitura Anti-Cheat nesta execu??o. Nenhuma altera??o foi feita.",
+        "Não foi possível concluir a leitura Anti-Cheat nesta execução. Nenhuma alteração foi feita.",
       warnings: [error instanceof Error ? error.message : String(error)],
     };
   }
@@ -80,8 +80,8 @@ export function loadCachedAntiCheatReport(): AntiCheatReport {
 function pendingCheck(label: string, maxPoints: number): AntiCheatCheck {
   return {
     label,
-    status: "Indispon?vel",
-    detail: "Leitura real indispon?vel.",
+    status: "Indisponível",
+    detail: "Leitura real indisponível.",
     ok: false,
     points: 0,
     maxPoints,

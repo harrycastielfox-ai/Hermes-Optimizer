@@ -52,8 +52,8 @@ type SchedulerTask = {
   frequency: SchedulerFrequency;
   enabled: boolean;
   createdAt: string;
-  lastRunAt?: string;
-  nextRunAt?: string;
+  lastRunAté: string;
+  nextRunAté: string;
 };
 
 type SchedulerHistoryEntry = {
@@ -95,14 +95,14 @@ const taskOptions: Array<{
 }> = [
   {
     type: "benchmark",
-    title: "Benchmark autom?tico",
+    title: "Benchmark automático",
     description: "Executa benchmark leve permitido.",
     icon: BarChart3,
   },
   {
     type: "diagnostic",
-    title: "Diagn?stico autom?tico",
-    description: "L? sa?de, CPU, RAM, disco e seguran?a.",
+    title: "Diagnóstico automático",
+    description: "Lê saúde, CPU, RAM, disco e segurança.",
     icon: ShieldCheck,
   },
   {
@@ -113,19 +113,19 @@ const taskOptions: Array<{
   },
   {
     type: "startupCheck",
-    title: "Verificacao de inicializa??o",
-    description: "L? apps de inicializa??o, sem desativar.",
+    title: "Verificacao de inicialização",
+    description: "Lê apps de inicialização, sem desativar.",
     icon: Zap,
   },
   {
     type: "performanceCheck",
     title: "Verificacao de desempenho",
-    description: "L? plano de energia e ajustes visuais.",
+    description: "Lê plano de energia e ajustes visuais.",
     icon: Gauge,
   },
   {
     type: "report",
-    title: "Geracao de relat?rio",
+    title: "Geracao de relatório",
     description: "Agrupa leituras locais conservadoras.",
     icon: FileText,
   },
@@ -161,7 +161,7 @@ export function HermesSchedulerCenter() {
       (task) => task.enabled && task.frequency === "onOpen" && isTaskDue(task),
     );
     if (onOpenTasks.length > 0) {
-      void runTaskQueue(onOpenTasks, "Execu??o ao abrir a central");
+      void runTaskQueue(onOpenTasks, "Execução ao abrir a central");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -271,7 +271,7 @@ export function HermesSchedulerCenter() {
             <div className="min-w-0">
               <p className="text-[11px] font-bold tracking-[0.22em] text-primary">AGENDA HERMES</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-                Manuten??o Programada
+                Manutenção Programada
               </h2>
               <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                 Organize verificacoes locais em uma agenda simples. Sem servico residente, sem
@@ -315,7 +315,7 @@ export function HermesSchedulerCenter() {
           icon={Clock3}
           label="PENDENTES"
           value={`${pendingTasks.length}`}
-          sub="Rodam apenas quando voc? abre ou executa"
+          sub="Rodam apenas quando você abre ou executa"
           tone={pendingTasks.length > 0 ? "warning" : "success"}
         />
         <StatusCard
@@ -380,7 +380,7 @@ export function HermesSchedulerCenter() {
             <div>
               <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">AGENDA ATIVA</h3>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Rotinas salvas localmente, com pr?xima execu??o em destaque.
+                Rotinas salvas localmente, com próxima execução em destaque.
               </p>
             </div>
             <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[10px] font-bold text-success">
@@ -405,7 +405,7 @@ export function HermesSchedulerCenter() {
               <EmptyState
                 icon={CalendarClock}
                 title="Nenhuma tarefa"
-                sub="Adicione uma tarefa conservadora para iniciar a manuten??o programada."
+                sub="Adicione uma tarefa conservadora para iniciar a manutenção programada."
               />
             )}
           </div>
@@ -424,7 +424,7 @@ export function HermesSchedulerCenter() {
               ) : (
                 <EmptyState
                   icon={History}
-                  title="Sem execu??es"
+                  title="Sem execuções"
                   sub="Data, tarefa, resultado, duracao e status aparecerao aqui."
                 />
               )}
@@ -473,7 +473,7 @@ function RemoveTaskDialog({
               Remover esta tarefa?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
-              A rotina deixara de aparecer na agenda e n?o ser? executada novamente.
+              A rotina deixara de aparecer na agenda e não será executada novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
         </div>
@@ -496,9 +496,9 @@ function RemoveTaskDialog({
           <div className="flex items-start gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3">
             <History className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             <div>
-              <p className="text-[12px] font-bold text-success">Hist?rico preservado</p>
+              <p className="text-[12px] font-bold text-success">Histórico preservado</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                As execu??es anteriores e seus resultados continuarao disponiveis no Hist?rico
+                As execuções anteriores e seus resultados continuarao disponiveis no Histórico
                 local.
               </p>
             </div>
@@ -639,7 +639,7 @@ function NextScheduleCard({ task, pendingCount }: { task?: SchedulerTask; pendin
       <div className="mt-4 flex items-start gap-2 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3 text-[12px] font-semibold leading-relaxed text-primary">
         <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          O Hermes n?o fica rodando em segundo plano. A agenda e verificada ao abrir ou por clique.
+          O Hermes não fica rodando em segundo plano. A agenda e verificada ao abrir ou por clique.
         </span>
       </div>
     </div>
@@ -679,7 +679,7 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
           <EmptyState
             icon={CalendarClock}
             title="Agenda livre"
-            sub="As proximas execu??es aparecerao aqui."
+            sub="As proximas execuções aparecerao aqui."
           />
         )}
       </div>
@@ -690,8 +690,8 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
 function SafetySummary() {
   const items = [
     "Sem servico residente",
-    "Sem limpeza autom?tica real",
-    "Sem Registro autom?tico",
+    "Sem limpeza automática real",
+    "Sem Registro automático",
     "Sem comandos de reparo",
   ];
 
@@ -699,7 +699,7 @@ function SafetySummary() {
     <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
       <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SEGURANCA DA AGENDA</h3>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-        A manuten??o programada e conservadora: prepara leituras, scans e relat?rios locais, sem
+        A manutenção programada e conservadora: prepara leituras, scans e relatórios locais, sem
         mexer no Windows por conta propria.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2">
@@ -830,7 +830,7 @@ function TaskRow({
                 {frequencyLabel(task.frequency)}
               </span>
               <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">
-                {task.nextRunAt ? `Proxima: ${formatDate(task.nextRunAt)}` : "Execu??o manual"}
+                {task.nextRunAt ? `Proxima: ${formatDate(task.nextRunAt)}` : "Execução manual"}
               </span>
             </div>
           </div>
@@ -972,7 +972,7 @@ function HistoryRow({ entry }: { entry: SchedulerHistoryEntry }) {
           <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
             <span>{formatDate(entry.startedAt)}</span>
             <span>{entry.durationMs} ms</span>
-            {entry.notificationPrepared && <span>Notifica??o preparada</span>}
+            {entry.notificationPrepared && <span>Notificação preparada</span>}
           </div>
         </div>
         <span
@@ -1208,7 +1208,7 @@ function readHistory(clearLegacyHistory = false): SchedulerHistoryEntry[] {
     const parsed = JSON.parse(raw) as SchedulerHistoryEntry[];
     return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
   } catch (error) {
-    console.warn("Falha ao ler hist?rico do Scheduler Hermes.", error);
+    console.warn("Falha ao ler histórico do Scheduler Hermes.", error);
     return [];
   }
 }
@@ -1238,13 +1238,13 @@ function readNotificationPreferences(): NotificationPreferences {
       return fallback;
     }
 
-    const parsed = JSON.parse(raw) as { notifications?: Partial<NotificationPreferences> };
+    const parsed = JSON.parse(raw) as { notificationsó: Partial<NotificationPreferences> };
     return {
       ...fallback,
       ...parsed.notifications,
     };
   } catch (error) {
-    console.warn("Falha ao ler preferencias de notifica??o Hermes.", error);
+    console.warn("Falha ao ler preferencias de notificação Hermes.", error);
     return fallback;
   }
 }
@@ -1294,7 +1294,7 @@ function formatGb(value: number) {
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Indispon?vel";
+    return "Indisponível";
   }
 
   return new Intl.DateTimeFormat("pt-BR", {

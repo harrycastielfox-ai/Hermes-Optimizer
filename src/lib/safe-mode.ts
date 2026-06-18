@@ -1,7 +1,7 @@
 export const HERMES_SAFE_TEST_MODE = true;
 
 export const HERMES_SAFE_TEST_MODE_MESSAGE =
-  "Modo Seguro de Teste ativo - nenhuma altera??o real ser? aplicada.";
+  "Modo Seguro de Teste ativo - nenhuma alteração real será aplicada.";
 
 export function forceSafeDryRun<T extends { confirmed: boolean; dryRun?: boolean }>(request: T): T {
   if (!HERMES_SAFE_TEST_MODE) {

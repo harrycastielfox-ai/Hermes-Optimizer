@@ -144,7 +144,7 @@ function LimpezaPage() {
       }
     } else if (!dryRun && HERMES_SAFE_TEST_MODE) {
       setNotice(
-        "Modo Seguro de Teste ativo: a limpeza ser? validada em dry-run, sem mover arquivos.",
+        "Modo Seguro de Teste ativo: a limpeza será validada em dry-run, sem mover arquivos.",
       );
     }
 

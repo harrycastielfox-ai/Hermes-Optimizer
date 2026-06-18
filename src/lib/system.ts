@@ -9,14 +9,14 @@ export type SystemBootContext = {
   isWindows: boolean;
   available: boolean;
   currentBootId?: string;
-  bootedAt?: string;
+  bootedAté: string;
   warnings: string[];
 };
 
 export type SystemRestartRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  delaySeconds?: number;
+  delaySecondsó: number;
 };
 
 export type SystemRestartResult = {
@@ -30,13 +30,13 @@ export type SystemRestartResult = {
 export const fallbackSystemSecurityContext: SystemSecurityContext = {
   isWindows: typeof navigator !== "undefined" ? /win/i.test(navigator.platform) : false,
   isElevated: false,
-  warnings: ["Contexto administrativo indispon?vel fora do backend Tauri."],
+  warnings: ["Contexto administrativo indisponível fora do backend Tauri."],
 };
 
 export const fallbackSystemBootContext: SystemBootContext = {
   isWindows: typeof navigator !== "undefined" ? /win/i.test(navigator.platform) : false,
   available: false,
-  warnings: ["Boot real indispon?vel fora do backend Tauri."],
+  warnings: ["Boot real indisponível fora do backend Tauri."],
 };
 
 export async function readSystemSecurityContext(): Promise<SystemSecurityContext> {
@@ -48,7 +48,7 @@ export async function readSystemSecurityContext(): Promise<SystemSecurityContext
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<SystemSecurityContext>("system_security_context_read");
   } catch (error) {
-    console.warn("Contexto administrativo indispon?vel.", error);
+    console.warn("Contexto administrativo indisponível.", error);
     return {
       ...fallbackSystemSecurityContext,
       warnings: [error instanceof Error ? error.message : String(error)],
@@ -65,7 +65,7 @@ export async function readSystemBootContext(): Promise<SystemBootContext> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<SystemBootContext>("system_boot_context_read");
   } catch (error) {
-    console.warn("Boot real indispon?vel.", error);
+    console.warn("Boot real indisponível.", error);
     return {
       ...fallbackSystemBootContext,
       warnings: [error instanceof Error ? error.message : String(error)],
@@ -75,7 +75,7 @@ export async function readSystemBootContext(): Promise<SystemBootContext> {
 
 export async function openWindowsSecurity(): Promise<void> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
-    throw new Error("Seguran?a do Windows indispon?vel fora do aplicativo Hermes.");
+    throw new Error("Segurança do Windows indisponível fora do aplicativo Hermes.");
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
@@ -91,7 +91,7 @@ export async function requestSystemRestart(
       scheduled: false,
       cancelled: false,
       delaySeconds: request.delaySeconds ?? 60,
-      message: "Reinicio validado fora do aplicativo Tauri. Nenhuma a??o real foi executada.",
+      message: "Reinicio validado fora do aplicativo Tauri. Nenhuma ação real foi executada.",
     };
   }
 
@@ -106,7 +106,7 @@ export async function cancelSystemRestart(dryRun = true): Promise<SystemRestartR
       scheduled: false,
       cancelled: false,
       delaySeconds: 0,
-      message: "Cancelamento validado fora do aplicativo Tauri. Nenhuma a??o real foi executada.",
+      message: "Cancelamento validado fora do aplicativo Tauri. Nenhuma ação real foi executada.",
     };
   }
 

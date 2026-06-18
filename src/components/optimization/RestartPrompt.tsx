@@ -78,7 +78,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
             <p className="mt-2 inline-flex items-center gap-2 text-[12px] font-semibold text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-success" />
               {HERMES_SAFE_TEST_MODE
-                ? "Modo teste: o Hermes valida o comando, mas n?o reinicia o computador."
+                ? "Modo teste: o Hermes valida o comando, mas não reinicia o computador."
                 : "Modo real: o Windows reinicia em 60 segundos depois da confirmacao."}
             </p>
           </div>

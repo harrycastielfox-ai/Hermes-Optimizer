@@ -25,7 +25,7 @@ function RepararWindowsPage() {
               Reparar Windows
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Verificacoes de integridade, imagem do sistema e hist?rico de reparos. Nenhum reparo
+              Verificacoes de integridade, imagem do sistema e histórico de reparos. Nenhum reparo
               pesado roda automaticamente.
             </p>
           </div>

@@ -15,7 +15,7 @@ const HermesAdminSettings = lazy(() =>
 export const Route = createFileRoute("/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Configura??es" },
+      { title: "Hermes Optimizer - Configurações" },
       { name: "description", content: "Preferencias locais do Hermes Optimizer." },
     ],
   }),

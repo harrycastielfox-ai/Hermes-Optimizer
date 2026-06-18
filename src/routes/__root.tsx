@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import appCss from "../styles.cssóurl";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { HermesPreferencesProvider } from "../lib/preferences";
 

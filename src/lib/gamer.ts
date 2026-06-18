@@ -83,7 +83,7 @@ export type GamerReport = {
 export type GamerApplyRequest = {
   confirmed: boolean;
   dryRun?: boolean;
-  processIds?: number[];
+  processIdsó: number[];
   includePerformanceProfile?: boolean;
   gameProfileId?: string;
 };
@@ -120,8 +120,8 @@ export type GamerGameProfileSaveRequest = {
   executable: string;
   recommendedPlan?: string;
   allowedProcessesToClose?: string[];
-  protectedProcesses?: string[];
-  appliedActions?: string[];
+  protectedProcessesó: string[];
+  appliedActionsó: string[];
 };
 
 export type GamerRestoreSessionRequest = {
@@ -151,7 +151,7 @@ export const fallbackGamerReport: GamerReport = {
     detected: false,
     confidence: "unavailable",
     requiresManualSelection: true,
-    message: "Deteccao de jogo ativo indispon?vel fora do backend Tauri.",
+    message: "Deteccao de jogo ativo indisponível fora do backend Tauri.",
   },
   gameProfiles: [],
   detectedGames: [],
@@ -165,13 +165,13 @@ export const fallbackGamerReport: GamerReport = {
     estimatedRamToFreeMb: 0,
   },
   safeguards: [
-    "Nunca fecha processos cr?ticos do Windows.",
+    "Nunca fecha processos críticos do Windows.",
     "Fechamento real exige confirmacao.",
-    "Usa CloseMainWindow; n?o usa kill forcado.",
-    "Snapshot e log local antes de qualquer aplica??o.",
+    "Usa CloseMainWindow; não usa kill forcado.",
+    "Snapshot e log local antes de qualquer aplicação.",
     "Restauracao pos-jogo usa o Restore Engine.",
   ],
-  warnings: ["Gamer Engine real indispon?vel. Nenhum processo demonstrativo foi exibido."],
+  warnings: ["Gamer Engine real indisponível. Nenhum processo demonstrativo foi exibido."],
 };
 
 export async function loadGamerReport(): Promise<GamerReport> {
@@ -183,7 +183,7 @@ export async function loadGamerReport(): Promise<GamerReport> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<GamerReport>("gamer_engine_read");
   } catch (error) {
-    console.warn("Gamer Engine indispon?vel, usando fallback local.", error);
+    console.warn("Gamer Engine indisponível, usando fallback local.", error);
     return fallbackGamerReport;
   }
 }
