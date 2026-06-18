@@ -194,7 +194,7 @@ function DefenderPage() {
                 <TrustCard
                   icon={FileCheck2}
                   title="Executavel Hermes"
-                  text="A permissao mira hermes-optimizer.exe, não pastas inteiras do sistema."
+                  text="A permissão mira hermes-optimizer.exe, não pastas inteiras do sistema."
                 />
                 <TrustCard
                   icon={LockKeyhole}
@@ -219,7 +219,7 @@ function DefenderPage() {
                     Liberar na mao se o botao não resolver
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Use este caminho se o Windows bloquear o app antes da permissao automática.
+                    Use este caminho se o Windows bloquear o app antes da permissão automática.
                   </p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ function DefenderPage() {
               <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <ManualStep text="Abra Segurança do Windows -> Proteção contra vírus e ameaças." />
                 <ManualStep text="Entre em Configurações de proteção contra vírus e ameaças -> Gerenciar configurações." />
-                <ManualStep text="Role até Exclusoes -> Adicionar ou remover exclusoes." />
+                <ManualStep text="Role até Exclusões -> Adicionar ou remover exclusões." />
                 <ManualStep text="Escolha Adicionar uma exclusao -> Arquivo." />
                 <ManualStep text="Selecione hermes-optimizer.exe e confirme." />
               </ol>

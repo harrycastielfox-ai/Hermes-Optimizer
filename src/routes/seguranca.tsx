@@ -122,7 +122,7 @@ function SecurityRecoveryPage() {
 
   async function runRestore(snapshot: RestoreSnapshot) {
     const dryRunConfirmed = window.confirm(
-      `Validar snapshot antes de restaurar?\n\n${snapshot.name}\n${snapshot.id}\n\nNenhuma alteração sera aplicada nesta validacao.`,
+      `Validar snapshot antes de restaurar?\n\n${snapshot.name}\n${snapshot.id}\n\nNenhuma alteração será aplicada nesta validação.`,
     );
     if (!dryRunConfirmed) {
       return;
@@ -212,7 +212,7 @@ function SecurityRecoveryPage() {
                 Restore Center Hermes
               </h1>
               <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-                Snapshots, rollback, logs locais, histórico de alterações e exportacao de relatório
+                Snapshots, rollback, logs locais, histórico de alterações e exportação de relatório
                 sem nuvem.
               </p>
             </div>
@@ -351,7 +351,7 @@ function SecurityRecoveryPage() {
                     <EmptyState
                       icon={Database}
                       title="Nenhum snapshot local"
-                      sub="Os snapshots aparecerao aqui após a primeira ação com Restore Engine."
+                      sub="Os snapshots aparecerão aqui após a primeira ação com Restore Engine."
                     />
                   )}
                 </div>
@@ -410,7 +410,7 @@ function SecurityRecoveryPage() {
                       <EmptyState
                         icon={FileText}
                         title="Sem logs recentes"
-                        sub="Eventos de snapshot, validação e rollback aparecerao aqui."
+                        sub="Eventos de snapshot, validação e rollback aparecerão aqui."
                       />
                     )}
                   </div>

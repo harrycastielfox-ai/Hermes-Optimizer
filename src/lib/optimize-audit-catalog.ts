@@ -1,4 +1,5 @@
 import type { ExecutionReportAction, ExecutionReportRisk } from "@/lib/execution-report";
+import { isGamerDependencyInstallerAction } from "@/lib/gamer-dependencies";
 import type { OptimizeAllPhaseId } from "@/lib/optimize-all";
 
 type AuditMethod = "analysis" | "engine" | "registry" | "cmd" | "powershell" | "profile";
@@ -298,7 +299,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2005-x86",
       "Validar VC++ 2005 x86",
       "VC.Redist.2005.x86",
-      "planejado: instalar/reparar vcredist 2005 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2005 x86",
       "cmd",
       "medium",
       false,
@@ -307,7 +308,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2005-x64",
       "Validar VC++ 2005 x64",
       "VC.Redist.2005.x64",
-      "planejado: instalar/reparar vcredist 2005 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2005 x64",
       "cmd",
       "medium",
       false,
@@ -316,7 +317,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2008-x86",
       "Validar VC++ 2008 x86",
       "VC.Redist.2008.x86",
-      "planejado: instalar/reparar vcredist 2008 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2008 x86",
       "cmd",
       "medium",
       false,
@@ -325,7 +326,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2008-x64",
       "Validar VC++ 2008 x64",
       "VC.Redist.2008.x64",
-      "planejado: instalar/reparar vcredist 2008 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2008 x64",
       "cmd",
       "medium",
       false,
@@ -334,7 +335,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2010-x86",
       "Validar VC++ 2010 x86",
       "VC.Redist.2010.x86",
-      "planejado: instalar/reparar vcredist 2010 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2010 x86",
       "cmd",
       "medium",
       false,
@@ -343,7 +344,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2010-x64",
       "Validar VC++ 2010 x64",
       "VC.Redist.2010.x64",
-      "planejado: instalar/reparar vcredist 2010 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2010 x64",
       "cmd",
       "medium",
       false,
@@ -352,7 +353,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2012-x86",
       "Validar VC++ 2012 x86",
       "VC.Redist.2012.x86",
-      "planejado: instalar/reparar vcredist 2012 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2012 x86",
       "cmd",
       "medium",
       false,
@@ -361,7 +362,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2012-x64",
       "Validar VC++ 2012 x64",
       "VC.Redist.2012.x64",
-      "planejado: instalar/reparar vcredist 2012 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2012 x64",
       "cmd",
       "medium",
       false,
@@ -370,7 +371,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2013-x86",
       "Validar VC++ 2013 x86",
       "VC.Redist.2013.x86",
-      "planejado: instalar/reparar vcredist 2013 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2013 x86",
       "cmd",
       "medium",
       false,
@@ -379,7 +380,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2013-x64",
       "Validar VC++ 2013 x64",
       "VC.Redist.2013.x64",
-      "planejado: instalar/reparar vcredist 2013 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2013 x64",
       "cmd",
       "medium",
       false,
@@ -388,7 +389,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2015-2022-x86",
       "Validar VC++ 2015-2022 x86",
       "VC.Redist.2015_2022.x86",
-      "planejado: instalar/reparar vcredist 2015-2022 x86",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2015-2022 x86",
       "cmd",
       "medium",
       false,
@@ -397,7 +398,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "vc-redist-2015-2022-x64",
       "Validar VC++ 2015-2022 x64",
       "VC.Redist.2015_2022.x64",
-      "planejado: instalar/reparar vcredist 2015-2022 x64",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar vcredist 2015-2022 x64",
       "cmd",
       "medium",
       false,
@@ -406,7 +407,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "directx-runtime",
       "Validar DirectX Runtime",
       "DirectX.Runtime.Legacy",
-      "planejado: instalar DirectX End-User Runtime",
+      "bloqueado: exigir URL oficial Microsoft + SHA256 + assinatura antes de instalar DirectX End-User Runtime",
       "cmd",
       "medium",
       false,
@@ -545,6 +546,9 @@ function auditStatus(
   }
   if (action.method === "analysis") {
     return "scanned";
+  }
+  if (!action.implemented && isGamerDependencyInstallerAction(action.slug)) {
+    return "unavailable";
   }
   if (!action.implemented) {
     return "planned";

@@ -40,7 +40,7 @@ export type StartupApplyRequest = {
   dryRun?: boolean;
   action: StartupApplyAction;
   itemIds: string[];
-  impactsó: StartupImpact[];
+  impacts?: StartupImpact[];
 };
 
 export type StartupApplyResult = {

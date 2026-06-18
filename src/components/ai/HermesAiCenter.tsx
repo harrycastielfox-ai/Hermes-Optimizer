@@ -84,7 +84,7 @@ export function HermesAiCenter() {
               Centro de Inteligencia Hermes
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Analise local, offline e somente leitura. A Hermes AI explica gargalos e recomenda
+              Análise local, offline e somente leitura. A Hermes AI explica gargalos e recomenda
               proximos passos, sem aplicar nada automaticamente.
             </p>
           </div>
@@ -219,7 +219,7 @@ export function HermesAiCenter() {
               <EmptyState
                 icon={Database}
                 title="Fontes indisponiveis"
-                sub={report.unavailableData[0] ?? "Sem fontes reais disponiveis nesta execução."}
+                sub={report.unavailableData[0] ?? "Sem fontes reais disponíveis nesta execução."}
               />
             )}
           </div>

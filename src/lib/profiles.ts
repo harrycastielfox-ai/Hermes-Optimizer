@@ -92,7 +92,7 @@ const fallbackProfiles: HermesProfile[] = [
     expectedImpact: [
       "Mantem o Windows em modo equilibrado.",
       "Evita ajustes agressivos.",
-      "Apenas registra planos de energia disponiveis.",
+      "Apenas registra planos de energia disponíveis.",
     ],
     safeguards: fallbackSafeguards,
   },
@@ -136,8 +136,8 @@ const fallbackProfiles: HermesProfile[] = [
     expectedImpact: [
       "Não altera tema ou efeitos visuais automaticamente.",
       "Ativa Alto Desempenho quando disponível.",
-      "Sugere fechamento seguro de overlays/apps secundarios.",
-      "Desabilita inicialização de alto impacto quando controlavel.",
+      "Sugere fechamento seguro de overlays/apps secundários.",
+      "Desabilita inicialização de alto impacto quando controlável.",
     ],
     safeguards: fallbackSafeguards,
   },

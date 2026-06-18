@@ -51,6 +51,7 @@ type LogItem = {
 
 const phaseTemplates: PreparePhase[] = [
   phase("scan", "Mapear maquina", "Leitura local do estado atual", MonitorCog),
+  phase("components", "Dependências gamer", "VC++, DirectX, hash e assinatura", ShieldCheck),
   phase("cleanup", "Limpar temporários", "Cache, logs e arquivos seguros", HardDrive),
   phase("startup", "Reduzir inicialização", "Apps de alto impacto", Zap),
   phase("windows", "Ajustar Windows", "Game Mode, GameDVR e visual mínimo", Gauge),

@@ -124,11 +124,11 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
     components: [],
   },
   summary: {
-    generalState: "Analise indisponível",
+    generalState: "Análise indisponível",
     problemCount: 0,
     recommendationCount: 0,
     recommendedProfile: null,
-    recommendedProfileReason: "Sem dados reais disponiveis para recomendar perfil.",
+    recommendedProfileReason: "Sem dados reais disponíveis para recomendar perfil.",
     confidence: "low",
   },
   findings: [],

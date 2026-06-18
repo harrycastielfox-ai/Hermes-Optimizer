@@ -97,7 +97,7 @@ const repairActions: RepairAction[] = [
     requiresAdmin: true,
     notes: [
       "Pode depender de fontes locais ou Windows Update em fase futura.",
-      "Sempre exigira confirmação forte antes de executar.",
+      "Sempre exigirá confirmação forte antes de executar.",
       "Não e executado automaticamente pelo Hermes.",
     ],
   },
@@ -126,7 +126,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     id: "network-reset",
     title: "reset de rede automático",
     description: "Reset amplo de adaptadores e configurações de rede.",
-    reason: "Pode desconectar redes salvas, VPNs e adaptadores até a próxima configuracao.",
+    reason: "Pode desconectar redes salvas, VPNs e adaptadores até a próxima configuração.",
     guidance: "O Hermes deve tratar isso como reparo avançado, nunca como otimização rápida.",
     mayRequireRestart: true,
   },
@@ -388,7 +388,7 @@ function RepairProtectionsPanel({
             </h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               Estas funcoes existem no Hermes como proteção obrigatória: elas não entram em
-              otimização automática e só devem avancar em fluxo dedicado.
+              otimização automática e só devem avançar em fluxo dedicado.
             </p>
           </div>
         </div>
@@ -675,7 +675,7 @@ function DiagnosticPanel({
           title="Defender"
           value={diagnostic.defender.status}
           description={
-            diagnostic.defender.active ? "Proteção ativa no diagnóstico." : "Revisao recomendada."
+            diagnostic.defender.active ? "Proteção ativa no diagnóstico." : "Revisão recomendada."
           }
           tone={diagnostic.defender.active ? "success" : "danger"}
         />
@@ -716,7 +716,7 @@ function RepairHistoryPanel({ history }: { history: RepairHistoryEntry[] }) {
           <EmptyState
             icon={History}
             title="Sem histórico ainda"
-            sub="Preparacoes, diagnosticos e bloqueios aparecerao aqui."
+            sub="Preparacoes, diagnosticos e bloqueios aparecerão aqui."
           />
         )}
       </div>

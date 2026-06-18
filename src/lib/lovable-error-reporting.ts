@@ -8,7 +8,7 @@ type LovableEvents = {
   captureException?: (
     error: unknown,
     context?: Record<string, unknown>,
-    optionsó: LovableErrorOptions,
+    options?: LovableErrorOptions,
   ) => void;
 };
 

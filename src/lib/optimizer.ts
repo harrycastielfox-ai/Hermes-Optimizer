@@ -33,7 +33,7 @@ export type OptimizeNowPlan = {
 
 const fallbackOptimizeNowPlan = (): OptimizeNowPlan => {
   const stages: OptimizeNowStage[] = [
-    fallbackStage("analysis-quick", "analysis-security", "Analise rápida", false),
+    fallbackStage("analysis-quick", "analysis-security", "Análise rápida", false),
     fallbackStage("advisor-pro", "advisor-pro", "Advisor Pro", false),
     fallbackStage("clean-scan", "clean-engine", "Scan de limpeza segura", true),
     fallbackStage("startup-scan", "startup-engine", "Scan de inicialização", true),

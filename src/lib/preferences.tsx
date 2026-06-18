@@ -218,7 +218,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.updates.autoDownload.description":
       "Preferencia salva, sem downloader implementado nesta fase.",
     "settings.updates.channel": "Canal",
-    "settings.updates.history.title": "Histórico de versoes",
+    "settings.updates.history.title": "Histórico de versões",
     "settings.updates.history.description": "Area preparada para changelog local futuro.",
     "settings.appearance.title": "Aparência",
     "settings.appearance.description":
@@ -227,7 +227,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.appearance.accent": "Cor principal",
     "settings.appearance.note.title": "Tema aplicado localmente",
     "settings.appearance.note.text":
-      "O Hermes muda apenas a aparência do app. Tema do Windows e navegadores nunca sao alterados.",
+      "O Hermes muda apenas a aparência do app. Tema do Windows e navegadores nunca são alterados.",
     "settings.notifications.title": "Notificações",
     "settings.notifications.description":
       "Preferencias locais para avisos futuros. Nenhum servico residente e criado.",

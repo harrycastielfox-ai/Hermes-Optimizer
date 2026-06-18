@@ -52,8 +52,8 @@ type SchedulerTask = {
   frequency: SchedulerFrequency;
   enabled: boolean;
   createdAt: string;
-  lastRunAt: string;
-  nextRunAt: string;
+  lastRunAt?: string;
+  nextRunAt?: string;
 };
 
 type SchedulerHistoryEntry = {
@@ -125,7 +125,7 @@ const taskOptions: Array<{
   },
   {
     type: "report",
-    title: "Geracao de relatório",
+    title: "Geração de relatório",
     description: "Agrupa leituras locais conservadoras.",
     icon: FileText,
   },
@@ -425,7 +425,7 @@ export function HermesSchedulerCenter() {
                 <EmptyState
                   icon={History}
                   title="Sem execuções"
-                  sub="Data, tarefa, resultado, duracao e status aparecerao aqui."
+                  sub="Data, tarefa, resultado, duracao e status aparecerão aqui."
                 />
               )}
             </div>
@@ -498,7 +498,7 @@ function RemoveTaskDialog({
             <div>
               <p className="text-[12px] font-bold text-success">Histórico preservado</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                As execuções anteriores e seus resultados continuarao disponiveis no Histórico
+                As execuções anteriores e seus resultados continuarão disponíveis no Histórico
                 local.
               </p>
             </div>
@@ -679,7 +679,7 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
           <EmptyState
             icon={CalendarClock}
             title="Agenda livre"
-            sub="As proximas execuções aparecerao aqui."
+            sub="As proximas execuções aparecerão aqui."
           />
         )}
       </div>
@@ -699,7 +699,7 @@ function SafetySummary() {
     <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
       <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SEGURANCA DA AGENDA</h3>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-        A manutenção programada e conservadora: prepara leituras, scans e relatórios locais, sem
+        A manutenção programada é conservadora: prepara leituras, scans e relatórios locais, sem
         mexer no Windows por conta propria.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2">

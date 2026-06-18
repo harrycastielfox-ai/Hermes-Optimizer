@@ -246,15 +246,15 @@ export function GlobalAnalysisModal({
       }
 
       setRunStatus("completed");
-      setCurrentStatus("Analise global concluida e salva no Dashboard.");
-      appendLog("info", "Analise concluida. Nenhuma alteração foi aplicada ao Windows.");
+      setCurrentStatus("Análise global concluída e salva no Dashboard.");
+      appendLog("info", "Análise concluída. Nenhuma alteração foi aplicada ao Windows.");
     } catch (error) {
       if (activeRun.current !== runId) {
         return;
       }
 
       setRunStatus("failed");
-      setCurrentStatus("Analise interrompida sem alterar o computador.");
+      setCurrentStatus("Análise interrompida sem alterar o computador.");
       appendLog("error", `ERRO | ${errorMessage(error)}`);
     }
   }
@@ -323,7 +323,7 @@ export function GlobalAnalysisModal({
     }
 
     setRunStatus("cancelled");
-    setCurrentStatus("Analise cancelada sem executar novas etapas.");
+    setCurrentStatus("Análise cancelada sem executar novas etapas.");
     return true;
   }
 
@@ -387,7 +387,7 @@ export function GlobalAnalysisModal({
             <div className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
-                <p className="text-sm font-bold">Analise 100% somente leitura</p>
+                <p className="text-sm font-bold">Análise 100% somente leitura</p>
                 <p className="mt-1 text-[12px] leading-relaxed">
                   O Hermes coleta e salva informações locais. Nenhum arquivo, processo ou ajuste do
                   Windows será alterado.
@@ -458,7 +458,7 @@ export function GlobalAnalysisModal({
                   <SafetyRow text="Coleta executada localmente." />
                   <SafetyRow text="Resultado salvo no histórico do Hermes." />
                   <SafetyRow text="Sem telemetria ou envio para nuvem." />
-                  <SafetyRow text="Nenhuma configuracao será alterada." />
+                  <SafetyRow text="Nenhuma configuração será alterada." />
                 </div>
               </div>
 
@@ -551,7 +551,7 @@ function advisorResult(advisor: AdvisorAiReport): StageExecutionResult {
 
 function assertReadOnly(engine: string, readOnly: boolean) {
   if (!readOnly) {
-    throw new Error(`${engine} recusada: a etapa nao confirmou modo somente leitura.`);
+    throw new Error(`${engine} recusada: a etapa não confirmou modo somente leitura.`);
   }
 }
 

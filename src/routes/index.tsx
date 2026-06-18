@@ -106,7 +106,10 @@ function Dashboard() {
   const temperatureValue = formatTemperatureValue(diagnostic.temperature);
   const temperatureSub = formatTemperatureSub(diagnostic.temperature);
   const wifiSub = formatWifiSub(diagnostic.network);
-  const pingValue = formatPing(diagnostic.network.pingMs);
+  const pingValue =
+    typeof diagnostic.network.pingMs === "number"
+      ? formatPing(diagnostic.network.pingMs)
+      : "Indisp.";
   const temperatureText =
     diagnostic.temperature.available && typeof diagnostic.temperature.celsius === "number"
       ? ` • ${formatNumber(diagnostic.temperature.celsius)}°C`

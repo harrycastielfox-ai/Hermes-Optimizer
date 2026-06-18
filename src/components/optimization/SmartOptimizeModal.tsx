@@ -666,7 +666,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
     title: "Perfil recomendado",
     detail: reports.profileResult
       ? `${reports.profileResult.engineResults.length} engine(s) do perfil validadas.`
-      : `${profileLabel(profileId)} sera usado como base do plano.`,
+      : `${profileLabel(profileId)} será usado como base do plano.`,
     status: "ready",
   });
 
@@ -690,6 +690,15 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       : "Aguardando mapeamento de componentes do Windows.",
     status: componentCmds?.length ? "ready" : "pending",
   });
+
+  if (reports.gamerDependencies) {
+    actions.push({
+      id: "gamer-dependencies",
+      title: "VC++/DirectX",
+      detail: `${reports.gamerDependencies.totalPackages} pacote(s) mapeados; instalação bloqueada por hash/assinatura.`,
+      status: reports.gamerDependencies.readyCount > 0 ? "ready" : "unavailable",
+    });
+  }
 
   return actions;
 }

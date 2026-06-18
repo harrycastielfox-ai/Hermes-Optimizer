@@ -57,13 +57,13 @@ export type DiagnosticReport = {
     adapterName: string;
     signalPercent?: number;
     gateway: string;
-    pingMs: number;
+    pingMs?: number;
     pingStatus: string;
     status: string;
   };
   temperature: {
     available: boolean;
-    celsius: number;
+    celsius?: number;
     status: string;
   };
   defender: {
@@ -225,7 +225,7 @@ export async function loadDiagnosticReport(): Promise<DiagnosticReport> {
       return report;
     })
     .catch((error) => {
-      console.warn("Diagnóstico salvo indisponível, usando fallback estatico.", error);
+      console.warn("Diagnóstico salvo indisponível, usando fallback estático.", error);
       return fallbackDiagnosticReport;
     })
     .finally(() => {
@@ -247,7 +247,7 @@ export async function refreshDiagnosticReport(): Promise<DiagnosticReport> {
     diagnosticLiveRefreshedAt = Date.now();
     return report;
   } catch (error) {
-    console.warn("Atualização real do diagnóstico indisponível, usando fallback estatico.", error);
+    console.warn("Atualização real do diagnóstico indisponível, usando fallback estático.", error);
     return fallbackDiagnosticReport;
   }
 }

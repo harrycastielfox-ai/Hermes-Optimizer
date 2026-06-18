@@ -176,7 +176,7 @@ function InicializacaoPage() {
               </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Controle seguro dos programas que iniciam com o Windows. O Hermes nunca remove
-                programas nem apaga executaveis.
+                programas nem apaga executáveis.
               </p>
             </div>
             <button

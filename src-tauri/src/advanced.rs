@@ -1965,7 +1965,7 @@ fn registry_string(
 }
 
 fn blocked_actions() -> Vec<AdvancedBlockedAction> {
-    vec![
+    let mut actions = vec![
         blocked(
             "chkdsk-repair",
             "chkdsk C: /f /r",
@@ -2056,7 +2056,40 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
             true,
             false,
         ),
+    ];
+    actions.extend(blocked_gamer_dependency_installers());
+    actions
+}
+
+fn blocked_gamer_dependency_installers() -> Vec<AdvancedBlockedAction> {
+    [
+        ("vc-redist-2005-x86", "Instalar VC++ 2005 x86"),
+        ("vc-redist-2005-x64", "Instalar VC++ 2005 x64"),
+        ("vc-redist-2008-x86", "Instalar VC++ 2008 x86"),
+        ("vc-redist-2008-x64", "Instalar VC++ 2008 x64"),
+        ("vc-redist-2010-x86", "Instalar VC++ 2010 x86"),
+        ("vc-redist-2010-x64", "Instalar VC++ 2010 x64"),
+        ("vc-redist-2012-x86", "Instalar VC++ 2012 x86"),
+        ("vc-redist-2012-x64", "Instalar VC++ 2012 x64"),
+        ("vc-redist-2013-x86", "Instalar VC++ 2013 x86"),
+        ("vc-redist-2013-x64", "Instalar VC++ 2013 x64"),
+        ("vc-redist-2015-2022-x86", "Instalar VC++ 2015-2022 x86"),
+        ("vc-redist-2015-2022-x64", "Instalar VC++ 2015-2022 x64"),
+        ("directx-runtime", "Instalar DirectX End-User Runtime"),
     ]
+    .into_iter()
+    .map(|(id, title)| {
+        blocked(
+            id,
+            title,
+            "Bloqueado: instalador exige fonte oficial Microsoft, SHA256 esperado e assinatura Authenticode valida antes de executar.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+        )
+    })
+    .collect()
 }
 
 fn blocked(

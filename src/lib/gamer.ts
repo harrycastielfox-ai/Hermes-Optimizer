@@ -120,8 +120,8 @@ export type GamerGameProfileSaveRequest = {
   executable: string;
   recommendedPlan?: string;
   allowedProcessesToClose?: string[];
-  protectedProcessesó: string[];
-  appliedActionsó: string[];
+  protectedProcesses?: string[];
+  appliedActions?: string[];
 };
 
 export type GamerRestoreSessionRequest = {

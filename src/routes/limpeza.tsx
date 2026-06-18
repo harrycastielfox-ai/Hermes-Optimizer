@@ -135,7 +135,7 @@ function LimpezaPage() {
           selectedItems
             .map((item) => `- ${item.label}: ${formatGb(item.estimatedGb)} GB`)
             .join("\n") +
-          `\n\nTotal estimado: ${formatGb(selectedGb)} GB.\n\nO Hermes movera arquivos allowlistados para quarentena, criara snapshot/log/rollback e nunca tocara Downloads, Documentos, Desktop, Imagens ou Videos.`,
+          `\n\nTotal estimado: ${formatGb(selectedGb)} GB.\n\nO Hermes moverá arquivos allowlistados para quarentena, criará snapshot/log/rollback e nunca tocará Downloads, Documentos, Desktop, Imagens ou Vídeos.`,
       );
 
       if (!confirmed) {

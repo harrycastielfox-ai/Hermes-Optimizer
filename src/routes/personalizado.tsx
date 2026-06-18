@@ -67,7 +67,7 @@ function PersonalizadoPage() {
     const userConfirmed =
       HERMES_SAFE_TEST_MODE ||
       window.confirm(
-        `Preparar esta acao individual?\n\n${customPresentation(action).title}\n\nO Hermes usara apenas itens allowlistados, com snapshot/log quando aplicavel.`,
+        `Preparar esta ação individual?\n\n${customPresentation(action).title}\n\nO Hermes usará apenas itens allowlistados, com snapshot/log quando aplicável.`,
       );
 
     if (!userConfirmed) {
@@ -181,7 +181,7 @@ function PersonalizadoPage() {
             {result && (
               <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
                 <p className="text-sm font-bold text-success">
-                  {result.dryRun ? "Dry-run concluido" : "Validação concluida"}
+                  {result.dryRun ? "Dry-run concluído" : "Validação concluída"}
                 </p>
                 <p className="mt-1 text-[12px] text-muted-foreground">
                   Ponto de segurança: {result.snapshotId}. {result.message}
@@ -569,7 +569,7 @@ function customPresentation(action: AdvancedAction) {
     },
     "list-power-plans": {
       title: "Ver planos de energia",
-      description: "Lista planos disponiveis sem alterar nada.",
+      description: "Lista planos disponíveis sem alterar nada.",
       impact: "Impacto: somente leitura.",
     },
     "set-high-performance-power-plan": {
@@ -641,11 +641,11 @@ function highLevelDescription(action: AdvancedBlockedAction) {
     "delete-user-files":
       "Arquivos pessoais continuam fora das rotinas automáticas; qualquer ação manual precisa ser clara e isolada.",
     "remove-programs":
-      "Programas não sao removidos pelo Hermes; quando aplicável, apenas a inicialização pode ser gerenciada.",
+      "Programas não são removidos pelo Hermes; quando aplicável, apenas a inicialização pode ser gerenciada.",
     "free-registry-delete":
-      "Chaves fora da lista segura exigem revisao técnica antes de qualquer alteração.",
+      "Chaves fora da lista segura exigem revisão técnica antes de qualquer alteração.",
     "hklm-multimedia-tweaks":
-      "Ajustes profundos de desempenho exigem permissao elevada, backup e confirmação forte.",
+      "Ajustes profundos de desempenho exigem permissão elevada, backup e confirmação forte.",
     "sfc-scan-now":
       "Verifica arquivos do Windows em Reparar Windows com acompanhamento do resultado.",
     "dism-restore-health":

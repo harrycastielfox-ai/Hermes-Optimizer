@@ -35,6 +35,10 @@ import {
   type AdvancedApplyResult,
   type AdvancedCatalog,
 } from "@/lib/advanced";
+import {
+  buildGamerDependencyReadiness,
+  type GamerDependencyReadiness,
+} from "@/lib/gamer-dependencies";
 
 export type OptimizeAllPhaseId =
   | "plan"
@@ -62,6 +66,7 @@ export type OptimizeAllReports = {
   profileResult?: ProfileApplyResult;
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
+  gamerDependencies?: GamerDependencyReadiness;
 };
 
 export type OptimizeAllGameTarget = {
@@ -89,9 +94,9 @@ export type OptimizeAllPhaseContext = {
 
 export type OptimizeAllPhaseResult = {
   outputs: string[];
-  reports: Partial<OptimizeAllReports>;
+  reports?: Partial<OptimizeAllReports>;
   recommendedProfileId?: string;
-  gameTargets: OptimizeAllGameTarget[];
+  gameTargets?: OptimizeAllGameTarget[];
   requiresGameSelection?: boolean;
 };
 
@@ -270,6 +275,7 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
 
 async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
   const advanced = await refreshAdvancedCatalog();
+  const gamerDependencies = buildGamerDependencyReadiness(advanced);
   const availableIds = new Set(advanced.actions.map((action) => action.id));
   const actionIds = HERMES_COMPONENT_CMD_ACTION_IDS.filter((id) => availableIds.has(id));
   const result = await tryRun(() =>
@@ -287,13 +293,15 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
     reports: {
       advanced,
       advancedResult: result.value ?? undefined,
+      gamerDependencies,
     },
     outputs: [
       `${actionIds.length} comando(s) CMD/DISM mapeados`,
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
+      gamerDependencies.summary,
       result.value
         ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
-        : (result.message ?? "Componentes ainda não disponiveis neste PC"),
+        : (result.message ?? "Componentes ainda não disponíveis neste PC"),
     ],
   };
 }
@@ -445,8 +453,8 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
       advancedResult: result.value ?? undefined,
     },
     outputs: [
-      `${advanced.actions.length} acao(oes) avancadas mapeadas`,
-      `${advanced.blockedActions.length} acao(oes) bloqueadas por criterio`,
+      `${advanced.actions.length} ação(ões) avançadas mapeadas`,
+      `${advanced.blockedActions.length} ação(ões) bloqueadas por critério`,
       result.value
         ? `${result.value.appliedActions.length} comando(s) validados pela Advanced Engine`
         : (result.message ?? "Sem comando avançado liberado para validação"),

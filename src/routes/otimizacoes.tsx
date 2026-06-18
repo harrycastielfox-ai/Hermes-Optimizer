@@ -119,7 +119,7 @@ function OtimizacoesPage() {
                   O QUE O HERMES RECOMENDA
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Primeira camada em linguagem simples. Os detalhes técnicos continuam disponiveis
+                  Primeira camada em linguagem simples. Os detalhes técnicos continuam disponíveis
                   abaixo.
                 </p>
               </div>
@@ -203,7 +203,7 @@ function OtimizacoesPage() {
                       </h2>
                       <p className="text-[12px] text-muted-foreground mt-1">
                         Leitura local das configurações que influenciam desempenho. Detalhes
-                        tecnicos ficam recolhidos.
+                        técnicos ficam recolhidos.
                       </p>
                     </div>
                     <span className="inline-flex w-fit items-center rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-semibold text-success">
@@ -304,7 +304,7 @@ function buildOptimizationRecommendations(
       rollback: "Disponível",
       mode: safeModeLabel(),
       detail:
-        "A recomendação principal e validar primeiro. O Hermes não remove programas e não apaga executaveis.",
+        "A recomendação principal é validar primeiro. O Hermes não remove programas e não apaga executáveis.",
     },
     {
       id: "gamer",
@@ -521,7 +521,7 @@ function AdvancedEnginePanel({ catalog }: { catalog: AdvancedCatalog }) {
             ACOES AVANCADAS PREPARADAS
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Recursos importantes continuam disponiveis, mas os comandos e chaves técnicas ficam
+            Recursos importantes continuam disponíveis, mas os comandos e chaves técnicas ficam
             recolhidos por padrão.
           </p>
         </div>
@@ -722,7 +722,7 @@ function advancedPresentation(action: AdvancedAction) {
     },
     "list-power-plans": {
       title: "Ver planos de energia",
-      description: "Lista os planos disponiveis sem alterar nada.",
+      description: "Lista os planos disponíveis sem alterar nada.",
       impact: "Impacto: somente leitura. Sem risco de mudanca.",
     },
     "set-high-performance-power-plan": {

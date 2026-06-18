@@ -125,7 +125,7 @@ function PrepararAmbientePage() {
                 Menos de 4 cliques para resolver
               </h1>
               <p className="mt-2 max-w-4xl text-sm leading-relaxed text-muted-foreground">
-                O Hermes mistura diagnóstico, preparacao, sessao Gamer e ferramentas sem esconder
+                O Hermes mistura diagnóstico, preparação, sessão Gamer e ferramentas sem esconder
                 risco. Esta tela monta o caminho certo e leva cada ação para o modulo seguro.
               </p>
             </div>
@@ -203,7 +203,7 @@ function PrepararAmbientePage() {
             <PrincipleCard
               icon={RotateCcw}
               title="Voltar atras"
-              description="Perfis e ferramentas precisam de snapshot, histórico ou rotulo claro de irreversivel."
+              description="Perfis e ferramentas precisam de snapshot, histórico ou rótulo claro de irreversível."
             />
             <PrincipleCard
               icon={Gamepad2}

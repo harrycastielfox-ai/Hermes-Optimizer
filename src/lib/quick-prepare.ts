@@ -32,8 +32,18 @@ import {
 } from "@/lib/performance";
 import { readSystemSecurityContext, type SystemSecurityContext } from "@/lib/system";
 import { HERMES_PREPARE_ADVANCED_ACTION_IDS } from "@/lib/optimize-all";
+import {
+  buildGamerDependencyReadiness,
+  type GamerDependencyReadiness,
+} from "@/lib/gamer-dependencies";
 
-export type QuickPreparePhaseId = "scan" | "cleanup" | "startup" | "windows" | "processes";
+export type QuickPreparePhaseId =
+  | "scan"
+  | "components"
+  | "cleanup"
+  | "startup"
+  | "windows"
+  | "processes";
 export type DnsProviderId = "cloudflare" | "google" | "opendns" | "quad9" | "adguard";
 
 export type DnsProvider = {
@@ -92,6 +102,7 @@ export type QuickPrepareReports = {
   performanceResult?: PerformanceApplyResult;
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
+  gamerDependencies?: GamerDependencyReadiness;
   gamer?: GamerReport;
   gamerResult?: GamerApplyResult;
   system?: SystemSecurityContext;
@@ -99,7 +110,7 @@ export type QuickPrepareReports = {
 
 export type QuickPreparePhaseResult = {
   outputs: string[];
-  reports: Partial<QuickPrepareReports>;
+  reports?: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareContext = {
@@ -125,7 +136,7 @@ export type QuickPrepareTaskUpdate = {
   totalTasks: number;
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reports: Partial<QuickPrepareReports>;
+  reports?: Partial<QuickPrepareReports>;
 };
 
 export type QuickPrepareExecutorCallbacks = {
@@ -226,6 +237,13 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "scan",
       "Mapear comandos",
       "Registro, CMD/DISM e DNS allowlistados.",
+      "scanOnly",
+    ),
+    task(
+      "scan-gamer-dependencies",
+      "components",
+      "Preparar dependências gamer",
+      "VC++ 2005-2022, DirectX, hash e assinatura.",
       "scanOnly",
     ),
     task(
@@ -341,7 +359,7 @@ async function runQuickPrepareTask(
 ): Promise<{
   status: QuickPrepareTaskStatus;
   outputs: string[];
-  reports: Partial<QuickPrepareReports>;
+  reports?: Partial<QuickPrepareReports>;
 }> {
   try {
     if (step.id === "check-admin") {
@@ -393,6 +411,21 @@ async function runQuickPrepareTask(
         outputs: [
           `${advanced.actions.length} comando(s) allowlistados`,
           `${advanced.blockedActions.length} bloqueado(s) por criterio`,
+        ],
+      };
+    }
+
+    if (step.id === "scan-gamer-dependencies") {
+      const advanced = state.advancedCatalog ?? (await refreshAdvancedCatalog());
+      state.advancedCatalog = advanced;
+      const gamerDependencies = buildGamerDependencyReadiness(advanced);
+      return {
+        status: "completed",
+        reports: { gamerDependencies, advanced },
+        outputs: [
+          gamerDependencies.summary,
+          gamerDependencies.detectedSummary,
+          gamerDependencies.blockers[0],
         ],
       };
     }
@@ -569,7 +602,7 @@ async function runQuickPrepareTask(
 
     return {
       status: "unavailable",
-      outputs: [`Passo ${step.id} ainda nao implementado.`],
+      outputs: [`Passo ${step.id} ainda não implementado.`],
     };
   } catch (error) {
     return {

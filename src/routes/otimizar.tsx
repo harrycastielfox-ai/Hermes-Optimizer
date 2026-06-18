@@ -464,10 +464,10 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
             {report.summary.plannedOnlyActions > 0
-              ? `${report.summary.plannedOnlyActions} acao(oes) ja estao desenhadas, mas ainda nao devem ser tratadas como executadas. O proximo passo e implementar esses itens no motor allowlistado.`
+              ? `${report.summary.plannedOnlyActions} ação(ões) já estão desenhadas, mas ainda não devem ser tratadas como executadas. O próximo passo é implementar esses itens no motor allowlistado.`
               : report.summary.missingToTarget === 0
-                ? "As 150 ações estao mapeadas como itens tecnicos auditaveis. Agora o refinamento e aumentar a parte aplicada no modo real."
-                : "A Fase 1 ainda mostra a distancia até 150. O caminho e converter mais ajustes seguros em ações reais do motor Hermes."}
+                ? "As 150 ações estao mapeadas como itens técnicos auditáveis. Agora o refinamento e aumentar a parte aplicada no modo real."
+                : "A Fase 1 ainda mostra a distância até 150. O caminho é converter mais ajustes seguros em ações reais do motor Hermes."}
           </p>
           {report.notes.length > 0 && (
             <div className="mt-3 space-y-1">
@@ -798,7 +798,7 @@ function Phase2RebootReadiness({
   const text = isConfirmed
     ? "O Windows iniciou de novo depois da Fase 1. A Fase 2 esta no ponto ideal."
     : isPending
-      ? "A Fase 1 foi concluida nesta mesma sessao do Windows. Reiniciar antes da Fase 2 tende a render melhor."
+      ? "A Fase 1 foi concluída nesta mesma sessão do Windows. Reiniciar antes da Fase 2 tende a render melhor."
       : "No app instalado o Hermes detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indisponível.";
   const colorClass = isConfirmed
     ? "border-success/25 bg-success/10 text-success"
@@ -860,7 +860,7 @@ function RestartRecommendationNotice({
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(recommendation.createdAt));
-  const phaseLabel = recommendation.phase === "prepare" ? "Fase 1 concluida" : "Fase 2 concluida";
+  const phaseLabel = recommendation.phase === "prepare" ? "Fase 1 concluída" : "Fase 2 concluída";
   const rebootConfirmed = recommendation.phase === "prepare" && prepareRebootStatus === "confirmed";
   const Icon = rebootConfirmed ? CheckCircle2 : Power;
   const title = rebootConfirmed ? "Reinicio detectado" : "Reinicio recomendado";

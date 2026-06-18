@@ -114,7 +114,7 @@ function PerfisPage() {
 
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
-        `Aplicar o perfil ${profile.name}? Um ponto de seguranca sera criado antes.`,
+        `Aplicar o perfil ${profile.name}? Um ponto de segurança será criado antes.`,
       );
       if (!confirmed) {
         return;
@@ -161,7 +161,7 @@ function PerfisPage() {
 
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
-        "Ativar Modo Gamer Hermesó Um ponto de segurança será criado antes e os apps sugeridos serao fechados de forma graciosa.",
+        "Ativar Modo Gamer Hermes? Um ponto de segurança será criado antes e os apps sugeridos serão fechados de forma graciosa.",
       );
       if (!confirmed) {
         return;
@@ -281,7 +281,7 @@ function PerfisPage() {
               {result && (
                 <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
                   <p className="text-sm font-semibold text-success">
-                    {result.dryRun ? "Dry-run concluido" : "Perfil aplicado"}
+                    {result.dryRun ? "Dry-run concluído" : "Perfil aplicado"}
                   </p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
                     Ponto de segurança: {result.snapshotId}. {result.message}
@@ -412,7 +412,7 @@ function GamerEnginePanel({
       {result && (
         <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
           <p className="text-sm font-semibold text-success">
-            {result.dryRun ? "Validação gamer concluida" : "Modo Gamer aplicado"}
+            {result.dryRun ? "Validação gamer concluída" : "Modo Gamer aplicado"}
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
             Ponto de segurança: {result.snapshotId}. {result.message}

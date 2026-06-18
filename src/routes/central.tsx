@@ -64,7 +64,7 @@ type OptimizationLevel = {
   tone: "safe" | "clean" | "performance" | "gamer" | "advanced";
   risk: ActionRisk;
   guarantees: string[];
-  technicalDetails: string[];
+  technicalDetails?: string[];
   actions: OptimizationAction[];
 };
 
@@ -73,7 +73,7 @@ const levels: OptimizationLevel[] = [
     id: "seguro",
     eyebrow: "NÍVEL 1",
     title: "Seguro",
-    summary: "Analise e recomenda sem mudar o Windows.",
+    summary: "Analisa e recomenda sem mudar o Windows.",
     detail: "Entenda o estado do PC antes de qualquer ajuste.",
     icon: ShieldCheck,
     tone: "safe",
@@ -137,7 +137,7 @@ const levels: OptimizationLevel[] = [
     tone: "clean",
     risk: "Baixo",
     guarantees: [
-      "Analise antes.",
+      "Analisa antes.",
       "Confirmação obrigatória.",
       "Quarentena quando aplicável.",
       "Não toca arquivos pessoais.",
@@ -358,7 +358,7 @@ const recommendationContextMap: Record<
   },
   advanced: {
     title: "Avançado",
-    summary: "Recomendação para olhar automações técnicas em area guiada e com confirmação forte.",
+    summary: "Recomendação para olhar automações técnicas em área guiada e com confirmação forte.",
     levelId: "avancado",
   },
 };
