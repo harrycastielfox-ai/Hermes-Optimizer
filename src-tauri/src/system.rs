@@ -1,8 +1,6 @@
-use serde::Serialize;
-use std::{
-    path::PathBuf,
-    process::{Command, Stdio},
-};
+use crate::safe_mode;
+use serde::{Deserialize, Serialize};
+use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,10 +13,39 @@ pub struct SystemSecurityContext {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SystemAdminRelaunchResult {
-    pub attempted: bool,
-    pub already_elevated: bool,
-    pub executable_path: Option<String>,
+pub struct SystemBootContext {
+    pub is_windows: bool,
+    pub available: bool,
+    pub current_boot_id: Option<String>,
+    pub booted_at: Option<String>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemRestartRequest {
+    pub confirmed: bool,
+    pub dry_run: Option<bool>,
+    pub delay_seconds: Option<u64>,
+}
+
+impl Default for SystemRestartRequest {
+    fn default() -> Self {
+        Self {
+            confirmed: false,
+            dry_run: Some(true),
+            delay_seconds: Some(60),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemRestartResult {
+    pub dry_run: bool,
+    pub scheduled: bool,
+    pub cancelled: bool,
+    pub delay_seconds: u64,
     pub message: String,
 }
 
@@ -45,43 +72,167 @@ pub fn system_security_context_read() -> SystemSecurityContext {
 }
 
 #[tauri::command]
-pub fn system_relaunch_as_admin() -> SystemAdminRelaunchResult {
+pub fn system_boot_context_read() -> SystemBootContext {
     if !cfg!(target_os = "windows") {
-        return SystemAdminRelaunchResult {
-            attempted: false,
-            already_elevated: false,
-            executable_path: None,
-            message: "Modo administrador real esta disponivel apenas no Windows.".to_string(),
+        return SystemBootContext {
+            is_windows: false,
+            available: false,
+            current_boot_id: None,
+            booted_at: None,
+            warnings: vec!["Boot do sistema disponivel apenas no Windows.".to_string()],
         };
     }
 
-    if read_windows_security_context()
-        .map(|context| context.is_elevated)
-        .unwrap_or(false)
+    match read_windows_boot_context() {
+        Ok(context) => context,
+        Err(error) => SystemBootContext {
+            is_windows: true,
+            available: false,
+            current_boot_id: None,
+            booted_at: None,
+            warnings: vec![error],
+        },
+    }
+}
+
+#[tauri::command]
+pub fn system_open_windows_security() -> Result<(), String> {
+    if !cfg!(target_os = "windows") {
+        return Err("Seguranca do Windows disponivel apenas no Windows.".to_string());
+    }
+
+    let mut command = Command::new("cmd");
+    command
+        .args(["/C", "start", "", "windowsdefender:"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
+    #[cfg(windows)]
     {
-        return SystemAdminRelaunchResult {
-            attempted: false,
-            already_elevated: true,
-            executable_path: current_executable_string().ok(),
-            message: "Hermes ja esta aberto como administrador.".to_string(),
-        };
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000);
     }
 
-    match relaunch_current_executable_as_admin() {
-        Ok(executable_path) => SystemAdminRelaunchResult {
-            attempted: true,
-            already_elevated: false,
-            executable_path: Some(executable_path),
-            message: "Pedido de administrador enviado. Confirme o UAC para abrir o Hermes elevado."
-                .to_string(),
-        },
-        Err(error) => SystemAdminRelaunchResult {
-            attempted: false,
-            already_elevated: false,
-            executable_path: current_executable_string().ok(),
-            message: error,
-        },
+    command
+        .spawn()
+        .map_err(|error| format!("Nao foi possivel abrir a Seguranca do Windows: {error}"))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn system_restart_computer(
+    request: Option<SystemRestartRequest>,
+) -> Result<SystemRestartResult, String> {
+    if !cfg!(target_os = "windows") {
+        return Err("Reinicio automatico disponivel apenas no Windows.".to_string());
     }
+
+    let request = request.unwrap_or_default();
+    let requested_dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(requested_dry_run);
+    let delay_seconds = request.delay_seconds.unwrap_or(60).clamp(15, 300);
+
+    if !dry_run && !request.confirmed {
+        return Err("Confirmacao obrigatoria para reiniciar o computador.".to_string());
+    }
+
+    if dry_run {
+        return Ok(SystemRestartResult {
+            dry_run,
+            scheduled: false,
+            cancelled: false,
+            delay_seconds,
+            message: format!(
+                "{} - reinicio validado. O Windows nao sera reiniciado enquanto o modo teste estiver ativo.",
+                safe_mode::mode_prefix(dry_run)
+            ),
+        });
+    }
+
+    run_shutdown_command(&[
+        "/r",
+        "/t",
+        &delay_seconds.to_string(),
+        "/c",
+        "Hermes Optimizer solicitou reinicio para concluir a otimizacao.",
+    ])?;
+
+    Ok(SystemRestartResult {
+        dry_run,
+        scheduled: true,
+        cancelled: false,
+        delay_seconds,
+        message: format!("Reinicio agendado em {delay_seconds} segundos pelo Hermes Optimizer."),
+    })
+}
+
+#[tauri::command]
+pub fn system_cancel_restart(dry_run: Option<bool>) -> Result<SystemRestartResult, String> {
+    if !cfg!(target_os = "windows") {
+        return Err("Cancelamento de reinicio disponivel apenas no Windows.".to_string());
+    }
+
+    let dry_run = safe_mode::force_dry_run(dry_run.unwrap_or(true));
+
+    if dry_run {
+        return Ok(SystemRestartResult {
+            dry_run,
+            scheduled: false,
+            cancelled: false,
+            delay_seconds: 0,
+            message: format!(
+                "{} - cancelamento validado. Nenhum reinicio estava agendado pelo modo teste.",
+                safe_mode::mode_prefix(dry_run)
+            ),
+        });
+    }
+
+    run_shutdown_command(&["/a"])?;
+
+    Ok(SystemRestartResult {
+        dry_run,
+        scheduled: false,
+        cancelled: true,
+        delay_seconds: 0,
+        message: "Reinicio agendado cancelado.".to_string(),
+    })
+}
+
+fn run_shutdown_command(args: &[&str]) -> Result<(), String> {
+    let mut command = Command::new("shutdown.exe");
+    command
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000);
+    }
+
+    let output = command
+        .spawn()
+        .map_err(|error| format!("Nao foi possivel executar shutdown.exe: {error}"))?
+        .wait_with_output()
+        .map_err(|error| format!("Falha aguardando shutdown.exe: {error}"))?;
+
+    if output.status.success() {
+        return Ok(());
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    Err(if !stderr.is_empty() {
+        stderr
+    } else if !stdout.is_empty() {
+        stdout
+    } else {
+        "shutdown.exe retornou erro sem detalhes.".to_string()
+    })
 }
 
 fn read_windows_security_context() -> Result<SystemSecurityContext, String> {
@@ -148,47 +299,24 @@ $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administ
     })
 }
 
-fn relaunch_current_executable_as_admin() -> Result<String, String> {
-    let executable = current_executable_path()?;
-    let executable_path = executable.to_string_lossy().replace('/', "\\");
-    if !is_allowed_hermes_executable_path(&executable_path) {
-        return Err("Relancamento elevado bloqueado: executavel atual nao e o Hermes.".to_string());
-    }
-
-    let working_directory = executable
-        .parent()
-        .map(|path| path.to_string_lossy().replace('/', "\\"))
-        .unwrap_or_else(|| ".".to_string());
-    let exe_arg = ps_escape(&executable_path);
-    let cwd_arg = ps_escape(&working_directory);
-    let script = format!(
-        "$ErrorActionPreference = 'Stop'; $exe = '{exe_arg}'; $cwd = '{cwd_arg}'; if (!(Test-Path -LiteralPath $exe)) {{ throw 'Executavel Hermes nao encontrado' }}; Start-Process -FilePath $exe -WorkingDirectory $cwd -Verb RunAs; 'ok'"
-    );
-
-    run_hidden_powershell(&script).map(|_| executable_path)
+fn read_windows_boot_context() -> Result<SystemBootContext, String> {
+    let script = r#"
+$ErrorActionPreference = 'Stop'
+$rawBoot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+if ($rawBoot -is [datetime]) {
+  $boot = $rawBoot
+} else {
+  $boot = [Management.ManagementDateTimeConverter]::ToDateTime([string]$rawBoot)
 }
+$bootUtc = $boot.ToUniversalTime()
+$bootIso = $bootUtc.ToString('o')
+[pscustomobject]@{
+  available = $true
+  currentBootId = "windows:$bootIso"
+  bootedAt = $bootIso
+} | ConvertTo-Json -Compress
+"#;
 
-fn current_executable_path() -> Result<PathBuf, String> {
-    std::env::current_exe()
-        .map_err(|error| format!("Nao foi possivel localizar o executavel Hermes: {error}"))
-}
-
-fn current_executable_string() -> Result<String, String> {
-    Ok(current_executable_path()?
-        .to_string_lossy()
-        .replace('/', "\\"))
-}
-
-fn is_allowed_hermes_executable_path(path: &str) -> bool {
-    let normalized = path.trim().replace('/', "\\").to_ascii_lowercase();
-    let bytes = normalized.as_bytes();
-    normalized.ends_with("\\hermes-optimizer.exe")
-        && bytes.len() > "\\hermes-optimizer.exe".len() + 3
-        && bytes.get(1) == Some(&b':')
-        && bytes.get(2) == Some(&b'\\')
-}
-
-fn run_hidden_powershell(script: &str) -> Result<String, String> {
     let mut command = Command::new("powershell");
     command
         .args([
@@ -209,23 +337,38 @@ fn run_hidden_powershell(script: &str) -> Result<String, String> {
 
     let child = command
         .spawn()
-        .map_err(|error| format!("Nao foi possivel iniciar PowerShell administrativo: {error}"))?;
+        .map_err(|error| format!("Nao foi possivel ler boot do Windows: {error}"))?;
     let output = child
         .wait_with_output()
-        .map_err(|error| format!("Falha ao solicitar administrador: {error}"))?;
+        .map_err(|error| format!("Falha lendo boot do Windows: {error}"))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
         return Err(if stderr.is_empty() {
-            "Windows recusou ou cancelou o pedido de administrador.".to_string()
+            "PowerShell retornou erro ao detectar boot do Windows.".to_string()
         } else {
             stderr
         });
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
-}
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let value = serde_json::from_str::<serde_json::Value>(&stdout)
+        .map_err(|error| format!("Boot do Windows veio em formato invalido: {error}"))?;
 
-fn ps_escape(value: &str) -> String {
-    value.replace('\'', "''")
+    Ok(SystemBootContext {
+        is_windows: true,
+        available: value
+            .get("available")
+            .and_then(|item| item.as_bool())
+            .unwrap_or(false),
+        current_boot_id: value
+            .get("currentBootId")
+            .and_then(|item| item.as_str())
+            .map(|item| item.to_string()),
+        booted_at: value
+            .get("bootedAt")
+            .and_then(|item| item.as_str())
+            .map(|item| item.to_string()),
+        warnings: Vec::new(),
+    })
 }

@@ -8,32 +8,19 @@ import {
   FileKey2,
   Globe2,
   Info,
-  Loader2,
   LockKeyhole,
   MonitorCog,
   Palette,
   RefreshCcw,
-  ShieldCheck,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import { applyAdvancedActions } from "@/lib/advanced";
 import { useHermesPreferences, type UpdateChannel } from "@/lib/preferences";
-import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
-import { relaunchHermesAsAdmin } from "@/lib/system";
 
 export function HermesAdminSettings() {
   const { preferences, loaded, language, updatePreferences, resetPreferences, t } =
     useHermesPreferences();
   const [notice, setNotice] = useState<string | null>(null);
-  const [defenderStatus, setDefenderStatus] = useState<"idle" | "running" | "done" | "failed">(
-    "idle",
-  );
-  const [defenderMessage, setDefenderMessage] = useState<string | null>(null);
-  const [adminStatus, setAdminStatus] = useState<"idle" | "running" | "requested" | "failed">(
-    "idle",
-  );
-  const [adminMessage, setAdminMessage] = useState<string | null>(null);
 
   function savePreference(updater: Parameters<typeof updatePreferences>[0]) {
     updatePreferences(updater);
@@ -48,55 +35,6 @@ export function HermesAdminSettings() {
 
     resetPreferences();
     setNotice(t("settings.notice.reset"));
-  }
-
-  async function handleAllowDefender() {
-    if (defenderStatus === "running") {
-      return;
-    }
-
-    if (!HERMES_SAFE_TEST_MODE) {
-      const confirmed = window.confirm(
-        "O Hermes vai pedir administrador para adicionar apenas o executavel hermes-optimizer.exe as exclusoes do Windows Defender. Continuar?",
-      );
-      if (!confirmed) {
-        return;
-      }
-    }
-
-    setDefenderStatus("running");
-    setDefenderMessage(null);
-    try {
-      const result = await applyAdvancedActions({
-        confirmed: !HERMES_SAFE_TEST_MODE,
-        dryRun: HERMES_SAFE_TEST_MODE,
-        actionIds: ["allow-hermes-defender-exclusion"],
-        extremeMode: false,
-      });
-      const firstAction = result.appliedActions[0];
-      setDefenderStatus("done");
-      setDefenderMessage(firstAction?.message ?? result.message);
-    } catch (error) {
-      setDefenderStatus("failed");
-      setDefenderMessage(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function handleRelaunchAdmin() {
-    if (adminStatus === "running") {
-      return;
-    }
-
-    setAdminStatus("running");
-    setAdminMessage(null);
-    try {
-      const result = await relaunchHermesAsAdmin();
-      setAdminStatus(result.alreadyElevated ? "idle" : "requested");
-      setAdminMessage(result.message);
-    } catch (error) {
-      setAdminStatus("failed");
-      setAdminMessage(error instanceof Error ? error.message : String(error));
-    }
   }
 
   const storageText = useMemo(() => {
@@ -343,23 +281,6 @@ export function HermesAdminSettings() {
         </SettingsPanel>
 
         <SettingsPanel
-          icon={ShieldCheck}
-          title="Liberar no Windows Defender"
-          description="Adiciona somente o executavel do Hermes as exclusoes do Defender quando houver falso positivo."
-        >
-          <ReadonlyNote
-            icon={Info}
-            title="Protecao continua ativa"
-            text="Esta funcao nao desativa o Defender. Ela prepara uma permissao especifica para hermes-optimizer.exe e exige administrador no modo real."
-          />
-          <DefenderAllowTool
-            status={defenderStatus}
-            message={defenderMessage}
-            onRun={handleAllowDefender}
-          />
-        </SettingsPanel>
-
-        <SettingsPanel
           icon={Globe2}
           title={t("settings.language.title")}
           description={t("settings.language.description")}
@@ -404,23 +325,6 @@ export function HermesAdminSettings() {
             icon={Info}
             title={t("settings.language.note.title")}
             text={t("settings.language.note.text")}
-          />
-        </SettingsPanel>
-
-        <SettingsPanel
-          icon={ShieldCheck}
-          title="Modo administrador real"
-          description="Abre o Hermes elevado quando DNS, DISM, Defender ou rede precisarem de permissao real."
-        >
-          <ReadonlyNote
-            icon={Info}
-            title="Usado pelos dois botoes"
-            text="Quando o modo teste for desligado, o fluxo Preparar PC/Otimizar Tudo usa esta elevacao para executar apenas comandos allowlistados."
-          />
-          <AdminRelaunchTool
-            status={adminStatus}
-            message={adminMessage}
-            onRun={handleRelaunchAdmin}
           />
         </SettingsPanel>
 
@@ -620,105 +524,6 @@ function PrivacyPromise({ text }: { text: string }) {
     <div className="flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">
       <CheckCircle2 className="h-4 w-4 shrink-0" />
       <span>{text}</span>
-    </div>
-  );
-}
-
-function DefenderAllowTool({
-  status,
-  message,
-  onRun,
-}: {
-  status: "idle" | "running" | "done" | "failed";
-  message: string | null;
-  onRun: () => void;
-}) {
-  const running = status === "running";
-  const label = HERMES_SAFE_TEST_MODE ? "Validar liberacao" : "Liberar no Defender";
-
-  return (
-    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground">Permissao do Hermes</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            Ideal quando o Windows bloquear o app mesmo ele sendo assinado e confiavel.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onRun}
-          disabled={running}
-          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_12px_26px_-18px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {running ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ShieldCheck className="h-4 w-4" />
-          )}
-          {running ? "Validando..." : label}
-        </button>
-      </div>
-      {message && (
-        <p
-          className={`mt-3 rounded-lg border px-3 py-2 text-[12px] font-semibold ${
-            status === "failed"
-              ? "border-destructive/20 bg-destructive/10 text-destructive"
-              : "border-success/20 bg-success/10 text-success"
-          }`}
-        >
-          {message}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function AdminRelaunchTool({
-  status,
-  message,
-  onRun,
-}: {
-  status: "idle" | "running" | "requested" | "failed";
-  message: string | null;
-  onRun: () => void;
-}) {
-  const running = status === "running";
-
-  return (
-    <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground">Abrir Hermes elevado</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            Abre uma nova janela do Hermes com permissao de administrador apos o UAC.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onRun}
-          disabled={running}
-          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_12px_26px_-18px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {running ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ShieldCheck className="h-4 w-4" />
-          )}
-          {running ? "Solicitando..." : "Abrir como admin"}
-        </button>
-      </div>
-      {message && (
-        <p
-          className={`mt-3 rounded-lg border px-3 py-2 text-[12px] font-semibold ${
-            status === "failed"
-              ? "border-destructive/20 bg-destructive/10 text-destructive"
-              : "border-primary/20 bg-primary/10 text-primary"
-          }`}
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

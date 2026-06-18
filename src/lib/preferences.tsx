@@ -44,6 +44,7 @@ type TranslationKey =
   | "sidebar.optimize"
   | "sidebar.diagnostic"
   | "sidebar.antiCheat"
+  | "sidebar.defender"
   | "sidebar.recommendations"
   | "sidebar.prepare"
   | "sidebar.central"
@@ -176,6 +177,7 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "sidebar.optimize": "Otimizar",
     "sidebar.diagnostic": "Diagnostico",
     "sidebar.antiCheat": "Anti-Cheat",
+    "sidebar.defender": "Defender",
     "sidebar.recommendations": "Recomendacoes",
     "sidebar.prepare": "Preparar Ambiente",
     "sidebar.central": "Central de Otimizacao",
@@ -284,6 +286,7 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "sidebar.optimize": "Optimize",
     "sidebar.diagnostic": "Diagnostics",
     "sidebar.antiCheat": "Anti-Cheat",
+    "sidebar.defender": "Defender",
     "sidebar.recommendations": "Recommendations",
     "sidebar.prepare": "Prepare Environment",
     "sidebar.central": "Optimization Hub",
@@ -391,6 +394,7 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "sidebar.optimize": "Optimizar",
     "sidebar.diagnostic": "Diagnostico",
     "sidebar.antiCheat": "Anti-Cheat",
+    "sidebar.defender": "Defender",
     "sidebar.recommendations": "Recomendaciones",
     "sidebar.prepare": "Preparar Ambiente",
     "sidebar.central": "Central de Optimizacion",

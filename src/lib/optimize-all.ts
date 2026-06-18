@@ -98,7 +98,9 @@ export type OptimizeAllPhaseResult = {
 export const HERMES_PREPARE_ADVANCED_ACTION_IDS = [
   "enable-game-mode",
   "disable-game-dvr",
+  "disable-xbox-game-bar-deep",
   "set-visual-effects-gamer-minimal",
+  "disable-hibernation",
   "disable-startup-delay",
   "disable-advertising-id",
   "disable-tailored-experiences",
@@ -107,12 +109,17 @@ export const HERMES_PREPARE_ADVANCED_ACTION_IDS = [
   "disable-location-tracking",
   "disable-recall-user",
   "flush-dns-cache",
+  "dism-analyze-component-store",
   "dism-start-component-cleanup",
   "dism-check-netfx3",
   "dism-check-directplay",
+  "check-gamer-dependencies",
+  "set-diagtrack-service-manual",
+  "set-mapsbroker-service-manual",
 ] as const;
 
 const HERMES_COMPONENT_CMD_ACTION_IDS = [
+  "dism-analyze-component-store",
   "dism-start-component-cleanup",
   "dism-check-netfx3",
   "dism-check-directplay",
@@ -122,7 +129,11 @@ const HERMES_COMPONENT_CMD_ACTION_IDS = [
 const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   ...HERMES_PREPARE_ADVANCED_ACTION_IDS,
   "dism-enable-directplay",
+  "winsock-reset",
+  "reset-ip-stack",
   "set-high-performance-power-plan",
+  "set-mmcss-gamer-pack",
+  "set-fate-trigger-cpu-priority-high",
   "disable-storage-sense-auto-cleanup",
 ] as const;
 
@@ -137,7 +148,7 @@ export async function runOptimizeAllPhase(
   if (phaseId === "safety") {
     return {
       outputs: [
-        HERMES_SAFE_TEST_MODE ? "Modo atual: teste bloqueado" : "Modo atual: real",
+        HERMES_SAFE_TEST_MODE ? "Modo atual: teste bloqueado" : "Modo atual: real liberado",
         "Engines reais conectadas por fase",
         "Sem telemetria, nuvem ou processo residente",
       ],
@@ -196,7 +207,11 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
 
   const result = await tryRun(() =>
     selectedIds.length
-      ? applyCleanEngine({ confirmed: false, dryRun: true, itemIds: selectedIds })
+      ? applyCleanEngine({
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
+          itemIds: selectedIds,
+        })
       : Promise.resolve(null),
   );
 
@@ -230,8 +245,8 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
   const result = await tryRun(() =>
     itemIds.length
       ? applyStartupEngine({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
           action: "disable",
           itemIds,
         })
@@ -260,8 +275,8 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
   const result = await tryRun(() =>
     actionIds.length
       ? applyAdvancedActions({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
           actionIds,
           extremeMode: false,
         })
@@ -277,7 +292,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       `${actionIds.length} comando(s) CMD/DISM mapeados`,
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
       result.value
-        ? `${result.value.appliedActions.length} comando(s) validados no modo teste`
+        ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
         : (result.message ?? "Componentes ainda nao disponiveis neste PC"),
     ],
   };
@@ -289,8 +304,8 @@ async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseR
   const result = await tryRun(() =>
     actionIds.length
       ? applyPerformanceControlled({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
           actionIds,
           reason: "Otimizar Tudo",
         })
@@ -349,8 +364,8 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
   const result = await tryRun(() =>
     shouldValidate
       ? applyGamerEngine({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
           processIds,
           includePerformanceProfile: true,
           gameProfileId: target?.profileId,
@@ -384,9 +399,9 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
   const result = await tryRun(() =>
     applyHermesProfile({
       profileId,
-      confirmed: false,
-      dryRun: true,
-      extremeConfirmed: false,
+      confirmed: shouldConfirmReal(),
+      dryRun: shouldDryRun(),
+      extremeConfirmed: !HERMES_SAFE_TEST_MODE && profileId === "extremo",
     }),
   );
 
@@ -400,7 +415,7 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
       result.value
         ? `${result.value.engineResults.length} engine(s) validadas pelo perfil`
         : (result.message ?? "Perfil disponivel para revisao manual"),
-      HERMES_SAFE_TEST_MODE ? "Nenhuma alteracao real aplicada" : "Pronto para confirmacao real",
+      HERMES_SAFE_TEST_MODE ? "Nenhuma alteracao real aplicada" : "Perfil aplicado no modo real",
     ],
   };
 }
@@ -416,8 +431,8 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
   const result = await tryRun(() =>
     actionIds.length
       ? applyAdvancedActions({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
           actionIds,
           extremeMode: false,
         })
@@ -437,6 +452,14 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
         : (result.message ?? "Sem comando avancado liberado para validacao"),
     ],
   };
+}
+
+function shouldDryRun() {
+  return HERMES_SAFE_TEST_MODE;
+}
+
+function shouldConfirmReal() {
+  return !HERMES_SAFE_TEST_MODE;
 }
 
 function pickProfile(reports: OptimizeAllReports, availableProfiles: string[]) {
@@ -470,7 +493,7 @@ function pickProfile(reports: OptimizeAllReports, availableProfiles: string[]) {
   return availableProfiles.includes("seguro") ? "seguro" : (availableProfiles[0] ?? "seguro");
 }
 
-function pickPerformanceActionIds(report: PerformanceReport, profileId: string) {
+function pickPerformanceActionIds(report: PerformanceReport, profileId: string): string[] {
   const ids = report.settings
     .filter((item) => item.canOptimizeLater)
     .map((item) => performanceSettingToActionId(item.id, profileId))
@@ -491,7 +514,7 @@ function pickPerformanceActionIds(report: PerformanceReport, profileId: string) 
   return ["set-high-performance-power-plan"];
 }
 
-function performanceSettingToActionId(settingId: string, profileId: string) {
+function performanceSettingToActionId(settingId: string, profileId: string): string | undefined {
   if (settingId === "power-plan") {
     if (profileId === "economia") return "set-power-saver-power-plan";
     if (profileId === "seguro" || profileId === "trabalho") return "set-balanced-power-plan";

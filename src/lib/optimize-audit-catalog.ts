@@ -1,0 +1,842 @@
+import type { ExecutionReportAction, ExecutionReportRisk } from "@/lib/execution-report";
+import type { OptimizeAllPhaseId } from "@/lib/optimize-all";
+
+type AuditMethod = "analysis" | "engine" | "registry" | "cmd" | "powershell" | "profile";
+
+type AuditSeed = {
+  slug: string;
+  title: string;
+  technicalName: string;
+  commandPreview: string;
+  method: AuditMethod;
+  risk: ExecutionReportRisk;
+  implemented: boolean;
+};
+
+type AuditPhaseDefinition = {
+  phaseId: OptimizeAllPhaseId;
+  phaseTitle: string;
+  phaseDetail: string;
+  actions: AuditSeed[];
+};
+
+export type OptimizeAuditAction = AuditSeed & {
+  id: string;
+  phaseId: OptimizeAllPhaseId;
+  phaseTitle: string;
+  phaseDetail: string;
+};
+
+export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
+  auditPhase("plan", "Plano inteligente", "Orquestrador + Hermes IA", [
+    a(
+      "diagnostic-health-score",
+      "Ler saude geral",
+      "diagnostic.healthScore",
+      "diagnostic_engine_read_cached",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "diagnostic-cpu",
+      "Ler CPU",
+      "diagnostic.cpu",
+      "diagnostic_engine_read_cached.cpu",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "diagnostic-memory",
+      "Ler memoria RAM",
+      "diagnostic.memory",
+      "diagnostic_engine_read_cached.memory",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "diagnostic-disk",
+      "Ler disco principal",
+      "diagnostic.disk",
+      "diagnostic_engine_read_cached.disk",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "diagnostic-gpu",
+      "Ler GPU",
+      "diagnostic.gpu",
+      "diagnostic_engine_read_cached.gpu",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "advisor-recommendations",
+      "Gerar recomendacoes",
+      "advisor.recommendations",
+      "advisor_ai_engine_analyze",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "optimizer-stages",
+      "Montar etapas locais",
+      "optimizer.stages",
+      "optimize_now_plan",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "profile-score",
+      "Pontuar perfil recomendado",
+      "profile.score",
+      "loadProfilesCatalog + pickProfile",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "risk-baseline",
+      "Classificar risco inicial",
+      "risk.baseline",
+      "Hermes local policy",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "restart-policy",
+      "Avaliar reinicio necessario",
+      "restart.policy",
+      "system_boot_context_read",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "admin-context",
+      "Verificar administrador",
+      "system.adminContext",
+      "system_security_context_read",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "safe-mode-policy",
+      "Validar modo teste/real",
+      "safeMode.policy",
+      "HERMES_SAFE_TEST_MODE",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "target-game-priority",
+      "Priorizar Fate Trigger",
+      "gamer.targetPriority",
+      "Fate Trigger preset",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "execution-report",
+      "Preparar relatorio",
+      "execution.report",
+      "buildExecutionReport",
+      "analysis",
+      "info",
+      true,
+    ),
+  ]),
+  auditPhase("safety", "Permissoes e confirmacao", "Modo teste, logs e controle", [
+    a(
+      "safe-test-lock",
+      "Bloqueio de modo teste",
+      "safeMode.forceDryRun",
+      "safe_mode::force_dry_run",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "admin-required-detection",
+      "Detectar exigencia de admin",
+      "system.isElevated",
+      "WindowsPrincipal.IsInRole",
+      "analysis",
+      "info",
+      true,
+    ),
+    a(
+      "tauri-command-allowlist",
+      "Conferir allowlist Tauri",
+      "tauri.invoke.allowlist",
+      "tauri::generate_handler",
+      "analysis",
+      "low",
+      true,
+    ),
+    a(
+      "cmd-command-allowlist",
+      "Conferir allowlist CMD",
+      "advanced.nativeCommandAllowlist",
+      "is_allowed_native_command",
+      "analysis",
+      "medium",
+      true,
+    ),
+    a(
+      "restart-dry-run",
+      "Validar reinicio seguro",
+      "system.restart.dryRun",
+      "shutdown /r /t 60",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "restart-cancel",
+      "Validar cancelamento de reinicio",
+      "system.restart.cancel",
+      "shutdown /a",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "execution-log",
+      "Registrar log da execucao",
+      "execution.log",
+      "localStorage hermes.execution.report.v1",
+      "engine",
+      "info",
+      true,
+    ),
+    a(
+      "phase-gate",
+      "Exigir Fase 1 antes da Fase 2",
+      "quickPrepare.gate",
+      "hermes.quickPrepare.completed.v1",
+      "engine",
+      "low",
+      true,
+    ),
+    a(
+      "boot-verification",
+      "Detectar boot apos Fase 1",
+      "system.boot.currentBootId",
+      "Win32_OperatingSystem.LastBootUpTime",
+      "powershell",
+      "info",
+      true,
+    ),
+    a(
+      "unavailable-labeling",
+      "Rotular indisponiveis",
+      "execution.unavailable",
+      "ExecutionReportStatus.unavailable",
+      "engine",
+      "info",
+      true,
+    ),
+  ]),
+  auditPhase("components", "Componentes essenciais", "VC++, DirectX e dependencias", [
+    a(
+      "dism-analyze-component-store",
+      "Analisar Component Store",
+      "DISM.AnalyzeComponentStore",
+      "DISM /Online /Cleanup-Image /AnalyzeComponentStore",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "dism-start-component-cleanup",
+      "Limpar Component Store",
+      "DISM.StartComponentCleanup",
+      "DISM /Online /Cleanup-Image /StartComponentCleanup",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "dism-check-netfx3",
+      "Verificar .NET Framework 3.5",
+      "DISM.NetFx3.Check",
+      "DISM /Online /Get-FeatureInfo /FeatureName:NetFx3",
+      "cmd",
+      "low",
+      true,
+    ),
+    a(
+      "dism-check-directplay",
+      "Verificar DirectPlay",
+      "DISM.DirectPlay.Check",
+      "DISM /Online /Get-FeatureInfo /FeatureName:DirectPlay",
+      "cmd",
+      "low",
+      true,
+    ),
+    a(
+      "dism-enable-directplay",
+      "Habilitar DirectPlay quando necessario",
+      "DISM.DirectPlay.Enable",
+      "DISM /Online /Enable-Feature /FeatureName:DirectPlay",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "vc-redist-2005-x86",
+      "Validar VC++ 2005 x86",
+      "VC.Redist.2005.x86",
+      "planejado: instalar/reparar vcredist 2005 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2005-x64",
+      "Validar VC++ 2005 x64",
+      "VC.Redist.2005.x64",
+      "planejado: instalar/reparar vcredist 2005 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2008-x86",
+      "Validar VC++ 2008 x86",
+      "VC.Redist.2008.x86",
+      "planejado: instalar/reparar vcredist 2008 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2008-x64",
+      "Validar VC++ 2008 x64",
+      "VC.Redist.2008.x64",
+      "planejado: instalar/reparar vcredist 2008 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2010-x86",
+      "Validar VC++ 2010 x86",
+      "VC.Redist.2010.x86",
+      "planejado: instalar/reparar vcredist 2010 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2010-x64",
+      "Validar VC++ 2010 x64",
+      "VC.Redist.2010.x64",
+      "planejado: instalar/reparar vcredist 2010 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2012-x86",
+      "Validar VC++ 2012 x86",
+      "VC.Redist.2012.x86",
+      "planejado: instalar/reparar vcredist 2012 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2012-x64",
+      "Validar VC++ 2012 x64",
+      "VC.Redist.2012.x64",
+      "planejado: instalar/reparar vcredist 2012 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2013-x86",
+      "Validar VC++ 2013 x86",
+      "VC.Redist.2013.x86",
+      "planejado: instalar/reparar vcredist 2013 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2013-x64",
+      "Validar VC++ 2013 x64",
+      "VC.Redist.2013.x64",
+      "planejado: instalar/reparar vcredist 2013 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2015-2022-x86",
+      "Validar VC++ 2015-2022 x86",
+      "VC.Redist.2015_2022.x86",
+      "planejado: instalar/reparar vcredist 2015-2022 x86",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "vc-redist-2015-2022-x64",
+      "Validar VC++ 2015-2022 x64",
+      "VC.Redist.2015_2022.x64",
+      "planejado: instalar/reparar vcredist 2015-2022 x64",
+      "cmd",
+      "medium",
+      false,
+    ),
+    a(
+      "directx-runtime",
+      "Validar DirectX Runtime",
+      "DirectX.Runtime.Legacy",
+      "planejado: instalar DirectX End-User Runtime",
+      "cmd",
+      "medium",
+      false,
+    ),
+  ]),
+  auditPhase("cleanup", "Limpeza segura", "Temporarios, cache e logs", [...cleanupSeeds()]),
+  auditPhase("startup", "Inicializacao", "Apps de alto impacto", [...startupSeeds()]),
+  auditPhase("performance", "Performance", "Energia, Game Mode e rede", [...performanceSeeds()]),
+  auditPhase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
+  auditPhase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", [
+    ...profileSeeds(),
+  ]),
+  auditPhase("manual", "Avancado guiado", "Comandos allowlistados e ajustes finos", [
+    a(
+      "winsock-reset",
+      "Resetar Winsock",
+      "Netsh.Winsock.Reset",
+      "netsh winsock reset",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "reset-ip-stack",
+      "Resetar pilha IP",
+      "Netsh.IntIp.Reset",
+      "netsh int ip reset",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "flush-dns-cache",
+      "Limpar cache DNS",
+      "Ipconfig.FlushDns",
+      "ipconfig /flushdns",
+      "cmd",
+      "low",
+      true,
+    ),
+    a(
+      "diagtrack-manual",
+      "Telemetria em manual",
+      "Service.DiagTrack.Start",
+      "sc.exe config DiagTrack start= demand",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "mapsbroker-manual",
+      "Mapas em manual",
+      "Service.MapsBroker.Start",
+      "sc.exe config MapsBroker start= demand",
+      "cmd",
+      "medium",
+      true,
+    ),
+    a(
+      "defender-exclusion-hermes",
+      "Permissao Defender do Hermes",
+      "Defender.Exclusion.Hermes",
+      "Add-MpPreference -ExclusionPath <Hermes>",
+      "powershell",
+      "high",
+      false,
+    ),
+    a(
+      "steam-game-priority",
+      "Prioridade Steam/Fate Trigger",
+      "Steam.GamePriority.FateTrigger",
+      "planejado: detectar Steam app + aplicar perfil",
+      "engine",
+      "medium",
+      false,
+    ),
+    a(
+      "rollback-manifest-check",
+      "Validar manifesto de reversao",
+      "Restore.Manifest.Validate",
+      "restore_validate_snapshot",
+      "engine",
+      "info",
+      true,
+    ),
+  ]),
+];
+
+export const OPTIMIZE_AUDIT_ACTIONS: OptimizeAuditAction[] = OPTIMIZE_AUDIT_PHASES.flatMap(
+  (phase) =>
+    phase.actions.map((action) => ({
+      ...action,
+      id: `${phase.phaseId}.${action.slug}`,
+      phaseId: phase.phaseId,
+      phaseTitle: phase.phaseTitle,
+      phaseDetail: phase.phaseDetail,
+    })),
+);
+
+export const OPTIMIZE_AUDIT_ACTION_TARGET = OPTIMIZE_AUDIT_ACTIONS.length;
+
+export function buildOptimizeAuditReportActions({
+  phaseId,
+  phaseStatus,
+  safeMode,
+  outputs,
+}: {
+  phaseId: OptimizeAllPhaseId;
+  phaseStatus: "completed" | "unavailable";
+  safeMode: boolean;
+  outputs: string[];
+}): ExecutionReportAction[] {
+  return OPTIMIZE_AUDIT_ACTIONS.filter((action) => action.phaseId === phaseId).map((action) => ({
+    id: action.id,
+    title: action.title,
+    detail: action.phaseDetail,
+    phase: action.phaseTitle,
+    status: auditStatus(action, phaseStatus, safeMode),
+    outputs,
+    plannedCount: 1,
+    technicalName: action.technicalName,
+    commandPreview: action.commandPreview,
+    method: action.method,
+    risk: action.risk,
+    implemented: action.implemented,
+  }));
+}
+
+function auditStatus(
+  action: OptimizeAuditAction,
+  phaseStatus: "completed" | "unavailable",
+  safeMode: boolean,
+): ExecutionReportAction["status"] {
+  if (phaseStatus === "unavailable") {
+    return "unavailable";
+  }
+  if (action.method === "analysis") {
+    return "scanned";
+  }
+  if (!action.implemented) {
+    return "planned";
+  }
+  return safeMode ? "simulated" : "applied";
+}
+
+function auditPhase(
+  phaseId: OptimizeAllPhaseId,
+  phaseTitle: string,
+  phaseDetail: string,
+  actions: AuditSeed[],
+): AuditPhaseDefinition {
+  return { phaseId, phaseTitle, phaseDetail, actions };
+}
+
+function a(
+  slug: string,
+  title: string,
+  technicalName: string,
+  commandPreview: string,
+  method: AuditMethod,
+  risk: ExecutionReportRisk,
+  implemented: boolean,
+): AuditSeed {
+  return { slug, title, technicalName, commandPreview, method, risk, implemented };
+}
+
+function cleanupSeeds(): AuditSeed[] {
+  return [
+    "Windows Temp",
+    "User Temp",
+    "Prefetch seguro",
+    "Logs do Windows",
+    "Cache de miniaturas",
+    "Recycle Bin",
+    "Windows Update cache",
+    "Delivery Optimization cache",
+    "DirectX Shader Cache",
+    "Browser cache detectado",
+    "Crash dumps",
+    "WER reports",
+    "Installer leftovers",
+    "Old update residues",
+    "Hermes quarantine purge",
+    "DNS resolver cache",
+    "Store cache",
+    "NVIDIA shader cache",
+    "AMD shader cache",
+    "Steam download cache",
+    "Epic launcher cache",
+    "Battle.net cache",
+    "Discord cache",
+    "OBS cache",
+    "Log rotation",
+    "Storage summary",
+  ].map((title, index) =>
+    a(
+      `cleanup-${index + 1}`,
+      title,
+      `Clean.${slugify(title)}`,
+      index < 16 ? "clean_engine_apply" : `planejado: limpar ${title}`,
+      index < 16 ? "engine" : "powershell",
+      index < 16 ? "low" : "medium",
+      index < 16,
+    ),
+  );
+}
+
+function startupSeeds(): AuditSeed[] {
+  return [
+    "Mapear apps ativos",
+    "Desativar alto impacto controlavel",
+    "Preservar antivirus",
+    "Preservar drivers de GPU",
+    "Preservar audio essencial",
+    "Preservar Discord se Gamer",
+    "Atraso de inicializacao OFF",
+    "Startup Run key review",
+    "Startup folder review",
+    "Scheduled startup tasks",
+    "OneDrive policy review",
+    "Teams auto-start review",
+    "Launcher auto-start review",
+    "Updater auto-start review",
+    "Background app impact",
+    "Boot time baseline",
+    "Rollback startup manifest",
+    "Post-reboot validation",
+  ].map((title, index) =>
+    a(
+      `startup-${index + 1}`,
+      title,
+      `Startup.${slugify(title)}`,
+      index < 8 ? "startup_engine_apply" : `planejado: ${title}`,
+      index < 8 ? "engine" : "registry",
+      index < 6 ? "low" : "medium",
+      index < 8,
+    ),
+  );
+}
+
+function performanceSeeds(): AuditSeed[] {
+  return [
+    [
+      "high-performance-plan",
+      "Plano Alto Desempenho",
+      "PowerPlan.HighPerformance",
+      "powercfg /setactive SCHEME_MIN",
+      true,
+    ],
+    [
+      "disable-transparency",
+      "Transparencia OFF",
+      "Visual.Transparency",
+      "HKCU Personalize EnableTransparency=0",
+      true,
+    ],
+    ["disable-animations", "Animacoes OFF", "Visual.Animations", "HKCU VisualEffects", true],
+    ["disable-shadows", "Sombras visuais OFF", "Visual.Shadows", "HKCU VisualEffects", true],
+    [
+      "game-mode-on",
+      "Game Mode ON",
+      "GameBar.AllowAutoGameMode",
+      "HKCU GameBar AutoGameModeEnabled=1",
+      true,
+    ],
+    ["game-dvr-off", "GameDVR OFF", "GameDVR.AppCapture", "HKCU GameDVR AppCaptureEnabled=0", true],
+    [
+      "visual-gamer-minimal",
+      "Visual gamer minimo",
+      "Visual.PerformancePreset",
+      "SystemPropertiesPerformance.exe preset",
+      true,
+    ],
+    ["disable-hibernation", "Hibernacao OFF", "Power.Hibernate", "powercfg /hibernate off", true],
+    [
+      "disable-startup-delay",
+      "Startup delay OFF",
+      "Explorer.StartupDelay",
+      "HKCU Serialize StartupDelayInMSec=0",
+      true,
+    ],
+    [
+      "network-autotuning",
+      "Auto tuning de rede",
+      "NetTCP.AutoTuning",
+      "netsh int tcp set global autotuninglevel=normal",
+      false,
+    ],
+    [
+      "network-ecn",
+      "ECN seguro",
+      "NetTCP.ECN",
+      "netsh int tcp set global ecncapability=disabled",
+      false,
+    ],
+    ["network-rss", "RSS de rede", "NetTCP.RSS", "netsh int tcp set global rss=enabled", false],
+    [
+      "multimedia-system-profile",
+      "SystemResponsiveness gamer",
+      "MMCSS.SystemResponsiveness",
+      "HKLM Multimedia SystemProfile",
+      false,
+    ],
+    ["gpu-priority", "GPU Priority", "MMCSS.GpuPriority", "HKLM Games Tasks GPU Priority", false],
+    ["cpu-priority", "CPU Priority", "MMCSS.Priority", "HKLM Games Tasks Priority", false],
+    [
+      "timer-resolution",
+      "Timer resolution policy",
+      "Timer.Resolution",
+      "planejado: timer policy seguro",
+      false,
+    ],
+    [
+      "ultimate-performance",
+      "Ultimate Performance opcional",
+      "PowerPlan.Ultimate",
+      "powercfg -duplicatescheme",
+      false,
+    ],
+    [
+      "usb-selective-suspend",
+      "USB selective suspend review",
+      "Power.UsbSelectiveSuspend",
+      "powercfg AC setting",
+      false,
+    ],
+    [
+      "pcie-link-state",
+      "PCIe link state review",
+      "Power.PcieLinkState",
+      "powercfg PCI Express",
+      false,
+    ],
+    [
+      "background-apps",
+      "Apps em segundo plano",
+      "BackgroundApps.Policy",
+      "HKCU BackgroundAccessApplications",
+      false,
+    ],
+    [
+      "notifications-off",
+      "Notificacoes foco gamer",
+      "Notifications.Gamer",
+      "HKCU PushNotifications",
+      false,
+    ],
+    ["focus-assist", "Assistente de foco", "FocusAssist.Gaming", "HKCU QuietHours", false],
+  ].map(([slug, title, technical, command, implemented]) =>
+    a(
+      String(slug),
+      String(title),
+      String(technical),
+      String(command),
+      "registry",
+      "medium",
+      Boolean(implemented),
+    ),
+  );
+}
+
+function gamerSeeds(): AuditSeed[] {
+  return [
+    "Detectar Fate Trigger Steam",
+    "Priorizar Fate Trigger UE5",
+    "Escolher jogo alvo",
+    "Preservar Discord",
+    "Fechar processos seguros",
+    "Preservar anticheat",
+    "Preservar overlay escolhido",
+    "Game Bar policy",
+    "Xbox overlay review",
+    "NVIDIA overlay review",
+    "AMD overlay review",
+    "Steam overlay review",
+    "OBS streaming exception",
+    "BlueStacks/WSL exception",
+    "Network route refresh",
+    "Shader cache readiness",
+    "Game process priority",
+    "Post-game restore point",
+  ].map((title, index) =>
+    a(
+      `gamer-${index + 1}`,
+      title,
+      `Gamer.${slugify(title)}`,
+      index < 7 ? "gamer_engine_apply" : `planejado: ${title}`,
+      index < 7 ? "engine" : "powershell",
+      index < 7 ? "low" : "medium",
+      index < 7,
+    ),
+  );
+}
+
+function profileSeeds(): AuditSeed[] {
+  return [
+    "Perfil Seguro",
+    "Perfil Gamer",
+    "Perfil Streamer",
+    "Perfil Trabalho",
+    "Perfil Economia",
+    "Perfil Criacao",
+    "Perfil Avancado",
+    "Perfil Extremo bloqueado",
+    "Aplicar energia do perfil",
+    "Aplicar startup do perfil",
+    "Aplicar performance do perfil",
+    "Aplicar advanced do perfil",
+    "Validar conflito entre perfis",
+    "Sugerir perfil por IA local",
+    "Persistir perfil recomendado",
+    "Relatorio do perfil aplicado",
+  ].map((title, index) =>
+    a(
+      `profile-${index + 1}`,
+      title,
+      `Profile.${slugify(title)}`,
+      index < 12 ? "profiles_apply" : `planejado: ${title}`,
+      "profile",
+      index === 7 ? "high" : index < 12 ? "medium" : "info",
+      index < 12,
+    ),
+  );
+}
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, ".")
+    .replace(/(^\.|\.$)/g, "")
+    .toLowerCase();
+}

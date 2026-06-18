@@ -202,7 +202,10 @@ struct DnsInterfaceState {
 struct RawAdvancedState {
     auto_game_mode_enabled: Option<i64>,
     allow_auto_game_mode: Option<i64>,
+    game_bar_show_startup_panel: Option<i64>,
+    game_bar_use_nexus_for_game_bar_enabled: Option<i64>,
     game_dvr_enabled: Option<i64>,
+    game_dvr_fse_behavior_mode: Option<i64>,
     app_capture_enabled: Option<i64>,
     startup_delay_in_msec: Option<i64>,
     advertising_info_enabled: Option<i64>,
@@ -219,6 +222,9 @@ struct RawAdvancedState {
     location_consent_value: Option<String>,
     storage_sense_enabled: Option<i64>,
     recall_disable_ai_data_analysis: Option<i64>,
+    hibernate_enabled: Option<i64>,
+    diagtrack_start_mode: Option<String>,
+    mapsbroker_start_mode: Option<String>,
     enable_transparency: Option<i64>,
     min_animate: Option<String>,
     drag_full_windows: Option<String>,
@@ -229,6 +235,14 @@ struct RawAdvancedState {
     listview_shadow: Option<i64>,
     enable_aero_peek: Option<i64>,
     visual_fx_setting: Option<i64>,
+    mmcss_system_responsiveness: Option<i64>,
+    mmcss_games_gpu_priority: Option<i64>,
+    mmcss_games_priority: Option<i64>,
+    mmcss_games_scheduling_category: Option<String>,
+    mmcss_games_sfio_priority: Option<String>,
+    fate_trigger_cpu_priority: Option<i64>,
+    fate_trigger_shipping_cpu_priority: Option<i64>,
+    gamer_dependencies_summary: Option<String>,
     #[serde(default)]
     dns_interfaces: Vec<DnsInterfaceState>,
     power_plan_guid: Option<String>,
@@ -478,6 +492,7 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "enable-game-mode" => Some(enable_game_mode_plan(state)),
             "disable-game-mode" => Some(disable_game_mode_plan(state)),
             "disable-game-dvr" => Some(disable_game_dvr_plan(state)),
+            "disable-xbox-game-bar-deep" => Some(disable_xbox_game_bar_deep_plan(state)),
             "enable-game-dvr" => Some(enable_game_dvr_plan(state)),
             "disable-startup-delay" => Some(disable_startup_delay_plan(state)),
             "disable-advertising-id" => Some(disable_advertising_id_plan(state)),
@@ -489,11 +504,29 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
                 Some(disable_storage_sense_auto_cleanup_plan(state))
             }
             "disable-recall-user" => Some(disable_recall_user_plan(state)),
+            "disable-hibernation" => Some(disable_hibernation_plan(state)),
             "flush-dns-cache" => Some(flush_dns_cache_plan()),
+            "dism-analyze-component-store" => Some(dism_analyze_component_store_plan()),
             "dism-start-component-cleanup" => Some(dism_start_component_cleanup_plan()),
             "dism-check-netfx3" => Some(dism_check_netfx3_plan()),
             "dism-check-directplay" => Some(dism_check_directplay_plan()),
             "dism-enable-directplay" => Some(dism_enable_directplay_plan()),
+            "winsock-reset" => Some(winsock_reset_plan()),
+            "reset-ip-stack" => Some(reset_ip_stack_plan()),
+            "set-diagtrack-service-manual" => Some(set_service_manual_plan(
+                "set-diagtrack-service-manual",
+                "Servico de telemetria em manual",
+                "Coloca o servico DiagTrack em inicializacao manual para reduzir carga em segundo plano sem remover o servico.",
+                "DiagTrack",
+                state.diagtrack_start_mode.as_deref(),
+            )),
+            "set-mapsbroker-service-manual" => Some(set_service_manual_plan(
+                "set-mapsbroker-service-manual",
+                "Servico de mapas em manual",
+                "Coloca o servico MapsBroker em inicializacao manual para reduzir servicos pouco usados durante jogos.",
+                "MapsBroker",
+                state.mapsbroker_start_mode.as_deref(),
+            )),
             "allow-hermes-defender-exclusion" => allow_hermes_defender_exclusion_plan(state),
             "set-dns-cloudflare" => Some(set_dns_provider_plan(
                 state,
@@ -550,6 +583,11 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
                 POWER_SAVER_POWER_PLAN_GUID,
                 AdvancedRisk::Low,
             )),
+            "set-mmcss-gamer-pack" => Some(set_mmcss_gamer_pack_plan(state)),
+            "set-fate-trigger-cpu-priority-high" => {
+                Some(set_fate_trigger_cpu_priority_high_plan(state))
+            }
+            "check-gamer-dependencies" => Some(check_gamer_dependencies_plan(state)),
             "disable-transparency" => Some(disable_transparency_plan(state)),
             "disable-window-animations" => Some(disable_window_animations_plan(state)),
             "disable-visual-shadows" => Some(disable_visual_shadows_plan(state)),
@@ -670,6 +708,70 @@ fn disable_game_dvr_plan(state: &RawAdvancedState) -> AdvancedPlan {
                 "GameDVR_Enabled",
                 0,
                 state.game_dvr_enabled,
+                RestoreRollbackActionType::RestoreGameMode,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR",
+                "AppCaptureEnabled",
+                0,
+                state.app_capture_enabled,
+                RestoreRollbackActionType::RestoreGameMode,
+            ),
+        ],
+    }
+}
+
+fn disable_xbox_game_bar_deep_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "disable-xbox-game-bar-deep",
+            "Desligar Xbox Game Bar e captura",
+            "Desliga painel inicial, Nexus Game Bar e captura Game DVR sem remover Xbox ou quebrar Game Pass.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Medium,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "ShowStartupPanel={}, UseNexus={}, GameDVR={}, FSEBehavior={}, AppCapture={}",
+                display_optional(state.game_bar_show_startup_panel),
+                display_optional(state.game_bar_use_nexus_for_game_bar_enabled),
+                display_optional(state.game_dvr_enabled),
+                display_optional(state.game_dvr_fse_behavior_mode),
+                display_optional(state.app_capture_enabled)
+            ),
+            "Desligar Game Bar startup, Nexus e capturas em segundo plano",
+            "PowerShell New-ItemProperty em HKCU GameBar/GameConfigStore/GameDVR",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\GameBar",
+                "ShowStartupPanel",
+                0,
+                state.game_bar_show_startup_panel,
+                RestoreRollbackActionType::RestoreGameMode,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\GameBar",
+                "UseNexusForGameBarEnabled",
+                0,
+                state.game_bar_use_nexus_for_game_bar_enabled,
+                RestoreRollbackActionType::RestoreGameMode,
+            ),
+            registry_dword(
+                "HKCU:\\System\\GameConfigStore",
+                "GameDVR_Enabled",
+                0,
+                state.game_dvr_enabled,
+                RestoreRollbackActionType::RestoreGameMode,
+            ),
+            registry_dword(
+                "HKCU:\\System\\GameConfigStore",
+                "GameDVR_FSEBehaviorMode",
+                2,
+                state.game_dvr_fse_behavior_mode,
                 RestoreRollbackActionType::RestoreGameMode,
             ),
             registry_dword(
@@ -1010,6 +1112,31 @@ fn disable_recall_user_plan(state: &RawAdvancedState) -> AdvancedPlan {
     )
 }
 
+fn disable_hibernation_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "disable-hibernation",
+            "Desativar hibernacao",
+            "Executa powercfg /hibernate off para liberar espaco do hiberfil.sys e reduzir estados de energia pesados.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            false,
+            display_optional(state.hibernate_enabled),
+            "Executar powercfg /hibernate off",
+            "cmd: powercfg /hibernate off",
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "powercfg".to_string(),
+            args: vec!["/hibernate".to_string(), "off".to_string()],
+            transient: false,
+        }],
+    }
+}
+
 fn flush_dns_cache_plan() -> AdvancedPlan {
     AdvancedPlan {
         action: action(
@@ -1035,6 +1162,19 @@ fn flush_dns_cache_plan() -> AdvancedPlan {
     }
 }
 
+fn dism_analyze_component_store_plan() -> AdvancedPlan {
+    dism_cmd_plan(
+        "dism-analyze-component-store",
+        "Analisar componentes do Windows",
+        "Executa DISM AnalyzeComponentStore para medir residuos de atualizacoes antes da limpeza.",
+        AdvancedRisk::Low,
+        &["/online", "/cleanup-image", "/analyzecomponentstore"],
+        "DISM analisa o armazenamento de componentes",
+        "cmd: dism /online /cleanup-image /analyzecomponentstore",
+        false,
+    )
+}
+
 fn dism_start_component_cleanup_plan() -> AdvancedPlan {
     dism_cmd_plan(
         "dism-start-component-cleanup",
@@ -1046,6 +1186,92 @@ fn dism_start_component_cleanup_plan() -> AdvancedPlan {
         "cmd: dism /online /cleanup-image /startcomponentcleanup",
         true,
     )
+}
+
+fn winsock_reset_plan() -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "winsock-reset",
+            "Resetar Winsock",
+            "Executa netsh winsock reset para reconstruir o catalogo de rede. Requer reinicio.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            true,
+            "Catalogo Winsock atual",
+            "Executar netsh winsock reset",
+            "cmd: netsh winsock reset",
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "netsh".to_string(),
+            args: vec!["winsock".to_string(), "reset".to_string()],
+            transient: false,
+        }],
+    }
+}
+
+fn reset_ip_stack_plan() -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "reset-ip-stack",
+            "Resetar pilha TCP/IP",
+            "Executa netsh int ip reset para limpar configuracoes corrompidas de rede. Requer reinicio.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            true,
+            "Pilha TCP/IP atual",
+            "Executar netsh int ip reset",
+            "cmd: netsh int ip reset",
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "netsh".to_string(),
+            args: vec!["int".to_string(), "ip".to_string(), "reset".to_string()],
+            transient: false,
+        }],
+    }
+}
+
+fn set_service_manual_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    service_name: &str,
+    current_mode: Option<&str>,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            false,
+            current_mode.unwrap_or("Nao detectado"),
+            "Definir inicializacao como Manual",
+            &format!("cmd: sc.exe config {service_name} start= demand"),
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "sc.exe".to_string(),
+            args: vec![
+                "config".to_string(),
+                service_name.to_string(),
+                "start=".to_string(),
+                "demand".to_string(),
+            ],
+            transient: false,
+        }],
+    }
 }
 
 fn dism_check_netfx3_plan() -> AdvancedPlan {
@@ -1110,7 +1336,7 @@ fn dism_cmd_plan(
             description,
             AdvancedMethod::Cmd,
             risk,
-            false,
+            true,
             false,
             true,
             false,
@@ -1255,6 +1481,134 @@ fn set_power_plan_plan(
             previous_guid: state.power_plan_guid.clone(),
             previous_name: state.power_plan_name.clone(),
         }],
+    }
+}
+
+fn set_mmcss_gamer_pack_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-mmcss-gamer-pack",
+            "MMCSS Gamer Pack",
+            "Ajusta Multimedia SystemProfile para priorizar jogos com SystemResponsiveness, GPU Priority, Priority, Scheduling Category e SFIO Priority.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            true,
+            format!(
+                "SystemResponsiveness={}, GPU Priority={}, Priority={}, Scheduling={}, SFIO={}",
+                display_optional(state.mmcss_system_responsiveness),
+                display_optional(state.mmcss_games_gpu_priority),
+                display_optional(state.mmcss_games_priority),
+                display_optional_string(state.mmcss_games_scheduling_category.as_deref()),
+                display_optional_string(state.mmcss_games_sfio_priority.as_deref())
+            ),
+            "Aplicar perfil MMCSS gamer recomendado",
+            "PowerShell New-ItemProperty em HKLM Multimedia\\SystemProfile\\Tasks\\Games",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+                "SystemResponsiveness",
+                0,
+                state.mmcss_system_responsiveness,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                "GPU Priority",
+                8,
+                state.mmcss_games_gpu_priority,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                "Priority",
+                6,
+                state.mmcss_games_priority,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_string(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                "Scheduling Category",
+                "High",
+                state.mmcss_games_scheduling_category.clone(),
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_string(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                "SFIO Priority",
+                "High",
+                state.mmcss_games_sfio_priority.clone(),
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
+fn set_fate_trigger_cpu_priority_high_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-fate-trigger-cpu-priority-high",
+            "Prioridade CPU do Fate Trigger",
+            "Aplica IFEO PerfOptions para priorizar os executaveis conhecidos do Fate Trigger/UE5.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            true,
+            format!(
+                "FateTrigger.exe={}, FateTrigger-Win64-Shipping.exe={}",
+                display_optional(state.fate_trigger_cpu_priority),
+                display_optional(state.fate_trigger_shipping_cpu_priority)
+            ),
+            "Definir CpuPriorityClass como 3 para Fate Trigger",
+            "PowerShell New-ItemProperty em HKLM Image File Execution Options\\FateTrigger*\\PerfOptions",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\FateTrigger.exe\\PerfOptions",
+                "CpuPriorityClass",
+                3,
+                state.fate_trigger_cpu_priority,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\FateTrigger-Win64-Shipping.exe\\PerfOptions",
+                "CpuPriorityClass",
+                3,
+                state.fate_trigger_shipping_cpu_priority,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
+fn check_gamer_dependencies_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "check-gamer-dependencies",
+            "Verificar dependencias gamer",
+            "Lê VC++ Redistributables e DirectX localmente antes de qualquer instalacao futura com hash/assinatura.",
+            AdvancedMethod::PowerShell,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            false,
+            false,
+            state
+                .gamer_dependencies_summary
+                .clone()
+                .unwrap_or_else(|| "Dependencias ainda nao lidas".to_string()),
+            "Checar VC++ 2005-2022 x86/x64 e DirectX End-User Runtime",
+            "PowerShell Get-ItemProperty Uninstall + HKLM DirectX",
+        ),
+        operations: Vec::new(),
     }
 }
 
@@ -1631,15 +1985,6 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
             true,
         ),
         blocked(
-            "winsock-reset",
-            "Reset de rede",
-            "Bloqueado nesta fase: pode quebrar conectividade e exige reinicio.",
-            AdvancedMethod::Cmd,
-            AdvancedRisk::High,
-            true,
-            true,
-        ),
-        blocked(
             "disable-windows-update",
             "Desabilitar Windows Update permanentemente",
             "Bloqueado: o Hermes nao desativa atualizacoes de seguranca de forma permanente.",
@@ -1751,6 +2096,7 @@ fn default_action_ids() -> Vec<String> {
     vec![
         "enable-game-mode".to_string(),
         "disable-game-dvr".to_string(),
+        "disable-xbox-game-bar-deep".to_string(),
         "disable-startup-delay".to_string(),
         "disable-advertising-id".to_string(),
         "disable-tailored-experiences".to_string(),
@@ -1758,13 +2104,20 @@ fn default_action_ids() -> Vec<String> {
         "disable-activity-history".to_string(),
         "disable-location-tracking".to_string(),
         "disable-recall-user".to_string(),
+        "disable-hibernation".to_string(),
         "flush-dns-cache".to_string(),
+        "dism-analyze-component-store".to_string(),
         "dism-start-component-cleanup".to_string(),
         "dism-check-netfx3".to_string(),
         "dism-check-directplay".to_string(),
+        "set-diagtrack-service-manual".to_string(),
+        "set-mapsbroker-service-manual".to_string(),
         "set-dns-cloudflare".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
+        "set-mmcss-gamer-pack".to_string(),
+        "set-fate-trigger-cpu-priority-high".to_string(),
+        "check-gamer-dependencies".to_string(),
         "disable-storage-sense-auto-cleanup".to_string(),
         "set-visual-effects-gamer-minimal".to_string(),
         "disable-transparency".to_string(),
@@ -1779,6 +2132,7 @@ fn allowed_action_ids() -> Vec<String> {
         "enable-game-mode".to_string(),
         "disable-game-mode".to_string(),
         "disable-game-dvr".to_string(),
+        "disable-xbox-game-bar-deep".to_string(),
         "enable-game-dvr".to_string(),
         "disable-startup-delay".to_string(),
         "disable-advertising-id".to_string(),
@@ -1788,11 +2142,17 @@ fn allowed_action_ids() -> Vec<String> {
         "disable-location-tracking".to_string(),
         "disable-storage-sense-auto-cleanup".to_string(),
         "disable-recall-user".to_string(),
+        "disable-hibernation".to_string(),
         "flush-dns-cache".to_string(),
+        "dism-analyze-component-store".to_string(),
         "dism-start-component-cleanup".to_string(),
         "dism-check-netfx3".to_string(),
         "dism-check-directplay".to_string(),
         "dism-enable-directplay".to_string(),
+        "winsock-reset".to_string(),
+        "reset-ip-stack".to_string(),
+        "set-diagtrack-service-manual".to_string(),
+        "set-mapsbroker-service-manual".to_string(),
         "allow-hermes-defender-exclusion".to_string(),
         "set-dns-cloudflare".to_string(),
         "set-dns-google".to_string(),
@@ -1803,6 +2163,9 @@ fn allowed_action_ids() -> Vec<String> {
         "set-high-performance-power-plan".to_string(),
         "set-balanced-power-plan".to_string(),
         "set-power-saver-power-plan".to_string(),
+        "set-mmcss-gamer-pack".to_string(),
+        "set-fate-trigger-cpu-priority-high".to_string(),
+        "check-gamer-dependencies".to_string(),
         "set-visual-effects-gamer-minimal".to_string(),
         "disable-transparency".to_string(),
         "disable-window-animations".to_string(),
@@ -1939,10 +2302,47 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
         (normalized.as_str(), normalized_name.as_str()),
         ("hkcu:\\software\\microsoft\\gamebar", "autogamemodeenabled")
             | ("hkcu:\\software\\microsoft\\gamebar", "allowautogamemode")
+            | ("hkcu:\\software\\microsoft\\gamebar", "showstartuppanel")
+            | (
+                "hkcu:\\software\\microsoft\\gamebar",
+                "usenexusforgamebarenabled"
+            )
             | ("hkcu:\\system\\gameconfigstore", "gamedvr_enabled")
+            | (
+                "hkcu:\\system\\gameconfigstore",
+                "gamedvr_fsebehaviormode"
+            )
             | (
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\gamedvr",
                 "appcaptureenabled"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile",
+                "systemresponsiveness"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile\\tasks\\games",
+                "gpu priority"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile\\tasks\\games",
+                "priority"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile\\tasks\\games",
+                "scheduling category"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile\\tasks\\games",
+                "sfio priority"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\image file execution options\\fatetrigger.exe\\perfoptions",
+                "cpupriorityclass"
+            )
+            | (
+                "hklm:\\software\\microsoft\\windows nt\\currentversion\\image file execution options\\fatetrigger-win64-shipping.exe\\perfoptions",
+                "cpupriorityclass"
             )
             | (
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\explorer\\serialize",
@@ -2539,6 +2939,7 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
         "powercfg" => {
             normalized_args == ["/l".to_string()]
                 || normalized_args == ["/list".to_string()]
+                || normalized_args == ["/hibernate".to_string(), "off".to_string()]
                 || matches!(
                     normalized_args.as_slice(),
                     [switch, guid]
@@ -2551,8 +2952,14 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
                 == [
                     "/online".to_string(),
                     "/cleanup-image".to_string(),
-                    "/startcomponentcleanup".to_string(),
+                    "/analyzecomponentstore".to_string(),
                 ]
+                || normalized_args
+                    == [
+                        "/online".to_string(),
+                        "/cleanup-image".to_string(),
+                        "/startcomponentcleanup".to_string(),
+                    ]
                 || normalized_args
                     == [
                         "/online".to_string(),
@@ -2574,6 +2981,18 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
                         "/norestart".to_string(),
                     ]
         }
+        "netsh" => {
+            normalized_args == ["winsock".to_string(), "reset".to_string()]
+                || normalized_args == ["int".to_string(), "ip".to_string(), "reset".to_string()]
+        }
+        "sc.exe" => matches!(
+            normalized_args.as_slice(),
+            [config, service, start_equals, mode]
+                if config == "config"
+                    && (service == "diagtrack" || service == "mapsbroker")
+                    && start_equals == "start="
+                    && mode == "demand"
+        ),
         "rundll32.exe" => {
             normalized_args
                 == [
@@ -2770,7 +3189,10 @@ fn fallback_state() -> RawAdvancedState {
     RawAdvancedState {
         auto_game_mode_enabled: None,
         allow_auto_game_mode: None,
+        game_bar_show_startup_panel: None,
+        game_bar_use_nexus_for_game_bar_enabled: None,
         game_dvr_enabled: None,
+        game_dvr_fse_behavior_mode: None,
         app_capture_enabled: None,
         startup_delay_in_msec: None,
         advertising_info_enabled: None,
@@ -2787,6 +3209,9 @@ fn fallback_state() -> RawAdvancedState {
         location_consent_value: None,
         storage_sense_enabled: None,
         recall_disable_ai_data_analysis: None,
+        hibernate_enabled: None,
+        diagtrack_start_mode: None,
+        mapsbroker_start_mode: None,
         enable_transparency: None,
         min_animate: None,
         drag_full_windows: None,
@@ -2797,6 +3222,14 @@ fn fallback_state() -> RawAdvancedState {
         listview_shadow: None,
         enable_aero_peek: None,
         visual_fx_setting: None,
+        mmcss_system_responsiveness: None,
+        mmcss_games_gpu_priority: None,
+        mmcss_games_priority: None,
+        mmcss_games_scheduling_category: None,
+        mmcss_games_sfio_priority: None,
+        fate_trigger_cpu_priority: None,
+        fate_trigger_shipping_cpu_priority: None,
+        gamer_dependencies_summary: None,
         dns_interfaces: Vec::new(),
         power_plan_guid: Some("Indisponivel".to_string()),
         power_plan_name: Some("Indisponivel".to_string()),
@@ -2869,6 +3302,14 @@ function Get-StringValue($path, $name) {
   } catch { return $null }
 }
 
+function Get-ServiceStartMode($name) {
+  try {
+    $service = Get-CimInstance Win32_Service -Filter "Name='$name'" -ErrorAction SilentlyContinue
+    if ($null -eq $service) { return $null }
+    return [string]$service.StartMode
+  } catch { return $null }
+}
+
 $gameBarPath = 'HKCU:\Software\Microsoft\GameBar'
 $gameConfigPath = 'HKCU:\System\GameConfigStore'
 $gameDvrPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR'
@@ -2880,12 +3321,18 @@ $activityHistoryPath = 'HKCU:\Software\Policies\Microsoft\Windows\System'
 $locationConsentPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
 $storageSensePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy'
 $windowsAiPath = 'HKCU:\Software\Policies\Microsoft\Windows\WindowsAI'
+$powerPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Power'
 $personalizePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
 $desktopPath = 'HKCU:\Control Panel\Desktop'
 $windowMetricsPath = 'HKCU:\Control Panel\Desktop\WindowMetrics'
 $advancedPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $visualFxPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects'
 $dwmPath = 'HKCU:\Software\Microsoft\Windows\DWM'
+$mmcssPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile'
+$mmcssGamesPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+$ifeoFateTriggerPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FateTrigger.exe\PerfOptions'
+$ifeoFateTriggerShippingPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FateTrigger-Win64-Shipping.exe\PerfOptions'
+$directXPath = 'HKLM:\SOFTWARE\Microsoft\DirectX'
 
 $powerPlanGuid = $null
 $powerPlanName = $null
@@ -2930,10 +3377,28 @@ try {
   $minAnimateValue = $null
 }
 
+$gamerDependenciesSummary = $null
+try {
+  $vcKeys = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
+    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+  )
+  $vcNames = @(Get-ItemProperty -Path $vcKeys -ErrorAction SilentlyContinue |
+    Where-Object { [string]$_.DisplayName -match 'Visual C\+\+.*Redistributable' } |
+    Select-Object -ExpandProperty DisplayName -Unique)
+  $directXVersion = Get-StringValue $directXPath 'Version'
+  $gamerDependenciesSummary = "VC++ Redistributables encontrados: $($vcNames.Count); DirectX=$directXVersion"
+} catch {
+  $gamerDependenciesSummary = $null
+}
+
 [pscustomobject]@{
   autoGameModeEnabled = Get-Dword $gameBarPath 'AutoGameModeEnabled'
   allowAutoGameMode = Get-Dword $gameBarPath 'AllowAutoGameMode'
+  gameBarShowStartupPanel = Get-Dword $gameBarPath 'ShowStartupPanel'
+  gameBarUseNexusForGameBarEnabled = Get-Dword $gameBarPath 'UseNexusForGameBarEnabled'
   gameDvrEnabled = Get-Dword $gameConfigPath 'GameDVR_Enabled'
+  gameDvrFseBehaviorMode = Get-Dword $gameConfigPath 'GameDVR_FSEBehaviorMode'
   appCaptureEnabled = Get-Dword $gameDvrPath 'AppCaptureEnabled'
   startupDelayInMsec = Get-Dword $serializePath 'StartupDelayInMSec'
   advertisingInfoEnabled = Get-Dword $advertisingPath 'Enabled'
@@ -2950,6 +3415,9 @@ try {
   locationConsentValue = Get-StringValue $locationConsentPath 'Value'
   storageSenseEnabled = Get-Dword $storageSensePath '01'
   recallDisableAiDataAnalysis = Get-Dword $windowsAiPath 'DisableAIDataAnalysis'
+  hibernateEnabled = Get-Dword $powerPath 'HibernateEnabled'
+  diagtrackStartMode = Get-ServiceStartMode 'DiagTrack'
+  mapsbrokerStartMode = Get-ServiceStartMode 'MapsBroker'
   enableTransparency = Get-Dword $personalizePath 'EnableTransparency'
   minAnimate = $minAnimateValue
   dragFullWindows = Get-StringValue $desktopPath 'DragFullWindows'
@@ -2960,6 +3428,14 @@ try {
   listviewShadow = Get-Dword $advancedPath 'ListviewShadow'
   enableAeroPeek = Get-Dword $dwmPath 'EnableAeroPeek'
   visualFxSetting = Get-Dword $visualFxPath 'VisualFXSetting'
+  mmcssSystemResponsiveness = Get-Dword $mmcssPath 'SystemResponsiveness'
+  mmcssGamesGpuPriority = Get-Dword $mmcssGamesPath 'GPU Priority'
+  mmcssGamesPriority = Get-Dword $mmcssGamesPath 'Priority'
+  mmcssGamesSchedulingCategory = Get-StringValue $mmcssGamesPath 'Scheduling Category'
+  mmcssGamesSfioPriority = Get-StringValue $mmcssGamesPath 'SFIO Priority'
+  fateTriggerCpuPriority = Get-Dword $ifeoFateTriggerPath 'CpuPriorityClass'
+  fateTriggerShippingCpuPriority = Get-Dword $ifeoFateTriggerShippingPath 'CpuPriorityClass'
+  gamerDependenciesSummary = $gamerDependenciesSummary
   dnsInterfaces = $dnsInterfaces
   powerPlanGuid = $powerPlanGuid
   powerPlanName = $powerPlanName

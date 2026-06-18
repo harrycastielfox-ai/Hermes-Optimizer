@@ -20,6 +20,7 @@ import { Route as ManutencaoProgramadaRouteImport } from './routes/manutencao-pr
 import { Route as LimpezaRouteImport } from './routes/limpeza'
 import { Route as InicializacaoRouteImport } from './routes/inicializacao'
 import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+import { Route as DefenderRouteImport } from './routes/defender'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as CentralRouteImport } from './routes/central'
 import { Route as AntiCheatRouteImport } from './routes/anti-cheat'
@@ -80,6 +81,11 @@ const DiagnosticoRoute = DiagnosticoRouteImport.update({
   path: '/diagnostico',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DefenderRoute = DefenderRouteImport.update({
+  id: '/defender',
+  path: '/defender',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
   '/limpeza': typeof LimpezaRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/defender'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/defender'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/defender'
     | '/diagnostico'
     | '/inicializacao'
     | '/limpeza'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AntiCheatRoute: typeof AntiCheatRoute
   CentralRoute: typeof CentralRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  DefenderRoute: typeof DefenderRoute
   DiagnosticoRoute: typeof DiagnosticoRoute
   InicializacaoRoute: typeof InicializacaoRoute
   LimpezaRoute: typeof LimpezaRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiagnosticoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/defender': {
+      id: '/defender'
+      path: '/defender'
+      fullPath: '/defender'
+      preLoaderRoute: typeof DefenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
@@ -340,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   AntiCheatRoute: AntiCheatRoute,
   CentralRoute: CentralRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  DefenderRoute: DefenderRoute,
   DiagnosticoRoute: DiagnosticoRoute,
   InicializacaoRoute: InicializacaoRoute,
   LimpezaRoute: LimpezaRoute,

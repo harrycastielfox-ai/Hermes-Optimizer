@@ -23,6 +23,13 @@ import {
 } from "@/lib/quick-prepare";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 import type { DiagnosticReport } from "@/lib/diagnostic";
+import { RestartPrompt } from "@/components/optimization/RestartPrompt";
+import {
+  buildExecutionReport,
+  type ExecutionReport,
+  type ExecutionReportAction,
+  type ExecutionReportStatus,
+} from "@/lib/execution-report";
 
 type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "cancelled";
@@ -62,7 +69,7 @@ export function QuickPrepareModal({
   runKey: number;
   onClose: () => void;
   onDiagnostic?: (report: DiagnosticReport) => void;
-  onCompleted?: (reports: QuickPrepareReports) => void;
+  onCompleted?: (reports: QuickPrepareReports, executionReport: ExecutionReport) => void;
   dnsProviderId: DnsProviderId;
 }) {
   const [phases, setPhases] = useState<PreparePhase[]>(() => resetPhases());
@@ -77,6 +84,7 @@ export function QuickPrepareModal({
   const phaseTaskTotals = useRef<Partial<Record<QuickPreparePhaseId, number>>>({});
   const phaseTaskCompleted = useRef<Partial<Record<QuickPreparePhaseId, number>>>({});
   const phaseHasUnavailable = useRef<Partial<Record<QuickPreparePhaseId, boolean>>>({});
+  const reportActions = useRef<ExecutionReportAction[]>([]);
   const executionMode = HERMES_SAFE_TEST_MODE ? "dryRun" : "real";
 
   useEffect(() => {
@@ -96,6 +104,7 @@ export function QuickPrepareModal({
     phaseTaskTotals.current = countTasksByPhase(taskPlan);
     phaseTaskCompleted.current = {};
     phaseHasUnavailable.current = {};
+    reportActions.current = [];
     setRunStatus("running");
     setCurrentStatus("Montando fila real do Preparar PC.");
     void runPrepare(runId);
@@ -128,7 +137,21 @@ export function QuickPrepareModal({
 
       setRunStatus("completed");
       setCurrentStatus("Preparo concluido. Reinicie o PC antes do Botao 2.");
-      onCompleted?.(nextReports);
+      onCompleted?.(
+        nextReports,
+        buildExecutionReport({
+          phase: "prepare",
+          title: "Preparacao da Maquina",
+          safeMode: HERMES_SAFE_TEST_MODE,
+          actions: reportActions.current,
+          notes: [
+            "Botao 1 concluido antes da Fase 2.",
+            HERMES_SAFE_TEST_MODE
+              ? "Modo teste: nenhuma alteracao real foi aplicada."
+              : "Modo real: ajustes implementados foram executados.",
+          ],
+        }),
+      );
       appendLog("info", "Preparar PC finalizado.");
       appendLog("warning", "Reinicio recomendado antes de executar Otimizar Tudo.");
     } catch (error) {
@@ -179,6 +202,7 @@ export function QuickPrepareModal({
     if (update.reports?.diagnostic) {
       onDiagnostic?.(update.reports.diagnostic);
     }
+    upsertReportAction(update);
     setReports((current) => ({ ...current, ...update.reports }));
     updatePhase(phaseId, {
       status: phaseStatus,
@@ -188,6 +212,31 @@ export function QuickPrepareModal({
       update.status === "unavailable" ? "warning" : "info",
       `${update.task.title}: ${update.outputs[0] ?? "ok"}`,
     );
+  }
+
+  function upsertReportAction(update: QuickPrepareTaskUpdate) {
+    const isScanOnly = update.task.realPolicy === "scanOnly";
+    const isAdminOnly = update.task.realPolicy === "adminOnly";
+    const action: ExecutionReportAction = {
+      id: update.task.id,
+      title: update.task.title,
+      detail: update.task.detail,
+      phase:
+        phaseTemplates.find((item) => item.id === update.task.phaseId)?.title ??
+        update.task.phaseId,
+      status: quickPrepareReportStatus(update),
+      outputs: update.outputs,
+      plannedCount: 1,
+      technicalName: `QuickPrepare.${update.task.id}`,
+      commandPreview: update.task.detail,
+      method: isScanOnly ? "analysis" : isAdminOnly ? "admin-engine" : "engine",
+      risk: isScanOnly ? "info" : isAdminOnly ? "medium" : "low",
+      implemented: update.status !== "unavailable",
+    };
+    reportActions.current = [
+      ...reportActions.current.filter((item) => item.id !== action.id),
+      action,
+    ];
   }
 
   function requestCancel() {
@@ -363,6 +412,12 @@ export function QuickPrepareModal({
           </div>
         </div>
 
+        {runStatus === "completed" && (
+          <div className="border-t border-border/70 bg-background/78 px-5 py-4 lg:px-6">
+            <RestartPrompt phase="prepare" />
+          </div>
+        )}
+
         <footer className="flex flex-col gap-3 border-t border-border/70 bg-background/78 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-success" />
@@ -517,6 +572,16 @@ function countTasksByPhase(tasks: Array<{ phaseId: QuickPreparePhaseId }>) {
 function appendPhaseOutput(update: QuickPrepareTaskUpdate) {
   const firstOutput = update.outputs[0] ?? phaseStatusLabel(update.status);
   return [`${update.task.title}: ${firstOutput}`, ...update.outputs.slice(1, 3)];
+}
+
+function quickPrepareReportStatus(update: QuickPrepareTaskUpdate): ExecutionReportStatus {
+  if (update.status === "unavailable") {
+    return "unavailable";
+  }
+  if (update.task.realPolicy === "scanOnly") {
+    return "scanned";
+  }
+  return HERMES_SAFE_TEST_MODE ? "simulated" : "applied";
 }
 
 function phaseIconClass(status: PhaseStatus) {

@@ -1328,6 +1328,14 @@ fn is_allowed_registry_path(path: &str) -> bool {
         || normalized.starts_with("hkcu:\\system\\gameconfigstore\\")
         || normalized.starts_with("hkcu:\\control panel\\")
         || normalized.starts_with("hklm:\\system\\currentcontrolset\\control\\power\\")
+        || normalized
+            == "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile"
+        || normalized
+            == "hklm:\\software\\microsoft\\windows nt\\currentversion\\multimedia\\systemprofile\\tasks\\games"
+        || normalized
+            == "hklm:\\software\\microsoft\\windows nt\\currentversion\\image file execution options\\fatetrigger.exe\\perfoptions"
+        || normalized
+            == "hklm:\\software\\microsoft\\windows nt\\currentversion\\image file execution options\\fatetrigger-win64-shipping.exe\\perfoptions"
 }
 
 fn is_allowed_startup_registry_path(path: &str) -> bool {

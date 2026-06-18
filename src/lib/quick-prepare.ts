@@ -160,7 +160,9 @@ const QUICK_PREPARE_PERFORMANCE_LABELS: Record<string, string> = {
 const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "enable-game-mode": "Game Mode ON",
   "disable-game-dvr": "GameDVR OFF",
+  "disable-xbox-game-bar-deep": "Xbox Game Bar e captura OFF",
   "set-visual-effects-gamer-minimal": "Visual gamer minimo",
+  "disable-hibernation": "Hibernacao OFF",
   "disable-startup-delay": "Inicializacao sem atraso",
   "disable-advertising-id": "ID de publicidade OFF",
   "disable-tailored-experiences": "Experiencias personalizadas OFF",
@@ -169,20 +171,28 @@ const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "disable-location-tracking": "Localizacao de apps bloqueada",
   "disable-recall-user": "Recall bloqueado no usuario",
   "flush-dns-cache": "Cache DNS limpo",
+  "dism-analyze-component-store": "CMD DISM: analisar componentes",
   "dism-start-component-cleanup": "CMD DISM: limpar componentes",
   "dism-check-netfx3": "CMD DISM: verificar NetFx3",
   "dism-check-directplay": "CMD DISM: verificar DirectPlay",
+  "check-gamer-dependencies": "Dependencias gamer verificadas",
+  "set-diagtrack-service-manual": "Servico de telemetria em manual",
+  "set-mapsbroker-service-manual": "Servico de mapas em manual",
 };
 
 const QUICK_PREPARE_ADMIN_ACTION_IDS = new Set([
+  "disable-hibernation",
   "set-dns-cloudflare",
   "set-dns-google",
   "set-dns-opendns",
   "set-dns-quad9",
   "set-dns-adguard",
+  "dism-analyze-component-store",
   "dism-start-component-cleanup",
   "dism-check-netfx3",
   "dism-check-directplay",
+  "set-diagtrack-service-manual",
+  "set-mapsbroker-service-manual",
 ]);
 
 export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPrepareTask[] {

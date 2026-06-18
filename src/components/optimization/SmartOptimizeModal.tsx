@@ -28,6 +28,16 @@ import {
   type OptimizeAllReports,
 } from "@/lib/optimize-all";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
+import { RestartPrompt } from "@/components/optimization/RestartPrompt";
+import {
+  buildExecutionReport,
+  type ExecutionReport,
+  type ExecutionReportAction,
+} from "@/lib/execution-report";
+import {
+  buildOptimizeAuditReportActions,
+  OPTIMIZE_AUDIT_ACTION_TARGET,
+} from "@/lib/optimize-audit-catalog";
 
 type RunStatus = "idle" | "running" | "awaitingGame" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "failed" | "cancelled";
@@ -76,19 +86,18 @@ const phaseTemplates: OptimizePhase[] = [
   ),
 ];
 
-const TOTAL_PLANNED_ACTIONS = phaseTemplates.reduce(
-  (total, item) => total + item.plannedActions,
-  0,
-);
+const TOTAL_PLANNED_ACTIONS = OPTIMIZE_AUDIT_ACTION_TARGET;
 
 export function SmartOptimizeModal({
   open,
   runKey,
   onClose,
+  onCompleted,
 }: {
   open: boolean;
   runKey: number;
   onClose: () => void;
+  onCompleted?: (executionReport: ExecutionReport) => void;
 }) {
   const [phases, setPhases] = useState<OptimizePhase[]>(() => resetPhases());
   const [logs, setLogs] = useState<LogItem[]>([]);
@@ -100,6 +109,7 @@ export function SmartOptimizeModal({
   const [selectedGameTarget, setSelectedGameTarget] = useState<OptimizeAllGameTarget | null>(null);
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
+  const reportActions = useRef<ExecutionReportAction[]>([]);
   const resumeState = useRef<{
     runId: number;
     phaseIndex: number;
@@ -120,6 +130,7 @@ export function SmartOptimizeModal({
     setReports({});
     setGameTargets([]);
     setSelectedGameTarget(null);
+    reportActions.current = [];
     resumeState.current = null;
     setRunStatus("running");
     setCurrentStatus("Preparando plano unico do Hermes.");
@@ -222,6 +233,21 @@ export function SmartOptimizeModal({
     setRunStatus("completed");
     setCurrentStatus("Plano unico concluido. Modo teste mantido.");
     appendLog("info", "Otimizar Tudo finalizado em modo teste.");
+    onCompleted?.(
+      buildExecutionReport({
+        phase: "optimize",
+        title: "Otimizacao Avancada",
+        safeMode: HERMES_SAFE_TEST_MODE,
+        actions: reportActions.current,
+        notes: [
+          "Botao 2 concluido em fluxo guiado.",
+          "A meta de 150 acoes e contabilizada por fases do plano Hermes.",
+          HERMES_SAFE_TEST_MODE
+            ? "Modo teste: nenhuma alteracao real foi aplicada."
+            : "Modo real: fases implementadas foram executadas.",
+        ],
+      }),
+    );
   }
 
   function chooseGameTarget(target: OptimizeAllGameTarget) {
@@ -277,6 +303,7 @@ export function SmartOptimizeModal({
       }
 
       updatePhase(phaseId, { status: "completed", outputs });
+      upsertReportAction(phaseId, "completed", outputs);
       appendLog("info", `${template?.title ?? phaseId}: concluido.`);
     } catch (error) {
       const message = errorMessage(error);
@@ -284,8 +311,32 @@ export function SmartOptimizeModal({
         status: "unavailable",
         outputs: [message, "Fase isolada sem efeitos."],
       });
+      upsertReportAction(phaseId, "unavailable", [message, "Fase isolada sem efeitos."]);
       appendLog("warning", `${template?.title ?? phaseId}: ${message}`);
     }
+  }
+
+  function upsertReportAction(
+    phaseId: PhaseId,
+    status: "completed" | "unavailable",
+    outputs: string[],
+  ) {
+    const actions = buildOptimizeAuditReportActions({
+      phaseId,
+      phaseStatus: status,
+      safeMode: HERMES_SAFE_TEST_MODE,
+      outputs,
+    });
+
+    if (actions.length === 0) {
+      return;
+    }
+
+    const actionIds = new Set(actions.map((action) => action.id));
+    reportActions.current = [
+      ...reportActions.current.filter((item) => !actionIds.has(item.id)),
+      ...actions,
+    ];
   }
 
   function requestCancel() {
@@ -390,7 +441,7 @@ export function SmartOptimizeModal({
               icon={ShieldCheck}
               label="Modo"
               value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}
-              sub="Modo teste ativo"
+              sub={HERMES_SAFE_TEST_MODE ? "Modo teste ativo" : "Execucao real liberada"}
             />
           </section>
 
@@ -402,8 +453,9 @@ export function SmartOptimizeModal({
                   O Hermes mira 150 acoes, mas executa apenas o que ja existe no motor.
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  O modo teste ainda nao aplica alteracoes reais. Acoes ainda nao implementadas
-                  ficam como planejamento ou indisponiveis, sem fingir execucao.
+                  {HERMES_SAFE_TEST_MODE
+                    ? "O modo teste ainda nao aplica alteracoes reais. Acoes ainda nao implementadas ficam como planejamento ou indisponiveis, sem fingir execucao."
+                    : "Modo real ligado: o Hermes aplica apenas as acoes implementadas, allowlistadas e confirmadas pelo motor."}
                 </p>
               </div>
             </div>
@@ -475,6 +527,12 @@ export function SmartOptimizeModal({
             </aside>
           </div>
         </div>
+
+        {runStatus === "completed" && (
+          <div className="border-t border-border/70 bg-background/78 px-5 py-4 lg:px-6">
+            <RestartPrompt phase="optimize" />
+          </div>
+        )}
 
         <footer className="flex flex-col gap-3 border-t border-border/70 bg-background/78 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">

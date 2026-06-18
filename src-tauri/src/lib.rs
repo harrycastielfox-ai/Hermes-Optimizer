@@ -82,7 +82,10 @@ pub fn run() {
             restore::restore_validate_snapshot,
             startup::startup_engine_apply,
             startup::startup_engine_read,
-            system::system_relaunch_as_admin,
+            system::system_boot_context_read,
+            system::system_cancel_restart,
+            system::system_open_windows_security,
+            system::system_restart_computer,
             system::system_security_context_read,
             hermes_window_minimize
         ])

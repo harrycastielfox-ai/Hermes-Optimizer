@@ -5,10 +5,25 @@ export type SystemSecurityContext = {
   warnings: string[];
 };
 
-export type SystemAdminRelaunchResult = {
-  attempted: boolean;
-  alreadyElevated: boolean;
-  executablePath?: string;
+export type SystemBootContext = {
+  isWindows: boolean;
+  available: boolean;
+  currentBootId?: string;
+  bootedAt?: string;
+  warnings: string[];
+};
+
+export type SystemRestartRequest = {
+  confirmed: boolean;
+  dryRun?: boolean;
+  delaySeconds?: number;
+};
+
+export type SystemRestartResult = {
+  dryRun: boolean;
+  scheduled: boolean;
+  cancelled: boolean;
+  delaySeconds: number;
   message: string;
 };
 
@@ -16,6 +31,12 @@ export const fallbackSystemSecurityContext: SystemSecurityContext = {
   isWindows: typeof navigator !== "undefined" ? /win/i.test(navigator.platform) : false,
   isElevated: false,
   warnings: ["Contexto administrativo indisponivel fora do backend Tauri."],
+};
+
+export const fallbackSystemBootContext: SystemBootContext = {
+  isWindows: typeof navigator !== "undefined" ? /win/i.test(navigator.platform) : false,
+  available: false,
+  warnings: ["Boot real indisponivel fora do backend Tauri."],
 };
 
 export async function readSystemSecurityContext(): Promise<SystemSecurityContext> {
@@ -35,15 +56,60 @@ export async function readSystemSecurityContext(): Promise<SystemSecurityContext
   }
 }
 
-export async function relaunchHermesAsAdmin(): Promise<SystemAdminRelaunchResult> {
+export async function readSystemBootContext(): Promise<SystemBootContext> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return fallbackSystemBootContext;
+  }
+
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return await invoke<SystemBootContext>("system_boot_context_read");
+  } catch (error) {
+    console.warn("Boot real indisponivel.", error);
+    return {
+      ...fallbackSystemBootContext,
+      warnings: [error instanceof Error ? error.message : String(error)],
+    };
+  }
+}
+
+export async function openWindowsSecurity(): Promise<void> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    throw new Error("Seguranca do Windows indisponivel fora do aplicativo Hermes.");
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke("system_open_windows_security");
+}
+
+export async function requestSystemRestart(
+  request: SystemRestartRequest,
+): Promise<SystemRestartResult> {
   if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
     return {
-      attempted: false,
-      alreadyElevated: false,
-      message: "Relancamento como administrador exige o aplicativo Tauri.",
+      dryRun: true,
+      scheduled: false,
+      cancelled: false,
+      delaySeconds: request.delaySeconds ?? 60,
+      message: "Reinicio validado fora do aplicativo Tauri. Nenhuma acao real foi executada.",
     };
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<SystemAdminRelaunchResult>("system_relaunch_as_admin");
+  return await invoke<SystemRestartResult>("system_restart_computer", { request });
+}
+
+export async function cancelSystemRestart(dryRun = true): Promise<SystemRestartResult> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return {
+      dryRun: true,
+      scheduled: false,
+      cancelled: false,
+      delaySeconds: 0,
+      message: "Cancelamento validado fora do aplicativo Tauri. Nenhuma acao real foi executada.",
+    };
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<SystemRestartResult>("system_cancel_restart", { dryRun });
 }
