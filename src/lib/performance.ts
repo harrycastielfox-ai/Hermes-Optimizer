@@ -82,23 +82,23 @@ export const fallbackPerformanceReport: PerformanceReport = {
   readOnly: true,
   willModifySystem: false,
   powerPlan: {
-    activeSchemeName: "Indisponivel",
-    activeSchemeGuid: "Indisponivel",
-    status: "Indisponivel",
+    activeSchemeName: "Indispon?vel",
+    activeSchemeGuid: "Indispon?vel",
+    status: "Indispon?vel",
   },
   gameMode: {
     available: false,
-    status: "Indisponivel",
+    status: "Indispon?vel",
   },
   visualEffects: {
-    profile: "Indisponivel",
-    status: "Indisponivel",
+    profile: "Indispon?vel",
+    status: "Indispon?vel",
   },
   backgroundApps: {
-    status: "Indisponivel",
+    status: "Indispon?vel",
   },
   settings: [],
-  warnings: ["Performance Engine real indisponivel. Nenhum ajuste demonstrativo foi exibido."],
+  warnings: ["Performance Engine real indispon?vel. Nenhum ajuste demonstrativo foi exibido."],
 };
 
 export async function loadPerformanceReport(): Promise<PerformanceReport> {
@@ -120,7 +120,7 @@ export async function refreshPerformanceReport(): Promise<PerformanceReport> {
     const report = await invoke<PerformanceReport>("performance_engine_read");
     return writeLocalReportCache("performance-report", report);
   } catch (error) {
-    console.warn("Performance Engine indisponivel, usando fallback local.", error);
+    console.warn("Performance Engine indispon?vel, usando fallback local.", error);
     return fallbackPerformanceReport;
   }
 }

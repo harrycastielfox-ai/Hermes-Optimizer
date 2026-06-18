@@ -11,7 +11,7 @@ import {
 export type UpdateChannel = "stable" | "beta";
 export type ThemePreference = "light" | "dark" | "system";
 export type AccentPreference = "blue" | "gold" | "auto";
-export type LanguagePreference = "pt-BR" | "en-US" | "es-ES";
+export type LanguagePreference = "pt-BR" | "en-US" | "es-ES" | "ja-JP";
 
 export type HermesAdminPreferences = {
   version: 1;
@@ -130,7 +130,8 @@ type TranslationKey =
   | "settings.option.auto"
   | "settings.option.portuguese"
   | "settings.option.english"
-  | "settings.option.spanish";
+  | "settings.option.spanish"
+  | "settings.option.japanese";
 
 type HermesPreferencesContextValue = {
   preferences: HermesAdminPreferences;
@@ -144,6 +145,7 @@ type HermesPreferencesContextValue = {
 
 const STORAGE_KEY = "hermes.admin.preferences.v1";
 const PREFERENCES_EVENT = "hermes:preferences-updated";
+const supportedLanguages = new Set<LanguagePreference>(["pt-BR", "en-US", "es-ES", "ja-JP"]);
 
 export const defaultPreferences: HermesAdminPreferences = {
   version: 1,
@@ -171,65 +173,65 @@ export const defaultPreferences: HermesAdminPreferences = {
   updatedAt: "0",
 };
 
-const translations: Record<LanguagePreference, Record<TranslationKey, string>> = {
+const translations: Record<LanguagePreference, Partial<Record<TranslationKey, string>>> = {
   "pt-BR": {
     "sidebar.dashboard": "Dashboard",
     "sidebar.optimize": "Otimizar",
-    "sidebar.diagnostic": "Diagnostico",
+    "sidebar.diagnostic": "Diagn?stico",
     "sidebar.antiCheat": "Anti-Cheat",
     "sidebar.defender": "Defender",
-    "sidebar.recommendations": "Recomendacoes",
+    "sidebar.recommendations": "Recomenda??es",
     "sidebar.prepare": "Preparar Ambiente",
-    "sidebar.central": "Central de Otimizacao",
-    "sidebar.startup": "Inicializacao",
+    "sidebar.central": "Central de Otimiza??o",
+    "sidebar.startup": "Inicializa??o",
     "sidebar.clean": "Limpeza",
-    "sidebar.security": "Seguranca",
+    "sidebar.security": "Seguran?a",
     "sidebar.repair": "Reparar Windows",
-    "sidebar.scheduler": "Manutencao Programada",
+    "sidebar.scheduler": "Manuten??o Programada",
     "sidebar.custom": "Personalizado",
-    "sidebar.settings": "Configuracoes",
+    "sidebar.settings": "Configura??es",
     "settings.eyebrow": "CONFIGURACOES",
-    "settings.title": "Configuracoes",
+    "settings.title": "Configura??es",
     "settings.subtitle":
       "Preferencias do aplicativo. Modulos operacionais ficam nas abas dedicadas da sidebar.",
     "settings.placeholder.loading": "Carregando preferencias locais...",
     "settings.placeholder.waiting": "Modulo aguardando abertura da secao.",
     "settings.admin.eyebrow": "ADMINISTRACAO",
-    "settings.admin.title": "Configuracoes completas",
+    "settings.admin.title": "Configura??es completas",
     "settings.admin.description":
-      "Preferencias locais para atualizacoes futuras, aparencia, notificacoes, idioma, licenca e privacidade.",
-    "settings.reset": "Restaurar padrao",
+      "Preferencias locais para atualiza??es futuras, apar?ncia, notifica??es, idioma, licen?a e privacidade.",
+    "settings.reset": "Restaurar padr?o",
     "settings.localOnly":
       "Preferencias salvas apenas neste dispositivo. Sem conta, sem nuvem e sem telemetria.",
     "settings.saved": "Salvo em",
     "settings.waiting": "Aguardando leitura local.",
     "settings.notice.saved": "Preferencias salvas localmente.",
-    "settings.notice.reset": "Preferencias locais restauradas para o padrao.",
+    "settings.notice.reset": "Preferencias locais restauradas para o padr?o.",
     "settings.confirmReset":
-      "Restaurar preferencias visuais e administrativas padrao? Nenhuma engine sera alterada.",
-    "settings.updates.title": "Atualizacoes",
+      "Restaurar preferencias visuais e administrativas padr?o? Nenhuma engine ser? alterada.",
+    "settings.updates.title": "Atualiza??es",
     "settings.updates.description":
-      "Estrutura visual para verificacao, download automatico e canais futuros. Nenhuma atualizacao real e executada.",
-    "settings.updates.autoCheck.title": "Verificar atualizacoes automaticamente",
+      "Estrutura visual para verificacao, download autom?tico e canais futuros. Nenhuma atualiza??o real e executada.",
+    "settings.updates.autoCheck.title": "Verificar atualiza??es automaticamente",
     "settings.updates.autoCheck.description": "Preparado para fase futura de updates locais.",
-    "settings.updates.autoDownload.title": "Baixar atualizacoes automaticamente",
+    "settings.updates.autoDownload.title": "Baixar atualiza??es automaticamente",
     "settings.updates.autoDownload.description":
       "Preferencia salva, sem downloader implementado nesta fase.",
     "settings.updates.channel": "Canal",
-    "settings.updates.history.title": "Historico de versoes",
+    "settings.updates.history.title": "Hist?rico de versoes",
     "settings.updates.history.description": "Area preparada para changelog local futuro.",
-    "settings.appearance.title": "Aparencia",
+    "settings.appearance.title": "Apar?ncia",
     "settings.appearance.description":
-      "Tema global funcional sem alterar engines ou configuracoes do Windows.",
+      "Tema global funcional sem alterar engines ou configura??es do Windows.",
     "settings.appearance.theme": "Tema",
     "settings.appearance.accent": "Cor principal",
     "settings.appearance.note.title": "Tema aplicado localmente",
     "settings.appearance.note.text":
-      "O Hermes muda apenas a aparencia do app. Tema do Windows e navegadores nunca sao alterados.",
-    "settings.notifications.title": "Notificacoes",
+      "O Hermes muda apenas a apar?ncia do app. Tema do Windows e navegadores nunca sao alterados.",
+    "settings.notifications.title": "Notifica??es",
     "settings.notifications.description":
       "Preferencias locais para avisos futuros. Nenhum servico residente e criado.",
-    "settings.notifications.system.title": "Notificacoes do sistema",
+    "settings.notifications.system.title": "Notifica??es do sistema",
     "settings.notifications.system.description": "Preparado para avisos locais sob demanda.",
     "settings.notifications.cleanup.title": "Limpezas concluidas",
     "settings.notifications.cleanup.description": "Preparado para resultados da Clean Engine.",
@@ -242,16 +244,16 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.language.interface": "Idioma da interface",
     "settings.language.note.title": "Idioma aplicado localmente",
     "settings.language.note.text":
-      "Nesta etapa, Configuracoes e a navegacao principal ja respondem ao idioma escolhido.",
-    "settings.license.title": "Licenca",
+      "Nesta etapa, Configura??es e a navegacao principal j? respondem ao idioma escolhido.",
+    "settings.license.title": "Licen?a",
     "settings.license.description":
-      "Area comercial preparada sem ativacao, servidor, pagamento ou validacao real.",
+      "Area comercial preparada sem ativacao, servidor, pagamento ou valida??o real.",
     "settings.license.version": "Versao atual",
     "settings.license.channel": "Canal atual",
-    "settings.license.status": "Status da licenca",
+    "settings.license.status": "Status da licen?a",
     "settings.license.activation": "Ativacao",
     "settings.license.devMode": "Congelada para esta release",
-    "settings.license.notImplemented": "Ativacao indisponivel",
+    "settings.license.notImplemented": "Ativacao indispon?vel",
     "settings.license.note.title": "Sem licenciamento real",
     "settings.license.note.text":
       "Licenciamento real esta congelado nesta release: nenhuma chave e validada, nenhum servidor e chamado e nenhum pagamento e integrado.",
@@ -260,11 +262,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
       "Compromissos locais do Hermes e base visual para preferencias futuras.",
     "settings.privacy.local": "Hermes funciona localmente.",
     "settings.privacy.noTelemetry": "Sem telemetria obrigatoria.",
-    "settings.privacy.noUpload": "Sem envio automatico de dados.",
+    "settings.privacy.noUpload": "Sem envio autom?tico de dados.",
     "settings.privacy.noCloud": "Sem nuvem obrigatoria, conta ou login.",
     "settings.privacy.share.title": "Compartilhar dados anonimos",
     "settings.privacy.share.description":
-      "Opcao futura. Desativada por padrao e sem qualquer coleta nesta fase.",
+      "Op??o futura. Desativada por padr?o e sem qualquer coleta nesta fase.",
     "settings.option.light": "Claro",
     "settings.option.dark": "Escuro",
     "settings.option.system": "Sistema",
@@ -276,10 +278,11 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.option.future": "Futuro",
     "settings.option.blue": "Azul Hermes",
     "settings.option.gold": "Dourado",
-    "settings.option.auto": "Automatico",
+    "settings.option.auto": "Autom?tico",
     "settings.option.portuguese": "Portugues",
     "settings.option.english": "English",
     "settings.option.spanish": "Espanol",
+    "settings.option.japanese": "Japones",
   },
   "en-US": {
     "sidebar.dashboard": "Dashboard",
@@ -388,11 +391,12 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.option.portuguese": "Portugues",
     "settings.option.english": "English",
     "settings.option.spanish": "Espanol",
+    "settings.option.japanese": "Japanese",
   },
   "es-ES": {
     "sidebar.dashboard": "Dashboard",
     "sidebar.optimize": "Optimizar",
-    "sidebar.diagnostic": "Diagnostico",
+    "sidebar.diagnostic": "Diagn?stico",
     "sidebar.antiCheat": "Anti-Cheat",
     "sidebar.defender": "Defender",
     "sidebar.recommendations": "Recomendaciones",
@@ -423,10 +427,10 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.notice.saved": "Preferencias guardadas localmente.",
     "settings.notice.reset": "Preferencias locales restauradas al predeterminado.",
     "settings.confirmReset":
-      "Restaurar preferencias visuales y administrativas al predeterminado? Ningun motor sera alterado.",
+      "Restaurar preferencias visuales y administrativas al predeterminado? Ningun motor ser? alterado.",
     "settings.updates.title": "Actualizaciones",
     "settings.updates.description":
-      "Estructura visual para verificacion, descarga automatica y canales futuros. No se ejecuta ninguna actualizacion real.",
+      "Estructura visual para verificacion, descarga autom?tica y canales futuros. No se ejecuta ninguna actualizacion real.",
     "settings.updates.autoCheck.title": "Verificar actualizaciones automaticamente",
     "settings.updates.autoCheck.description":
       "Preparado para una fase futura de actualizaciones locales.",
@@ -478,7 +482,7 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
       "Compromisos locales de Hermes y base visual para preferencias futuras.",
     "settings.privacy.local": "Hermes funciona localmente.",
     "settings.privacy.noTelemetry": "Sin telemetria obligatoria.",
-    "settings.privacy.noUpload": "Sin envio automatico de datos.",
+    "settings.privacy.noUpload": "Sin envio autom?tico de datos.",
     "settings.privacy.noCloud": "Sin nube obligatoria, cuenta o login.",
     "settings.privacy.share.title": "Compartir datos anonimos",
     "settings.privacy.share.description":
@@ -494,10 +498,118 @@ const translations: Record<LanguagePreference, Record<TranslationKey, string>> =
     "settings.option.future": "Futuro",
     "settings.option.blue": "Azul Hermes",
     "settings.option.gold": "Dorado",
-    "settings.option.auto": "Automatico",
+    "settings.option.auto": "Autom?tico",
     "settings.option.portuguese": "Portugues",
     "settings.option.english": "English",
     "settings.option.spanish": "Espanol",
+    "settings.option.japanese": "Japones",
+  },
+  "ja-JP": {
+    "sidebar.dashboard": "ダッシュボード",
+    "sidebar.optimize": "最適化",
+    "sidebar.diagnostic": "診断",
+    "sidebar.antiCheat": "アンチチート",
+    "sidebar.defender": "Defender",
+    "sidebar.recommendations": "推奨",
+    "sidebar.prepare": "環境準備",
+    "sidebar.central": "最適化センター",
+    "sidebar.startup": "スタートアップ",
+    "sidebar.clean": "クリーンアップ",
+    "sidebar.security": "セキュリティ",
+    "sidebar.repair": "Windows修復",
+    "sidebar.scheduler": "定期メンテナンス",
+    "sidebar.custom": "カスタム",
+    "sidebar.settings": "設定",
+    "settings.eyebrow": "設定",
+    "settings.title": "設定",
+    "settings.subtitle": "アプリの設定です。実行モジュールはサイドバーの専用エリアにあります。",
+    "settings.placeholder.loading": "ローカル設定を読み込み中...",
+    "settings.placeholder.waiting": "このセクションを開くまで待機中です。",
+    "settings.admin.eyebrow": "管理",
+    "settings.admin.title": "詳細設定",
+    "settings.admin.description":
+      "今後の更新、外観、通知、言語、ライセンス、プライバシーのローカル設定。",
+    "settings.reset": "標準に戻す",
+    "settings.localOnly":
+      "設定はこのデバイスだけに保存されます。アカウント、クラウド、テレメトリはありません。",
+    "settings.saved": "保存日時",
+    "settings.waiting": "ローカル読み込みを待機中です。",
+    "settings.notice.saved": "設定をローカルに保存しました。",
+    "settings.notice.reset": "ローカル設定を標準に戻しました。",
+    "settings.confirmReset": "外観と管理設定を標準に戻しますか？エンジン設定は変更されません。",
+    "settings.updates.title": "更新",
+    "settings.updates.description":
+      "確認、自動ダウンロード、今後のチャンネル用の表示構造です。実際の更新は実行されません。",
+    "settings.updates.autoCheck.title": "更新を自動で確認",
+    "settings.updates.autoCheck.description": "今後のローカル更新フェーズ用に準備済みです。",
+    "settings.updates.autoDownload.title": "更新を自動でダウンロード",
+    "settings.updates.autoDownload.description":
+      "設定は保存されますが、この段階ではダウンローダーは未実装です。",
+    "settings.updates.channel": "チャンネル",
+    "settings.updates.history.title": "バージョン履歴",
+    "settings.updates.history.description": "今後のローカル変更履歴用エリアです。",
+    "settings.appearance.title": "外観",
+    "settings.appearance.description":
+      "エンジンやWindows設定を変更しない、アプリ内だけのテーマ設定です。",
+    "settings.appearance.theme": "テーマ",
+    "settings.appearance.accent": "メインカラー",
+    "settings.appearance.note.title": "テーマはローカル適用",
+    "settings.appearance.note.text":
+      "Hermesはアプリの外観だけを変更します。Windowsやブラウザのテーマは変更しません。",
+    "settings.notifications.title": "通知",
+    "settings.notifications.description":
+      "今後の通知用ローカル設定です。常駐サービスは作成されません。",
+    "settings.notifications.system.title": "システム通知",
+    "settings.notifications.system.description": "必要な時だけ表示するローカル通知用です。",
+    "settings.notifications.cleanup.title": "クリーンアップ完了",
+    "settings.notifications.cleanup.description": "Clean Engineの結果通知用に準備済みです。",
+    "settings.notifications.performance.title": "パフォーマンス警告",
+    "settings.notifications.performance.description":
+      "常時監視なしで、今後の読み取り結果に対応するための設定です。",
+    "settings.language.title": "言語",
+    "settings.language.description":
+      "インターフェースのローカル言語です。主要テキストはインターネットなしで更新されます。",
+    "settings.language.interface": "インターフェース言語",
+    "settings.language.note.title": "言語はローカル適用",
+    "settings.language.note.text":
+      "この段階では、設定画面とメインナビゲーションが選択した言語に対応します。",
+    "settings.license.title": "ライセンス",
+    "settings.license.description":
+      "有効化、サーバー、支払い、実検証なしで準備された商用エリアです。",
+    "settings.license.version": "現在のバージョン",
+    "settings.license.channel": "現在のチャンネル",
+    "settings.license.status": "ライセンス状態",
+    "settings.license.activation": "有効化",
+    "settings.license.devMode": "このリリースでは凍結",
+    "settings.license.notImplemented": "有効化は未対応",
+    "settings.license.note.title": "実ライセンスなし",
+    "settings.license.note.text":
+      "このリリースでは実ライセンスを凍結しています。キー検証、サーバー呼び出し、支払い連携はありません。",
+    "settings.privacy.title": "プライバシー",
+    "settings.privacy.description": "Hermesのローカル方針と今後のプライバシー設定のベースです。",
+    "settings.privacy.local": "Hermesはローカルで動作します。",
+    "settings.privacy.noTelemetry": "必須テレメトリなし。",
+    "settings.privacy.noUpload": "データの自動送信なし。",
+    "settings.privacy.noCloud": "必須クラウド、アカウント、ログインなし。",
+    "settings.privacy.share.title": "匿名データを共有",
+    "settings.privacy.share.description":
+      "今後のオプションです。標準では無効で、この段階では収集はありません。",
+    "settings.option.light": "ライト",
+    "settings.option.dark": "ダーク",
+    "settings.option.system": "システム",
+    "settings.option.current": "現在",
+    "settings.option.active": "有効",
+    "settings.option.stable": "安定版",
+    "settings.option.recommended": "推奨",
+    "settings.option.beta": "ベータ",
+    "settings.option.future": "今後対応",
+    "settings.option.blue": "Hermesブルー",
+    "settings.option.gold": "ゴールド",
+    "settings.option.auto": "自動",
+    "settings.option.portuguese": "ポルトガル語",
+    "settings.option.english": "英語",
+    "settings.option.spanish": "スペイン語",
+    "settings.option.japanese": "日本語",
   },
 };
 
@@ -561,7 +673,7 @@ export function HermesPreferencesProvider({ children }: { children: ReactNode })
 
   const t = useCallback(
     (key: TranslationKey) =>
-      translations[preferences.language.current][key] ?? translations["pt-BR"][key],
+      translations[preferences.language.current]?.[key] ?? translations["pt-BR"][key] ?? key,
     [preferences.language],
   );
 
@@ -648,14 +760,19 @@ export function mergePreferences(value: Partial<HermesAdminPreferences>): Hermes
       ...value.notifications,
     },
     language: {
-      ...defaultPreferences.language,
-      ...value.language,
+      current: normalizeLanguage(value.language?.current),
     },
     privacy: {
       anonymousSharing: false,
     },
     updatedAt: value.updatedAt ?? new Date().toISOString(),
   };
+}
+
+function normalizeLanguage(value: unknown): LanguagePreference {
+  return typeof value === "string" && supportedLanguages.has(value as LanguagePreference)
+    ? (value as LanguagePreference)
+    : defaultPreferences.language.current;
 }
 
 function applyDocumentPreferences(

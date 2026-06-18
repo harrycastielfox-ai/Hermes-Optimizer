@@ -26,7 +26,7 @@ import {
 export const Route = createFileRoute("/diagnostico")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Diagnostico" },
+      { title: "Hermes Optimizer - Diagn?stico" },
       { name: "description", content: "Benchmark local leve do Hermes Optimizer." },
     ],
   }),
@@ -81,11 +81,11 @@ function DiagnosticoPage() {
                 BENCHMARK ENGINE
               </p>
               <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
-                Diagnostico
+                Diagn?stico
               </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Benchmark leve, local e somente leitura para comparar antes e depois das
-                otimizacoes.
+                otimiza??es.
               </p>
             </div>
             <button
@@ -110,7 +110,7 @@ function DiagnosticoPage() {
                   <ScoreBadge score={report.score} />
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Leitura rapida de estado. Nao executa stress test e nao altera o Windows.
+                  Leitura r?pida de estado. N?o executa stress test e n?o altera o Windows.
                 </p>
               </div>
             </div>
@@ -197,7 +197,7 @@ function HermesAiDiagnosticPanel({ report }: { report: BenchmarkReport }) {
                 Centro de Inteligencia Hermes
               </h2>
               <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">
-                Interpretacao local do benchmark. Nenhuma acao e aplicada e nenhum dado sai do
+                Interpretacao local do benchmark. Nenhuma a??o e aplicada e nenhum dado sai do
                 computador.
               </p>
             </div>
@@ -207,7 +207,7 @@ function HermesAiDiagnosticPanel({ report }: { report: BenchmarkReport }) {
             to="/otimizacoes"
             className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-[0_14px_28px_-18px_rgba(37,99,235,0.95)] transition hover:bg-blue-700"
           >
-            Ver Otimizacoes Recomendadas
+            Ver Otimiza??es Recomendadas
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -305,10 +305,10 @@ function buildHermesAiSummary(report: BenchmarkReport) {
 
   const improvements = [
     report.components.startup.score < 82
-      ? "Revisar itens de inicializacao para reduzir impacto no boot."
+      ? "Revisar itens de inicializa??o para reduzir impacto no boot."
       : null,
     report.components.power.score < 82
-      ? "Revisar configuracoes de energia para alinhar desempenho e estabilidade."
+      ? "Revisar configura??es de energia para alinhar desempenho e estabilidade."
       : null,
     report.components.disk.score < 82
       ? "Executar um scan de limpeza segura antes de qualquer remocao."
@@ -324,13 +324,13 @@ function buildHermesAiSummary(report: BenchmarkReport) {
 
   if (strengths.length === 0) {
     strengths.push(
-      "O sistema esta operacional, mas ainda nao ha um componente claramente excelente.",
+      "O sistema esta operacional, mas ainda n?o ha um componente claramente excelente.",
     );
   }
 
   if (improvements.length === 0) {
     improvements.push(
-      "Manter diagnosticos periodicos e comparar o score antes e depois das otimizacoes.",
+      "Manter diagnosticos periodicos e comparar o score antes e depois das otimiza??es.",
     );
   }
 
@@ -352,26 +352,26 @@ function stateLabel(score: number) {
 }
 
 function stateText(score: number) {
-  if (score >= 90) return "Seu sistema apresenta bom estado geral e nao exige ajustes agressivos.";
+  if (score >= 90) return "Seu sistema apresenta bom estado geral e n?o exige ajustes agressivos.";
   if (score >= 80) return "Seu sistema esta saudavel, com oportunidades pontuais de melhoria.";
-  if (score >= 65) return "O Hermes encontrou pontos que podem ser otimizados com seguranca.";
-  return "O benchmark indica que vale revisar desempenho, inicializacao e limpeza com cuidado.";
+  if (score >= 65) return "O Hermes encontrou pontos que podem ser otimizados com seguran?a.";
+  return "O benchmark indica que vale revisar desempenho, inicializa??o e limpeza com cuidado.";
 }
 
 function recommendedAction(report: BenchmarkReport) {
   if (report.components.startup.score < 75) {
-    return "Revisar inicializacao antes de aplicar qualquer perfil.";
+    return "Revisar inicializa??o antes de aplicar qualquer perfil.";
   }
 
   if (report.components.disk.score < 75) {
-    return "Executar limpeza segura em modo de validacao.";
+    return "Executar limpeza segura em modo de valida??o.";
   }
 
   if (report.components.power.score < 78) {
-    return "Revisar configuracoes de desempenho em Otimizacoes.";
+    return "Revisar configura??es de desempenho em Otimiza??es.";
   }
 
-  return "Abrir Otimizacoes Recomendadas para validar o melhor proximo passo.";
+  return "Abrir Otimiza??es Recomendadas para validar o melhor pr?ximo passo.";
 }
 
 function withoutAntiCheatScore(report: BenchmarkReport): BenchmarkReport {

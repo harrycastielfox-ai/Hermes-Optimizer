@@ -31,7 +31,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
   auditPhase("plan", "Plano inteligente", "Orquestrador + Hermes IA", [
     a(
       "diagnostic-health-score",
-      "Ler saude geral",
+      "Ler sa?de geral",
       "diagnostic.healthScore",
       "diagnostic_engine_read_cached",
       "analysis",
@@ -76,7 +76,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "advisor-recommendations",
-      "Gerar recomendacoes",
+      "Gerar recomenda??es",
       "advisor.recommendations",
       "advisor_ai_engine_analyze",
       "analysis",
@@ -112,7 +112,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "restart-policy",
-      "Avaliar reinicio necessario",
+      "Avaliar reinicio necess?rio",
       "restart.policy",
       "system_boot_context_read",
       "analysis",
@@ -148,7 +148,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "execution-report",
-      "Preparar relatorio",
+      "Preparar relat?rio",
       "execution.report",
       "buildExecutionReport",
       "analysis",
@@ -213,7 +213,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "execution-log",
-      "Registrar log da execucao",
+      "Registrar log da execu??o",
       "execution.log",
       "localStorage hermes.execution.report.v1",
       "engine",
@@ -231,7 +231,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "boot-verification",
-      "Detectar boot apos Fase 1",
+      "Detectar boot ap?s Fase 1",
       "system.boot.currentBootId",
       "Win32_OperatingSystem.LastBootUpTime",
       "powershell",
@@ -248,7 +248,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       true,
     ),
   ]),
-  auditPhase("components", "Componentes essenciais", "VC++, DirectX e dependencias", [
+  auditPhase("components", "Componentes essenciais", "VC++, DirectX e depend?ncias", [
     a(
       "dism-analyze-component-store",
       "Analisar Component Store",
@@ -287,7 +287,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "dism-enable-directplay",
-      "Habilitar DirectPlay quando necessario",
+      "Habilitar DirectPlay quando necess?rio",
       "DISM.DirectPlay.Enable",
       "DISM /Online /Enable-Feature /FeatureName:DirectPlay",
       "cmd",
@@ -412,14 +412,14 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       false,
     ),
   ]),
-  auditPhase("cleanup", "Limpeza segura", "Temporarios, cache e logs", [...cleanupSeeds()]),
-  auditPhase("startup", "Inicializacao", "Apps de alto impacto", [...startupSeeds()]),
+  auditPhase("cleanup", "Limpeza segura", "Tempor?rios, cache e logs", [...cleanupSeeds()]),
+  auditPhase("startup", "Inicializa??o", "Apps de alto impacto", [...startupSeeds()]),
   auditPhase("performance", "Performance", "Energia, Game Mode e rede", [...performanceSeeds()]),
   auditPhase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
   auditPhase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", [
     ...profileSeeds(),
   ]),
-  auditPhase("manual", "Avancado guiado", "Comandos allowlistados e ajustes finos", [
+  auditPhase("manual", "Avan?ado guiado", "Comandos allowlistados e ajustes finos", [
     a(
       "winsock-reset",
       "Resetar Winsock",
@@ -478,10 +478,10 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "steam-game-priority",
       "Prioridade Steam/Fate Trigger",
       "Steam.GamePriority.FateTrigger",
-      "planejado: detectar Steam app + aplicar perfil",
+      "set-fate-trigger-cpu-priority-high + set-fate-trigger-graphics-high-performance",
       "engine",
       "medium",
-      false,
+      true,
     ),
     a(
       "rollback-manifest-check",
@@ -622,7 +622,7 @@ function startupSeeds(): AuditSeed[] {
     "Preservar drivers de GPU",
     "Preservar audio essencial",
     "Preservar Discord se Gamer",
-    "Atraso de inicializacao OFF",
+    "Atraso de inicializa??o OFF",
     "Startup Run key review",
     "Startup folder review",
     "Scheduled startup tasks",
@@ -675,7 +675,7 @@ function performanceSeeds(): AuditSeed[] {
     ["game-dvr-off", "GameDVR OFF", "GameDVR.AppCapture", "HKCU GameDVR AppCaptureEnabled=0", true],
     [
       "visual-gamer-minimal",
-      "Visual gamer minimo",
+      "Visual gamer m?nimo",
       "Visual.PerformancePreset",
       "SystemPropertiesPerformance.exe preset",
       true,
@@ -707,11 +707,11 @@ function performanceSeeds(): AuditSeed[] {
       "multimedia-system-profile",
       "SystemResponsiveness gamer",
       "MMCSS.SystemResponsiveness",
-      "HKLM Multimedia SystemProfile",
-      false,
+      "HKLM Multimedia SystemProfile SystemResponsiveness=0",
+      true,
     ],
-    ["gpu-priority", "GPU Priority", "MMCSS.GpuPriority", "HKLM Games Tasks GPU Priority", false],
-    ["cpu-priority", "CPU Priority", "MMCSS.Priority", "HKLM Games Tasks Priority", false],
+    ["gpu-priority", "GPU Priority", "MMCSS.GpuPriority", "HKLM Games Tasks GPU Priority=8", true],
+    ["cpu-priority", "CPU Priority", "MMCSS.Priority", "HKLM Games Tasks Priority=6", true],
     [
       "timer-resolution",
       "Timer resolution policy",
@@ -749,7 +749,7 @@ function performanceSeeds(): AuditSeed[] {
     ],
     [
       "notifications-off",
-      "Notificacoes foco gamer",
+      "Notifica??es foco gamer",
       "Notifications.Gamer",
       "HKCU PushNotifications",
       false,
@@ -809,7 +809,7 @@ function profileSeeds(): AuditSeed[] {
     "Perfil Trabalho",
     "Perfil Economia",
     "Perfil Criacao",
-    "Perfil Avancado",
+    "Perfil Avan?ado",
     "Perfil Extremo bloqueado",
     "Aplicar energia do perfil",
     "Aplicar startup do perfil",
@@ -818,7 +818,7 @@ function profileSeeds(): AuditSeed[] {
     "Validar conflito entre perfis",
     "Sugerir perfil por IA local",
     "Persistir perfil recomendado",
-    "Relatorio do perfil aplicado",
+    "Relat?rio do perfil aplicado",
   ].map((title, index) =>
     a(
       `profile-${index + 1}`,

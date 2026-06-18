@@ -29,10 +29,10 @@ import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 export const Route = createFileRoute("/inicializacao")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Inicializacao" },
+      { title: "Hermes Optimizer - Inicializa??o" },
       {
         name: "description",
-        content: "Leitura local dos programas de inicializacao do Hermes Optimizer.",
+        content: "Leitura local dos programas de inicializa??o do Hermes Optimizer.",
       },
     ],
   }),
@@ -123,16 +123,18 @@ function InicializacaoPage() {
       const confirmed = window.confirm(
         `Confirmar ${actionLabel} ${applicableItems.length} item(ns) de inicializacao?\n\n` +
           applicableItems.map((item) => `- ${item.name}`).join("\n") +
-          "\n\nO Hermes nao remove programas, nao apaga executaveis e criara snapshot/log/rollback antes da acao.",
+          "
+
+O Hermes n?o remove programas, n?o apaga executaveis e criara snapshot/log/rollback antes da a??o.",
       );
 
       if (!confirmed) {
-        setNotice("Acao de inicializacao cancelada antes de alterar o Windows.");
+        setNotice("A??o de inicializa??o cancelada antes de alterar o Windows.");
         return;
       }
     } else {
       setNotice(
-        "Modo Seguro de Teste ativo: esta acao sera executada como dry-run, sem alterar inicializacao.",
+        "Modo Seguro de Teste ativo: esta a??o ser? executada como dry-run, sem alterar inicializa??o.",
       );
     }
 
@@ -172,7 +174,7 @@ function InicializacaoPage() {
                 STARTUP ENGINE
               </p>
               <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
-                Inicializacao
+                Inicializa??o
               </h1>
               <p className="text-[13px] text-muted-foreground mt-1">
                 Controle seguro dos programas que iniciam com o Windows. O Hermes nunca remove
@@ -226,7 +228,7 @@ function InicializacaoPage() {
                   PROGRAMAS DE INICIALIZACAO
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Selecione os programas e use Desativar ou Reativar. Acoes reais exigem
+                  Selecione os programas e use Desativar ou Reativar. A??es reais exigem
                   confirmacao, snapshot, log e rollback.
                 </p>
               </div>
@@ -316,7 +318,7 @@ function InicializacaoPage() {
 
                 {report.items.length === 0 && (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhum programa de inicializacao foi encontrado pela leitura local.
+                    Nenhum programa de inicializa??o foi encontrado pela leitura local.
                   </div>
                 )}
               </div>

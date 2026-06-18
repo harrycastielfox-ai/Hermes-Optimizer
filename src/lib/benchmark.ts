@@ -32,17 +32,17 @@ export const fallbackBenchmarkReport: BenchmarkReport = {
   score: 0,
   previousScore: undefined,
   delta: undefined,
-  verdict: "Benchmark indisponivel",
+  verdict: "Benchmark indispon?vel",
   components: {
-    cpu: component("CPU", 0, "Indisponivel sem leitura real", 20),
-    memory: component("RAM", 0, "Indisponivel sem leitura real", 20),
-    disk: component("Disco", 0, "Indisponivel sem leitura real", 20),
-    startup: component("Inicializacao", 0, "Indisponivel sem leitura real", 15),
-    power: component("Energia", 0, "Indisponivel sem leitura real", 15),
-    security: component("Seguranca", 0, "Indisponivel sem leitura real", 10),
-    antiCheat: component("Anti-Cheat", 0, "Indisponivel sem leitura real", 10),
+    cpu: component("CPU", 0, "Indispon?vel sem leitura real", 20),
+    memory: component("RAM", 0, "Indispon?vel sem leitura real", 20),
+    disk: component("Disco", 0, "Indispon?vel sem leitura real", 20),
+    startup: component("Inicializa??o", 0, "Indispon?vel sem leitura real", 15),
+    power: component("Energia", 0, "Indispon?vel sem leitura real", 15),
+    security: component("Seguran?a", 0, "Indispon?vel sem leitura real", 10),
+    antiCheat: component("Anti-Cheat", 0, "Indispon?vel sem leitura real", 10),
   },
-  observations: ["Benchmark real indisponivel. Nenhum score demonstrativo foi exibido."],
+  observations: ["Benchmark real indispon?vel. Nenhum score demonstrativo foi exibido."],
 };
 
 let benchmarkMemoryCache: BenchmarkReport | null = null;
@@ -64,7 +64,7 @@ export async function loadCachedBenchmark(): Promise<BenchmarkReport> {
       return report;
     })
     .catch((error) => {
-      console.warn("Benchmark salvo indisponivel, usando fallback indisponivel.", error);
+      console.warn("Benchmark salvo indispon?vel, usando fallback indispon?vel.", error);
       return fallbackBenchmarkReport;
     })
     .finally(() => {
@@ -85,7 +85,7 @@ export async function runBenchmark(): Promise<BenchmarkReport> {
     benchmarkMemoryCache = report;
     return report;
   } catch (error) {
-    console.warn("Benchmark Engine indisponivel, usando fallback indisponivel.", error);
+    console.warn("Benchmark Engine indispon?vel, usando fallback indispon?vel.", error);
     return fallbackBenchmarkReport;
   }
 }

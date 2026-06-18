@@ -313,6 +313,14 @@ export function HermesAdminSettings() {
                     ? t("settings.option.active")
                     : t("settings.option.current"),
               },
+              {
+                value: "ja-JP",
+                label: t("settings.option.japanese"),
+                description:
+                  preferences.language.current === "ja-JP"
+                    ? t("settings.option.active")
+                    : t("settings.option.current"),
+              },
             ]}
             onChange={(language) =>
               savePreference((current) => ({
@@ -458,7 +466,7 @@ function SegmentedControl<T extends string>({
   return (
     <div className="rounded-xl border border-border/70 bg-card px-3 py-3">
       <p className="text-[11px] font-bold tracking-[0.16em] text-primary">{label}</p>
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {options.map((option) => {
           const active = option.value === value;
           return (

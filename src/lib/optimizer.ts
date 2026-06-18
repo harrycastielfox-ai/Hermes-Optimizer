@@ -33,11 +33,11 @@ export type OptimizeNowPlan = {
 
 const fallbackOptimizeNowPlan = (): OptimizeNowPlan => {
   const stages: OptimizeNowStage[] = [
-    fallbackStage("analysis-quick", "analysis-security", "Analise rapida", false),
+    fallbackStage("analysis-quick", "analysis-security", "Analise r?pida", false),
     fallbackStage("advisor-pro", "advisor-pro", "Advisor Pro", false),
     fallbackStage("clean-scan", "clean-engine", "Scan de limpeza segura", true),
-    fallbackStage("startup-scan", "startup-engine", "Scan de inicializacao", true),
-    fallbackStage("performance-check", "performance-engine", "Validacao de desempenho", true),
+    fallbackStage("startup-scan", "startup-engine", "Scan de inicializa??o", true),
+    fallbackStage("performance-check", "performance-engine", "Valida??o de desempenho", true),
     fallbackStage("restore-check", "restore-engine", "Garantia de reversao", true),
   ];
 
@@ -60,8 +60,8 @@ const fallbackOptimizeNowPlan = (): OptimizeNowPlan => {
     safeguards: [
       "Sem telemetria, nuvem ou login.",
       "Sem servico residente ou monitoramento permanente.",
-      "Sem alteracao no Windows durante o plano inicial.",
-      "Acoes reais so depois de mostrar impacto e pedir confirmacao.",
+      "Sem altera??o no Windows durante o plano inicial.",
+      "A??es reais s? depois de mostrar impacto e pedir confirmacao.",
     ],
   };
 };
@@ -81,7 +81,7 @@ function fallbackStage(
     readOnly: true,
     willModifySystem: false,
     requiresConfirmationBeforeChanges,
-    outputs: ["Somente leitura.", "Nenhuma alteracao aplicada automaticamente."],
+    outputs: ["Somente leitura.", "Nenhuma altera??o aplicada automaticamente."],
   };
 }
 
@@ -94,7 +94,7 @@ export async function runOptimizeNowPlan(): Promise<OptimizeNowPlan> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<OptimizeNowPlan>("optimize_now_plan");
   } catch (error) {
-    console.warn("Orquestrador Analisar Agora indisponivel, usando plano local seguro.", error);
+    console.warn("Orquestrador Analisar Agora indispon?vel, usando plano local seguro.", error);
     return fallbackOptimizeNowPlan();
   }
 }

@@ -13,7 +13,7 @@ export function SafeTestModeNotice() {
         <div>
           <p className="text-sm font-bold">{HERMES_SAFE_TEST_MODE_MESSAGE}</p>
           <p className="mt-1 text-[12px] leading-relaxed">
-            Clean, Startup, Gamer, Perfis, Advanced e Performance rodam somente como validacao nesta
+            Clean, Startup, Gamer, Perfis, Advanced e Performance rodam somente como valida??o nesta
             fase.
           </p>
         </div>

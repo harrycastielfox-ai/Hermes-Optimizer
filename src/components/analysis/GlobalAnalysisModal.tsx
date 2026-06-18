@@ -41,18 +41,18 @@ const stageTemplates: AnalysisStage[] = [
   stage(
     "diagnostic",
     "Analisando sistema",
-    "Diagnostico",
-    "Coleta CPU, RAM, disco, hardware, Windows, rede e seguranca.",
+    "Diagn?stico",
+    "Coleta CPU, RAM, disco, hardware, Windows, rede e seguran?a.",
   ),
   stage(
     "startup",
-    "Lendo inicializacao",
-    "Inicializacao",
+    "Lendo inicializa??o",
+    "Inicializa??o",
     "Classifica os aplicativos que iniciam com o Windows sem desativar nenhum item.",
   ),
   stage(
     "cleanup",
-    "Mapeando arquivos temporarios",
+    "Mapeando arquivos tempor?rios",
     "Limpeza",
     "Calcula apenas candidatos seguros. Nenhum arquivo e movido ou excluido.",
   ),
@@ -60,7 +60,7 @@ const stageTemplates: AnalysisStage[] = [
     "performance",
     "Avaliando desempenho",
     "Performance",
-    "Le plano de energia, Modo Jogo e configuracoes visuais sem aplicar ajustes.",
+    "L? plano de energia, Modo Jogo e configura??es visuais sem aplicar ajustes.",
   ),
   stage(
     "applications",
@@ -70,9 +70,9 @@ const stageTemplates: AnalysisStage[] = [
   ),
   stage(
     "advisor",
-    "Gerando recomendacoes",
+    "Gerando recomenda??es",
     "Hermes IA Local",
-    "Cruza as fontes locais e produz recomendacoes explicaveis.",
+    "Cruza as fontes locais e produz recomenda??es explicaveis.",
   ),
 ];
 
@@ -109,7 +109,7 @@ export function GlobalAnalysisModal({
     setLogs([]);
     setHighlights([]);
     setRunStatus("running");
-    setCurrentStatus("Preparando diagnostico global somente leitura.");
+    setCurrentStatus("Preparando diagn?stico global somente leitura.");
     void runAnalysis(runId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, runKey]);
@@ -138,7 +138,7 @@ export function GlobalAnalysisModal({
 
         return resultFromAvailability(
           hasRealData(diagnostic.generatedAt),
-          "Diagnostico completo salvo no historico local.",
+          "Diagn?stico completo salvo no hist?rico local.",
           [
             `CPU: ${Math.round(diagnostic.cpu.usagePercent)}%`,
             `RAM: ${Math.round(diagnostic.ram.usedPercent)}% em uso`,
@@ -158,7 +158,7 @@ export function GlobalAnalysisModal({
 
         return resultFromAvailability(
           hasRealData(startup.generatedAt),
-          "Inicializacao analisada sem alterar aplicativos.",
+          "Inicializa??o analisada sem alterar aplicativos.",
           [
             `${startup.highImpactCount} de alto impacto`,
             `${startup.mediumImpactCount} de medio impacto`,
@@ -177,7 +177,7 @@ export function GlobalAnalysisModal({
 
         return resultFromAvailability(
           hasRealData(clean.generatedAt),
-          "Arquivos temporarios apenas mapeados.",
+          "Arquivos tempor?rios apenas mapeados.",
           [
             `${clean.items.length} area(s) analisada(s)`,
             `${formatGb(clean.totalGb)} GB encontrados`,
@@ -196,7 +196,7 @@ export function GlobalAnalysisModal({
 
         return resultFromAvailability(
           hasRealData(performance.generatedAt),
-          "Configuracoes de desempenho avaliadas sem ajustes.",
+          "Configura??es de desempenho avaliadas sem ajustes.",
           [
             `Plano de energia: ${performance.powerPlan.activeSchemeName}`,
             `Modo Jogo: ${performance.gameMode.status}`,
@@ -247,7 +247,7 @@ export function GlobalAnalysisModal({
 
       setRunStatus("completed");
       setCurrentStatus("Analise global concluida e salva no Dashboard.");
-      appendLog("info", "Analise concluida. Nenhuma alteracao foi aplicada ao Windows.");
+      appendLog("info", "Analise concluida. Nenhuma altera??o foi aplicada ao Windows.");
     } catch (error) {
       if (activeRun.current !== runId) {
         return;
@@ -302,15 +302,15 @@ export function GlobalAnalysisModal({
   function requestCancel() {
     cancelRequested.current = true;
     setRunStatus("cancelled");
-    setCurrentStatus("Cancelamento solicitado. A analise parara antes da proxima etapa.");
+    setCurrentStatus("Cancelamento solicitado. A analise parara antes da pr?xima etapa.");
     setStages((current) =>
       current.map((item) =>
         item.status === "pending"
-          ? { ...item, status: "cancelled", source: "Cancelado pelo usuario" }
+          ? { ...item, status: "cancelled", source: "Cancelado pelo usu?rio" }
           : item,
       ),
     );
-    appendLog("warning", "Usuario solicitou o cancelamento da analise.");
+    appendLog("warning", "Usu?rio solicitou o cancelamento da analise.");
   }
 
   function shouldStop(runId: number) {
@@ -389,8 +389,8 @@ export function GlobalAnalysisModal({
               <div>
                 <p className="text-sm font-bold">Analise 100% somente leitura</p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  O Hermes coleta e salva informacoes locais. Nenhum arquivo, processo ou ajuste do
-                  Windows sera alterado.
+                  O Hermes coleta e salva informa??es locais. Nenhum arquivo, processo ou ajuste do
+                  Windows ser? alterado.
                 </p>
               </div>
             </div>
@@ -456,9 +456,9 @@ export function GlobalAnalysisModal({
                 </h3>
                 <div className="mt-3 space-y-2 text-[12px] text-muted-foreground">
                   <SafetyRow text="Coleta executada localmente." />
-                  <SafetyRow text="Resultado salvo no historico do Hermes." />
+                  <SafetyRow text="Resultado salvo no hist?rico do Hermes." />
                   <SafetyRow text="Sem telemetria ou envio para nuvem." />
-                  <SafetyRow text="Nenhuma configuracao sera alterada." />
+                  <SafetyRow text="Nenhuma configuracao ser? alterada." />
                 </div>
               </div>
 
@@ -481,7 +481,7 @@ export function GlobalAnalysisModal({
         <div className="relative flex flex-col gap-3 border-t border-border/70 bg-white/78 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-success" />
-            Somente leitura. Nenhuma acao de limpeza ou otimizacao sera executada.
+            Somente leitura. Nenhuma a??o de limpeza ou otimiza??o ser? executada.
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             {canCancel && (
@@ -528,7 +528,7 @@ function resultFromAvailability(
   return {
     status: available ? "completed" : "unavailable",
     source: available ? "Engine local" : "Dados indisponiveis",
-    message: available ? message : "A engine nao retornou dados reais nesta execucao.",
+    message: available ? message : "A engine n?o retornou dados reais nesta execu??o.",
     outputs,
   };
 }
@@ -537,9 +537,9 @@ function advisorResult(advisor: AdvisorAiReport): StageExecutionResult {
   const available =
     hasRealData(advisor.generatedAt) && advisor.hermesScore.status !== "unavailable";
   const score =
-    advisor.hermesScore.value === null ? "Indisponivel" : `${advisor.hermesScore.value}/100`;
+    advisor.hermesScore.value === null ? "Indispon?vel" : `${advisor.hermesScore.value}/100`;
 
-  return resultFromAvailability(available, "Recomendacoes locais geradas e salvas.", [
+  return resultFromAvailability(available, "Recomenda??es locais geradas e salvas.", [
     `Score Hermes: ${score}`,
     `${advisor.recommendations.length} recomendacao(oes)`,
     `Confianca: ${advisor.summary.confidence}`,
@@ -577,8 +577,8 @@ async function withStageTimeout(
             source: "Tempo limite",
             message: `A etapa ${stageId} excedeu ${STAGE_TIMEOUT_MS / 1000}s.`,
             outputs: [
-              "A interface foi liberada com seguranca.",
-              "Nenhuma alteracao foi executada.",
+              "A interface foi liberada com seguran?a.",
+              "Nenhuma altera??o foi executada.",
             ],
           });
         }, STAGE_TIMEOUT_MS);
@@ -718,7 +718,7 @@ function stagePillClass(status: StageStatus) {
 function stageStatusLabel(status: StageStatus) {
   if (status === "running") return "Analisando";
   if (status === "completed") return "Concluido";
-  if (status === "unavailable") return "Indisponivel";
+  if (status === "unavailable") return "Indispon?vel";
   if (status === "failed") return "Falha";
   if (status === "cancelled") return "Cancelado";
   return "Pendente";

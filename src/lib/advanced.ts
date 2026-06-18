@@ -74,7 +74,7 @@ export const fallbackAdvancedCatalog: AdvancedCatalog = {
   residentProcess: false,
   actions: [],
   blockedActions: [],
-  warnings: ["Advanced Engine real indisponivel. Nenhum catalogo demonstrativo foi exibido."],
+  warnings: ["Advanced Engine real indispon?vel. Nenhum catalogo demonstrativo foi exibido."],
 };
 
 export async function loadAdvancedCatalog(): Promise<AdvancedCatalog> {
@@ -96,7 +96,7 @@ export async function refreshAdvancedCatalog(): Promise<AdvancedCatalog> {
     const catalog = await invoke<AdvancedCatalog>("advanced_engine_catalog");
     return writeLocalReportCache("advanced-catalog", catalog);
   } catch (error) {
-    console.warn("Advanced Engine indisponivel, usando fallback local.", error);
+    console.warn("Advanced Engine indispon?vel, usando fallback local.", error);
     return fallbackAdvancedCatalog;
   }
 }

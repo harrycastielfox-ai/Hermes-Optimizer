@@ -29,7 +29,7 @@ export const Route = createFileRoute("/defender")({
       { title: "Hermes Optimizer - Windows Defender" },
       {
         name: "description",
-        content: "Liberacao especifica do Hermes no Windows Defender sem desativar a protecao.",
+        content: "Libera??o especifica do Hermes no Windows Defender sem desativar a prote??o.",
       },
     ],
   }),
@@ -106,7 +106,7 @@ function DefenderPage() {
     try {
       await openWindowsSecurity();
       setSecurityStatus("done");
-      setSecurityMessage("Seguranca do Windows aberta.");
+      setSecurityMessage("Seguran?a do Windows aberta.");
     } catch (error) {
       setSecurityStatus("failed");
       setSecurityMessage(error instanceof Error ? error.message : String(error));
@@ -118,7 +118,7 @@ function DefenderPage() {
       return HERMES_SAFE_TEST_MODE ? "Validando..." : "Liberando...";
     }
 
-    return HERMES_SAFE_TEST_MODE ? "Validar liberacao" : "Liberar no Defender agora";
+    return HERMES_SAFE_TEST_MODE ? "Validar libera??o" : "Liberar no Defender agora";
   }, [actionStatus]);
 
   return (
@@ -150,7 +150,7 @@ function DefenderPage() {
               </div>
 
               <div className="grid min-w-[260px] grid-cols-2 gap-2">
-                <StatusPill label="Windows" value={systemContext.isWindows ? "Sim" : "Nao"} />
+                <StatusPill label="Windows" value={systemContext.isWindows ? "Sim" : "N?o"} />
                 <StatusPill label="Modo" value={modeLabel} />
                 <StatusPill label="Permissao" value={adminLabel} span />
               </div>
@@ -163,9 +163,9 @@ function DefenderPage() {
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-xl font-bold text-foreground">Protecao continua ativa</h2>
+                    <h2 className="text-xl font-bold text-foreground">Prote??o continua ativa</h2>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      O Hermes nao desativa o Windows Defender. Ele adiciona somente o caminho do
+                      O Hermes n?o desativa o Windows Defender. Ele adiciona somente o caminho do
                       proprio executavel a lista de exclusoes quando houver falso positivo.
                     </p>
                   </div>
@@ -194,17 +194,17 @@ function DefenderPage() {
                 <TrustCard
                   icon={FileCheck2}
                   title="Executavel Hermes"
-                  text="A permissao mira hermes-optimizer.exe, nao pastas inteiras do sistema."
+                  text="A permissao mira hermes-optimizer.exe, n?o pastas inteiras do sistema."
                 />
                 <TrustCard
                   icon={LockKeyhole}
                   title="Exclusao especifica"
-                  text="Feita apenas quando o usuario confirmar no modo real."
+                  text="Feita apenas quando o usu?rio confirmar no modo real."
                 />
                 <TrustCard
                   icon={CheckCircle2}
                   title="Defender mantido"
-                  text="A protecao do Windows segue ativa para o restante da maquina."
+                  text="A prote??o do Windows segue ativa para o restante da maquina."
                 />
               </div>
             </section>
@@ -216,18 +216,18 @@ function DefenderPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-foreground">
-                    Liberar na mao se o botao nao resolver
+                    Liberar na mao se o botao n?o resolver
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Use este caminho se o Windows bloquear o app antes da permissao automatica.
+                    Use este caminho se o Windows bloquear o app antes da permissao autom?tica.
                   </p>
                 </div>
               </div>
 
               <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <ManualStep text="Abra Seguranca do Windows -> Protecao contra virus e ameacas." />
-                <ManualStep text="Entre em Configuracoes de protecao contra virus e ameacas -> Gerenciar configuracoes." />
-                <ManualStep text="Role ate Exclusoes -> Adicionar ou remover exclusoes." />
+                <ManualStep text="Abra Seguran?a do Windows -> Prote??o contra v?rus e amea?as." />
+                <ManualStep text="Entre em Configura??es de prote??o contra v?rus e amea?as -> Gerenciar configura??es." />
+                <ManualStep text="Role at? Exclusoes -> Adicionar ou remover exclusoes." />
                 <ManualStep text="Escolha Adicionar uma exclusao -> Arquivo." />
                 <ManualStep text="Selecione hermes-optimizer.exe e confirme." />
               </ol>
@@ -244,7 +244,7 @@ function DefenderPage() {
                   ) : (
                     <ExternalLink className="h-4 w-4" />
                   )}
-                  Abrir Seguranca do Windows
+                  Abrir Seguran?a do Windows
                 </button>
                 {securityMessage && (
                   <ActionMessage status={securityStatus} message={securityMessage} compact />

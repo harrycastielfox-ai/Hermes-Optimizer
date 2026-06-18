@@ -161,21 +161,21 @@ const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "enable-game-mode": "Game Mode ON",
   "disable-game-dvr": "GameDVR OFF",
   "disable-xbox-game-bar-deep": "Xbox Game Bar e captura OFF",
-  "set-visual-effects-gamer-minimal": "Visual gamer minimo",
+  "set-visual-effects-gamer-minimal": "Visual gamer m?nimo",
   "disable-hibernation": "Hibernacao OFF",
-  "disable-startup-delay": "Inicializacao sem atraso",
+  "disable-startup-delay": "Inicializa??o sem atraso",
   "disable-advertising-id": "ID de publicidade OFF",
   "disable-tailored-experiences": "Experiencias personalizadas OFF",
   "disable-consumer-features": "Apps e sugestoes promovidas OFF",
-  "disable-activity-history": "Historico de atividades OFF",
+  "disable-activity-history": "Hist?rico de atividades OFF",
   "disable-location-tracking": "Localizacao de apps bloqueada",
-  "disable-recall-user": "Recall bloqueado no usuario",
+  "disable-recall-user": "Recall bloqueado no usu?rio",
   "flush-dns-cache": "Cache DNS limpo",
   "dism-analyze-component-store": "CMD DISM: analisar componentes",
   "dism-start-component-cleanup": "CMD DISM: limpar componentes",
   "dism-check-netfx3": "CMD DISM: verificar NetFx3",
   "dism-check-directplay": "CMD DISM: verificar DirectPlay",
-  "check-gamer-dependencies": "Dependencias gamer verificadas",
+  "check-gamer-dependencies": "Depend?ncias gamer verificadas",
   "set-diagtrack-service-manual": "Servico de telemetria em manual",
   "set-mapsbroker-service-manual": "Servico de mapas em manual",
 };
@@ -210,8 +210,8 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-diagnostic",
       "scan",
-      "Diagnostico local",
-      "Leitura de saude e hardware.",
+      "Diagn?stico local",
+      "Leitura de sa?de e hardware.",
       "scanOnly",
     ),
     task(
@@ -231,7 +231,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-clean",
       "cleanup",
-      "Mapear temporarios",
+      "Mapear tempor?rios",
       "Cache, logs e limpeza segura.",
       "scanOnly",
     ),
@@ -245,14 +245,14 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-startup",
       "startup",
-      "Mapear inicializacao",
+      "Mapear inicializa??o",
       "Apps ativos e impacto no boot.",
       "scanOnly",
     ),
     task(
       "apply-startup",
       "startup",
-      "Validar inicializacao",
+      "Validar inicializa??o",
       "Desativa alto impacto controlavel.",
       "userSafe",
     ),
@@ -307,7 +307,7 @@ export async function runQuickPrepareExecutor(
 
   for (const [index, step] of steps.entries()) {
     if (callbacks.shouldCancel?.()) {
-      throw new Error("Preparar PC cancelado pelo usuario.");
+      throw new Error("Preparar PC cancelado pelo usu?rio.");
     }
 
     callbacks.onTaskStart?.({
@@ -354,7 +354,7 @@ async function runQuickPrepareTask(
           system.isElevated
             ? "Administrador confirmado."
             : "Sem administrador: modo teste continua validando a fila.",
-          system.username ? `Usuario: ${system.username}` : "Usuario nao informado pelo Windows.",
+          system.username ? `Usuario: ${system.username}` : "Usu?rio n?o informado pelo Windows.",
         ],
       };
     }
@@ -366,7 +366,7 @@ async function runQuickPrepareTask(
         reports: { diagnostic },
         outputs: [
           `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
-          "Diagnostico local salvo para o Dashboard.",
+          "Diagn?stico local salvo para o Dashboard.",
         ],
       };
     }
@@ -430,7 +430,7 @@ async function runQuickPrepareTask(
         reports: { cleanResult },
         outputs: [
           `${cleanResult.plannedEntries} item(ns) validados`,
-          cleanResult.dryRun ? "Modo teste: limpeza nao removeu arquivos." : cleanResult.message,
+          cleanResult.dryRun ? "Modo teste: limpeza n?o removeu arquivos." : cleanResult.message,
         ],
       };
     }
@@ -460,7 +460,7 @@ async function runQuickPrepareTask(
       if (state.selectedStartupItemIds.length === 0) {
         return {
           status: "completed",
-          outputs: ["Sem inicializacao de alto impacto controlavel."],
+          outputs: ["Sem inicializa??o de alto impacto controlavel."],
         };
       }
 
@@ -476,7 +476,7 @@ async function runQuickPrepareTask(
         outputs: [
           `${startupResult.selectedItems} item(ns) validados`,
           startupResult.dryRun
-            ? "Modo teste: inicializacao nao foi alterada."
+            ? "Modo teste: inicializa??o n?o foi alterada."
             : startupResult.message,
         ],
       };
@@ -726,7 +726,7 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados para desativar`
-        : (result.message ?? "Sem inicializacao de alto impacto controlavel"),
+        : (result.message ?? "Sem inicializa??o de alto impacto controlavel"),
     ],
   };
 }

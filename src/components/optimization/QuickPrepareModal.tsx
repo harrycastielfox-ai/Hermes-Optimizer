@@ -51,10 +51,10 @@ type LogItem = {
 
 const phaseTemplates: PreparePhase[] = [
   phase("scan", "Mapear maquina", "Leitura local do estado atual", MonitorCog),
-  phase("cleanup", "Limpar temporarios", "Cache, logs e arquivos seguros", HardDrive),
-  phase("startup", "Reduzir inicializacao", "Apps de alto impacto", Zap),
-  phase("windows", "Ajustar Windows", "Game Mode, GameDVR e visual minimo", Gauge),
-  phase("processes", "Liberar processos", "Fecha segundo plano com protecoes", Sparkles),
+  phase("cleanup", "Limpar tempor?rios", "Cache, logs e arquivos seguros", HardDrive),
+  phase("startup", "Reduzir inicializa??o", "Apps de alto impacto", Zap),
+  phase("windows", "Ajustar Windows", "Game Mode, GameDVR e visual m?nimo", Gauge),
+  phase("processes", "Liberar processos", "Fecha segundo plano com prote??es", Sparkles),
 ];
 
 export function QuickPrepareModal({
@@ -147,7 +147,7 @@ export function QuickPrepareModal({
           notes: [
             "Botao 1 concluido antes da Fase 2.",
             HERMES_SAFE_TEST_MODE
-              ? "Modo teste: nenhuma alteracao real foi aplicada."
+              ? "Modo teste: nenhuma altera??o real foi aplicada."
               : "Modo real: ajustes implementados foram executados.",
           ],
         }),
@@ -246,11 +246,11 @@ export function QuickPrepareModal({
     setPhases((current) =>
       current.map((item) =>
         item.status === "pending"
-          ? { ...item, status: "cancelled", outputs: ["Cancelado pelo usuario."] }
+          ? { ...item, status: "cancelled", outputs: ["Cancelado pelo usu?rio."] }
           : item,
       ),
     );
-    appendLog("warning", "Usuario cancelou Preparar PC.");
+    appendLog("warning", "Usu?rio cancelou Preparar PC.");
   }
 
   function shouldStop(runId: number) {
@@ -320,7 +320,7 @@ export function QuickPrepareModal({
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
                   Este fluxo usa CMD/PowerShell/Registro allowlistados por baixo: Game Mode,
-                  GameDVR, DNS escolhido, visual gamer minimo, limpeza, inicializacao e processos
+                  GameDVR, DNS escolhido, visual gamer m?nimo, limpeza, inicializa??o e processos
                   seguros.
                 </p>
               </div>
@@ -361,7 +361,7 @@ export function QuickPrepareModal({
               <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">RESUMO</h3>
                 <div className="mt-3 space-y-2 text-sm">
-                  <SummaryLine label="Saude" value={formatScore(reports.diagnostic?.healthScore)} />
+                  <SummaryLine label="Sa?de" value={formatScore(reports.diagnostic?.healthScore)} />
                   <SummaryLine
                     label="Passos"
                     value={totalTasks > 0 ? `${completedTasks}/${totalTasks}` : "Montando"}
@@ -369,15 +369,15 @@ export function QuickPrepareModal({
                   <SummaryLine
                     label="Admin"
                     value={
-                      reports.system ? (reports.system.isElevated ? "Sim" : "Nao") : "Verificando"
+                      reports.system ? (reports.system.isElevated ? "Sim" : "N?o") : "Verificando"
                     }
                   />
                   <SummaryLine
-                    label="Temporarios"
+                    label="Tempor?rios"
                     value={reports.clean ? `${formatGb(reports.clean.totalGb)} GB` : "Aguardando"}
                   />
                   <SummaryLine
-                    label="Inicializacao"
+                    label="Inicializa??o"
                     value={
                       reports.startup
                         ? `${reports.startup.highImpactCount} alto impacto`

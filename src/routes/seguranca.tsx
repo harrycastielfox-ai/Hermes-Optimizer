@@ -34,7 +34,7 @@ import {
 export const Route = createFileRoute("/seguranca")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Seguranca e Recuperacao" },
+      { title: "Hermes Optimizer - Seguran?a e Recuperacao" },
       { name: "description", content: "Snapshots, logs e rollback local do Hermes Optimizer." },
     ],
   }),
@@ -142,7 +142,7 @@ function SecurityRecoveryPage() {
         `Restaurar este snapshot agora?\n\n${snapshot.name}\nAcoes reversiveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executara apenas rollback suportado pelo manifesto seguro.`,
       );
       if (!restoreConfirmed) {
-        setNotice("Restauracao cancelada apos validacao segura.");
+        setNotice("Restauracao cancelada ap?s valida??o segura.");
         await loadSecurityCenter();
         return;
       }
@@ -164,7 +164,7 @@ function SecurityRecoveryPage() {
     try {
       const payload = {
         generatedAt: new Date().toISOString(),
-        source: "Hermes Optimizer - Seguranca e Recuperacao",
+        source: "Hermes Optimizer - Seguran?a e Recuperacao",
         localOnly: true,
         status,
         snapshots,
@@ -179,7 +179,7 @@ function SecurityRecoveryPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setNotice("Relatorio local exportado com snapshots, logs e status do Restore Engine.");
+      setNotice("Relat?rio local exportado com snapshots, logs e status do Restore Engine.");
     } catch (nextError) {
       setError(errorMessage(nextError));
     }
@@ -187,15 +187,17 @@ function SecurityRecoveryPage() {
 
   function prepareHistoryClear() {
     const confirmation = window.prompt(
-      "Limpar historico local exigira uma bridge segura em fase futura.\n\nDigite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
+      "Limpar hist?rico local exigira uma bridge segura em fase futura.
+
+Digite LIMPAR HISTORICO para registrar sua confirmacao sem apagar nada agora.",
     );
 
     if (confirmation !== "LIMPAR HISTORICO") {
-      setNotice("Limpeza de historico cancelada.");
+      setNotice("Limpeza de hist?rico cancelada.");
       return;
     }
 
-    setNotice("Confirmacao forte recebida. Nenhum historico foi apagado nesta etapa.");
+    setNotice("Confirmacao forte recebida. Nenhum hist?rico foi apagado nesta etapa.");
   }
 
   return (
@@ -212,7 +214,7 @@ function SecurityRecoveryPage() {
                 Restore Center Hermes
               </h1>
               <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-                Snapshots, rollback, logs locais, historico de alteracoes e exportacao de relatorio
+                Snapshots, rollback, logs locais, hist?rico de altera??es e exportacao de relat?rio
                 sem nuvem.
               </p>
             </div>
@@ -234,7 +236,7 @@ function SecurityRecoveryPage() {
               icon={Database}
               label="SNAPSHOTS"
               value={status ? `${status.totalSnapshots}/${status.maxSnapshots}` : "--"}
-              sub={status?.retentionPolicy ?? "Carregando historico local"}
+              sub={status?.retentionPolicy ?? "Carregando hist?rico local"}
             />
             <StatusCard
               icon={History}
@@ -246,7 +248,7 @@ function SecurityRecoveryPage() {
               icon={RotateCcw}
               label="ROLLBACK"
               value={status ? `${status.snapshotsWithRollback}` : "--"}
-              sub="Snapshots com manifesto reversivel"
+              sub="Snapshots com manifesto revers?vel"
             />
             <StatusCard
               icon={LockKeyhole}
@@ -266,7 +268,7 @@ function SecurityRecoveryPage() {
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-foreground">Snapshots e rollback</h2>
                   <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                    Toda restauracao passa por validacao antes de aplicar. Em Safe Test Mode, a
+                    Toda restauracao passa por valida??o antes de aplicar. Em Safe Test Mode, a
                     bridge TypeScript forca dry-run.
                   </p>
                 </div>
@@ -281,7 +283,7 @@ function SecurityRecoveryPage() {
                 />
                 <SecurityActionButton
                   icon={Trash2}
-                  label="Limpar historico"
+                  label="Limpar hist?rico"
                   onClick={prepareHistoryClear}
                   disabled={isLoading || isWorking}
                 />
@@ -351,7 +353,7 @@ function SecurityRecoveryPage() {
                     <EmptyState
                       icon={Database}
                       title="Nenhum snapshot local"
-                      sub="Os snapshots aparecerao aqui apos a primeira acao com Restore Engine."
+                      sub="Os snapshots aparecerao aqui ap?s a primeira a??o com Restore Engine."
                     />
                   )}
                 </div>
@@ -369,7 +371,7 @@ function SecurityRecoveryPage() {
                         <ResultBox
                           title={
                             validation.fullyReversible
-                              ? "Snapshot reversivel"
+                              ? "Snapshot revers?vel"
                               : "Snapshot validado com atencao"
                           }
                           message={validation.message}
@@ -410,7 +412,7 @@ function SecurityRecoveryPage() {
                       <EmptyState
                         icon={FileText}
                         title="Sem logs recentes"
-                        sub="Eventos de snapshot, validacao e rollback aparecerao aqui."
+                        sub="Eventos de snapshot, valida??o e rollback aparecerao aqui."
                       />
                     )}
                   </div>
@@ -527,7 +529,7 @@ function SnapshotRow({
         </div>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
-        <MiniStat label="Acoes" value={`${snapshot.plannedActions.length}`} />
+        <MiniStat label="A??es" value={`${snapshot.plannedActions.length}`} />
         <MiniStat label="Rollback" value={`${snapshot.rollbackManifest.length}`} />
         <MiniStat label="Estado" value={`${snapshot.previousState.length}`} />
       </div>
@@ -559,7 +561,7 @@ function SelectedSnapshotDetails({ snapshot }: { snapshot: RestoreSnapshot }) {
         ))}
         {snapshot.rollbackManifest.length === 0 && (
           <p className="text-[12px] text-muted-foreground">
-            Snapshot estrutural sem acoes reversiveis registradas.
+            Snapshot estrutural sem a??es reversiveis registradas.
           </p>
         )}
       </div>

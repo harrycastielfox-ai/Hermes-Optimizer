@@ -161,7 +161,7 @@ function PerfisPage() {
 
     if (!dryRun && !HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
-        "Ativar Modo Gamer Hermes? Um ponto de seguranca sera criado antes e os apps sugeridos serao fechados de forma graciosa.",
+        "Ativar Modo Gamer Hermes? Um ponto de seguran?a ser? criado antes e os apps sugeridos serao fechados de forma graciosa.",
       );
       if (!confirmed) {
         return;
@@ -197,7 +197,7 @@ function PerfisPage() {
               Perfis
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Perfis locais com ponto de seguranca, historico e reversao antes de ajustes reais.
+              Perfis locais com ponto de seguran?a, hist?rico e reversao antes de ajustes reais.
             </p>
           </div>
 
@@ -232,7 +232,7 @@ function PerfisPage() {
                       {selectedProfile.reversible && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
                           <RotateCcw className="w-3.5 h-3.5" />
-                          Reversivel
+                          Revers?vel
                         </span>
                       )}
                     </div>
@@ -284,7 +284,7 @@ function PerfisPage() {
                     {result.dryRun ? "Dry-run concluido" : "Perfil aplicado"}
                   </p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
-                    Ponto de seguranca: {result.snapshotId}. {result.message}
+                    Ponto de seguran?a: {result.snapshotId}. {result.message}
                   </p>
                 </div>
               )}
@@ -388,7 +388,7 @@ function GamerEnginePanel({
           <div>
             <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">APPS SUGERIDOS</h3>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              Somente apps com reversao disponivel entram na aplicacao automatica.
+              Somente apps com reversao dispon?vel entram na aplica??o autom?tica.
             </p>
           </div>
           <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[11px] font-bold text-success">
@@ -403,7 +403,7 @@ function GamerEnginePanel({
             ))
           ) : (
             <p className="rounded-xl border border-border/70 bg-card px-3 py-3 text-sm text-muted-foreground">
-              Nenhum app nao essencial sugerido para fechar agora.
+              Nenhum app n?o essencial sugerido para fechar agora.
             </p>
           )}
         </div>
@@ -412,10 +412,10 @@ function GamerEnginePanel({
       {result && (
         <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
           <p className="text-sm font-semibold text-success">
-            {result.dryRun ? "Validacao gamer concluida" : "Modo Gamer aplicado"}
+            {result.dryRun ? "Valida??o gamer concluida" : "Modo Gamer aplicado"}
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Ponto de seguranca: {result.snapshotId}. {result.message}
+            Ponto de seguran?a: {result.snapshotId}. {result.message}
           </p>
         </div>
       )}

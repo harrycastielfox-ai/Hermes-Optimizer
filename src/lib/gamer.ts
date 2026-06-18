@@ -151,7 +151,7 @@ export const fallbackGamerReport: GamerReport = {
     detected: false,
     confidence: "unavailable",
     requiresManualSelection: true,
-    message: "Deteccao de jogo ativo indisponivel fora do backend Tauri.",
+    message: "Deteccao de jogo ativo indispon?vel fora do backend Tauri.",
   },
   gameProfiles: [],
   detectedGames: [],
@@ -165,13 +165,13 @@ export const fallbackGamerReport: GamerReport = {
     estimatedRamToFreeMb: 0,
   },
   safeguards: [
-    "Nunca fecha processos criticos do Windows.",
+    "Nunca fecha processos cr?ticos do Windows.",
     "Fechamento real exige confirmacao.",
-    "Usa CloseMainWindow; nao usa kill forcado.",
-    "Snapshot e log local antes de qualquer aplicacao.",
+    "Usa CloseMainWindow; n?o usa kill forcado.",
+    "Snapshot e log local antes de qualquer aplica??o.",
     "Restauracao pos-jogo usa o Restore Engine.",
   ],
-  warnings: ["Gamer Engine real indisponivel. Nenhum processo demonstrativo foi exibido."],
+  warnings: ["Gamer Engine real indispon?vel. Nenhum processo demonstrativo foi exibido."],
 };
 
 export async function loadGamerReport(): Promise<GamerReport> {
@@ -183,7 +183,7 @@ export async function loadGamerReport(): Promise<GamerReport> {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<GamerReport>("gamer_engine_read");
   } catch (error) {
-    console.warn("Gamer Engine indisponivel, usando fallback local.", error);
+    console.warn("Gamer Engine indispon?vel, usando fallback local.", error);
     return fallbackGamerReport;
   }
 }

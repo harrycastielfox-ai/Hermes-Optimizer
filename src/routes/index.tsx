@@ -483,7 +483,7 @@ function formatTemperatureValue(temperature: DiagnosticReport["temperature"]) {
 
 function formatTemperatureSub(temperature: DiagnosticReport["temperature"]) {
   if (!temperature.available) {
-    return "Sensor indisponivel";
+    return "Sensor indispon?vel";
   }
 
   return temperature.status;

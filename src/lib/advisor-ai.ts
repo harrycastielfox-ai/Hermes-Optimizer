@@ -116,7 +116,7 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
   chatbot: false,
   hermesScore: {
     value: null,
-    label: "Indisponivel",
+    label: "Indispon?vel",
     status: "unavailable",
     confidence: "low",
     coveragePercent: 0,
@@ -124,7 +124,7 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
     components: [],
   },
   summary: {
-    generalState: "Analise indisponivel",
+    generalState: "Analise indispon?vel",
     problemCount: 0,
     recommendationCount: 0,
     recommendedProfile: null,
@@ -134,7 +134,7 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
   findings: [],
   recommendations: [],
   sources: [],
-  unavailableData: ["Backend Tauri local indisponivel."],
+  unavailableData: ["Backend Tauri local indispon?vel."],
   history: {
     diagnosticReports: 0,
     benchmarkReports: 0,
@@ -145,7 +145,7 @@ export const unavailableAdvisorAiReport: AdvisorAiReport = {
   },
   safeguards: [
     "Fallback seguro sem dados inventados.",
-    "Nenhuma acao e aplicada.",
+    "Nenhuma a??o e aplicada.",
     "Nenhum dado e enviado para nuvem.",
   ],
 };
@@ -169,10 +169,10 @@ export async function refreshAdvisorAiReport(): Promise<AdvisorAiReport> {
     const report = await invoke<AdvisorAiReport>("advisor_ai_engine_analyze");
     return writeLocalReportCache("advisor-ai-report", report);
   } catch (error) {
-    console.warn("Hermes AI local indisponivel.", error);
+    console.warn("Hermes AI local indispon?vel.", error);
     return {
       ...unavailableAdvisorAiReport,
-      unavailableData: ["Hermes AI local indisponivel no backend Tauri."],
+      unavailableData: ["Hermes AI local indispon?vel no backend Tauri."],
     };
   }
 }

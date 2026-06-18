@@ -145,7 +145,7 @@ export function HermesAiCenter() {
 
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <MiniMetric label="Problemas" value={`${report.summary.problemCount}`} />
-            <MiniMetric label="Recomendacoes" value={`${report.summary.recommendationCount}`} />
+            <MiniMetric label="Recomenda??es" value={`${report.summary.recommendationCount}`} />
             <MiniMetric
               label="Cobertura"
               value={`${Math.round(report.hermesScore.coveragePercent)}%`}
@@ -157,7 +157,7 @@ export function HermesAiCenter() {
               PERFIL RECOMENDADO
             </p>
             <p className="mt-1 text-lg font-bold text-foreground">
-              {report.summary.recommendedProfile ?? "Indisponivel"}
+              {report.summary.recommendedProfile ?? "Indispon?vel"}
             </p>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.summary.recommendedProfileReason}
@@ -168,15 +168,15 @@ export function HermesAiCenter() {
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <InsightPanel
             title="Problemas Detectados"
-            emptyTitle="Nenhum problema critico"
-            emptySub="A Hermes AI nao detectou gargalos com as fontes atuais."
+            emptyTitle="Nenhum problema cr?tico"
+            emptySub="A Hermes AI n?o detectou gargalos com as fontes atuais."
             items={topFindings}
             renderItem={(item) => <FindingRow key={item.id} item={item} sources={report.sources} />}
           />
           <InsightPanel
-            title="Recomendacoes"
-            emptyTitle="Sem recomendacoes agora"
-            emptySub="Quando houver sinais suficientes, as recomendacoes aparecem aqui."
+            title="Recomenda??es"
+            emptyTitle="Sem recomenda??es agora"
+            emptySub="Quando houver sinais suficientes, as recomenda??es aparecem aqui."
             items={topRecommendations}
             renderItem={(item) => (
               <RecommendationRow key={item.id} item={item} sources={report.sources} />
@@ -193,11 +193,11 @@ export function HermesAiCenter() {
                 PLANO DE ACAO HERMES
               </h3>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Recomendacao textual. Nenhuma etapa e executada automaticamente.
+                Recomenda??o textual. Nenhuma etapa e executada automaticamente.
               </p>
             </div>
             <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary">
-              Somente recomendacao
+              Somente recomenda??o
             </span>
           </div>
 
@@ -219,7 +219,7 @@ export function HermesAiCenter() {
               <EmptyState
                 icon={Database}
                 title="Fontes indisponiveis"
-                sub={report.unavailableData[0] ?? "Sem fontes reais disponiveis nesta execucao."}
+                sub={report.unavailableData[0] ?? "Sem fontes reais disponiveis nesta execu??o."}
               />
             )}
           </div>
@@ -244,7 +244,7 @@ export function HermesAiCenter() {
             ) : (
               <EmptyState
                 icon={CircleGauge}
-                title="Score indisponivel"
+                title="Score indispon?vel"
                 sub={report.hermesScore.explanation}
               />
             )}
@@ -575,7 +575,7 @@ function classifyScore(report: AdvisorAiReport): {
   const score = report.hermesScore.value;
 
   if (score == null) {
-    return { label: "Indisponivel", tone: "warning" };
+    return { label: "Indispon?vel", tone: "warning" };
   }
 
   if (score >= 90) {
@@ -587,14 +587,14 @@ function classifyScore(report: AdvisorAiReport): {
   }
 
   if (score >= 55) {
-    return { label: "Necessita Otimizacao", tone: "warning" };
+    return { label: "Necessita Otimiza??o", tone: "warning" };
   }
 
   if (score >= 35) {
     return { label: "Atencao", tone: "warning" };
   }
 
-  return { label: "Critico", tone: "danger" };
+  return { label: "Cr?tico", tone: "danger" };
 }
 
 function buildActionPlan(report: AdvisorAiReport): string[] {
@@ -602,10 +602,10 @@ function buildActionPlan(report: AdvisorAiReport): string[] {
   const categories = new Set(report.recommendations.map((item) => item.category));
 
   if (categories.has("cleanup")) {
-    plan.push("Executar limpeza segura apos revisar os itens encontrados.");
+    plan.push("Executar limpeza segura ap?s revisar os itens encontrados.");
   }
   if (categories.has("startup")) {
-    plan.push("Revisar inicializacao e desativar apenas itens aprovados pelo usuario.");
+    plan.push("Revisar inicializa??o e desativar apenas itens aprovados pelo usu?rio.");
   }
   if (report.summary.recommendedProfile) {
     plan.push(`Avaliar o Perfil ${report.summary.recommendedProfile} antes de aplicar ajustes.`);
@@ -661,7 +661,7 @@ function severityPillClass(severity: AdvisorAiSeverity) {
 }
 
 function severityLabel(severity: AdvisorAiSeverity) {
-  if (severity === "critical") return "Critico";
+  if (severity === "critical") return "Cr?tico";
   if (severity === "high") return "Alto";
   if (severity === "medium") return "Medio";
   if (severity === "low") return "Baixo";

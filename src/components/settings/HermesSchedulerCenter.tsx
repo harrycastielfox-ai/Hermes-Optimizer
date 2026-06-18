@@ -78,14 +78,14 @@ const HISTORY_KEY = "hermes.scheduler.history.v1";
 const ADMIN_PREFS_KEY = "hermes.admin.preferences.v1";
 const MAX_HISTORY = 30;
 
-const defaultTasks: SchedulerTask[] = [
-  defaultTask("diagnostic", "onOpen", true),
-  defaultTask("cleanScan", "weekly", true),
-  defaultTask("startupCheck", "weekly", true),
-  defaultTask("performanceCheck", "weekly", true),
-  defaultTask("benchmark", "manual", true),
-  defaultTask("report", "monthly", true),
-];
+const legacyDefaultTaskIds = new Set([
+  "scheduler-diagnostic-onOpen",
+  "scheduler-cleanScan-weekly",
+  "scheduler-startupCheck-weekly",
+  "scheduler-performanceCheck-weekly",
+  "scheduler-benchmark-manual",
+  "scheduler-report-monthly",
+]);
 
 const taskOptions: Array<{
   type: SchedulerTaskType;
@@ -95,14 +95,14 @@ const taskOptions: Array<{
 }> = [
   {
     type: "benchmark",
-    title: "Benchmark automatico",
+    title: "Benchmark autom?tico",
     description: "Executa benchmark leve permitido.",
     icon: BarChart3,
   },
   {
     type: "diagnostic",
-    title: "Diagnostico automatico",
-    description: "Le saude, CPU, RAM, disco e seguranca.",
+    title: "Diagn?stico autom?tico",
+    description: "L? sa?de, CPU, RAM, disco e seguran?a.",
     icon: ShieldCheck,
   },
   {
@@ -113,19 +113,19 @@ const taskOptions: Array<{
   },
   {
     type: "startupCheck",
-    title: "Verificacao de inicializacao",
-    description: "Le apps de inicializacao, sem desativar.",
+    title: "Verificacao de inicializa??o",
+    description: "L? apps de inicializa??o, sem desativar.",
     icon: Zap,
   },
   {
     type: "performanceCheck",
     title: "Verificacao de desempenho",
-    description: "Le plano de energia e ajustes visuais.",
+    description: "L? plano de energia e ajustes visuais.",
     icon: Gauge,
   },
   {
     type: "report",
-    title: "Geracao de relatorio",
+    title: "Geracao de relat?rio",
     description: "Agrupa leituras locais conservadoras.",
     icon: FileText,
   },
@@ -153,15 +153,15 @@ export function HermesSchedulerCenter() {
   const notifications = useMemo(readNotificationPreferences, []);
 
   useEffect(() => {
-    const loadedTasks = readTasks();
+    const { tasks: loadedTasks, removedLegacyDefaults } = readTasks();
     setTasks(loadedTasks);
-    setHistory(readHistory());
+    setHistory(readHistory(removedLegacyDefaults && loadedTasks.length === 0));
 
     const onOpenTasks = loadedTasks.filter(
       (task) => task.enabled && task.frequency === "onOpen" && isTaskDue(task),
     );
     if (onOpenTasks.length > 0) {
-      void runTaskQueue(onOpenTasks, "Execucao ao abrir a central");
+      void runTaskQueue(onOpenTasks, "Execu??o ao abrir a central");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -271,7 +271,7 @@ export function HermesSchedulerCenter() {
             <div className="min-w-0">
               <p className="text-[11px] font-bold tracking-[0.22em] text-primary">AGENDA HERMES</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-                Manutencao Programada
+                Manuten??o Programada
               </h2>
               <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                 Organize verificacoes locais em uma agenda simples. Sem servico residente, sem
@@ -315,7 +315,7 @@ export function HermesSchedulerCenter() {
           icon={Clock3}
           label="PENDENTES"
           value={`${pendingTasks.length}`}
-          sub="Rodam apenas quando voce abre ou executa"
+          sub="Rodam apenas quando voc? abre ou executa"
           tone={pendingTasks.length > 0 ? "warning" : "success"}
         />
         <StatusCard
@@ -380,7 +380,7 @@ export function HermesSchedulerCenter() {
             <div>
               <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">AGENDA ATIVA</h3>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Rotinas salvas localmente, com proxima execucao em destaque.
+                Rotinas salvas localmente, com pr?xima execu??o em destaque.
               </p>
             </div>
             <span className="w-fit rounded-full border border-success/20 bg-success/10 px-3 py-1 text-[10px] font-bold text-success">
@@ -405,7 +405,7 @@ export function HermesSchedulerCenter() {
               <EmptyState
                 icon={CalendarClock}
                 title="Nenhuma tarefa"
-                sub="Adicione uma tarefa conservadora para iniciar a manutencao programada."
+                sub="Adicione uma tarefa conservadora para iniciar a manuten??o programada."
               />
             )}
           </div>
@@ -424,7 +424,7 @@ export function HermesSchedulerCenter() {
               ) : (
                 <EmptyState
                   icon={History}
-                  title="Sem execucoes"
+                  title="Sem execu??es"
                   sub="Data, tarefa, resultado, duracao e status aparecerao aqui."
                 />
               )}
@@ -473,7 +473,7 @@ function RemoveTaskDialog({
               Remover esta tarefa?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
-              A rotina deixara de aparecer na agenda e nao sera executada novamente.
+              A rotina deixara de aparecer na agenda e n?o ser? executada novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
         </div>
@@ -496,9 +496,9 @@ function RemoveTaskDialog({
           <div className="flex items-start gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3">
             <History className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             <div>
-              <p className="text-[12px] font-bold text-success">Historico preservado</p>
+              <p className="text-[12px] font-bold text-success">Hist?rico preservado</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                As execucoes anteriores e seus resultados continuarao disponiveis no Historico
+                As execu??es anteriores e seus resultados continuarao disponiveis no Hist?rico
                 local.
               </p>
             </div>
@@ -639,7 +639,7 @@ function NextScheduleCard({ task, pendingCount }: { task?: SchedulerTask; pendin
       <div className="mt-4 flex items-start gap-2 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3 text-[12px] font-semibold leading-relaxed text-primary">
         <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          O Hermes nao fica rodando em segundo plano. A agenda e verificada ao abrir ou por clique.
+          O Hermes n?o fica rodando em segundo plano. A agenda e verificada ao abrir ou por clique.
         </span>
       </div>
     </div>
@@ -679,7 +679,7 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
           <EmptyState
             icon={CalendarClock}
             title="Agenda livre"
-            sub="As proximas execucoes aparecerao aqui."
+            sub="As proximas execu??es aparecerao aqui."
           />
         )}
       </div>
@@ -690,8 +690,8 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
 function SafetySummary() {
   const items = [
     "Sem servico residente",
-    "Sem limpeza automatica real",
-    "Sem Registro automatico",
+    "Sem limpeza autom?tica real",
+    "Sem Registro autom?tico",
     "Sem comandos de reparo",
   ];
 
@@ -699,7 +699,7 @@ function SafetySummary() {
     <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
       <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SEGURANCA DA AGENDA</h3>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-        A manutencao programada e conservadora: prepara leituras, scans e relatorios locais, sem
+        A manuten??o programada e conservadora: prepara leituras, scans e relat?rios locais, sem
         mexer no Windows por conta propria.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2">
@@ -830,7 +830,7 @@ function TaskRow({
                 {frequencyLabel(task.frequency)}
               </span>
               <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">
-                {task.nextRunAt ? `Proxima: ${formatDate(task.nextRunAt)}` : "Execucao manual"}
+                {task.nextRunAt ? `Proxima: ${formatDate(task.nextRunAt)}` : "Execu??o manual"}
               </span>
             </div>
           </div>
@@ -972,7 +972,7 @@ function HistoryRow({ entry }: { entry: SchedulerHistoryEntry }) {
           <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
             <span>{formatDate(entry.startedAt)}</span>
             <span>{entry.durationMs} ms</span>
-            {entry.notificationPrepared && <span>Notificacao preparada</span>}
+            {entry.notificationPrepared && <span>Notifica??o preparada</span>}
           </div>
         </div>
         <span
@@ -1144,28 +1144,40 @@ function buildHistoryEntry(
   };
 }
 
-function readTasks(): SchedulerTask[] {
+function readTasks(): { tasks: SchedulerTask[]; removedLegacyDefaults: boolean } {
   if (typeof window === "undefined") {
-    return defaultTasks;
+    return { tasks: [], removedLegacyDefaults: false };
   }
 
   try {
     const raw = window.localStorage.getItem(TASKS_KEY);
     if (!raw) {
-      saveTasks(defaultTasks);
-      return defaultTasks;
+      return { tasks: [], removedLegacyDefaults: false };
     }
 
     const parsed = JSON.parse(raw) as SchedulerTask[];
-    const visibleTasks = Array.isArray(parsed)
-      ? parsed.filter((task) => visibleTaskTypes.has(task.type))
-      : [];
-    return visibleTasks.length > 0
-      ? visibleTasks.map((task) => ({ ...task, nextRunAt: calculateNextRun(task) }))
-      : defaultTasks;
+    if (!Array.isArray(parsed)) {
+      saveTasks([]);
+      return { tasks: [], removedLegacyDefaults: false };
+    }
+
+    const visibleTasks = parsed.filter((task) => visibleTaskTypes.has(task.type));
+    const migratedTasks = visibleTasks.filter((task) => !legacyDefaultTaskIds.has(task.id));
+    const removedLegacyDefaults = migratedTasks.length !== visibleTasks.length;
+    const normalizedTasks = migratedTasks.map((task) => ({
+      ...task,
+      nextRunAt: calculateNextRun(task),
+    }));
+
+    if (removedLegacyDefaults || normalizedTasks.length !== parsed.length) {
+      saveTasks(normalizedTasks);
+    }
+
+    return { tasks: normalizedTasks, removedLegacyDefaults };
   } catch (error) {
     console.warn("Falha ao ler tarefas programadas Hermes.", error);
-    return defaultTasks;
+    saveTasks([]);
+    return { tasks: [], removedLegacyDefaults: false };
   }
 }
 
@@ -1177,12 +1189,17 @@ function saveTasks(tasks: SchedulerTask[]) {
   window.localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
 }
 
-function readHistory(): SchedulerHistoryEntry[] {
+function readHistory(clearLegacyHistory = false): SchedulerHistoryEntry[] {
   if (typeof window === "undefined") {
     return [];
   }
 
   try {
+    if (clearLegacyHistory) {
+      saveHistory([]);
+      return [];
+    }
+
     const raw = window.localStorage.getItem(HISTORY_KEY);
     if (!raw) {
       return [];
@@ -1191,7 +1208,7 @@ function readHistory(): SchedulerHistoryEntry[] {
     const parsed = JSON.parse(raw) as SchedulerHistoryEntry[];
     return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
   } catch (error) {
-    console.warn("Falha ao ler historico do Scheduler Hermes.", error);
+    console.warn("Falha ao ler hist?rico do Scheduler Hermes.", error);
     return [];
   }
 }
@@ -1227,7 +1244,7 @@ function readNotificationPreferences(): NotificationPreferences {
       ...parsed.notifications,
     };
   } catch (error) {
-    console.warn("Falha ao ler preferencias de notificacao Hermes.", error);
+    console.warn("Falha ao ler preferencias de notifica??o Hermes.", error);
     return fallback;
   }
 }
@@ -1277,7 +1294,7 @@ function formatGb(value: number) {
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Indisponivel";
+    return "Indispon?vel";
   }
 
   return new Intl.DateTimeFormat("pt-BR", {

@@ -97,7 +97,7 @@ export const fallbackCleanScanReport: CleanScanReport = {
   totalGb: 0,
   items: [],
   protectedLocations: ["Downloads", "Documentos", "Desktop", "Imagens", "Videos"],
-  warnings: ["Scan real indisponivel. Nenhum tamanho demonstrativo foi exibido."],
+  warnings: ["Scan real indispon?vel. Nenhum tamanho demonstrativo foi exibido."],
 };
 
 export async function loadCleanScanReport(): Promise<CleanScanReport> {
@@ -119,7 +119,7 @@ export async function refreshCleanScanReport(): Promise<CleanScanReport> {
     const report = await invoke<CleanScanReport>("clean_engine_scan");
     return writeLocalReportCache("clean-scan", report);
   } catch (error) {
-    console.warn("Clean Engine Scan indisponivel, usando fallback indisponivel.", error);
+    console.warn("Clean Engine Scan indispon?vel, usando fallback indispon?vel.", error);
     return fallbackCleanScanReport;
   }
 }

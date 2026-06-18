@@ -63,42 +63,42 @@ const repairActions: RepairAction[] = [
     title: "Verificador de Arquivos",
     command: "sfc /scannow",
     description:
-      "Verifica arquivos protegidos do Windows e prepara reparo estrutural quando necessario.",
+      "Verifica arquivos protegidos do Windows e prepara reparo estrutural quando necess?rio.",
     risk: "medium",
     estimatedTime: "10 a 30 min",
     requiresAdmin: true,
     notes: [
       "Pode consumir CPU e disco durante a verificacao.",
-      "Nao deve ser interrompido apos iniciado em fase futura.",
-      "Nesta fase o Hermes apenas prepara snapshot, log e historico.",
+      "N?o deve ser interrompido ap?s iniciado em fase futura.",
+      "Nesta fase o Hermes apenas prepara snapshot, log e hist?rico.",
     ],
   },
   {
     id: "dism-scanhealth",
     title: "Imagem do Windows",
     command: "DISM /Online /Cleanup-Image /ScanHealth",
-    description: "Analisa a imagem do Windows para detectar corrupcao sem aplicar reparo.",
+    description: "Analisa a imagem do Windows para detectar corrup??o sem aplicar reparo.",
     risk: "medium",
     estimatedTime: "5 a 20 min",
     requiresAdmin: true,
     notes: [
-      "Leitura pesada, preparada para execucao confirmada futura.",
-      "Nao altera a imagem do sistema nesta etapa visual.",
-      "Resultado futuro deve ser registrado no historico local.",
+      "Leitura pesada, preparada para execu??o confirmada futura.",
+      "N?o altera a imagem do sistema nesta etapa visual.",
+      "Resultado futuro deve ser registrado no hist?rico local.",
     ],
   },
   {
     id: "dism-restorehealth",
     title: "Restaurar Imagem",
     command: "DISM /Online /Cleanup-Image /RestoreHealth",
-    description: "Prepara reparo da imagem do Windows quando uma corrupcao for confirmada.",
+    description: "Prepara reparo da imagem do Windows quando uma corrup??o for confirmada.",
     risk: "high",
     estimatedTime: "20 a 60 min",
     requiresAdmin: true,
     notes: [
       "Pode depender de fontes locais ou Windows Update em fase futura.",
       "Sempre exigira confirmacao forte antes de executar.",
-      "Nao e executado automaticamente pelo Hermes.",
+      "N?o e executado automaticamente pelo Hermes.",
     ],
   },
 ];
@@ -106,16 +106,16 @@ const repairActions: RepairAction[] = [
 const protectedRepairActions: ProtectedRepairAction[] = [
   {
     id: "chkdsk-repair",
-    title: "chkdsk /f /r automatico",
+    title: "chkdsk /f /r autom?tico",
     description: "Reparo profundo de disco.",
     reason: "Pode demorar bastante, exigir reinicio e travar o volume durante a verificacao.",
     guidance:
-      "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmacao forte e recomendacao de backup antes de qualquer execucao futura.",
+      "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmacao forte e recomenda??o de backup antes de qualquer execu??o futura.",
     mayRequireRestart: true,
   },
   {
     id: "winsock-reset",
-    title: "winsock reset automatico",
+    title: "winsock reset autom?tico",
     description: "Reinicializacao de componentes de rede.",
     reason: "Pode afetar conectividade e geralmente pede reinicio para concluir.",
     guidance:
@@ -124,19 +124,19 @@ const protectedRepairActions: ProtectedRepairAction[] = [
   },
   {
     id: "network-reset",
-    title: "reset de rede automatico",
-    description: "Reset amplo de adaptadores e configuracoes de rede.",
-    reason: "Pode desconectar redes salvas, VPNs e adaptadores ate a proxima configuracao.",
-    guidance: "O Hermes deve tratar isso como reparo avancado, nunca como otimizacao rapida.",
+    title: "reset de rede autom?tico",
+    description: "Reset amplo de adaptadores e configura??es de rede.",
+    reason: "Pode desconectar redes salvas, VPNs e adaptadores at? a pr?xima configuracao.",
+    guidance: "O Hermes deve tratar isso como reparo avan?ado, nunca como otimiza??o r?pida.",
     mayRequireRestart: true,
   },
   {
     id: "windows-reset",
     title: "reset do Windows",
     description: "Reinstalacao/restauracao ampla do sistema.",
-    reason: "E uma acao estrutural do Windows e pode afetar aplicativos e configuracoes.",
+    reason: "E uma a??o estrutural do Windows e pode afetar aplicativos e configura??es.",
     guidance:
-      "Fica fora do Hermes automatico. O app pode orientar o usuario, mas nao deve disparar esse fluxo sozinho.",
+      "Fica fora do Hermes autom?tico. O app pode orientar o usu?rio, mas n?o deve disparar esse fluxo sozinho.",
   },
 ];
 
@@ -173,14 +173,14 @@ export function HermesRepairCenter() {
 
       if (recordHistory) {
         const snapshot = await createRepairSnapshot({
-          title: "Diagnostico Hermes",
+          title: "Diagn?stico Hermes",
           description:
-            "Snapshot local para auditoria antes do diagnostico de reparo somente leitura.",
+            "Snapshot local para auditoria antes do diagn?stico de reparo somente leitura.",
           command: "diagnostic_engine_read",
           risk: "low",
         });
         const entry = buildHistoryEntry({
-          action: "Diagnostico Hermes",
+          action: "Diagn?stico Hermes",
           result: `Diagnostico concluido: ${nextDiagnostic.healthLabel}, Defender ${nextDiagnostic.defender.status}, Windows Update ${nextDiagnostic.windowsUpdate.status}.`,
           status: "checked",
           snapshotId: snapshot?.id,
@@ -189,7 +189,7 @@ export function HermesRepairCenter() {
         setNotice(
           snapshot
             ? `Diagnostico registrado com snapshot ${snapshot.id}.`
-            : "Diagnostico registrado localmente. Snapshot real exige Tauri.",
+            : "Diagn?stico registrado localmente. Snapshot real exige Tauri.",
         );
       }
     } catch (nextError) {
@@ -197,7 +197,7 @@ export function HermesRepairCenter() {
       setError(message);
       commitHistory(
         buildHistoryEntry({
-          action: "Diagnostico Hermes",
+          action: "Diagn?stico Hermes",
           result: message,
           status: "failed",
         }),
@@ -228,7 +228,7 @@ export function HermesRepairCenter() {
       });
       const result = snapshot
         ? `Acao preparada com snapshot ${snapshot.id}. Comando nao executado.`
-        : "Acao preparada em historico local. Snapshot real exige Tauri.";
+        : "A??o preparada em hist?rico local. Snapshot real exige Tauri.";
 
       commitHistory(
         buildHistoryEntry({
@@ -284,7 +284,7 @@ export function HermesRepairCenter() {
             <h2 className="mt-1 text-xl font-bold text-foreground">Escolha uma verificacao</h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               O Hermes organiza reparos por etapas. Selecione um card para ver apenas o detalhe
-              necessario.
+              necess?rio.
             </p>
           </div>
           <button
@@ -294,7 +294,7 @@ export function HermesRepairCenter() {
             className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_10px_26px_-14px_rgba(37,99,235,0.85)] transition hover:bg-primary/95 disabled:opacity-60"
           >
             <RefreshCcw className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`} />
-            Verificar diagnostico
+            Verificar diagn?stico
           </button>
         </div>
 
@@ -302,7 +302,7 @@ export function HermesRepairCenter() {
           <RepairModeCard
             icon={Stethoscope}
             eyebrow="ANALISE"
-            title="Diagnostico"
+            title="Diagn?stico"
             description={`${diagnostic.healthLabel} - score ${Math.round(diagnostic.healthScore)}/100`}
             selected={selectedSection === "diagnostic"}
             onClick={() => setSelectedSection("diagnostic")}
@@ -324,7 +324,7 @@ export function HermesRepairCenter() {
           <RepairModeCard
             icon={LockKeyhole}
             eyebrow="PROTECAO"
-            title="Protecoes Ativas"
+            title="Prote??es Ativas"
             description={`${protectedRepairActions.length} reparos exigem fluxo dedicado`}
             selected={selectedSection === "protections"}
             onClick={() => setSelectedSection("protections")}
@@ -334,7 +334,7 @@ export function HermesRepairCenter() {
           <RepairModeCard
             icon={History}
             eyebrow="AUDITORIA"
-            title="Historico"
+            title="Hist?rico"
             description={`${history.length} registros locais`}
             selected={selectedSection === "history"}
             onClick={() => setSelectedSection("history")}
@@ -387,13 +387,13 @@ function RepairProtectionsPanel({
               Reparos que exigem cuidado extra
             </h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Estas funcoes existem no Hermes como protecao obrigatoria: elas nao entram em
-              otimizacao automatica e so devem avancar em fluxo dedicado.
+              Estas funcoes existem no Hermes como prote??o obrigatoria: elas n?o entram em
+              otimiza??o autom?tica e s? devem avancar em fluxo dedicado.
             </p>
           </div>
         </div>
         <span className="w-fit rounded-full border border-warning/25 bg-warning/10 px-3 py-1 text-[11px] font-bold text-warning">
-          Execucao automatica protegida
+          Execu??o autom?tica protegida
         </span>
       </div>
 
@@ -466,7 +466,7 @@ function ProtectedRepairCard({
         className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_10px_26px_-16px_rgba(37,99,235,0.85)] transition hover:bg-primary/95"
       >
         <ShieldCheck className="h-4 w-4" />
-        Registrar protecao
+        Registrar prote??o
       </button>
     </div>
   );
@@ -568,9 +568,9 @@ function RepairActionDetail({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MiniFact label="Nivel" value={riskLabel(action.risk)} />
+        <MiniFact label="N?vel" value={riskLabel(action.risk)} />
         <MiniFact label="Tempo" value={action.estimatedTime} />
-        <MiniFact label="Admin" value={action.requiresAdmin ? "Obrigatorio" : "Nao"} />
+        <MiniFact label="Admin" value={action.requiresAdmin ? "Obrigatorio" : "N?o"} />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
@@ -593,7 +593,7 @@ function RepairActionDetail({
 
         <details className="rounded-2xl border border-border/70 bg-background/70 p-4 text-[12px]">
           <summary className="cursor-pointer select-none font-bold text-primary">
-            Ver detalhe tecnico
+            Ver detalhe t?cnico
           </summary>
           <code className="mt-3 block break-words rounded-xl bg-muted px-3 py-3 font-semibold text-muted-foreground">
             {action.command}
@@ -643,8 +643,8 @@ function DiagnosticPanel({
         <StatusCard
           icon={Clock3}
           label="ULTIMA VERIFICACAO"
-          value={latestHistory ? formatDate(latestHistory.timestamp) : "Nao registrada"}
-          sub={latestHistory?.action ?? "Aguardando diagnostico Hermes"}
+          value={latestHistory ? formatDate(latestHistory.timestamp) : "N?o registrada"}
+          sub={latestHistory?.action ?? "Aguardando diagn?stico Hermes"}
         />
         <StatusCard
           icon={FileSearch}
@@ -656,7 +656,7 @@ function DiagnosticPanel({
           icon={ShieldAlert}
           label="INTEGRIDADE"
           value={repairReadiness(diagnostic)}
-          sub="Baseado em diagnostico local existente"
+          sub="Baseado em diagn?stico local existente"
         />
       </div>
 
@@ -675,7 +675,7 @@ function DiagnosticPanel({
           title="Defender"
           value={diagnostic.defender.status}
           description={
-            diagnostic.defender.active ? "Protecao ativa no diagnostico." : "Revisao recomendada."
+            diagnostic.defender.active ? "Prote??o ativa no diagn?stico." : "Revisao recomendada."
           }
           tone={diagnostic.defender.active ? "success" : "danger"}
         />
@@ -684,7 +684,7 @@ function DiagnosticPanel({
           title="Alertas locais"
           value={diagnostic.warnings.length > 0 ? "Atencao" : "Sem alertas"}
           description={
-            diagnostic.warnings[0] ?? "Nenhum aviso critico retornado pela Diagnostic Engine."
+            diagnostic.warnings[0] ?? "Nenhum aviso cr?tico retornado pela Diagnostic Engine."
           }
           tone={diagnostic.warnings.length > 0 ? "warning" : "success"}
         />
@@ -715,7 +715,7 @@ function RepairHistoryPanel({ history }: { history: RepairHistoryEntry[] }) {
         ) : (
           <EmptyState
             icon={History}
-            title="Sem historico ainda"
+            title="Sem hist?rico ainda"
             sub="Preparacoes, diagnosticos e bloqueios aparecerao aqui."
           />
         )}
@@ -894,7 +894,7 @@ function buildIntegrityStatus(report: DiagnosticReport): {
   if (!report.defender.active) {
     return {
       label: "Atencao",
-      description: "Defender inativo ou indisponivel no diagnostico.",
+      description: "Defender inativo ou indispon?vel no diagn?stico.",
       tone: "warning",
     };
   }
@@ -909,7 +909,7 @@ function buildIntegrityStatus(report: DiagnosticReport): {
 
   return {
     label: "Saudavel",
-    description: "Sem alertas criticos nas engines de leitura atuais.",
+    description: "Sem alertas cr?ticos nas engines de leitura atuais.",
     tone: "success",
   };
 }
@@ -957,7 +957,7 @@ function readHistory(): RepairHistoryEntry[] {
     const parsed = JSON.parse(raw) as RepairHistoryEntry[];
     return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
   } catch (error) {
-    console.warn("Falha ao ler historico local de reparos.", error);
+    console.warn("Falha ao ler hist?rico local de reparos.", error);
     return [];
   }
 }
@@ -1014,7 +1014,7 @@ function shortSnapshot(snapshotId: string) {
 
 function historyDisplayResult(entry: RepairHistoryEntry) {
   if (entry.snapshotId) {
-    return entry.result.replace(entry.snapshotId, "snapshot de seguranca");
+    return entry.result.replace(entry.snapshotId, "snapshot de seguran?a");
   }
 
   return entry.result;
@@ -1023,7 +1023,7 @@ function historyDisplayResult(entry: RepairHistoryEntry) {
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Indisponivel";
+    return "Indispon?vel";
   }
 
   return new Intl.DateTimeFormat("pt-BR", {

@@ -27,7 +27,7 @@ export const Route = createFileRoute("/personalizado")({
   head: () => ({
     meta: [
       { title: "Hermes Optimizer - Personalizado" },
-      { name: "description", content: "Acoes individuais seguras do Hermes Optimizer." },
+      { name: "description", content: "A??es individuais seguras do Hermes Optimizer." },
     ],
   }),
   component: PersonalizadoPage,
@@ -110,8 +110,8 @@ function PersonalizadoPage() {
           id: action.id,
           title: blockedTitle(action),
           message: blockedMayRequireRestart(action)
-            ? "Preparado para validacao segura. Esta opcao pode exigir reinicio quando for aplicada em fluxo real."
-            : "Preparado para validacao segura. O Hermes mantem a execucao controlada e guiada.",
+            ? "Preparado para valida??o segura. Esta op??o pode exigir reinicio quando for aplicada em fluxo real."
+            : "Preparado para valida??o segura. O Hermes mantem a execu??o controlada e guiada.",
           requiresRestart: blockedMayRequireRestart(action),
         },
       ]);
@@ -137,7 +137,7 @@ function PersonalizadoPage() {
               Personalizado
             </h1>
             <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
-              Escolha uma acao especifica da lista segura do Hermes. Esta e a unica area para
+              Escolha uma a??o especifica da lista segura do Hermes. Esta e a unica area para
               validar comandos individuais; comandos livres e recursos perigosos continuam
               protegidos.
             </p>
@@ -152,7 +152,7 @@ function PersonalizadoPage() {
                   ACOES PERMITIDAS
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Escolha uma acao e valide diretamente pelo proprio card. Em modo seguro, tudo roda
+                  Escolha uma a??o e valide diretamente pelo proprio card. Em modo seguro, tudo roda
                   como dry-run.
                 </p>
               </div>
@@ -170,7 +170,7 @@ function PersonalizadoPage() {
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <StatusBox label="Acoes permitidas" value={`${catalog.actions.length}`} />
+              <StatusBox label="A??es permitidas" value={`${catalog.actions.length}`} />
               <StatusBox
                 label="Modo atual"
                 value={HERMES_SAFE_TEST_MODE ? "Dry-run" : "Confirmacao"}
@@ -181,10 +181,10 @@ function PersonalizadoPage() {
             {result && (
               <div className="mt-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3">
                 <p className="text-sm font-bold text-success">
-                  {result.dryRun ? "Dry-run concluido" : "Validacao concluida"}
+                  {result.dryRun ? "Dry-run concluido" : "Valida??o concluida"}
                 </p>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  Ponto de seguranca: {result.snapshotId}. {result.message}
+                  Ponto de seguran?a: {result.snapshotId}. {result.message}
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
                   {result.appliedActions.map((item) => (
@@ -202,9 +202,9 @@ function PersonalizadoPage() {
 
             {blockedResult.length > 0 && (
               <div className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-4 py-3">
-                <p className="text-sm font-bold text-warning">Acoes de nivel alto preparadas</p>
+                <p className="text-sm font-bold text-warning">A??es de n?vel alto preparadas</p>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  Estes itens foram preparados com validacao guiada. Em modo seguro, nenhuma mudanca
+                  Estes itens foram preparados com valida??o guiada. Em modo seguro, nenhuma mudanca
                   real e aplicada.
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -240,7 +240,7 @@ function PersonalizadoPage() {
                   ACOES DE NIVEL ALTO
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Opcoes individuais avancadas com explicacao, confirmacao e validacao guiada.
+                  Op??es individuais avan?adas com explicacao, confirmacao e valida??o guiada.
                 </p>
               </div>
               <span className="inline-flex w-fit rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-[11px] font-bold text-destructive">
@@ -303,7 +303,7 @@ function CustomActionCard({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-bold text-foreground">{presentation.title}</h3>
             <Badge tone={action.risk}>{riskLabel(action.risk)}</Badge>
-            {action.reversible && <SmallPill text="Reversivel" />}
+            {action.reversible && <SmallPill text="Revers?vel" />}
             {!action.persistent && <SmallPill text="Temporario" />}
             {action.requiresAdmin && <SmallPill text="Admin" tone="warning" />}
           </div>
@@ -313,7 +313,7 @@ function CustomActionCard({
       </div>
 
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
-        <TechnicalLine label="Titulo tecnico" value={action.title} />
+        <TechnicalLine label="Titulo t?cnico" value={action.title} />
         <TechnicalLine label="Metodo" value={methodLabel(action.method)} />
         <TechnicalLine label="Valor atual" value={action.currentValue} />
         <TechnicalLine label="Mudanca planejada" value={action.plannedChange} />
@@ -327,7 +327,7 @@ function CustomActionCard({
         className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_10px_26px_-14px_rgba(37,99,235,0.85)] transition hover:bg-primary/95 disabled:opacity-60"
       >
         <Terminal className="h-4 w-4" />
-        {HERMES_SAFE_TEST_MODE ? "Validar em dry-run" : "Preparar acao"}
+        {HERMES_SAFE_TEST_MODE ? "Validar em dry-run" : "Preparar a??o"}
       </button>
     </article>
   );
@@ -361,11 +361,11 @@ function BlockedActionCard({
         </div>
       </div>
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
-        <TechnicalLine label="Nome tecnico" value={action.title} />
+        <TechnicalLine label="Nome t?cnico" value={action.title} />
         <TechnicalLine label="Metodo" value={methodLabel(action.method)} />
-        <TechnicalLine label="Exige admin" value={action.requiresAdmin ? "sim" : "nao"} />
-        <TechnicalLine label="Exige extremo" value={action.requiresExtreme ? "sim" : "nao"} />
-        <TechnicalLine label="Pode exigir reinicio" value={mayRequireRestart ? "sim" : "nao"} />
+        <TechnicalLine label="Exige admin" value={action.requiresAdmin ? "sim" : "n?o"} />
+        <TechnicalLine label="Exige extremo" value={action.requiresExtreme ? "sim" : "n?o"} />
+        <TechnicalLine label="Pode exigir reinicio" value={mayRequireRestart ? "sim" : "n?o"} />
       </TechnicalDetails>
 
       <button
@@ -390,14 +390,14 @@ function WorkingOverlay({ hasRestartWarning }: { hasRestartWarning: boolean }) {
             <SlidersHorizontal className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-bold text-foreground">Validando acao</p>
+            <p className="text-sm font-bold text-foreground">Validando a??o</p>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              O Hermes esta preparando a analise da acao escolhida. Em modo seguro, nenhuma
-              alteracao real sera aplicada.
+              O Hermes esta preparando a analise da a??o escolhida. Em modo seguro, nenhuma
+              altera??o real ser? aplicada.
             </p>
             {hasRestartWarning && (
               <p className="mt-2 text-[12px] font-semibold text-warning">
-                Esta acao pode exigir reinicio se for liberada no futuro.
+                Esta a??o pode exigir reinicio se for liberada no futuro.
               </p>
             )}
           </div>
@@ -426,10 +426,10 @@ function HighLevelActionDialog({
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-base font-bold text-foreground">Confirmar acao de nivel alto</p>
+            <p className="text-base font-bold text-foreground">Confirmar a??o de n?vel alto</p>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              O Hermes vai preparar esta acao com validacao guiada. Antes de qualquer aplicacao
-              real, voce sempre vera o que sera feito, se precisa de admin, se pode exigir reinicio
+              O Hermes vai preparar esta a??o com valida??o guiada. Antes de qualquer aplica??o
+              real, voc? sempre vera o que ser? feito, se precisa de admin, se pode exigir reinicio
               e como acompanhar o resultado.
             </p>
             <div className="mt-3 rounded-xl border border-border/70 bg-background/70 p-3">
@@ -446,7 +446,7 @@ function HighLevelActionDialog({
               )}
               {restartItems.length > 0 && (
                 <p className="mt-2 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-[12px] font-semibold text-warning">
-                  Algumas opcoes podem pedir reinicio para concluir corretamente.
+                  Algumas op??es podem pedir reinicio para concluir corretamente.
                 </p>
               )}
             </div>
@@ -513,7 +513,7 @@ function TechnicalLine({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
       <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground">{label}</p>
       <p className="mt-1 break-words text-[12px] font-semibold text-foreground">
-        {value || "indisponivel"}
+        {value || "indispon?vel"}
       </p>
     </div>
   );
@@ -549,8 +549,8 @@ function customPresentation(action: AdvancedAction) {
   const map: Record<string, { title: string; description: string; impact: string }> = {
     "enable-game-mode": {
       title: "Modo Jogo do Windows",
-      description: "Prepara o Windows para priorizar jogos quando voce permitir.",
-      impact: "Impacto: melhor foco em jogos. Reversivel.",
+      description: "Prepara o Windows para priorizar jogos quando voc? permitir.",
+      impact: "Impacto: melhor foco em jogos. Revers?vel.",
     },
     "disable-game-dvr": {
       title: "Captura Xbox / Game DVR",
@@ -558,9 +558,9 @@ function customPresentation(action: AdvancedAction) {
       impact: "Impacto: pode melhorar FPS e reduzir tarefas em segundo plano.",
     },
     "disable-startup-delay": {
-      title: "Atraso de inicializacao",
-      description: "Reduz a espera antes de iniciar apps apos login.",
-      impact: "Impacto: login mais rapido. Reversivel.",
+      title: "Atraso de inicializa??o",
+      description: "Reduz a espera antes de iniciar apps ap?s login.",
+      impact: "Impacto: login mais r?pido. Revers?vel.",
     },
     "flush-dns-cache": {
       title: "Limpar cache DNS",
@@ -575,7 +575,7 @@ function customPresentation(action: AdvancedAction) {
     "set-high-performance-power-plan": {
       title: "Plano de alto desempenho",
       description: "Prepara troca controlada para maior desempenho.",
-      impact: "Impacto: mais desempenho com possivel maior consumo.",
+      impact: "Impacto: mais desempenho com poss?vel maior consumo.",
     },
     "disable-transparency": {
       title: "Transparencias do Windows",
@@ -584,18 +584,18 @@ function customPresentation(action: AdvancedAction) {
     },
     "disable-window-animations": {
       title: "Animacoes do Windows",
-      description: "Reduz movimentos da interface quando voce permitir.",
-      impact: "Impacto: sensacao mais rapida. Reversivel.",
+      description: "Reduz movimentos da interface quando voc? permitir.",
+      impact: "Impacto: sensacao mais r?pida. Revers?vel.",
     },
     "disable-visual-shadows": {
       title: "Sombras visuais",
       description: "Reduz sombras leves da interface.",
-      impact: "Impacto: menor custo visual. Reversivel.",
+      impact: "Impacto: menor custo visual. Revers?vel.",
     },
     "set-visual-effects-custom": {
       title: "Efeitos visuais personalizados",
       description: "Marca efeitos visuais como personalizados com confirmacao clara.",
-      impact: "Impacto: organizacao dos ajustes visuais. Reversivel.",
+      impact: "Impacto: organizacao dos ajustes visuais. Revers?vel.",
     },
   };
 
@@ -611,10 +611,10 @@ function customPresentation(action: AdvancedAction) {
 function blockedTitle(action: AdvancedBlockedAction) {
   const map: Record<string, string> = {
     "chkdsk-repair": "Reparo profundo do disco",
-    "defrag-optimize": "Otimizacao automatica de disco",
+    "defrag-optimize": "Otimiza??o autom?tica de disco",
     "winsock-reset": "Reset completo de rede",
-    "disable-windows-update": "Desativar atualizacoes",
-    "disable-defender": "Desativar protecao",
+    "disable-windows-update": "Desativar atualiza??es",
+    "disable-defender": "Desativar prote??o",
     "delete-user-files": "Apagar arquivos pessoais",
     "remove-programs": "Remover programas",
     "free-registry-delete": "Registro livre",
@@ -629,27 +629,27 @@ function blockedTitle(action: AdvancedBlockedAction) {
 function highLevelDescription(action: AdvancedBlockedAction) {
   const map: Record<string, string> = {
     "chkdsk-repair":
-      "Verifica o disco em profundidade e pode agendar reparos para a proxima inicializacao.",
+      "Verifica o disco em profundidade e pode agendar reparos para a pr?xima inicializa??o.",
     "defrag-optimize":
-      "Analisa a otimizacao de disco considerando o tipo de unidade antes de qualquer acao.",
+      "Analisa a otimiza??o de disco considerando o tipo de unidade antes de qualquer a??o.",
     "winsock-reset":
       "Prepara uma restauracao de componentes de rede quando houver falhas persistentes de conexao.",
     "disable-windows-update":
-      "Controla ajustes de atualizacao apenas em fluxo guiado, sem reduzir seguranca de forma permanente.",
+      "Controla ajustes de atualiza??o apenas em fluxo guiado, sem reduzir seguran?a de forma permanente.",
     "disable-defender":
-      "Mantem a protecao do Windows sob controle explicito e com confirmacao dedicada.",
+      "Mantem a prote??o do Windows sob controle explicito e com confirmacao dedicada.",
     "delete-user-files":
-      "Arquivos pessoais continuam fora das rotinas automaticas; qualquer acao manual precisa ser clara e isolada.",
+      "Arquivos pessoais continuam fora das rotinas autom?ticas; qualquer a??o manual precisa ser clara e isolada.",
     "remove-programs":
-      "Programas nao sao removidos pelo Hermes; quando aplicavel, apenas a inicializacao pode ser gerenciada.",
+      "Programas n?o sao removidos pelo Hermes; quando aplic?vel, apenas a inicializa??o pode ser gerenciada.",
     "free-registry-delete":
-      "Chaves fora da lista segura exigem revisao tecnica antes de qualquer alteracao.",
+      "Chaves fora da lista segura exigem revisao t?cnica antes de qualquer altera??o.",
     "hklm-multimedia-tweaks":
       "Ajustes profundos de desempenho exigem permissao elevada, backup e confirmacao forte.",
     "sfc-scan-now":
       "Verifica arquivos do Windows em Reparar Windows com acompanhamento do resultado.",
     "dism-restore-health":
-      "Repara a imagem do Windows em Reparar Windows quando houver indicio de corrupcao.",
+      "Repara a imagem do Windows em Reparar Windows quando houver indicio de corrup??o.",
   };
 
   return map[action.id] ?? action.reason.replace(/^Bloqueado(?: nesta fase)?:\s*/i, "");

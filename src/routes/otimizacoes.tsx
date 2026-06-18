@@ -42,7 +42,7 @@ import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 export const Route = createFileRoute("/otimizacoes")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Otimizacoes" },
+      { title: "Hermes Optimizer - Otimiza??es" },
       { name: "description", content: "Performance Engine somente leitura do Hermes Optimizer." },
     ],
   }),
@@ -102,11 +102,11 @@ function OtimizacoesPage() {
               OTIMIZACOES RECOMENDADAS
             </p>
             <h1 className="text-[clamp(26px,2vw,32px)] leading-tight font-bold tracking-tight text-foreground">
-              Otimizacoes
+              Otimiza??es
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Com base no diagnostico do seu PC, o Hermes organizou ajustes que podem melhorar
-              desempenho, inicializacao e experiencia geral, mantendo reversao e modo seguro.
+              Com base no diagn?stico do seu PC, o Hermes organizou ajustes que podem melhorar
+              desempenho, inicializa??o e experi?ncia geral, mantendo reversao e modo seguro.
             </p>
           </div>
 
@@ -153,8 +153,8 @@ function OtimizacoesPage() {
                   COMO O HERMES FAZ ISSO
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Performance Engine, Advanced Engine, comandos, valores e acoes bloqueadas ficam
-                  recolhidos por padrao.
+                  Performance Engine, Advanced Engine, comandos, valores e a??es bloqueadas ficam
+                  recolhidos por padr?o.
                 </p>
               </div>
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-primary">
@@ -202,7 +202,7 @@ function OtimizacoesPage() {
                         AJUSTES DETECTADOS
                       </h2>
                       <p className="text-[12px] text-muted-foreground mt-1">
-                        Leitura local das configuracoes que influenciam desempenho. Detalhes
+                        Leitura local das configura??es que influenciam desempenho. Detalhes
                         tecnicos ficam recolhidos.
                       </p>
                     </div>
@@ -229,7 +229,7 @@ function OtimizacoesPage() {
                     PREPARADO PARA REVERSAO
                   </h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    A Performance Engine ja esta separada para criar um ponto de seguranca antes de
+                    A Performance Engine j? esta separada para criar um ponto de seguran?a antes de
                     qualquer ajuste real futuro.
                   </p>
                 </section>
@@ -286,9 +286,9 @@ function buildOptimizationRecommendations(
       recommendation: highPerformance
         ? "Preparar ajuste controlado do plano de energia."
         : "Manter leitura do plano de energia atual.",
-      impact: "Pode melhorar resposta geral, com possivel aumento de consumo.",
+      impact: "Pode melhorar resposta geral, com poss?vel aumento de consumo.",
       level: "medium",
-      rollback: "Disponivel",
+      rollback: "Dispon?vel",
       mode: safeModeLabel(),
       detail: `Plano atual: ${report.powerPlan.activeSchemeName}. O Hermes recomenda validar energia antes de qualquer perfil.`,
     },
@@ -296,28 +296,28 @@ function buildOptimizationRecommendations(
       id: "startup",
       centralLevel: "performance",
       icon: ListChecks,
-      title: "Inicializacao",
+      title: "Inicializa??o",
       state: startupDelay?.currentValue || "Monitorada",
       recommendation: "Revisar atrasos e itens que iniciam com o Windows.",
       impact: "Pode reduzir tempo de boot e deixar o login mais leve.",
       level: startupDelay ? "medium" : "low",
-      rollback: "Disponivel",
+      rollback: "Dispon?vel",
       mode: safeModeLabel(),
       detail:
-        "A recomendacao principal e validar primeiro. O Hermes nao remove programas e nao apaga executaveis.",
+        "A recomenda??o principal e validar primeiro. O Hermes n?o remove programas e n?o apaga executaveis.",
     },
     {
       id: "gamer",
       centralLevel: "gamer",
       icon: Gamepad2,
-      title: "Experiencia Gamer",
+      title: "Experi?ncia Gamer",
       state: report.gameMode.status,
       recommendation: gameDvr
         ? "Verificar Modo Jogo e captura em segundo plano."
         : "Validar Modo Jogo antes de aplicar perfil gamer.",
       impact: "Pode melhorar foco em jogos e reduzir tarefas desnecessarias durante partidas.",
       level: "medium",
-      rollback: "Disponivel",
+      rollback: "Dispon?vel",
       mode: safeModeLabel(),
       detail:
         "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmacao, preservando processos protegidos.",
@@ -332,39 +332,39 @@ function buildOptimizationRecommendations(
         "Reduzir apenas efeitos opcionais, sem alterar tema do Windows ou navegadores.",
       impact: "Pode melhorar fluidez em maquinas intermediarias.",
       level: "low",
-      rollback: "Disponivel",
+      rollback: "Dispon?vel",
       mode: safeModeLabel(),
       detail:
         "Transparencias, animacoes e sombras devem continuar opt-in, reversiveis e explicadas antes de qualquer mudanca real.",
     },
     {
       id: "network",
-      centralLevel: "avancado",
+      centralLevel: "avan?ado",
       icon: Wifi,
       title: "Rede/DNS",
-      state: dnsFlush ? "Cache local detectado" : "Sem acao indicada",
+      state: dnsFlush ? "Cache local detectado" : "Sem a??o indicada",
       recommendation: "Limpar cache DNS apenas se houver lentidao ou falha de navegacao.",
-      impact: "Pode resolver problemas temporarios de resolucao de nomes.",
+      impact: "Pode resolver problemas tempor?rios de resolucao de nomes.",
       level: "low",
-      rollback: "Nao necessario",
+      rollback: "N?o necess?rio",
       mode: safeModeLabel(),
-      detail: "Esta e uma acao temporaria. Nao muda configuracoes permanentes de rede.",
+      detail: "Esta e uma a??o temporaria. N?o muda configura??es permanentes de rede.",
     },
     {
       id: "advanced",
-      centralLevel: "avancado",
+      centralLevel: "avan?ado",
       icon: Terminal,
-      title: "Avancado",
+      title: "Avan?ado",
       state: `${catalog.actions.length} acoes seguras`,
       recommendation:
-        "Manter recursos avancados disponiveis apenas para validacao e detalhes tecnicos.",
+        "Manter recursos avancados disponiveis apenas para valida??o e detalhes tecnicos.",
       impact:
         "Permite auditar CMD, PowerShell e Registro sem expor complexidade na primeira camada.",
       level: "high",
-      rollback: "Conforme acao",
+      rollback: "Conforme a??o",
       mode: safeModeLabel(),
       detail:
-        "Acoes bloqueadas continuam bloqueadas. Comandos profundos exigem confirmacao forte em Reparar Windows.",
+        "A??es bloqueadas continuam bloqueadas. Comandos profundos exigem confirmacao forte em Reparar Windows.",
     },
   ];
 }
@@ -425,7 +425,7 @@ function RecommendationCard({
           label="Impacto"
           value={
             recommendation.level === "high"
-              ? "Avancado"
+              ? "Avan?ado"
               : recommendation.level === "medium"
                 ? "Medio"
                 : "Leve"
@@ -445,7 +445,7 @@ function RecommendationCard({
             : "border border-border bg-card text-foreground hover:bg-muted dark:hover:bg-primary/10"
         }`}
       >
-        Entender recomendacao
+        Entender recomenda??o
         <ArrowRight className="h-4 w-4" />
       </button>
     </article>
@@ -522,7 +522,7 @@ function AdvancedEnginePanel({ catalog }: { catalog: AdvancedCatalog }) {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Recursos importantes continuam disponiveis, mas os comandos e chaves tecnicas ficam
-            recolhidos por padrao.
+            recolhidos por padr?o.
           </p>
         </div>
         <div className="flex shrink-0">
@@ -580,7 +580,7 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
             >
               {riskLabel(action.risk)}
             </span>
-            {action.reversible && <StatusBadge label="Reversivel" />}
+            {action.reversible && <StatusBadge label="Revers?vel" />}
             {action.requiresAdmin && <StatusBadge label="Admin" tone="warning" />}
             {!action.persistent && <StatusBadge label="Temporario" />}
           </div>
@@ -590,7 +590,7 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         <div className="shrink-0 text-left sm:text-right">
           <p className="text-[11px] text-muted-foreground">Estado</p>
           <p className="text-sm font-semibold text-foreground">
-            {action.persistent ? "Reversivel" : "Temporario"}
+            {action.persistent ? "Revers?vel" : "Temporario"}
           </p>
           <p className="mt-1 text-[11px] font-semibold text-primary">
             {HERMES_SAFE_TEST_MODE ? "Preparado" : "Confirmacao exigida"}
@@ -598,13 +598,13 @@ function AdvancedActionRow({ action }: { action: AdvancedAction }) {
         </div>
       </div>
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
-        <TechnicalLine label="Titulo tecnico" value={action.title} />
+        <TechnicalLine label="Titulo t?cnico" value={action.title} />
         <TechnicalLine label="Metodo" value={methodLabel(action.method)} />
         <TechnicalLine label="Valor atual" value={action.currentValue} />
         <TechnicalLine label="Mudanca planejada" value={action.plannedChange} />
-        <TechnicalLine label="Preview tecnico" value={action.commandPreview} />
-        <TechnicalLine label="Persistente" value={action.persistent ? "sim" : "nao"} />
-        <TechnicalLine label="Reversivel" value={action.reversible ? "sim" : "nao"} />
+        <TechnicalLine label="Preview t?cnico" value={action.commandPreview} />
+        <TechnicalLine label="Persistente" value={action.persistent ? "sim" : "n?o"} />
+        <TechnicalLine label="Revers?vel" value={action.reversible ? "sim" : "n?o"} />
       </TechnicalDetails>
     </div>
   );
@@ -627,10 +627,10 @@ function BlockedActionRow({ item }: { item: AdvancedBlockedAction }) {
       </div>
       <p className="mt-1 text-[12px] text-muted-foreground">{presentation.reason}</p>
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
-        <TechnicalLine label="Titulo tecnico" value={item.title} />
+        <TechnicalLine label="Titulo t?cnico" value={item.title} />
         <TechnicalLine label="Metodo" value={methodLabel(item.method)} />
-        <TechnicalLine label="Exige admin" value={item.requiresAdmin ? "sim" : "nao"} />
-        <TechnicalLine label="Exige modo extremo" value={item.requiresExtreme ? "sim" : "nao"} />
+        <TechnicalLine label="Exige admin" value={item.requiresAdmin ? "sim" : "n?o"} />
+        <TechnicalLine label="Exige modo extremo" value={item.requiresExtreme ? "sim" : "n?o"} />
         <TechnicalLine label="Motivo original" value={item.reason} />
       </TechnicalDetails>
     </div>
@@ -702,18 +702,18 @@ function advancedPresentation(action: AdvancedAction) {
   const map: Record<string, { title: string; description: string; impact: string }> = {
     "enable-game-mode": {
       title: "Modo Jogo do Windows",
-      description: "Prepara o Windows para priorizar a experiencia em jogos.",
-      impact: "Impacto: melhor foco em jogos. Reversivel.",
+      description: "Prepara o Windows para priorizar a experi?ncia em jogos.",
+      impact: "Impacto: melhor foco em jogos. Revers?vel.",
     },
     "disable-game-dvr": {
       title: "Captura Xbox / Game DVR",
       description: "Reduz gravacao em segundo plano durante jogos.",
-      impact: "Impacto: pode melhorar FPS e reduzir overhead. Reversivel.",
+      impact: "Impacto: pode melhorar FPS e reduzir overhead. Revers?vel.",
     },
     "disable-startup-delay": {
-      title: "Atraso de inicializacao",
-      description: "Reduz a espera antes de iniciar apps apos login.",
-      impact: "Impacto: inicializacao mais rapida. Reversivel.",
+      title: "Atraso de inicializa??o",
+      description: "Reduz a espera antes de iniciar apps ap?s login.",
+      impact: "Impacto: inicializa??o mais r?pida. Revers?vel.",
     },
     "flush-dns-cache": {
       title: "Limpar cache DNS",
@@ -728,27 +728,27 @@ function advancedPresentation(action: AdvancedAction) {
     "set-high-performance-power-plan": {
       title: "Plano de alto desempenho",
       description: "Prepara troca controlada para maior desempenho.",
-      impact: "Impacto: mais desempenho com possivel maior consumo. Reversivel.",
+      impact: "Impacto: mais desempenho com poss?vel maior consumo. Revers?vel.",
     },
     "disable-transparency": {
       title: "Transparencias do Windows",
-      description: "Pode reduzir efeitos visuais leves quando o usuario aceitar.",
-      impact: "Impacto: aparencia mais simples e uso grafico menor. Opt-in.",
+      description: "Pode reduzir efeitos visuais leves quando o usu?rio aceitar.",
+      impact: "Impacto: apar?ncia mais simples e uso gr?fico menor. Opt-in.",
     },
     "disable-window-animations": {
       title: "Animacoes do Windows",
-      description: "Pode reduzir animacoes de janelas quando o usuario aceitar.",
-      impact: "Impacto: sensacao mais rapida. Opt-in e reversivel.",
+      description: "Pode reduzir animacoes de janelas quando o usu?rio aceitar.",
+      impact: "Impacto: sensacao mais r?pida. Opt-in e revers?vel.",
     },
     "disable-visual-shadows": {
       title: "Sombras visuais",
-      description: "Pode reduzir sombras leves da interface quando o usuario aceitar.",
-      impact: "Impacto: menor custo visual. Opt-in e reversivel.",
+      description: "Pode reduzir sombras leves da interface quando o usu?rio aceitar.",
+      impact: "Impacto: menor custo visual. Opt-in e revers?vel.",
     },
     "set-visual-effects-custom": {
       title: "Efeitos visuais do Windows",
       description: "Marca os efeitos como personalizados apenas com confirmacao clara.",
-      impact: "Impacto: aparencia/desempenho. Opt-in e reversivel.",
+      impact: "Impacto: apar?ncia/desempenho. Opt-in e revers?vel.",
     },
   };
 
@@ -765,23 +765,23 @@ function blockedPresentation(item: AdvancedBlockedAction) {
   const map: Record<string, { title: string; reason: string }> = {
     "chkdsk-repair": {
       title: "Reparo profundo do disco",
-      reason: "Bloqueado por seguranca: pode demorar muito e exigir reinicio.",
+      reason: "Bloqueado por seguran?a: pode demorar muito e exigir reinicio.",
     },
     "defrag-optimize": {
-      title: "Otimizacao automatica de disco",
-      reason: "Bloqueado: precisa diferenciar SSD, HDD e NVMe antes de qualquer execucao.",
+      title: "Otimiza??o autom?tica de disco",
+      reason: "Bloqueado: precisa diferenciar SSD, HDD e NVMe antes de qualquer execu??o.",
     },
     "winsock-reset": {
       title: "Reset completo de rede",
       reason: "Bloqueado: pode alterar conectividade e exigir reinicio.",
     },
     "disable-windows-update": {
-      title: "Desativar atualizacoes do Windows",
-      reason: "Bloqueado: atualizacoes de seguranca nao devem ser desativadas permanentemente.",
+      title: "Desativar atualiza??es do Windows",
+      reason: "Bloqueado: atualiza??es de seguran?a n?o devem ser desativadas permanentemente.",
     },
     "disable-defender": {
-      title: "Desativar protecao do Windows",
-      reason: "Bloqueado: protecao permanente nao sera reduzida automaticamente.",
+      title: "Desativar prote??o do Windows",
+      reason: "Bloqueado: prote??o permanente n?o ser? reduzida automaticamente.",
     },
     "delete-user-files": {
       title: "Apagar arquivos pessoais",
@@ -792,7 +792,7 @@ function blockedPresentation(item: AdvancedBlockedAction) {
       reason: "Bloqueado: o Hermes nunca remove softwares.",
     },
     "free-registry-delete": {
-      title: "Alteracoes livres no sistema",
+      title: "Altera??es livres no sistema",
       reason: "Bloqueado: somente itens da lista segura podem ser preparados.",
     },
     "hklm-multimedia-tweaks": {
@@ -821,23 +821,23 @@ function performancePresentation(item: PerformanceSetting) {
     },
     "game-mode": {
       title: "Modo Jogo",
-      description: "Ajuda o Windows a priorizar a experiencia em jogos.",
+      description: "Ajuda o Windows a priorizar a experi?ncia em jogos.",
       impact: "Impacto: estabilidade e foco durante jogos.",
     },
     transparency: {
       title: "Transparencias",
       description: "Efeito visual do Windows. Nunca muda sem aceite explicito.",
-      impact: "Impacto: aparencia e custo grafico leve.",
+      impact: "Impacto: apar?ncia e custo gr?fico leve.",
     },
     animations: {
       title: "Animacoes",
       description: "Efeitos de movimento da interface. Ajuste sempre opt-in.",
-      impact: "Impacto: sensacao de velocidade e aparencia.",
+      impact: "Impacto: sensacao de velocidade e apar?ncia.",
     },
     shadows: {
       title: "Sombras visuais",
-      description: "Sombras da interface. Ajuste sempre reversivel.",
-      impact: "Impacto: aparencia e custo visual leve.",
+      description: "Sombras da interface. Ajuste sempre revers?vel.",
+      impact: "Impacto: apar?ncia e custo visual leve.",
     },
     "background-apps": {
       title: "Apps em segundo plano",
@@ -879,13 +879,13 @@ function SettingRow({ item }: { item: PerformanceSetting }) {
         </span>
       </div>
       <TechnicalDetails open={showDetails} onToggle={() => setShowDetails((current) => !current)}>
-        <TechnicalLine label="Nome tecnico" value={item.label} />
+        <TechnicalLine label="Nome t?cnico" value={item.label} />
         <TechnicalLine label="Fonte" value={item.source} />
         <TechnicalLine label="Valor lido" value={item.value} />
         <TechnicalLine label="Estado interno" value={item.status} />
         <TechnicalLine
           label="Otimizavel futuramente"
-          value={item.canOptimizeLater ? "sim" : "nao"}
+          value={item.canOptimizeLater ? "sim" : "n?o"}
         />
       </TechnicalDetails>
     </div>
@@ -920,7 +920,7 @@ function TechnicalLine({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
       <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground">{label}</p>
       <p className="mt-1 break-words text-[12px] font-semibold text-foreground">
-        {value || "indisponivel"}
+        {value || "indispon?vel"}
       </p>
     </div>
   );
