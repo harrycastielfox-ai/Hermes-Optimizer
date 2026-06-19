@@ -144,7 +144,7 @@ function DefenderPage() {
                   Liberar no Windows Defender
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  Quando o Windows bloquear o Hermes por reputacao de app novo, esta pagina prepara
+                  Quando o Windows bloquear o Hermes por reputação de app novo, esta página prepara
                   uma exclusao especifica do executavel sem desligar o Defender.
                 </p>
               </div>
@@ -204,7 +204,7 @@ function DefenderPage() {
                 <TrustCard
                   icon={CheckCircle2}
                   title="Defender mantido"
-                  text="A proteção do Windows segue ativa para o restante da maquina."
+                  text="A proteção do Windows segue ativa para o restante da máquina."
                 />
               </div>
             </section>
@@ -216,7 +216,7 @@ function DefenderPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-foreground">
-                    Liberar na mao se o botao não resolver
+                    Liberar na mão se o botão não resolver
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Use este caminho se o Windows bloquear o app antes da permissão automática.

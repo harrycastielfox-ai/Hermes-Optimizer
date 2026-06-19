@@ -218,7 +218,7 @@ export function HermesAiCenter() {
             ) : (
               <EmptyState
                 icon={Database}
-                title="Fontes indisponiveis"
+                title="Fontes indisponíveis"
                 sub={report.unavailableData[0] ?? "Sem fontes reais disponíveis nesta execução."}
               />
             )}
@@ -617,7 +617,7 @@ function buildActionPlan(report: AdvisorAiReport): string[] {
     plan.push("Validar Performance Engine e Game Mode antes de aplicar ajustes.");
   }
 
-  plan.push("Abrir a area Otimizar para seguir o plano guiado com menos cliques.");
+  plan.push("Abrir a área Otimizar para seguir o plano guiado com menos cliques.");
 
   return Array.from(new Set(plan)).slice(0, 6);
 }

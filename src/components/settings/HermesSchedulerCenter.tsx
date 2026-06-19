@@ -113,13 +113,13 @@ const taskOptions: Array<{
   },
   {
     type: "startupCheck",
-    title: "Verificacao de inicialização",
+    title: "Verificação de inicialização",
     description: "Lê apps de inicialização, sem desativar.",
     icon: Zap,
   },
   {
     type: "performanceCheck",
-    title: "Verificacao de desempenho",
+    title: "Verificação de desempenho",
     description: "Lê plano de energia e ajustes visuais.",
     icon: Gauge,
   },
@@ -488,7 +488,7 @@ function RemoveTaskDialog({
                 {config?.title ?? "Tarefa programada"}
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {task ? frequencyLabel(task.frequency) : "Programacao local"}
+                {task ? frequencyLabel(task.frequency) : "Programação local"}
               </p>
             </div>
           </div>
@@ -769,7 +769,7 @@ async function executeTask(
 
   return {
     status: "success",
-    message: `Relatorio gerado: score ${Math.round(diagnostic.healthScore)}/100, ${formatGb(clean.totalGb)} GB limpeza, ${startup.totalItems} startup, plano ${performance.powerPlan.activeSchemeName}.`,
+    message: `Relatório gerado: score ${Math.round(diagnostic.healthScore)}/100, ${formatGb(clean.totalGb)} GB limpeza, ${startup.totalItems} startup, plano ${performance.powerPlan.activeSchemeName}.`,
   };
 }
 
@@ -1272,7 +1272,7 @@ function statusPillClass(status: SchedulerStatus) {
 }
 
 function statusLabel(status: SchedulerStatus) {
-  if (status === "success") return "Concluido";
+  if (status === "success") return "Concluído";
   if (status === "prepared") return "Preparado";
   if (status === "skipped") return "Pulado";
   return "Falha";

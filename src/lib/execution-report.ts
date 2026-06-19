@@ -53,6 +53,18 @@ export type ExecutionReport = {
   notes: string[];
 };
 
+export type ExecutionCycleReport = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  safeMode: boolean;
+  targetActions: number;
+  summary: ExecutionReportSummary;
+  reports: Partial<Record<ExecutionReportPhase, ExecutionReport>>;
+  actions: ExecutionReportAction[];
+  notes: string[];
+};
+
 export function buildExecutionReport({
   phase,
   title,
@@ -82,6 +94,40 @@ export function buildExecutionReport({
     summary: summarizeExecutionActions(normalizedActions),
     actions: normalizedActions,
     notes,
+  };
+}
+
+export function buildExecutionCycleReport(
+  reports: Partial<Record<ExecutionReportPhase, ExecutionReport>>,
+): ExecutionCycleReport {
+  const phaseReports = (["prepare", "optimize"] as const)
+    .map((phase) => reports[phase])
+    .filter((report): report is ExecutionReport => Boolean(report));
+  const createdAt = phaseReports[0]?.createdAt ?? new Date().toISOString();
+  const updatedAt = phaseReports.at(-1)?.createdAt ?? createdAt;
+  const safeMode = phaseReports.every((report) => report.safeMode);
+  const actions = phaseReports.flatMap((report) =>
+    report.actions.map((action) => ({
+      ...action,
+      id: `${report.phase}.${action.id}`,
+      phase: `${report.title} / ${action.phase}`,
+    })),
+  );
+  const notes = phaseReports.flatMap((report) => [
+    `${report.title}: ${report.summary.completedActions}/${report.summary.plannedActions} contabilizadas.`,
+    ...report.notes,
+  ]);
+
+  return {
+    id: `cycle-${createdAt}`,
+    createdAt,
+    updatedAt,
+    safeMode,
+    targetActions: HERMES_ACTION_TARGET,
+    summary: summarizeExecutionActions(actions),
+    reports,
+    actions,
+    notes: [...new Set(notes)].slice(0, 10),
   };
 }
 

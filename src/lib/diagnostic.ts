@@ -200,7 +200,7 @@ export const fallbackDiagnosticReport: DiagnosticReport = {
     seconds: 0,
     label: "Indisponível",
   },
-  warnings: ["Dados reais indisponiveis. Fallback sem valores demonstrativos."],
+  warnings: ["Dados reais indisponíveis. Fallback sem valores demonstrativos."],
 };
 
 let diagnosticMemoryCache: DiagnosticReport | null = null;

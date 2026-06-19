@@ -229,7 +229,7 @@ function OtimizacoesPage() {
                     PREPARADO PARA REVERSAO
                   </h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    A Performance Engine já esta separada para criar um ponto de segurança antes de
+                    A Performance Engine já está separada para criar um ponto de segurança antes de
                     qualquer ajuste real futuro.
                   </p>
                 </section>
@@ -335,7 +335,7 @@ function buildOptimizationRecommendations(
       rollback: "Disponível",
       mode: safeModeLabel(),
       detail:
-        "Transparencias, animacoes e sombras devem continuar opt-in, reversiveis e explicadas antes de qualquer mudanca real.",
+        "Transparências, animações e sombras devem continuar opt-in, reversíveis e explicadas antes de qualquer mudança real.",
     },
     {
       id: "network",
@@ -737,7 +737,7 @@ function advancedPresentation(action: AdvancedAction) {
     },
     "disable-window-animations": {
       title: "Animacoes do Windows",
-      description: "Pode reduzir animacoes de janelas quando o usuário aceitar.",
+      description: "Pode reduzir animações de janelas quando o usuário aceitar.",
       impact: "Impacto: sensacao mais rápida. Opt-in e reversível.",
     },
     "disable-visual-shadows": {
@@ -765,7 +765,7 @@ function blockedPresentation(item: AdvancedBlockedAction) {
   const map: Record<string, { title: string; reason: string }> = {
     "chkdsk-repair": {
       title: "Reparo profundo do disco",
-      reason: "Bloqueado por segurança: pode demorar muito e exigir reinicio.",
+      reason: "Bloqueado por segurança: pode demorar muito e exigir reinício.",
     },
     "defrag-optimize": {
       title: "Otimização automática de disco",
@@ -773,7 +773,7 @@ function blockedPresentation(item: AdvancedBlockedAction) {
     },
     "winsock-reset": {
       title: "Reset completo de rede",
-      reason: "Bloqueado: pode alterar conectividade e exigir reinicio.",
+      reason: "Bloqueado: pode alterar conectividade e exigir reinício.",
     },
     "disable-windows-update": {
       title: "Desativar atualizações do Windows",

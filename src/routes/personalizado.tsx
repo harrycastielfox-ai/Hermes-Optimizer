@@ -110,7 +110,7 @@ function PersonalizadoPage() {
           id: action.id,
           title: blockedTitle(action),
           message: blockedMayRequireRestart(action)
-            ? "Preparado para validação segura. Esta opção pode exigir reinicio quando for aplicada em fluxo real."
+            ? "Preparado para validação segura. Esta opção pode exigir reinício quando for aplicada em fluxo real."
             : "Preparado para validação segura. O Hermes mantem a execução controlada e guiada.",
           requiresRestart: blockedMayRequireRestart(action),
         },
@@ -137,7 +137,7 @@ function PersonalizadoPage() {
               Personalizado
             </h1>
             <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
-              Escolha uma ação especifica da lista segura do Hermes. Esta e a unica area para
+              Escolha uma ação específica da lista segura do Hermes. Esta é a única área para
               validar comandos individuais; comandos livres e recursos perigosos continuam
               protegidos.
             </p>
@@ -216,7 +216,7 @@ function PersonalizadoPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-[12px] font-bold text-foreground">{item.title}</p>
                         {item.requiresRestart && (
-                          <SmallPill text="Pode exigir reinicio" tone="warning" />
+                          <SmallPill text="Pode exigir reinício" tone="warning" />
                         )}
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground">{item.message}</p>
@@ -355,7 +355,7 @@ function BlockedActionCard({
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-foreground">{blockedTitle(action)}</p>
             <BlockedRiskBadge />
-            {mayRequireRestart && <SmallPill text="Pode exigir reinicio" tone="warning" />}
+            {mayRequireRestart && <SmallPill text="Pode exigir reinício" tone="warning" />}
           </div>
           <p className="mt-1 text-[12px] text-muted-foreground">{highLevelDescription(action)}</p>
         </div>
@@ -365,7 +365,7 @@ function BlockedActionCard({
         <TechnicalLine label="Metodo" value={methodLabel(action.method)} />
         <TechnicalLine label="Exige admin" value={action.requiresAdmin ? "sim" : "não"} />
         <TechnicalLine label="Exige extremo" value={action.requiresExtreme ? "sim" : "não"} />
-        <TechnicalLine label="Pode exigir reinicio" value={mayRequireRestart ? "sim" : "não"} />
+        <TechnicalLine label="Pode exigir reinício" value={mayRequireRestart ? "sim" : "não"} />
       </TechnicalDetails>
 
       <button
@@ -392,12 +392,12 @@ function WorkingOverlay({ hasRestartWarning }: { hasRestartWarning: boolean }) {
           <div>
             <p className="text-sm font-bold text-foreground">Validando ação</p>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              O Hermes esta preparando a analise da ação escolhida. Em modo seguro, nenhuma
+              O Hermes está preparando a análise da ação escolhida. Em modo seguro, nenhuma
               alteração real será aplicada.
             </p>
             {hasRestartWarning && (
               <p className="mt-2 text-[12px] font-semibold text-warning">
-                Esta ação pode exigir reinicio se for liberada no futuro.
+                Esta ação pode exigir reinício se for liberada no futuro.
               </p>
             )}
           </div>
@@ -429,7 +429,7 @@ function HighLevelActionDialog({
             <p className="text-base font-bold text-foreground">Confirmar ação de nível alto</p>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               O Hermes vai preparar esta ação com validação guiada. Antes de qualquer aplicação
-              real, você sempre vera o que será feito, se precisa de admin, se pode exigir reinicio
+              real, você sempre verá o que será feito, se precisa de admin, se pode exigir reinício
               e como acompanhar o resultado.
             </p>
             <div className="mt-3 rounded-xl border border-border/70 bg-background/70 p-3">
@@ -446,7 +446,7 @@ function HighLevelActionDialog({
               )}
               {restartItems.length > 0 && (
                 <p className="mt-2 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-[12px] font-semibold text-warning">
-                  Algumas opções podem pedir reinicio para concluir corretamente.
+                  Algumas opções podem pedir reinício para concluir corretamente.
                 </p>
               )}
             </div>

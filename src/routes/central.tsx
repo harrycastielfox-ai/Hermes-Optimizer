@@ -244,7 +244,7 @@ const levels: OptimizationLevel[] = [
     ],
     actions: [
       {
-        title: "Preparacao para jogos",
+        title: "Preparação para jogos",
         description: "Fluxo Gamer em modo seguro.",
         icon: Gamepad2,
         to: "/perfis",
@@ -311,7 +311,7 @@ const levels: OptimizationLevel[] = [
       },
       {
         title: "Reparo avançado",
-        description: "Verificacao profunda do Windows com confirmação forte.",
+        description: "Verificação profunda do Windows com confirmação forte.",
         icon: AlertTriangle,
         to: "/reparar-windows",
         risk: "Extremo",

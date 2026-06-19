@@ -113,7 +113,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
             ) : (
               <Power className="h-4 w-4" />
             )}
-            {HERMES_SAFE_TEST_MODE ? "Validar reinicio" : "Reiniciar em 60s"}
+            {HERMES_SAFE_TEST_MODE ? "Validar reinício" : "Reiniciar em 60s"}
           </button>
         </div>
       </div>

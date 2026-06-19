@@ -157,7 +157,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       true,
     ),
   ]),
-  auditPhase("safety", "Permissoes e confirmação", "Modo teste, logs e controle", [
+  auditPhase("safety", "Permissões e confirmação", "Modo teste, logs e controle", [
     a(
       "safe-test-lock",
       "Bloqueio de modo teste",
@@ -196,7 +196,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "restart-dry-run",
-      "Validar reinicio seguro",
+      "Validar reinício seguro",
       "system.restart.dryRun",
       "shutdown /r /t 60",
       "cmd",
@@ -205,7 +205,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "restart-cancel",
-      "Validar cancelamento de reinicio",
+      "Validar cancelamento de reinício",
       "system.restart.cancel",
       "shutdown /a",
       "cmd",
@@ -241,7 +241,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "unavailable-labeling",
-      "Rotular indisponiveis",
+      "Rotular indisponíveis",
       "execution.unavailable",
       "ExecutionReportStatus.unavailable",
       "engine",
@@ -416,7 +416,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
   auditPhase("cleanup", "Limpeza segura", "Temporários, cache e logs", [...cleanupSeeds()]),
   auditPhase("startup", "Inicialização", "Apps de alto impacto", [...startupSeeds()]),
   auditPhase("performance", "Performance", "Energia, Game Mode e rede", [...performanceSeeds()]),
-  auditPhase("gamer", "Sessao Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
+  auditPhase("gamer", "Sessão Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
   auditPhase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", [
     ...profileSeeds(),
   ]),
@@ -667,7 +667,7 @@ function performanceSeeds(): AuditSeed[] {
       "HKCU Personalize EnableTransparency=0",
       true,
     ],
-    ["disable-animations", "Animacoes OFF", "Visual.Animations", "HKCU VisualEffects", true],
+    ["disable-animations", "Animações OFF", "Visual.Animations", "HKCU VisualEffects", true],
     ["disable-shadows", "Sombras visuais OFF", "Visual.Shadows", "HKCU VisualEffects", true],
     [
       "game-mode-on",
@@ -684,7 +684,7 @@ function performanceSeeds(): AuditSeed[] {
       "SystemPropertiesPerformance.exe preset",
       true,
     ],
-    ["disable-hibernation", "Hibernacao OFF", "Power.Hibernate", "powercfg /hibernate off", true],
+    ["disable-hibernation", "Hibernação OFF", "Power.Hibernate", "powercfg /hibernate off", true],
     [
       "disable-startup-delay",
       "Startup delay OFF",
@@ -812,7 +812,7 @@ function profileSeeds(): AuditSeed[] {
     "Perfil Streamer",
     "Perfil Trabalho",
     "Perfil Economia",
-    "Perfil Criacao",
+    "Perfil Criação",
     "Perfil Avançado",
     "Perfil Extremo bloqueado",
     "Aplicar energia do perfil",

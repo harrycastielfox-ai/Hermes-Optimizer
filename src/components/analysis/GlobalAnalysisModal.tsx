@@ -153,7 +153,7 @@ export function GlobalAnalysisModal({
       await executeStage(runId, "startup", async () => {
         const startup = await refreshStartupReport();
         assertReadOnly("Startup Engine", startup.readOnly);
-        nextHighlights.push(`${startup.totalItems} itens de inicializacao detectados`);
+        nextHighlights.push(`${startup.totalItems} itens de inicialização detectados`);
         setHighlights([...nextHighlights]);
 
         return resultFromAvailability(
@@ -161,7 +161,7 @@ export function GlobalAnalysisModal({
           "Inicialização analisada sem alterar aplicativos.",
           [
             `${startup.highImpactCount} de alto impacto`,
-            `${startup.mediumImpactCount} de medio impacto`,
+            `${startup.mediumImpactCount} de médio impacto`,
             `${startup.disabledItems} ja desativado(s)`,
           ],
         );
@@ -179,7 +179,7 @@ export function GlobalAnalysisModal({
           hasRealData(clean.generatedAt),
           "Arquivos temporários apenas mapeados.",
           [
-            `${clean.items.length} area(s) analisada(s)`,
+            `${clean.items.length} área(s) analisada(s)`,
             `${formatGb(clean.totalGb)} GB encontrados`,
             "Nenhum arquivo movido ou excluido",
           ],
@@ -527,7 +527,7 @@ function resultFromAvailability(
 ): StageExecutionResult {
   return {
     status: available ? "completed" : "unavailable",
-    source: available ? "Engine local" : "Dados indisponiveis",
+    source: available ? "Engine local" : "Dados indisponíveis",
     message: available ? message : "A engine não retornou dados reais nesta execução.",
     outputs,
   };
@@ -541,7 +541,7 @@ function advisorResult(advisor: AdvisorAiReport): StageExecutionResult {
 
   return resultFromAvailability(available, "Recomendações locais geradas e salvas.", [
     `Score Hermes: ${score}`,
-    `${advisor.recommendations.length} recomendacao(oes)`,
+    `${advisor.recommendations.length} recomendação(ões)`,
     `Confianca: ${advisor.summary.confidence}`,
     advisor.summary.recommendedProfile
       ? `Perfil sugerido: ${advisor.summary.recommendedProfile}`
@@ -717,7 +717,7 @@ function stagePillClass(status: StageStatus) {
 
 function stageStatusLabel(status: StageStatus) {
   if (status === "running") return "Analisando";
-  if (status === "completed") return "Concluido";
+  if (status === "completed") return "Concluído";
   if (status === "unavailable") return "Indisponível";
   if (status === "failed") return "Falha";
   if (status === "cancelled") return "Cancelado";

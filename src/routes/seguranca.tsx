@@ -370,7 +370,7 @@ function SecurityRecoveryPage() {
                           title={
                             validation.fullyReversible
                               ? "Snapshot reversível"
-                              : "Snapshot validado com atencao"
+                              : "Snapshot validado com atenção"
                           }
                           message={validation.message}
                           tone={validation.fullyReversible ? "success" : "warning"}

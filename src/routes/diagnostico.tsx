@@ -226,7 +226,7 @@ function HermesAiDiagnosticPanel({ report }: { report: BenchmarkReport }) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <InsightBlock title="Principais Gargalos" items={summary.bottlenecks} />
-            <InsightBlock title="O que esta bom" items={summary.strengths} positive />
+            <InsightBlock title="O que está bom" items={summary.strengths} positive />
           </div>
         </div>
 
@@ -301,7 +301,7 @@ function buildHermesAiSummary(report: BenchmarkReport) {
     .sort((a, b) => b.score - a.score)
     .filter((component) => component.score >= 82)
     .slice(0, 3)
-    .map((component) => `${component.label} esta dentro de um bom intervalo.`);
+    .map((component) => `${component.label} está dentro de um bom intervalo.`);
 
   const improvements = [
     report.components.startup.score < 82
@@ -324,7 +324,7 @@ function buildHermesAiSummary(report: BenchmarkReport) {
 
   if (strengths.length === 0) {
     strengths.push(
-      "O sistema esta operacional, mas ainda não ha um componente claramente excelente.",
+      "O sistema está operacional, mas ainda não há um componente claramente excelente.",
     );
   }
 
@@ -353,7 +353,7 @@ function stateLabel(score: number) {
 
 function stateText(score: number) {
   if (score >= 90) return "Seu sistema apresenta bom estado geral e não exige ajustes agressivos.";
-  if (score >= 80) return "Seu sistema esta saudavel, com oportunidades pontuais de melhoria.";
+  if (score >= 80) return "Seu sistema está saudável, com oportunidades pontuais de melhoria.";
   if (score >= 65) return "O Hermes encontrou pontos que podem ser otimizados com segurança.";
   return "O benchmark indica que vale revisar desempenho, inicialização e limpeza com cuidado.";
 }

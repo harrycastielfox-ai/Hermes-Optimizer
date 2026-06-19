@@ -68,7 +68,7 @@ const repairActions: RepairAction[] = [
     estimatedTime: "10 a 30 min",
     requiresAdmin: true,
     notes: [
-      "Pode consumir CPU e disco durante a verificacao.",
+      "Pode consumir CPU e disco durante a verificação.",
       "Não deve ser interrompido após iniciado em fase futura.",
       "Nesta fase o Hermes apenas prepara snapshot, log e histórico.",
     ],
@@ -108,7 +108,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     id: "chkdsk-repair",
     title: "chkdsk /f /r automático",
     description: "Reparo profundo de disco.",
-    reason: "Pode demorar bastante, exigir reinicio e travar o volume durante a verificacao.",
+    reason: "Pode demorar bastante, exigir reinício e travar o volume durante a verificação.",
     guidance:
       "O Hermes deixa esse reparo em fluxo dedicado, com explicacao, confirmação forte e recomendação de backup antes de qualquer execução futura.",
     mayRequireRestart: true,
@@ -117,7 +117,7 @@ const protectedRepairActions: ProtectedRepairAction[] = [
     id: "winsock-reset",
     title: "winsock reset automático",
     description: "Reinicializacao de componentes de rede.",
-    reason: "Pode afetar conectividade e geralmente pede reinicio para concluir.",
+    reason: "Pode afetar conectividade e geralmente pede reinício para concluir.",
     guidance:
       "Quando fizer sentido, deve aparecer como reparo de rede guiado, explicando o impacto antes da confirmação.",
     mayRequireRestart: true,
@@ -209,7 +209,7 @@ export function HermesRepairCenter() {
 
   async function prepareRepair(action: RepairAction) {
     const confirmed = window.confirm(
-      `Preparar ${action.title}?\n\nComando futuro: ${action.command}\nTempo estimado: ${action.estimatedTime}\nRisco: ${riskLabel(action.risk)}\n\nNesta fase o Hermes NAO executara o comando. Sera criado snapshot/log/historico quando possivel.`,
+      `Preparar ${action.title}?\n\nComando futuro: ${action.command}\nTempo estimado: ${action.estimatedTime}\nRisco: ${riskLabel(action.risk)}\n\nNesta fase o Hermes NÃO executará o comando. Será criado snapshot/log/histórico quando possível.`,
     );
     if (!confirmed) {
       return;
@@ -281,7 +281,7 @@ export function HermesRepairCenter() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-bold tracking-[0.22em] text-primary">PLANO DE REPARO</p>
-            <h2 className="mt-1 text-xl font-bold text-foreground">Escolha uma verificacao</h2>
+            <h2 className="mt-1 text-xl font-bold text-foreground">Escolha uma verificação</h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               O Hermes organiza reparos por etapas. Selecione um card para ver apenas o detalhe
               necessário.
@@ -387,7 +387,7 @@ function RepairProtectionsPanel({
               Reparos que exigem cuidado extra
             </h3>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Estas funcoes existem no Hermes como proteção obrigatória: elas não entram em
+              Estas funções existem no Hermes como proteção obrigatória: elas não entram em
               otimização automática e só devem avançar em fluxo dedicado.
             </p>
           </div>
@@ -432,7 +432,7 @@ function ProtectedRepairCard({
               </span>
               {action.mayRequireRestart && (
                 <span className="rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-[10px] font-bold text-warning">
-                  Pode exigir reinicio
+                  Pode exigir reinício
                 </span>
               )}
             </div>
@@ -539,7 +539,7 @@ function RepairActionDetail({
       ? "Preparar reparo"
       : action.id === "dism-scanhealth"
         ? "Preparar analise"
-        : "Preparar verificacao";
+        : "Preparar verificação";
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_34px_-20px_rgba(15,23,42,0.16)]">
@@ -702,7 +702,7 @@ function RepairHistoryPanel({ history }: { history: RepairHistoryEntry[] }) {
         </div>
         <div>
           <p className="text-[11px] font-bold tracking-[0.22em] text-primary">HISTORICO</p>
-          <h3 className="mt-1 text-xl font-bold text-foreground">Ultimas preparacoes</h3>
+          <h3 className="mt-1 text-xl font-bold text-foreground">Últimas preparações</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Snapshots, validacoes e bloqueios ficam registrados localmente.
           </p>

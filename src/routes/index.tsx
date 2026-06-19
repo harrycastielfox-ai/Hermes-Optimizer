@@ -129,7 +129,7 @@ function Dashboard() {
                   Dashboard Hermes
                 </h1>
                 <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
-                  Status central do PC com coleta local. O Dashboard acompanha a maquina; a area
+                  Status central do PC com coleta local. O Dashboard acompanha a máquina; a área
                   Otimizar cuida do plano guiado.
                 </p>
               </div>

@@ -6,6 +6,7 @@ mod benchmark;
 mod clean;
 mod diagnostic;
 mod gamer;
+mod gamer_dependencies;
 mod optimizer;
 mod performance;
 mod profiles;
@@ -69,6 +70,10 @@ pub fn run() {
             gamer::gamer_profile_save,
             gamer::gamer_profiles_list,
             gamer::gamer_restore_session,
+            gamer_dependencies::gamer_dependency_download_official_installers,
+            gamer_dependencies::gamer_dependency_install_verified,
+            gamer_dependencies::gamer_dependency_open_cache_dir,
+            gamer_dependencies::gamer_dependency_verify_installers,
             optimizer::optimize_now_plan,
             performance::performance_apply_controlled,
             performance::performance_engine_read,

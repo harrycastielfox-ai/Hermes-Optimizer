@@ -121,7 +121,7 @@ function InicializacaoPage() {
     const actionLabel = action === "disable" ? "desativar" : "reativar";
     if (!HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
-        `Confirmar ${actionLabel} ${applicableItems.length} item(ns) de inicializacao?\n\n` +
+        `Confirmar ${actionLabel} ${applicableItems.length} item(ns) de inicialização?\n\n` +
           applicableItems.map((item) => `- ${item.name}`).join("\n") +
           "\n\nO Hermes não remove programas, não apaga executáveis e criará snapshot/log/rollback antes da ação.",
       );

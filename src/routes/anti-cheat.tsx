@@ -182,7 +182,7 @@ function AntiCheatCard({
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary/70 bg-primary px-4 text-sm font-bold text-primary-foreground shadow-[0_0_22px_rgba(37,99,235,0.42),0_16px_32px_-18px_rgba(37,99,235,0.95)] transition hover:bg-primary/95"
           >
             <Shield className="h-4 w-4" />
-            {showActivationGuide ? "Ocultar guia seguro" : "Ativar funcoes desativadas"}
+            {showActivationGuide ? "Ocultar guia seguro" : "Ativar funções desativadas"}
           </button>
         ) : (
           <button
@@ -229,7 +229,7 @@ function buildActivationItems(report: AntiCheatReport) {
   const checks = [
     {
       check: report.checks.tpm,
-      guidance: "Verifique no BIOS/UEFI se TPM, Intel PTT ou AMD fTPM esta ativo.",
+      guidance: "Verifique no BIOS/UEFI se TPM, Intel PTT ou AMD fTPM está ativo.",
     },
     {
       check: report.checks.secureBoot,
@@ -254,7 +254,7 @@ function buildActivationItems(report: AntiCheatReport) {
     },
     {
       check: report.services.faceit,
-      guidance: "Abra o FACEIT Anti-Cheat oficial e confira se esta instalado e ativo.",
+      guidance: "Abra o FACEIT Anti-Cheat oficial e confira se está instalado e ativo.",
     },
     {
       check: report.services.battleye,

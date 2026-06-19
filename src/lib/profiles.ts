@@ -144,7 +144,7 @@ const fallbackProfiles: HermesProfile[] = [
   {
     id: "economia",
     name: "Economia",
-    summary: "Reduz consumo e animacoes não essenciais.",
+    summary: "Reduz consumo e animações não essenciais.",
     risk: "low",
     status: "previewOnly",
     reversible: true,

@@ -34,7 +34,11 @@ import { readSystemSecurityContext, type SystemSecurityContext } from "@/lib/sys
 import { HERMES_PREPARE_ADVANCED_ACTION_IDS } from "@/lib/optimize-all";
 import {
   buildGamerDependencyReadiness,
+  installVerifiedGamerDependencies,
+  type GamerDependencyInstallResult,
   type GamerDependencyReadiness,
+  type GamerDependencyVerificationReport,
+  verifyGamerDependencyInstallers,
 } from "@/lib/gamer-dependencies";
 
 export type QuickPreparePhaseId =
@@ -103,6 +107,8 @@ export type QuickPrepareReports = {
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
   gamerDependencies?: GamerDependencyReadiness;
+  gamerDependencyVerification?: GamerDependencyVerificationReport;
+  gamerDependencyInstallResult?: GamerDependencyInstallResult;
   gamer?: GamerReport;
   gamerResult?: GamerApplyResult;
   system?: SystemSecurityContext;
@@ -164,7 +170,7 @@ const QUICK_PREPARE_PERFORMANCE_ACTION_IDS = [
 const QUICK_PREPARE_PERFORMANCE_LABELS: Record<string, string> = {
   "set-high-performance-power-plan": "Plano Alto desempenho",
   "disable-transparency": "Transparencias OFF",
-  "disable-window-animations": "Animacoes OFF",
+  "disable-window-animations": "Animações OFF",
   "disable-visual-shadows": "Sombras visuais OFF",
 };
 
@@ -173,13 +179,13 @@ const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "disable-game-dvr": "GameDVR OFF",
   "disable-xbox-game-bar-deep": "Xbox Game Bar e captura OFF",
   "set-visual-effects-gamer-minimal": "Visual gamer mínimo",
-  "disable-hibernation": "Hibernacao OFF",
+  "disable-hibernation": "Hibernação OFF",
   "disable-startup-delay": "Inicialização sem atraso",
   "disable-advertising-id": "ID de publicidade OFF",
   "disable-tailored-experiences": "Experiencias personalizadas OFF",
   "disable-consumer-features": "Apps e sugestoes promovidas OFF",
   "disable-activity-history": "Histórico de atividades OFF",
-  "disable-location-tracking": "Localizacao de apps bloqueada",
+  "disable-location-tracking": "Localização de apps bloqueada",
   "disable-recall-user": "Recall bloqueado no usuário",
   "flush-dns-cache": "Cache DNS limpo",
   "dism-analyze-component-store": "CMD DISM: analisar componentes",
@@ -215,7 +221,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "check-admin",
       "scan",
       "Verificar administrador",
-      "Confere se o Hermes esta elevado.",
+      "Confere se o Hermes está elevado.",
       "scanOnly",
     ),
     task(
@@ -245,6 +251,13 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "Preparar dependências gamer",
       "VC++ 2005-2022, DirectX, hash e assinatura.",
       "scanOnly",
+    ),
+    task(
+      "install-gamer-dependencies",
+      "components",
+      "Validar instaladores gamer",
+      "Executa somente dependências verificadas no cache.",
+      "adminOnly",
     ),
     task(
       "scan-clean",
@@ -383,7 +396,7 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { diagnostic },
         outputs: [
-          `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
+          `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
           "Diagnóstico local salvo para o Dashboard.",
         ],
       };
@@ -416,17 +429,42 @@ async function runQuickPrepareTask(
     }
 
     if (step.id === "scan-gamer-dependencies") {
-      const advanced = state.advancedCatalog ?? (await refreshAdvancedCatalog());
+      const [advanced, gamerDependencyVerification] = await Promise.all([
+        state.advancedCatalog ? Promise.resolve(state.advancedCatalog) : refreshAdvancedCatalog(),
+        verifyGamerDependencyInstallers(),
+      ]);
       state.advancedCatalog = advanced;
-      const gamerDependencies = buildGamerDependencyReadiness(advanced);
+      const gamerDependencies = buildGamerDependencyReadiness(
+        advanced,
+        gamerDependencyVerification,
+      );
       return {
         status: "completed",
-        reports: { gamerDependencies, advanced },
-        outputs: [
-          gamerDependencies.summary,
-          gamerDependencies.detectedSummary,
-          gamerDependencies.blockers[0],
-        ],
+        reports: { gamerDependencies, gamerDependencyVerification, advanced },
+        outputs: formatGamerDependencyOutputs(gamerDependencies, gamerDependencyVerification),
+      };
+    }
+
+    if (step.id === "install-gamer-dependencies") {
+      const gamerDependencyInstallResult = await installVerifiedGamerDependencies({
+        confirmed: shouldConfirmReal(context, state, step),
+        dryRun: shouldDryRunTask(context, state, step),
+      });
+      const advanced = state.advancedCatalog ?? (await refreshAdvancedCatalog());
+      state.advancedCatalog = advanced;
+      const gamerDependencies = buildGamerDependencyReadiness(
+        advanced,
+        gamerDependencyInstallResult.report,
+      );
+      return {
+        status: "completed",
+        reports: {
+          advanced,
+          gamerDependencies,
+          gamerDependencyVerification: gamerDependencyInstallResult.report,
+          gamerDependencyInstallResult,
+        },
+        outputs: formatGamerDependencyInstallOutputs(gamerDependencyInstallResult),
       };
     }
 
@@ -440,7 +478,7 @@ async function runQuickPrepareTask(
         reports: { clean },
         outputs: [
           `${formatGb(clean.totalGb)} GB temporários mapeados`,
-          `${state.selectedCleanItemIds.length} area(s) seguras selecionadas`,
+          `${state.selectedCleanItemIds.length} área(s) seguras selecionadas`,
         ],
       };
     }
@@ -483,7 +521,7 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { startup },
         outputs: [
-          `${startup.totalItems} item(ns) de inicializacao`,
+          `${startup.totalItems} item(ns) de inicialização`,
           `${state.selectedStartupItemIds.length} alto impacto controlável`,
         ],
       };
@@ -672,6 +710,40 @@ function formatApplyOutputs(
   ];
 }
 
+function formatGamerDependencyOutputs(
+  readiness: GamerDependencyReadiness,
+  verification: GamerDependencyVerificationReport,
+) {
+  const missingCount = verification.packages.filter((item) => item.status === "missing").length;
+  const blockedCount = verification.packages.filter((item) => item.status === "blocked").length;
+  const failedCount = verification.packages.filter((item) => item.status === "failed").length;
+  const cacheLabel =
+    verification.cacheDir.length > 84
+      ? `${verification.cacheDir.slice(0, 81)}...`
+      : verification.cacheDir;
+
+  return [
+    `${verification.readyCount}/${verification.totalPackages} dependência(s) VC++/DirectX prontas`,
+    `${missingCount} ausente(s), ${blockedCount} bloqueada(s), ${failedCount} falha(s)`,
+    readiness.detectedSummary,
+    `Cache local: ${cacheLabel}`,
+  ];
+}
+
+function formatGamerDependencyInstallOutputs(result: GamerDependencyInstallResult) {
+  const dryRunCount = result.actions.filter((item) => item.status === "dryRun").length;
+  const skippedCount = result.actions.filter((item) => item.status === "skipped").length;
+  const blockedCount = result.actions.filter((item) => item.status === "blocked").length;
+
+  return [
+    result.dryRun
+      ? `${dryRunCount} instalador(es) verificado(s) em modo teste`
+      : `${result.installedCount} instalado(s), ${result.skippedCount} pulado(s)`,
+    `${skippedCount} já instalado(s), ${blockedCount} bloqueado(s), ${result.failedCount} falha(s)`,
+    result.message,
+  ];
+}
+
 export async function runQuickPreparePhase(
   phaseId: QuickPreparePhaseId,
   context: QuickPrepareContext,
@@ -696,18 +768,21 @@ export async function runQuickPreparePhase(
 }
 
 async function runScanPhase(): Promise<QuickPreparePhaseResult> {
-  const [diagnostic, performance, advanced] = await Promise.all([
+  const [diagnostic, performance, advanced, gamerDependencyVerification] = await Promise.all([
     refreshDiagnosticReport(),
     refreshPerformanceReport(),
     refreshAdvancedCatalog(),
+    verifyGamerDependencyInstallers(),
   ]);
+  const gamerDependencies = buildGamerDependencyReadiness(advanced, gamerDependencyVerification);
 
   return {
-    reports: { diagnostic, performance, advanced },
+    reports: { diagnostic, performance, advanced, gamerDependencies, gamerDependencyVerification },
     outputs: [
-      `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
+      `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
       `Modo Jogo: ${performance.gameMode.status}`,
       `${advanced.actions.length} ajuste(s) Windows mapeados`,
+      `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas`,
     ],
   };
 }
@@ -727,7 +802,7 @@ async function runCleanupPhase(): Promise<QuickPreparePhaseResult> {
     reports: { clean, cleanResult: result.value ?? undefined },
     outputs: [
       `${formatGb(clean.totalGb)} GB temporários mapeados`,
-      `${itemIds.length} area(s) seguras selecionadas`,
+      `${itemIds.length} área(s) seguras selecionadas`,
       result.value
         ? `${result.value.plannedEntries} item(ns) validados para limpeza`
         : (result.message ?? "Sem lixo seguro para aplicar agora"),
@@ -755,7 +830,7 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
   return {
     reports: { startup, startupResult: result.value ?? undefined },
     outputs: [
-      `${startup.totalItems} item(ns) de inicializacao analisados`,
+      `${startup.totalItems} item(ns) de inicialização analisados`,
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados para desativar`

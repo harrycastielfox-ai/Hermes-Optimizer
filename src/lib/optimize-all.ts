@@ -37,7 +37,11 @@ import {
 } from "@/lib/advanced";
 import {
   buildGamerDependencyReadiness,
+  installVerifiedGamerDependencies,
+  type GamerDependencyInstallResult,
   type GamerDependencyReadiness,
+  type GamerDependencyVerificationReport,
+  verifyGamerDependencyInstallers,
 } from "@/lib/gamer-dependencies";
 
 export type OptimizeAllPhaseId =
@@ -67,6 +71,8 @@ export type OptimizeAllReports = {
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
   gamerDependencies?: GamerDependencyReadiness;
+  gamerDependencyVerification?: GamerDependencyVerificationReport;
+  gamerDependencyInstallResult?: GamerDependencyInstallResult;
 };
 
 export type OptimizeAllGameTarget = {
@@ -198,8 +204,8 @@ async function runPlanPhase(): Promise<OptimizeAllPhaseResult> {
     reports: { plan, advisor, diagnostic },
     outputs: [
       `${plan.summary.totalStages} etapa(s) do orquestrador local`,
-      `${advisor.recommendations.length} recomendacao(oes) da Hermes IA`,
-      `Saude atual: ${Math.round(diagnostic.healthScore)}/100`,
+      `${advisor.recommendations.length} recomendação(ões) da Hermes IA`,
+      `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
     ],
   };
 }
@@ -227,7 +233,7 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
     },
     outputs: [
       `${formatGb(clean.totalGb)} GB candidatos à revisão`,
-      `${clean.items.length} area(s) mapeada(s)`,
+      `${clean.items.length} área(s) mapeada(s)`,
       result.value
         ? `${result.value.plannedEntries} item(ns) validados pela Clean Engine`
         : (result.message ?? "Sem item seguro selecionado para validação"),
@@ -264,7 +270,7 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
       startupResult: result.value ?? undefined,
     },
     outputs: [
-      `${startup.totalItems} item(ns) de inicializacao`,
+      `${startup.totalItems} item(ns) de inicialização`,
       `${startup.highImpactCount} alto impacto`,
       result.value
         ? `${result.value.selectedItems} item(ns) validados pela Startup Engine`
@@ -274,8 +280,17 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
 }
 
 async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
-  const advanced = await refreshAdvancedCatalog();
-  const gamerDependencies = buildGamerDependencyReadiness(advanced);
+  const [advanced, gamerDependencyVerification] = await Promise.all([
+    refreshAdvancedCatalog(),
+    verifyGamerDependencyInstallers(),
+  ]);
+  const gamerDependencies = buildGamerDependencyReadiness(advanced, gamerDependencyVerification);
+  const gamerDependencyInstallResult = await tryRun(() =>
+    installVerifiedGamerDependencies({
+      confirmed: shouldConfirmReal(),
+      dryRun: shouldDryRun(),
+    }),
+  );
   const availableIds = new Set(advanced.actions.map((action) => action.id));
   const actionIds = HERMES_COMPONENT_CMD_ACTION_IDS.filter((id) => availableIds.has(id));
   const result = await tryRun(() =>
@@ -294,11 +309,16 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       advanced,
       advancedResult: result.value ?? undefined,
       gamerDependencies,
+      gamerDependencyVerification:
+        gamerDependencyInstallResult.value?.report ?? gamerDependencyVerification,
+      gamerDependencyInstallResult: gamerDependencyInstallResult.value ?? undefined,
     },
     outputs: [
       `${actionIds.length} comando(s) CMD/DISM mapeados`,
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
-      gamerDependencies.summary,
+      gamerDependencyInstallResult.value
+        ? gamerDependencyInstallResult.value.message
+        : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas`,
       result.value
         ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
         : (result.message ?? "Componentes ainda não disponíveis neste PC"),

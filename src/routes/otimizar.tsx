@@ -33,7 +33,9 @@ import {
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 import { readSystemBootContext, type SystemBootContext } from "@/lib/system";
 import {
+  buildExecutionCycleReport,
   HERMES_ACTION_TARGET,
+  type ExecutionCycleReport,
   type ExecutionReport,
   type ExecutionReportRisk,
   type ExecutionReportStatus,
@@ -42,6 +44,7 @@ import {
 const QUICK_PREPARE_STORAGE_KEY = "hermes.quickPrepare.completed.v1";
 const RESTART_RECOMMENDATION_STORAGE_KEY = "hermes.restart.recommended.v1";
 const EXECUTION_REPORT_STORAGE_KEY = "hermes.execution.report.v1";
+const EXECUTION_CYCLE_STORAGE_KEY = "hermes.execution.cycle.v1";
 
 type QuickPrepareGate = {
   completedAt: string;
@@ -67,7 +70,7 @@ export const Route = createFileRoute("/otimizar")({
       { title: "Hermes Optimizer - Otimizar" },
       {
         name: "description",
-        content: "Area de otimização guiada do Hermes Optimizer.",
+        content: "Área de otimização guiada do Hermes Optimizer.",
       },
     ],
   }),
@@ -89,6 +92,9 @@ function OtimizarPage() {
   );
   const [executionReport, setExecutionReport] = useState<ExecutionReport | null>(() =>
     readExecutionReport(),
+  );
+  const [executionCycleReport, setExecutionCycleReport] = useState<ExecutionCycleReport | null>(
+    () => readExecutionCycleReport(),
   );
   const [systemBootContext, setSystemBootContext] = useState<SystemBootContext | null>(null);
 
@@ -177,23 +183,35 @@ function OtimizarPage() {
         writeRestartRecommendation(nextRestart);
         setExecutionReport(report);
         writeExecutionReport(report);
+        const nextCycleReport = buildExecutionCycleReport({ prepare: report });
+        setExecutionCycleReport(nextCycleReport);
+        writeExecutionCycleReport(nextCycleReport);
       })();
     },
     [selectedDnsProviderId, systemBootContext],
   );
 
-  const handleOptimizeCompleted = useCallback((report: ExecutionReport) => {
-    const nextRestart: RestartRecommendation = {
-      phase: "optimize",
-      createdAt: new Date().toISOString(),
-      safeMode: HERMES_SAFE_TEST_MODE,
-      message: "Reinício final recomendado para consolidar o plano aplicado.",
-    };
-    setRestartRecommendation(nextRestart);
-    writeRestartRecommendation(nextRestart);
-    setExecutionReport(report);
-    writeExecutionReport(report);
-  }, []);
+  const handleOptimizeCompleted = useCallback(
+    (report: ExecutionReport) => {
+      const nextRestart: RestartRecommendation = {
+        phase: "optimize",
+        createdAt: new Date().toISOString(),
+        safeMode: HERMES_SAFE_TEST_MODE,
+          message: "Reinício final recomendado para consolidar o plano aplicado.",
+      };
+      setRestartRecommendation(nextRestart);
+      writeRestartRecommendation(nextRestart);
+      setExecutionReport(report);
+      writeExecutionReport(report);
+      const nextCycleReport = buildExecutionCycleReport({
+        prepare: executionCycleReport?.reports.prepare,
+        optimize: report,
+      });
+      setExecutionCycleReport(nextCycleReport);
+      writeExecutionCycleReport(nextCycleReport);
+    },
+    [executionCycleReport],
+  );
 
   const healthScore = Math.round(diagnostic.healthScore);
   const projectStats = [
@@ -211,7 +229,7 @@ function OtimizarPage() {
     {
       icon: Wrench,
       title: "Componentes",
-      text: "VC++, DirectX e dependências entram como modulo.",
+      text: "VC++, DirectX e dependências entram como módulo.",
     },
     { icon: Gauge, title: "Performance", text: "Energia, inicialização, limpeza e modo gamer." },
   ];
@@ -232,13 +250,13 @@ function OtimizarPage() {
             <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div>
                 <p className="mb-2 text-xs font-bold tracking-[0.22em] text-primary">
-                  PROJETO DE OTIMIZACAO
+                  PROJETO DE OTIMIZAÇÃO
                 </p>
                 <h1 className="text-[clamp(30px,3vw,48px)] font-black leading-tight tracking-normal text-foreground">
                   Hermes em dois passos
                 </h1>
                 <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-                  O Dashboard acompanha o PC. Esta area concentra a parte que resolve: analisar,
+                  O Dashboard acompanha o PC. Esta área concentra a parte que resolve: analisar,
                   montar o plano e preparar a otimização em fases.
                 </p>
               </div>
@@ -268,7 +286,11 @@ function OtimizarPage() {
               onOptimize={handleOptimizeNow}
             />
 
-            {executionReport && <ExecutionReportPanel report={executionReport} />}
+            {executionCycleReport ? (
+              <ExecutionCycleReportPanel cycle={executionCycleReport} />
+            ) : (
+              executionReport && <ExecutionReportPanel report={executionReport} />
+            )}
 
             <section className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
               {machineFacts.map((item) => (
@@ -384,6 +406,35 @@ function writeExecutionReport(report: ExecutionReport) {
   window.localStorage.setItem(EXECUTION_REPORT_STORAGE_KEY, JSON.stringify(report));
 }
 
+function readExecutionCycleReport(): ExecutionCycleReport | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(EXECUTION_CYCLE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as ExecutionCycleReport;
+    if (!parsed.createdAt || !parsed.summary || !Array.isArray(parsed.actions)) {
+      return null;
+    }
+    if (parsed.safeMode !== HERMES_SAFE_TEST_MODE) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeExecutionCycleReport(report: ExecutionCycleReport) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(EXECUTION_CYCLE_STORAGE_KEY, JSON.stringify(report));
+}
+
 function getPrepareRebootStatus(
   gate: QuickPrepareGate | null,
   bootContext: SystemBootContext | null,
@@ -395,6 +446,163 @@ function getPrepareRebootStatus(
     return "unknown";
   }
   return gate.bootIdAtCompletion === bootContext.currentBootId ? "pending" : "confirmed";
+}
+
+function ExecutionCycleReportPanel({ cycle }: { cycle: ExecutionCycleReport }) {
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(cycle.updatedAt));
+  const targetProgress = Math.min(
+    100,
+    Math.round((cycle.summary.plannedActions / cycle.targetActions) * 100),
+  );
+  const targetLabel =
+    cycle.summary.missingToTarget === 0
+      ? "Meta 150+ mapeada"
+      : `${cycle.summary.missingToTarget} faltam para 150`;
+  const completedLabel = cycle.safeMode
+    ? cycle.summary.simulatedActions
+    : cycle.summary.appliedActions;
+  const pendingActions = cycle.actions.filter((action) =>
+    ["planned", "unavailable", "failed"].includes(action.status),
+  );
+  const visibleActions = cycle.actions
+    .filter((action) => action.status !== "scanned")
+    .slice(-8)
+    .reverse();
+
+  return (
+    <section className="mt-4 rounded-2xl border border-primary/20 bg-card/92 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_38px_-28px_rgba(37,99,235,0.35)]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <ListChecks className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-[0.2em] text-primary">
+              RELATÓRIO GERAL DO CICLO
+            </p>
+            <h2 className="mt-1 text-xl font-black text-foreground">
+              Fase 1 + Fase 2 em uma auditoria
+            </h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+              Mostra o que foi lido, simulado ou aplicado, o que ficou indisponível e quanto falta
+              para a meta técnica de 150+ ações.
+            </p>
+          </div>
+        </div>
+        <span className="w-fit rounded-full border border-border/70 bg-background/70 px-3 py-1 text-[11px] font-bold text-muted-foreground">
+          Atualizado {dateLabel}
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <CyclePhaseCard
+          label="Fase 1"
+          title="Preparar PC"
+          report={cycle.reports.prepare}
+          fallback="Aguardando Botão 1"
+        />
+        <CyclePhaseCard
+          label="Fase 2"
+          title="Otimizar Tudo"
+          report={cycle.reports.optimize}
+          fallback="Aguardando Botão 2"
+        />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-border/70 bg-background/70 p-3">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-[11px] font-bold tracking-[0.16em] text-primary">META DO MOTOR</p>
+            <p className="mt-1 text-sm font-black text-foreground">{targetLabel}</p>
+          </div>
+          <span className="text-sm font-black text-primary">{targetProgress}%</span>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${targetProgress}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-8">
+        <ReportStat label="Meta" value={`${cycle.targetActions}+`} />
+        <ReportStat label="Mapeadas" value={`${cycle.summary.plannedActions}`} />
+        <ReportStat label="Concluídas" value={`${cycle.summary.completedActions}`} />
+        <ReportStat
+          label={cycle.safeMode ? "Simuladas" : "Aplicadas"}
+          value={`${completedLabel}`}
+        />
+        <ReportStat label="Leituras" value={`${cycle.summary.scannedActions}`} />
+        <ReportStat label="Planejadas" value={`${cycle.summary.plannedOnlyActions}`} />
+        <ReportStat label="Indisp." value={`${cycle.summary.unavailableActions}`} />
+        <ReportStat label="Falhas" value={`${cycle.summary.failedActions}`} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">
+            ÚLTIMAS AÇÕES AUDITÁVEIS
+          </p>
+          {visibleActions.length > 0 ? (
+            visibleActions.map((action) => <ExecutionActionRow key={action.id} action={action} />)
+          ) : (
+            <EmptyReportMessage text="Nenhuma ação técnica registrada ainda." />
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">
+            PENDÊNCIAS TÉCNICAS
+          </p>
+          {pendingActions.length > 0 ? (
+            pendingActions
+              .slice(0, 5)
+              .map((action) => <ExecutionActionRow key={action.id} action={action} />)
+          ) : (
+            <EmptyReportMessage text="Nenhuma pendência técnica no ciclo atual." />
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CyclePhaseCard({
+  label,
+  title,
+  report,
+  fallback,
+}: {
+  label: string;
+  title: string;
+  report?: ExecutionReport;
+  fallback: string;
+}) {
+  const status = report ? "Registrada" : fallback;
+  const value = report
+    ? `${report.summary.completedActions}/${report.summary.plannedActions}`
+    : "0/0";
+
+  return (
+    <div className="rounded-xl border border-border/70 bg-background/70 px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 text-sm font-black text-foreground">{title}</p>
+          <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{status}</p>
+        </div>
+        <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-black text-primary">
+          {value}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
@@ -416,11 +624,13 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             <ListChecks className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.2em] text-primary">RELATORIO DE EXECUCAO</p>
+            <p className="text-xs font-bold tracking-[0.2em] text-primary">
+              RELATÓRIO DE EXECUÇÃO
+            </p>
             <h2 className="mt-1 text-lg font-black text-foreground">{report.title}</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.safeMode
-                ? "Modo teste: ações contabilizadas como leitura ou simulacao."
+                ? "Modo teste: ações contabilizadas como leitura ou simulação."
                 : "Modo real: ações implementadas contabilizadas como aplicadas."}
             </p>
           </div>
@@ -454,7 +664,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
           )}
         </div>
         <div className="rounded-xl border border-border/70 bg-background/70 p-3">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">PROXIMO FOCO</p>
+          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">PRÓXIMO FOCO</p>
           <p className="mt-2 text-sm font-black text-foreground">
             {report.summary.plannedOnlyActions > 0
               ? "Converter planejadas em motor real"
@@ -466,7 +676,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             {report.summary.plannedOnlyActions > 0
               ? `${report.summary.plannedOnlyActions} ação(ões) já estão desenhadas, mas ainda não devem ser tratadas como executadas. O próximo passo é implementar esses itens no motor allowlistado.`
               : report.summary.missingToTarget === 0
-                ? "As 150 ações estao mapeadas como itens técnicos auditáveis. Agora o refinamento e aumentar a parte aplicada no modo real."
+                ? "As 150 ações estão mapeadas como itens técnicos auditáveis. Agora o refinamento é aumentar a parte aplicada no modo real."
                 : "A Fase 1 ainda mostra a distância até 150. O caminho é converter mais ajustes seguros em ações reais do motor Hermes."}
           </p>
           {report.notes.length > 0 && (
@@ -492,6 +702,14 @@ function ReportStat({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-1 text-base font-black text-foreground">{value}</p>
     </div>
+  );
+}
+
+function EmptyReportMessage({ text }: { text: string }) {
+  return (
+    <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
+      {text}
+    </p>
   );
 }
 
@@ -646,14 +864,14 @@ function OptimizationPhaseBoard({
     <section className="mt-5">
       <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-bold tracking-[0.22em] text-primary">FASES DE OTIMIZACAO</p>
+          <p className="text-xs font-bold tracking-[0.22em] text-primary">FASES DE OTIMIZAÇÃO</p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Faca na ordem. Conclua a preparacao, reinicie quando o Hermes pedir e depois rode a fase
+            Faça na ordem. Conclua a preparação, reinicie quando o Hermes pedir e depois rode a fase
             avançada.
           </p>
         </div>
         <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/70 bg-card/85 px-4 py-2">
-          <PhaseStepperItem index="1" label="Preparacao" active />
+          <PhaseStepperItem index="1" label="Preparação" active />
           <span className="h-px w-8 bg-border" />
           <PhaseStepperItem index="2" label="Avançada" active={!optimizeLocked} />
         </div>
@@ -680,9 +898,9 @@ function OptimizationPhaseBoard({
               {quickPrepareGate ? "Concluida" : "Aguardando"}
             </span>
           </div>
-          <h2 className="text-base font-black text-foreground">Preparacao da Maquina</h2>
+          <h2 className="text-base font-black text-foreground">Preparação da Máquina</h2>
           <div className="mt-3 space-y-2">
-            <PhaseActionRow index="1" label="Preparar maquina" ready />
+            <PhaseActionRow index="1" label="Preparar máquina" ready />
             <PhaseActionRow
               index="2"
               label={`Aplicar DNS ${selectedDnsProvider.label}`}
@@ -690,7 +908,7 @@ function OptimizationPhaseBoard({
               accent={selectedDnsProvider.label}
             />
             <PhaseActionRow index="3" label="Game Mode, GameDVR OFF e visual gamer" ready />
-            <PhaseActionRow index="4" label="Hibernacao, privacidade e servicos seguros" ready />
+            <PhaseActionRow index="4" label="Hibernação, privacidade e serviços seguros" ready />
           </div>
           <button
             type="button"
@@ -698,7 +916,7 @@ function OptimizationPhaseBoard({
             disabled={isQuickPrepareOpen}
             className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-black text-primary-foreground shadow-[0_14px_34px_-24px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isQuickPrepareOpen ? "Preparando..." : "Iniciar Preparacao"}
+            {isQuickPrepareOpen ? "Preparando..." : "Iniciar Preparação"}
           </button>
           <p className="mt-2 text-center text-[12px] font-bold text-muted-foreground">
             Leva de 2 a 5 minutos. Depois reinicie para a Fase 2 render melhor.
@@ -749,7 +967,7 @@ function OptimizationPhaseBoard({
             <div className="mt-4 rounded-xl border border-border/60 bg-muted/70 px-4 py-3 text-center">
               <p className="text-sm font-black text-foreground">Conclua a Fase 1 primeiro</p>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
-                Faca a Preparacao da Maquina antes. O Hermes libera este botao depois.
+                Faça a Preparação da Máquina antes. O Hermes libera este botão depois.
               </p>
             </div>
           ) : (
@@ -769,8 +987,8 @@ function OptimizationPhaseBoard({
               </button>
               <p className="mt-2 text-center text-[12px] font-bold text-muted-foreground">
                 {prepareRebootStatus === "confirmed"
-                  ? `Reinicio detectado apos o preparo: ${completedLabel}.`
-                  : `Reinicio recomendado antes desta fase. Ultimo preparo: ${completedLabel}.`}
+                  ? `Reinício detectado após o preparo: ${completedLabel}.`
+                  : `Reinício recomendado antes desta fase. Último preparo: ${completedLabel}.`}
               </p>
             </>
           )}
@@ -791,12 +1009,12 @@ function Phase2RebootReadiness({
   const isPending = status === "pending";
   const Icon = isConfirmed ? CheckCircle2 : isPending ? AlertTriangle : Power;
   const title = isConfirmed
-    ? "Reinicio detectado"
+    ? "Reinício detectado"
     : isPending
-      ? "Aguardando reinicio"
-      : "Reinicio não verificado";
+      ? "Aguardando reinício"
+      : "Reinício não verificado";
   const text = isConfirmed
-    ? "O Windows iniciou de novo depois da Fase 1. A Fase 2 esta no ponto ideal."
+    ? "O Windows iniciou de novo depois da Fase 1. A Fase 2 está no ponto ideal."
     : isPending
       ? "A Fase 1 foi concluída nesta mesma sessão do Windows. Reiniciar antes da Fase 2 tende a render melhor."
       : "No app instalado o Hermes detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indisponível.";
@@ -863,9 +1081,9 @@ function RestartRecommendationNotice({
   const phaseLabel = recommendation.phase === "prepare" ? "Fase 1 concluída" : "Fase 2 concluída";
   const rebootConfirmed = recommendation.phase === "prepare" && prepareRebootStatus === "confirmed";
   const Icon = rebootConfirmed ? CheckCircle2 : Power;
-  const title = rebootConfirmed ? "Reinicio detectado" : "Reinicio recomendado";
+  const title = rebootConfirmed ? "Reinício detectado" : "Reinício recomendado";
   const message = rebootConfirmed
-    ? "O Windows reiniciou depois da Fase 1. A Otimização Avançada esta no estado ideal."
+    ? "O Windows reiniciou depois da Fase 1. A Otimização Avançada está no estado ideal."
     : recommendation.message;
   const panelClass = rebootConfirmed
     ? "border-success/25 bg-success/10"

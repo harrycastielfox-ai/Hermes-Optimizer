@@ -61,7 +61,7 @@ export const currentDashboardInput: AdvisorInput = {
 export const fallbackAdvisorRecommendations: AdvisorRecommendation[] = [
   {
     id: "fallback-advisor-unavailable",
-    title: "Recomendações indisponiveis",
+    title: "Recomendações indisponíveis",
     description:
       "O Advisor Pro precisa de diagnóstico real do backend Tauri. Nenhuma recomendação demonstrativa foi exibida.",
     severity: "warning",
