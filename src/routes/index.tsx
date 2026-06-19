@@ -336,7 +336,7 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="mt-2 rounded-2xl border border-border/60 bg-card/95 p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-24px_rgba(15,23,42,0.20)]">
+            <div className="hidden">
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <StatusItem
                   icon={Zap}

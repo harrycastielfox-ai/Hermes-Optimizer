@@ -147,13 +147,205 @@ html.dark[data-hermes-accent="gold"] {
 }
 
 @layer base {
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
   * {
     border-color: var(--color-border);
+    scrollbar-color: color-mix(in oklab, var(--primary) 58%, transparent)
+      color-mix(in oklab, var(--background) 62%, transparent);
+    scrollbar-width: thin;
   }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: color-mix(in oklab, var(--background) 62%, transparent);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 42px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--primary) 58%, transparent);
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--primary) 78%, transparent);
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
   body {
-    background-color: var(--color-background);
+    margin: 0;
+    overflow: hidden;
+    background-color: transparent;
     color: var(--color-foreground);
     font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .lightning-bg.flex {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .lightning-bg.flex > main {
+    min-height: 0;
+  }
+
+  .hermes-window-chrome {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 1000;
+    display: flex;
+    height: 34px;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 4px;
+    color: color-mix(in oklab, var(--foreground) 58%, transparent);
+    cursor: default;
+    user-select: none;
+  }
+
+  .hermes-window-chrome::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--background) 18%, transparent),
+      transparent
+    );
+  }
+
+  .hermes-window-control {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 42px;
+    height: 30px;
+    place-items: center;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    cursor: default;
+    outline: none;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .hermes-window-control svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+  }
+
+  .hermes-window-control:hover,
+  .hermes-window-control:focus-visible {
+    background: color-mix(in oklab, var(--primary) 14%, transparent);
+    color: color-mix(in oklab, var(--foreground) 88%, transparent);
+  }
+
+  .hermes-window-control--close:hover,
+  .hermes-window-control--close:focus-visible {
+    background: oklch(0.62 0.22 25);
+    color: white;
+  }
+
+  .hermes-window-resize {
+    position: fixed;
+    z-index: 999;
+    background: transparent;
+  }
+
+  .hermes-window-resize--n,
+  .hermes-window-resize--s {
+    left: 14px;
+    right: 14px;
+    height: 7px;
+    cursor: ns-resize;
+  }
+
+  .hermes-window-resize--n {
+    top: 0;
+  }
+
+  .hermes-window-resize--s {
+    bottom: 0;
+  }
+
+  .hermes-window-resize--e,
+  .hermes-window-resize--w {
+    top: 14px;
+    bottom: 14px;
+    width: 7px;
+    cursor: ew-resize;
+  }
+
+  .hermes-window-resize--e {
+    right: 0;
+  }
+
+  .hermes-window-resize--w {
+    left: 0;
+  }
+
+  .hermes-window-resize--ne,
+  .hermes-window-resize--nw,
+  .hermes-window-resize--se,
+  .hermes-window-resize--sw {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hermes-window-resize--ne {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+  }
+
+  .hermes-window-resize--nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+  }
+
+  .hermes-window-resize--se {
+    right: 0;
+    bottom: 0;
+    cursor: nwse-resize;
+  }
+
+  .hermes-window-resize--sw {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
   }
 }
 

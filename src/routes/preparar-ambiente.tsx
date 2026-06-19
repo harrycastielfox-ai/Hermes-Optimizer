@@ -45,7 +45,7 @@ type PrepStep = {
   title: string;
   description: string;
   status: PrepStatus;
-  risk: "baixo" | "medio" | "alto";
+  risk: "baixo" | "médio" | "alto";
   time: string;
   cta: string;
   to: string;
@@ -207,7 +207,7 @@ function PrepararAmbientePage() {
             />
             <PrincipleCard
               icon={Gamepad2}
-              title="Sessao Gamer"
+              title="Sessão Gamer"
               description="O modo diario deve detectar o alvo, proteger apps importantes e permitir encerrar/restaurar."
             />
           </section>
@@ -236,7 +236,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       icon: ListChecks,
       bullets: [
         hasDiagnostic ? "Diagnóstico real disponível" : "Aguardando backend Tauri",
-        `Saude atual: ${Math.round(report.diagnostic.healthScore)}/100`,
+        `Saúde atual: ${Math.round(report.diagnostic.healthScore)}/100`,
         "Sem limpeza, sem tweak, sem reboot",
       ],
     },
@@ -253,7 +253,7 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       bullets: [
         "Componentes, energia e rede ficam aqui",
         "SFC/DISM nunca rodam no diagnóstico rápido",
-        "Pode exigir administrador e reinicio",
+        "Pode exigir administrador e reinício",
       ],
     },
     {
@@ -261,24 +261,24 @@ function buildPrepSteps(report: EnvironmentReport): PrepStep[] {
       title: "Limpeza e Inicialização",
       description: "Remove excesso com preview e reduz peso do boot sem apagar pastas pessoais.",
       status: cleanupGb > 0 || startupItems > 0 ? "attention" : "safe",
-      risk: "medio",
+      risk: "médio",
       time: "até 3 cliques",
       cta: cleanupGb > 0 ? "Abrir Limpeza" : "Abrir Inicialização",
       to: cleanupGb > 0 ? "/limpeza" : "/inicializacao",
       icon: HardDrive,
       bullets: [
         `${formatGb(cleanupGb)} GB candidatos à revisão`,
-        `${startupItems} item(ns) de inicializacao`,
+        `${startupItems} item(ns) de inicialização`,
         "Downloads e documentos continuam protegidos",
       ],
     },
     {
       id: "gamer-session",
-      title: "Sessao Gamer",
+      title: "Sessão Gamer",
       description:
         "Modo diario: detectar jogo/app, proteger Discord/launcher e aplicar foco temporario.",
       status: gameDetected ? "ready" : "manual",
-      risk: "medio",
+      risk: "médio",
       time: "2 cliques",
       cta: "Abrir Gamer",
       to: "/perfis",

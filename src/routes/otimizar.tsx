@@ -197,7 +197,7 @@ function OtimizarPage() {
         phase: "optimize",
         createdAt: new Date().toISOString(),
         safeMode: HERMES_SAFE_TEST_MODE,
-          message: "Reinício final recomendado para consolidar o plano aplicado.",
+        message: "Reinício final recomendado para consolidar o plano aplicado.",
       };
       setRestartRecommendation(nextRestart);
       writeRestartRecommendation(nextRestart);
@@ -624,9 +624,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             <ListChecks className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.2em] text-primary">
-              RELATÓRIO DE EXECUÇÃO
-            </p>
+            <p className="text-xs font-bold tracking-[0.2em] text-primary">RELATÓRIO DE EXECUÇÃO</p>
             <h2 className="mt-1 text-lg font-black text-foreground">{report.title}</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.safeMode

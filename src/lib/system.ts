@@ -91,7 +91,7 @@ export async function requestSystemRestart(
       scheduled: false,
       cancelled: false,
       delaySeconds: request.delaySeconds ?? 60,
-      message: "Reinicio validado fora do aplicativo Tauri. Nenhuma ação real foi executada.",
+      message: "Reinício validado fora do aplicativo Tauri. Nenhuma ação real foi executada.",
     };
   }
 

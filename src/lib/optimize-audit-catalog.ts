@@ -113,7 +113,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "restart-policy",
-      "Avaliar reinicio necessário",
+      "Avaliar reinício necessário",
       "restart.policy",
       "system_boot_context_read",
       "analysis",
