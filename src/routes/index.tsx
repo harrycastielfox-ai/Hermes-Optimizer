@@ -35,6 +35,7 @@ import {
   refreshLiveDiagnosticReport,
   type DiagnosticReport,
 } from "@/lib/diagnostic";
+import { readExecutionCycleReport, type ExecutionCycleReport } from "@/lib/execution-report";
 import {
   HermesArchitectureIcon,
   HermesClockIcon,
@@ -64,6 +65,9 @@ function Dashboard() {
   const [recommendations, setRecommendations] = useState<AdvisorRecommendation[]>(
     fallbackAdvisorRecommendations,
   );
+  const [executionCycle, setExecutionCycle] = useState<ExecutionCycleReport | null>(() =>
+    readExecutionCycleReport(),
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -91,6 +95,10 @@ function Dashboard() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    setExecutionCycle(readExecutionCycleReport());
   }, []);
 
   const healthScore = Math.round(diagnostic.healthScore);
@@ -305,6 +313,8 @@ function Dashboard() {
               </InfoPanel>
             </div>
 
+            {executionCycle && <DashboardExecutionCyclePanel cycle={executionCycle} />}
+
             {/* Status bar */}
             <div className="rounded-2xl border border-border/45 bg-card/75 p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_10px_28px_-24px_rgba(15,23,42,0.18)]">
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
@@ -400,6 +410,67 @@ function StatusItem({
   );
 }
 
+function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }) {
+  const progress = Math.min(
+    100,
+    Math.round((cycle.summary.plannedActions / cycle.targetActions) * 100),
+  );
+  const phaseLabel = cycle.reports.optimize
+    ? "Preparar PC + Otimizar Tudo"
+    : cycle.reports.prepare
+      ? "Preparar PC concluído"
+      : "Ciclo iniciado";
+
+  return (
+    <section className="mb-4 rounded-2xl border border-primary/20 bg-card/82 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_30px_-24px_rgba(37,99,235,0.28)]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">
+            ÚLTIMO CICLO HERMES
+          </p>
+          <h2 className="mt-1 text-lg font-black text-foreground">{phaseLabel}</h2>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Atualizado em {formatDateTime(cycle.updatedAt)}.{" "}
+            {cycle.safeMode ? "Modo teste." : "Modo real."}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <DashboardCycleStat label="Meta" value={`${cycle.targetActions}`} />
+          <DashboardCycleStat label="Mapeadas" value={`${cycle.summary.plannedActions}`} />
+          <DashboardCycleStat label="Concluídas" value={`${cycle.summary.completedActions}`} />
+          <DashboardCycleStat label="Faltam" value={`${cycle.summary.missingToTarget}`} />
+        </div>
+      </div>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          {cycle.summary.simulatedActions} simuladas • {cycle.summary.scannedActions} leituras •{" "}
+          {cycle.summary.unavailableActions} indisponíveis
+        </span>
+        <Link to="/otimizar" className="font-bold text-primary hover:underline">
+          Ver relatório completo →
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function DashboardCycleStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-right">
+      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-black text-foreground">{value}</p>
+    </div>
+  );
+}
+
 function getRecommendationVisual(recommendation: AdvisorRecommendation) {
   if (recommendation.category === "hardware") {
     return { icon: Gamepad2, color: "bg-purple-accent/15 text-purple-accent" };
@@ -432,6 +503,18 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: value >= 100 ? 0 : 1,
   }).format(value);
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "data indisponível";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
 }
 
 function formatGb(value: number) {

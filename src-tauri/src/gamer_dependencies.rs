@@ -48,6 +48,7 @@ pub struct GamerDependencyVerificationReport {
     pub cache_dir: String,
     pub total_packages: usize,
     pub ready_count: usize,
+    pub installed_locally_count: usize,
     pub blocked_count: usize,
     pub packages: Vec<GamerDependencyVerificationItem>,
     pub warnings: Vec<String>,
@@ -109,6 +110,7 @@ pub struct GamerDependencyVerificationItem {
     pub official_url: Option<String>,
     pub cached_path: String,
     pub file_exists: bool,
+    pub installed_locally: bool,
     pub status: GamerDependencyVerificationStatus,
     pub sha256: Option<String>,
     pub expected_sha256: Option<String>,
@@ -195,6 +197,10 @@ fn verify_installers_blocking(
         .iter()
         .filter(|item| matches!(item.status, GamerDependencyVerificationStatus::Verified))
         .count();
+    let installed_locally_count = packages
+        .iter()
+        .filter(|item| item.installed_locally)
+        .count();
     let blocked_count = packages.len().saturating_sub(ready_count);
 
     Ok(GamerDependencyVerificationReport {
@@ -203,6 +209,7 @@ fn verify_installers_blocking(
         cache_dir: cache_dir.to_string_lossy().to_string(),
         total_packages: packages.len(),
         ready_count,
+        installed_locally_count,
         blocked_count,
         packages,
         warnings,
@@ -656,13 +663,16 @@ fn verify_package(
     let expected_sha256 = clean_optional(package.expected_sha256.clone());
     let official_url = clean_optional(package.official_url.clone());
     let file_exists = cached_path.is_file();
+    let installed_locally = dependency_already_installed(package).unwrap_or(false);
 
-    if official_url.is_none() {
+    if official_url.is_none() && !installed_locally {
         blocked_reasons.push("URL direta oficial ainda nao foi aprovada no manifesto.".to_string());
     }
 
     if !file_exists {
-        blocked_reasons.push("Instalador ainda nao esta no cache local do Hermes.".to_string());
+        if !installed_locally {
+            blocked_reasons.push("Instalador ainda nao esta no cache local do Hermes.".to_string());
+        }
         return GamerDependencyVerificationItem {
             package_id: package.id.clone(),
             title: package.title.clone(),
@@ -671,7 +681,33 @@ fn verify_package(
             official_url,
             cached_path: cached_path.to_string_lossy().to_string(),
             file_exists,
-            status: GamerDependencyVerificationStatus::Missing,
+            installed_locally,
+            status: if installed_locally {
+                GamerDependencyVerificationStatus::Verified
+            } else {
+                GamerDependencyVerificationStatus::Missing
+            },
+            sha256: None,
+            expected_sha256,
+            sha256_matches: None,
+            signature_status: None,
+            signature_subject: None,
+            publisher_matches: None,
+            blocked_reasons,
+        };
+    }
+
+    if installed_locally {
+        return GamerDependencyVerificationItem {
+            package_id: package.id.clone(),
+            title: package.title.clone(),
+            installer_file_name,
+            official_source_page: package.official_source_page.clone(),
+            official_url,
+            cached_path: cached_path.to_string_lossy().to_string(),
+            file_exists,
+            installed_locally,
+            status: GamerDependencyVerificationStatus::Verified,
             sha256: None,
             expected_sha256,
             sha256_matches: None,
@@ -692,6 +728,7 @@ fn verify_package(
                 official_url,
                 cached_path,
                 true,
+                installed_locally,
                 expected_sha256,
                 None,
                 blocked_reasons,
@@ -740,6 +777,7 @@ fn verify_package(
         official_url,
         cached_path,
         true,
+        installed_locally,
         expected_sha256,
         Some((probe, sha256_matches, publisher_matches)),
         blocked_reasons,
@@ -754,6 +792,7 @@ fn build_probe_item(
     official_url: Option<String>,
     cached_path: PathBuf,
     file_exists: bool,
+    installed_locally: bool,
     expected_sha256: Option<String>,
     probe: Option<(FileSecurityProbe, Option<bool>, Option<bool>)>,
     blocked_reasons: Vec<String>,
@@ -780,6 +819,7 @@ fn build_probe_item(
         official_url,
         cached_path: cached_path.to_string_lossy().to_string(),
         file_exists,
+        installed_locally,
         status,
         sha256,
         expected_sha256,
@@ -805,6 +845,7 @@ fn failed_item(
         official_url: clean_optional(package.official_url.clone()),
         cached_path: cached_path.to_string_lossy().to_string(),
         file_exists: false,
+        installed_locally: false,
         status: GamerDependencyVerificationStatus::Failed,
         sha256: None,
         expected_sha256: clean_optional(package.expected_sha256.clone()),

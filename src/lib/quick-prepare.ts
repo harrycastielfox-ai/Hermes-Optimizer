@@ -725,6 +725,7 @@ function formatGamerDependencyOutputs(
   return [
     `${verification.readyCount}/${verification.totalPackages} dependência(s) VC++/DirectX prontas`,
     `${missingCount} ausente(s), ${blockedCount} bloqueada(s), ${failedCount} falha(s)`,
+    `${verification.installedLocallyCount} já instalada(s) no Windows`,
     readiness.detectedSummary,
     `Cache local: ${cacheLabel}`,
   ];
@@ -782,6 +783,7 @@ async function runScanPhase(): Promise<QuickPreparePhaseResult> {
       `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
       `Modo Jogo: ${performance.gameMode.status}`,
       `${advanced.actions.length} ajuste(s) Windows mapeados`,
+      `${gamerDependencyVerification.installedLocallyCount} dependência(s) já instalada(s) no Windows`,
       `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas`,
     ],
   };

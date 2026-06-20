@@ -1,4 +1,6 @@
 export const HERMES_ACTION_TARGET = 150;
+export const EXECUTION_REPORT_STORAGE_KEY = "hermes.execution.report.v1";
+export const EXECUTION_CYCLE_STORAGE_KEY = "hermes.execution.cycle.v1";
 
 export type ExecutionReportPhase = "prepare" | "optimize";
 
@@ -173,4 +175,70 @@ export function summarizeExecutionActions(
 
   summary.missingToTarget = Math.max(0, HERMES_ACTION_TARGET - summary.plannedActions);
   return summary;
+}
+
+export function readExecutionReport(): ExecutionReport | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(EXECUTION_REPORT_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as ExecutionReport;
+    if (!parsed.createdAt || !parsed.title || !parsed.summary || !Array.isArray(parsed.actions)) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writeExecutionReport(report: ExecutionReport) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(EXECUTION_REPORT_STORAGE_KEY, JSON.stringify(report));
+}
+
+export function readExecutionCycleReport(options?: {
+  safeMode?: boolean;
+}): ExecutionCycleReport | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(EXECUTION_CYCLE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as ExecutionCycleReport;
+    if (!parsed.createdAt || !parsed.summary || !Array.isArray(parsed.actions)) {
+      return null;
+    }
+
+    if (typeof options?.safeMode === "boolean" && parsed.safeMode !== options.safeMode) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writeExecutionCycleReport(report: ExecutionCycleReport) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(EXECUTION_CYCLE_STORAGE_KEY, JSON.stringify(report));
 }

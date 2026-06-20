@@ -12,6 +12,7 @@ type AuditSeed = {
   method: AuditMethod;
   risk: ExecutionReportRisk;
   implemented: boolean;
+  weight?: number;
 };
 
 type AuditPhaseDefinition = {
@@ -527,7 +528,7 @@ export function buildOptimizeAuditReportActions({
     phase: action.phaseTitle,
     status: auditStatus(action, phaseStatus, safeMode),
     outputs,
-    plannedCount: 1,
+    plannedCount: auditActionWeight(action),
     technicalName: action.technicalName,
     commandPreview: action.commandPreview,
     method: action.method,
@@ -573,8 +574,77 @@ function a(
   method: AuditMethod,
   risk: ExecutionReportRisk,
   implemented: boolean,
+  weight?: number,
 ): AuditSeed {
-  return { slug, title, technicalName, commandPreview, method, risk, implemented };
+  return { slug, title, technicalName, commandPreview, method, risk, implemented, weight };
+}
+
+function auditActionWeight(action: OptimizeAuditAction) {
+  if (action.weight) {
+    return action.weight;
+  }
+
+  if (action.phaseId === "plan") return 1;
+  if (action.phaseId === "safety") return action.method === "cmd" ? 2 : 1;
+  if (action.phaseId === "cleanup") return action.implemented ? 2 : 1;
+  if (action.phaseId === "startup") return action.implemented ? 2 : 1;
+  if (action.phaseId === "profile") return action.implemented ? 2 : 1;
+
+  const weights: Record<string, number> = {
+    "components.dism-analyze-component-store": 2,
+    "components.dism-start-component-cleanup": 3,
+    "components.dism-check-netfx3": 2,
+    "components.dism-check-directplay": 2,
+    "components.dism-enable-directplay": 2,
+    "components.directx-runtime": 3,
+    "performance.high-performance-plan": 2,
+    "performance.disable-transparency": 1,
+    "performance.disable-animations": 4,
+    "performance.disable-shadows": 2,
+    "performance.game-mode-on": 2,
+    "performance.game-dvr-off": 3,
+    "performance.visual-gamer-minimal": 18,
+    "performance.disable-hibernation": 1,
+    "performance.disable-startup-delay": 1,
+    "performance.network-autotuning": 2,
+    "performance.network-ecn": 1,
+    "performance.network-rss": 1,
+    "performance.multimedia-system-profile": 3,
+    "performance.gpu-priority": 2,
+    "performance.cpu-priority": 2,
+    "performance.background-apps": 3,
+    "performance.notifications-off": 2,
+    "performance.focus-assist": 2,
+    "gamer.gamer-1": 2,
+    "gamer.gamer-2": 4,
+    "gamer.gamer-3": 2,
+    "gamer.gamer-4": 2,
+    "gamer.gamer-5": 6,
+    "gamer.gamer-6": 3,
+    "gamer.gamer-7": 2,
+    "gamer.gamer-8": 2,
+    "gamer.gamer-9": 2,
+    "gamer.gamer-10": 2,
+    "gamer.gamer-11": 2,
+    "gamer.gamer-12": 2,
+    "gamer.gamer-13": 2,
+    "gamer.gamer-14": 2,
+    "gamer.gamer-15": 2,
+    "gamer.gamer-16": 2,
+    "gamer.gamer-17": 3,
+    "gamer.gamer-18": 1,
+    "manual.winsock-reset": 2,
+    "manual.reset-ip-stack": 2,
+    "manual.flush-dns-cache": 1,
+    "manual.diagtrack-manual": 1,
+    "manual.mapsbroker-manual": 1,
+    "manual.steam-game-priority": 3,
+    "manual.rollback-manifest-check": 1,
+  };
+
+  if (action.slug.startsWith("vc-redist-")) return 2;
+
+  return weights[action.id] ?? 1;
 }
 
 function cleanupSeeds(): AuditSeed[] {

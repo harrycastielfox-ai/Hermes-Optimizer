@@ -94,6 +94,7 @@ export function QuickPrepareModal({
   const [currentStatus, setCurrentStatus] = useState("Aguardando preparo.");
   const [completedTasks, setCompletedTasks] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
+  const [finalExecutionReport, setFinalExecutionReport] = useState<ExecutionReport | null>(null);
   const activeRun = useRef(0);
   const cancelRequested = useRef(false);
   const phaseTaskTotals = useRef<Partial<Record<QuickPreparePhaseId, number>>>({});
@@ -113,6 +114,7 @@ export function QuickPrepareModal({
     setPhases(resetPhases());
     setReports({});
     setLogs([]);
+    setFinalExecutionReport(null);
     setCompletedTasks(0);
     const taskPlan = buildQuickPrepareTaskPlan({ dnsProviderId, executionMode });
     setTotalTasks(taskPlan.length);
@@ -151,22 +153,21 @@ export function QuickPrepareModal({
       }
 
       setRunStatus("completed");
+      const executionReport = buildExecutionReport({
+        phase: "prepare",
+        title: "Preparação da Máquina",
+        safeMode: HERMES_SAFE_TEST_MODE,
+        actions: reportActions.current,
+        notes: [
+          "Botão 1 concluído antes da Fase 2.",
+          HERMES_SAFE_TEST_MODE
+            ? "Modo teste: nenhuma alteração real foi aplicada."
+            : "Modo real: ajustes implementados foram executados.",
+        ],
+      });
+      setFinalExecutionReport(executionReport);
       setCurrentStatus("Preparo concluído. Reinicie o PC antes do Botão 2.");
-      onCompleted?.(
-        nextReports,
-        buildExecutionReport({
-          phase: "prepare",
-          title: "Preparação da Máquina",
-          safeMode: HERMES_SAFE_TEST_MODE,
-          actions: reportActions.current,
-          notes: [
-            "Botão 1 concluído antes da Fase 2.",
-            HERMES_SAFE_TEST_MODE
-              ? "Modo teste: nenhuma alteração real foi aplicada."
-              : "Modo real: ajustes implementados foram executados.",
-          ],
-        }),
-      );
+      onCompleted?.(nextReports, executionReport);
       appendLog("info", "Preparar PC finalizado.");
       appendLog("warning", "Reinício recomendado antes de executar Otimizar Tudo.");
     } catch (error) {
@@ -241,7 +242,7 @@ export function QuickPrepareModal({
         update.task.phaseId,
       status: quickPrepareReportStatus(update),
       outputs: update.outputs,
-      plannedCount: 1,
+      plannedCount: quickPreparePlannedCount(update),
       technicalName: `QuickPrepare.${update.task.id}`,
       commandPreview: update.task.detail,
       method: isScanOnly ? "analysis" : isAdminOnly ? "admin-engine" : "engine",
@@ -374,6 +375,10 @@ export function QuickPrepareModal({
               {reports.gamerDependencyVerification && (
                 <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
               )}
+
+              {finalExecutionReport && (
+                <PrepareExecutionReportPanel report={finalExecutionReport} />
+              )}
             </div>
 
             <aside className="space-y-4">
@@ -407,7 +412,7 @@ export function QuickPrepareModal({
                     label="VC++/DirectX"
                     value={
                       reports.gamerDependencyVerification
-                        ? `${reports.gamerDependencyVerification.readyCount}/${reports.gamerDependencyVerification.totalPackages} prontas`
+                        ? `${reports.gamerDependencyVerification.readyCount}/${reports.gamerDependencyVerification.totalPackages} prontas; ${reports.gamerDependencyVerification.installedLocallyCount} instaladas`
                         : "Aguardando"
                     }
                   />
@@ -525,6 +530,85 @@ function PreparePhaseCard({ phase }: { phase: PreparePhase }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function PrepareExecutionReportPanel({ report }: { report: ExecutionReport }) {
+  const summary = report.summary;
+  const visibleActions = report.actions.filter((action) => action.status !== "planned").slice(0, 5);
+
+  return (
+    <section className="rounded-2xl border border-success/20 bg-success/10 p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-success">
+            Relatório do Preparar PC
+          </p>
+          <h3 className="mt-1 text-base font-black text-foreground">
+            {summary.completedActions} ação(ões) contabilizada(s)
+          </h3>
+          <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+            Reinicie o PC antes de rodar o Botão 2 para seguir com mais estabilidade.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
+          <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
+          <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
+          <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
+          <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
+        </div>
+      </div>
+
+      {visibleActions.length > 0 && (
+        <div className="mt-4 grid gap-2 lg:grid-cols-2">
+          {visibleActions.map((action) => (
+            <div
+              key={action.id}
+              className="rounded-xl border border-border/60 bg-background/60 px-3 py-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-[12px] font-black text-foreground">{action.title}</p>
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${reportStatusClass(
+                    action.status,
+                  )}`}
+                >
+                  {reportStatusLabel(action.status)}
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-[11px] font-medium text-muted-foreground">
+                {action.outputs[0] ?? action.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReportStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "primary" | "success" | "warning";
+}) {
+  const className =
+    tone === "success"
+      ? "border-success/20 bg-success/10 text-success"
+      : tone === "warning"
+        ? "border-warning/25 bg-warning/10 text-warning"
+        : "border-primary/20 bg-primary/10 text-primary";
+
+  return (
+    <span className={`rounded-xl border px-3 py-1.5 ${className}`}>
+      <span className="block text-[9px] font-bold uppercase tracking-[0.12em]">{label}</span>
+      <span className="block text-sm font-black">{value}</span>
+    </span>
   );
 }
 
@@ -661,8 +745,13 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
               Abrir cache
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
             <DependencyStat label="Prontas" value={currentReport.readyCount} tone="success" />
+            <DependencyStat
+              label="Instaladas"
+              value={currentReport.installedLocallyCount}
+              tone="success"
+            />
             <DependencyStat label="Bloqueadas" value={currentReport.blockedCount} tone="warning" />
             <DependencyStat label="Total" value={currentReport.totalPackages} tone="primary" />
           </div>
@@ -801,7 +890,10 @@ function DependencyExecutionRow({ action }: { action: GamerDependencyInstallActi
 }
 
 function DependencyRow({ item }: { item: GamerDependencyVerificationItem }) {
-  const reason = item.blockedReasons[0] ?? dependencyStatusLabel(item.status);
+  const reason = item.installedLocally
+    ? "Já instalado no Windows; o Hermes não reinstala."
+    : (item.blockedReasons[0] ?? dependencyStatusLabel(item.status));
+  const label = item.installedLocally ? "Instalado" : dependencyStatusLabel(item.status);
 
   return (
     <div className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.95fr)_auto] md:items-center">
@@ -817,7 +909,7 @@ function DependencyRow({ item }: { item: GamerDependencyVerificationItem }) {
           item.status,
         )}`}
       >
-        {dependencyStatusLabel(item.status)}
+        {label}
       </span>
     </div>
   );
@@ -928,6 +1020,99 @@ function quickPrepareReportStatus(update: QuickPrepareTaskUpdate): ExecutionRepo
     return "scanned";
   }
   return HERMES_SAFE_TEST_MODE ? "simulated" : "applied";
+}
+
+function quickPreparePlannedCount(update: QuickPrepareTaskUpdate) {
+  if (update.status === "unavailable") {
+    return 1;
+  }
+
+  if (update.task.id === "check-admin") return 2;
+  if (update.task.id === "scan-diagnostic") return 8;
+  if (update.task.id === "scan-performance") return 4;
+  if (update.task.id === "scan-advanced")
+    return Math.max(1, update.reports?.advanced?.actions.length ?? 1);
+  if (update.task.id === "scan-gamer-dependencies") {
+    return Math.max(1, update.reports?.gamerDependencyVerification?.totalPackages ?? 1);
+  }
+  if (update.task.id === "install-gamer-dependencies") {
+    return Math.max(1, update.reports?.gamerDependencyInstallResult?.actions.length ?? 1);
+  }
+  if (update.task.id === "scan-clean") return Math.max(1, update.reports?.clean?.items.length ?? 1);
+  if (update.task.id === "apply-clean") {
+    return Math.max(1, update.reports?.cleanResult?.plannedEntries ?? 1);
+  }
+  if (update.task.id === "scan-startup")
+    return Math.max(1, update.reports?.startup?.totalItems ?? 1);
+  if (update.task.id === "apply-startup") {
+    return Math.max(1, update.reports?.startupResult?.selectedItems ?? 1);
+  }
+  if (update.task.id === "scan-processes") {
+    return Math.max(1, update.reports?.gamer?.summary.suggestedToClose ?? 1);
+  }
+  if (update.task.id === "apply-processes") {
+    return Math.max(1, update.reports?.gamerResult?.closedProcesses.length ?? 1);
+  }
+  if (update.task.id.startsWith("performance-")) {
+    return Math.max(1, update.reports?.performanceResult?.appliedActions.length ?? 2);
+  }
+  if (update.task.id.startsWith("advanced-")) {
+    return quickPrepareAdvancedActionWeight(update.task.id.replace("advanced-", ""));
+  }
+
+  return 1;
+}
+
+function quickPrepareAdvancedActionWeight(actionId: string) {
+  const weights: Record<string, number> = {
+    "enable-game-mode": 2,
+    "disable-game-dvr": 2,
+    "disable-xbox-game-bar-deep": 6,
+    "set-visual-effects-gamer-minimal": 18,
+    "disable-hibernation": 1,
+    "disable-startup-delay": 1,
+    "disable-advertising-id": 1,
+    "disable-tailored-experiences": 1,
+    "disable-consumer-features": 2,
+    "disable-activity-history": 1,
+    "disable-location-tracking": 1,
+    "disable-recall-user": 1,
+    "flush-dns-cache": 1,
+    "dism-analyze-component-store": 1,
+    "dism-start-component-cleanup": 1,
+    "dism-check-netfx3": 1,
+    "dism-check-directplay": 1,
+    "check-gamer-dependencies": 6,
+    "set-diagtrack-service-manual": 1,
+    "set-mapsbroker-service-manual": 1,
+    "set-dns-cloudflare": 3,
+    "set-dns-google": 3,
+    "set-dns-opendns": 3,
+    "set-dns-quad9": 3,
+    "set-dns-adguard": 3,
+  };
+
+  return weights[actionId] ?? 1;
+}
+
+function reportStatusClass(status: ExecutionReportAction["status"]) {
+  if (status === "applied") return "border-success/20 bg-success/10 text-success";
+  if (status === "simulated" || status === "scanned") {
+    return "border-primary/20 bg-primary/10 text-primary";
+  }
+  if (status === "failed") return "border-destructive/20 bg-destructive/10 text-destructive";
+  if (status === "unavailable") return "border-warning/25 bg-warning/10 text-warning";
+  return "border-border bg-muted text-muted-foreground";
+}
+
+function reportStatusLabel(status: ExecutionReportAction["status"]) {
+  if (status === "applied") return "Aplicado";
+  if (status === "simulated") return "Simulado";
+  if (status === "scanned") return "Lido";
+  if (status === "unavailable") return "Indisp.";
+  if (status === "failed") return "Falha";
+  if (status === "cancelled") return "Cancelado";
+  return "Planejado";
 }
 
 function phaseIconClass(status: PhaseStatus) {

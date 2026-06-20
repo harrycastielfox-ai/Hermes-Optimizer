@@ -319,7 +319,7 @@ export function HermesAdminSettings() {
                 description:
                   preferences.language.current === "ja-JP"
                     ? t("settings.option.active")
-                    : t("settings.option.current"),
+                    : t("settings.option.intermediate"),
               },
             ]}
             onChange={(language) =>

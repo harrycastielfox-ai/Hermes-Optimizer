@@ -31,6 +31,7 @@ import {
 } from "@/lib/startup";
 import {
   applyAdvancedActions,
+  applyOptimizeNowGraphicsPreference,
   refreshAdvancedCatalog,
   type AdvancedApplyResult,
   type AdvancedCatalog,
@@ -70,6 +71,9 @@ export type OptimizeAllReports = {
   profileResult?: ProfileApplyResult;
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
+  gamerFocusAdvanced?: AdvancedCatalog;
+  gamerFocusAdvancedResult?: AdvancedApplyResult;
+  gamerGraphicsPreferenceResult?: AdvancedApplyResult;
   gamerDependencies?: GamerDependencyReadiness;
   gamerDependencyVerification?: GamerDependencyVerificationReport;
   gamerDependencyInstallResult?: GamerDependencyInstallResult;
@@ -146,6 +150,11 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
   "disable-storage-sense-auto-cleanup",
+] as const;
+
+const HERMES_GAMER_FOCUS_ACTION_IDS = [
+  "set-mmcss-gamer-pack",
+  "set-fate-trigger-cpu-priority-high",
 ] as const;
 
 export async function runOptimizeAllPhase(
@@ -318,7 +327,8 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
       gamerDependencyInstallResult.value
         ? gamerDependencyInstallResult.value.message
-        : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas`,
+        : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas; ${gamerDependencyVerification.installedLocallyCount} já instalada(s)`,
+      `${gamerDependencies.excludedToolchain.length} item(ns) de toolchain pesada ficam fora do pacote gamer`,
       result.value
         ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
         : (result.message ?? "Componentes ainda não disponíveis neste PC"),
@@ -400,14 +410,19 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
         })
       : Promise.resolve(null),
   );
+  const focusPackage = await runGamerFocusPackage(target);
 
   return {
     reports: {
       gamer,
       gamerResult: result.value ?? undefined,
+      gamerFocusAdvanced: focusPackage.advanced,
+      gamerFocusAdvancedResult: focusPackage.advancedResult,
+      gamerGraphicsPreferenceResult: focusPackage.graphicsPreferenceResult,
     },
     gameTargets,
     outputs: [
+      ...focusPackage.outputs,
       target ? `Jogo alvo: ${target.label}` : "Jogo alvo não selecionado",
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
       `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo Steam/Discord quando detectados`,
@@ -415,6 +430,60 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
         ? `${result.value.closedProcesses.length} processo(s) validados pela Gamer Engine`
         : (result.message ?? "Seleção manual de jogo será necessária"),
     ],
+  };
+}
+
+async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
+  const advanced = await refreshAdvancedCatalog();
+  const availableIds = new Set(
+    advanced.actions
+      .filter((action) => !action.requiresExtreme && action.risk !== "high")
+      .map((action) => action.id),
+  );
+  const actionIds = HERMES_GAMER_FOCUS_ACTION_IDS.filter((id) => availableIds.has(id));
+  const advancedResult = await tryRun(() =>
+    actionIds.length
+      ? applyAdvancedActions({
+          confirmed: shouldConfirmReal(),
+          dryRun: shouldDryRun(),
+          actionIds,
+          extremeMode: false,
+        })
+      : Promise.resolve(null),
+  );
+  const fateGraphicsExecutable = shouldApplyFateGraphicsPreference(target)
+    ? target?.executable
+    : undefined;
+  const graphicsPreferenceResult = await tryRun(() =>
+    fateGraphicsExecutable
+      ? applyOptimizeNowGraphicsPreference(fateGraphicsExecutable, shouldDryRun())
+      : Promise.resolve(null),
+  );
+
+  const outputs = [
+    actionIds.length
+      ? `Pacote Fate/UE5: ${actionIds.length} ajuste(s) MMCSS/CPU validados`
+      : "Pacote Fate/UE5 indisponível neste catálogo",
+    advancedResult.value
+      ? `${advancedResult.value.appliedActions.length} ajuste(s) de foco gamer ${advancedResult.value.dryRun ? "simulados" : "aplicados"}`
+      : (advancedResult.message ?? "Pacote de foco aguardando motor avançado"),
+  ];
+
+  if (shouldApplyFateGraphicsPreference(target)) {
+    outputs.push(
+      graphicsPreferenceResult.value
+        ? "GPU alto desempenho validada para o executável Fate Trigger detectado"
+        : (graphicsPreferenceResult.message ?? "GPU alto desempenho aguardando validação"),
+    );
+  } else if (target && isFateTriggerTarget(target)) {
+    outputs.push("GPU alto desempenho será ativada quando o caminho real da Steam for detectado");
+  }
+
+  return {
+    advanced,
+    advancedResult: advancedResult.value,
+    graphicsPreferenceResult: graphicsPreferenceResult.value,
+    outputs,
   };
 }
 
@@ -663,6 +732,28 @@ function engineHintFromText(value: string) {
     return "Unreal Engine 5";
   }
   return undefined;
+}
+
+function shouldApplyFateGraphicsPreference(target?: OptimizeAllGameTarget) {
+  return Boolean(
+    target &&
+    isFateTriggerTarget(target) &&
+    target.executable &&
+    isWindowsExecutablePath(target.executable),
+  );
+}
+
+function isFateTriggerTarget(target: OptimizeAllGameTarget) {
+  const text = normalizeGameKey(`${target.label} ${target.detail} ${target.executable ?? ""}`);
+  return (
+    text.includes("fatetrigger") ||
+    text.includes("fatetriggerwin64shipping") ||
+    (text.includes("fate") && text.includes("trigger"))
+  );
+}
+
+function isWindowsExecutablePath(value: string) {
+  return /^[a-z]:\\/i.test(value) && value.toLowerCase().endsWith(".exe");
 }
 
 function normalizeGameKey(value: string) {

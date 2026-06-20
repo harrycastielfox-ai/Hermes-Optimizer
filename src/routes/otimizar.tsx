@@ -35,16 +35,18 @@ import { readSystemBootContext, type SystemBootContext } from "@/lib/system";
 import {
   buildExecutionCycleReport,
   HERMES_ACTION_TARGET,
+  readExecutionCycleReport,
+  readExecutionReport,
   type ExecutionCycleReport,
   type ExecutionReport,
   type ExecutionReportRisk,
   type ExecutionReportStatus,
+  writeExecutionCycleReport,
+  writeExecutionReport,
 } from "@/lib/execution-report";
 
 const QUICK_PREPARE_STORAGE_KEY = "hermes.quickPrepare.completed.v1";
 const RESTART_RECOMMENDATION_STORAGE_KEY = "hermes.restart.recommended.v1";
-const EXECUTION_REPORT_STORAGE_KEY = "hermes.execution.report.v1";
-const EXECUTION_CYCLE_STORAGE_KEY = "hermes.execution.cycle.v1";
 
 type QuickPrepareGate = {
   completedAt: string;
@@ -83,7 +85,9 @@ function OtimizarPage() {
   const [quickPrepareRunKey, setQuickPrepareRunKey] = useState(0);
   const [isSmartOptimizeOpen, setIsSmartOptimizeOpen] = useState(false);
   const [smartOptimizeRunKey, setSmartOptimizeRunKey] = useState(0);
-  const [selectedDnsProviderId, setSelectedDnsProviderId] = useState<DnsProviderId>("cloudflare");
+  const [selectedDnsProviderId, setSelectedDnsProviderId] = useState<DnsProviderId>(
+    () => readQuickPrepareGate()?.dnsProviderId ?? "cloudflare",
+  );
   const [quickPrepareGate, setQuickPrepareGate] = useState<QuickPrepareGate | null>(() =>
     readQuickPrepareGate(),
   );
@@ -94,7 +98,7 @@ function OtimizarPage() {
     readExecutionReport(),
   );
   const [executionCycleReport, setExecutionCycleReport] = useState<ExecutionCycleReport | null>(
-    () => readExecutionCycleReport(),
+    () => readExecutionCycleReport({ safeMode: HERMES_SAFE_TEST_MODE }),
   );
   const [systemBootContext, setSystemBootContext] = useState<SystemBootContext | null>(null);
 
@@ -115,7 +119,7 @@ function OtimizarPage() {
   useEffect(() => {
     let mounted = true;
 
-    void readSystemBootContext().then((context) => {
+    void refreshSystemBootContext().then((context) => {
       if (mounted) {
         setSystemBootContext(context);
       }
@@ -143,8 +147,12 @@ function OtimizarPage() {
       return;
     }
 
-    setSmartOptimizeRunKey((current) => current + 1);
-    setIsSmartOptimizeOpen(true);
+    void (async () => {
+      const bootContext = await refreshSystemBootContext();
+      setSystemBootContext(bootContext);
+      setSmartOptimizeRunKey((current) => current + 1);
+      setIsSmartOptimizeOpen(true);
+    })();
   }, [isSmartOptimizeOpen, quickPrepareGate]);
 
   const handleDiagnosticUpdate = useCallback((report: DiagnosticReport) => {
@@ -156,7 +164,7 @@ function OtimizarPage() {
       void (async () => {
         const bootContext = systemBootContext?.available
           ? systemBootContext
-          : await readSystemBootContext();
+          : await refreshSystemBootContext();
 
         if (bootContext.available) {
           setSystemBootContext(bootContext);
@@ -380,59 +388,16 @@ function writeRestartRecommendation(recommendation: RestartRecommendation) {
   window.localStorage.setItem(RESTART_RECOMMENDATION_STORAGE_KEY, JSON.stringify(recommendation));
 }
 
-function readExecutionReport(): ExecutionReport | null {
-  if (typeof window === "undefined") {
-    return null;
+async function refreshSystemBootContext(): Promise<SystemBootContext> {
+  const context = await readSystemBootContext();
+  if (context.currentBootId || !context.bootedAt) {
+    return context;
   }
-  try {
-    const raw = window.localStorage.getItem(EXECUTION_REPORT_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw) as ExecutionReport;
-    if (!parsed.createdAt || !parsed.title || !parsed.summary || !Array.isArray(parsed.actions)) {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
 
-function writeExecutionReport(report: ExecutionReport) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(EXECUTION_REPORT_STORAGE_KEY, JSON.stringify(report));
-}
-
-function readExecutionCycleReport(): ExecutionCycleReport | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(EXECUTION_CYCLE_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw) as ExecutionCycleReport;
-    if (!parsed.createdAt || !parsed.summary || !Array.isArray(parsed.actions)) {
-      return null;
-    }
-    if (parsed.safeMode !== HERMES_SAFE_TEST_MODE) {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function writeExecutionCycleReport(report: ExecutionCycleReport) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(EXECUTION_CYCLE_STORAGE_KEY, JSON.stringify(report));
+  return {
+    ...context,
+    currentBootId: `windows:${context.bootedAt}`,
+  };
 }
 
 function getPrepareRebootStatus(

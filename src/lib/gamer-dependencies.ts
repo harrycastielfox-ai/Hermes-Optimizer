@@ -49,6 +49,7 @@ export type GamerDependencyVerificationItem = {
   officialUrl?: string;
   cachedPath: string;
   fileExists: boolean;
+  installedLocally: boolean;
   status: GamerDependencyVerificationStatus;
   sha256?: string;
   expectedSha256?: string;
@@ -65,6 +66,7 @@ export type GamerDependencyVerificationReport = {
   cacheDir: string;
   totalPackages: number;
   readyCount: number;
+  installedLocallyCount: number;
   blockedCount: number;
   packages: GamerDependencyVerificationItem[];
   warnings: string[];
@@ -135,6 +137,16 @@ export type GamerDependencyReadiness = {
   installPlan: GamerDependencyInstallPlan;
   verification?: GamerDependencyVerificationReport;
   blockers: string[];
+  excludedToolchain: GamerDependencyExcludedToolchainItem[];
+};
+
+export type GamerDependencyExcludedToolchainItem = {
+  id: string;
+  title: string;
+  observedVersion?: string;
+  policy: "neverAutoInstall";
+  reason: string;
+  relevantWhen: string;
 };
 
 const VCRUNTIME_YEARS = ["2005", "2008", "2010", "2012", "2013", "2015-2022"] as const;
@@ -157,6 +169,60 @@ export const GAMER_DEPENDENCY_PACKAGES: GamerDependencyPackage[] = [
   },
 ];
 
+export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolchainItem[] = [
+  {
+    id: "vs-build-tools-2022",
+    title: "Ferramentas de Build do Visual Studio 2022",
+    observedVersion: "17.14.33",
+    policy: "neverAutoInstall",
+    reason: "Toolchain de compilacao pesada; nao e runtime necessario para jogar.",
+    relevantWhen: "Somente para desenvolvedores, compilacao nativa ou projetos C++.",
+  },
+  {
+    id: "visual-studio-installer",
+    title: "Microsoft Visual Studio Installer",
+    observedVersion: "4.6.58.48107",
+    policy: "neverAutoInstall",
+    reason:
+      "Gerenciador de workloads do Visual Studio; nao melhora FPS, latencia ou estabilidade gamer.",
+    relevantWhen: "Somente se o usuario quiser administrar instalacoes do Visual Studio.",
+  },
+  {
+    id: "windows-sdk-addon",
+    title: "Windows SDK AddOn",
+    observedVersion: "10.1.0.0",
+    policy: "neverAutoInstall",
+    reason:
+      "Componente de desenvolvimento do Windows SDK; fica fora do pacote gamer do cliente final.",
+    relevantWhen: "Somente para desenvolvimento, depuracao ou build de apps Windows.",
+  },
+  {
+    id: "windows-sdk-26100",
+    title: "Windows Software Development Kit",
+    observedVersion: "10.0.26100.7705",
+    policy: "neverAutoInstall",
+    reason:
+      "SDK completo do Windows e grande e nao substitui DirectX End-User Runtime nem VC++ Redistributable.",
+    relevantWhen: "Somente para desenvolvimento Windows, drivers ou ferramentas tecnicas.",
+  },
+  {
+    id: "vs-core-editor-fonts",
+    title: "vs_CoreEditorFonts",
+    observedVersion: "17.7.40001",
+    policy: "neverAutoInstall",
+    reason:
+      "Fonte/asset do Visual Studio; sem beneficio direto para jogos ou otimizacao do sistema.",
+    relevantWhen: "Somente como dependencia visual do ambiente Visual Studio.",
+  },
+  {
+    id: "windows-app-runtime-main",
+    title: "Windows App Runtime Main",
+    policy: "neverAutoInstall",
+    reason: "Runtime do Windows App SDK; so deve ser instalado quando um app especifico exigir.",
+    relevantWhen: "Somente por requisito explicito de outro aplicativo, nao por otimizacao gamer.",
+  },
+];
+
 export function buildGamerDependencyReadiness(
   advancedCatalog?: AdvancedCatalog,
   verification?: GamerDependencyVerificationReport,
@@ -173,6 +239,7 @@ export function buildGamerDependencyReadiness(
     "Downloads diretos legados seguem bloqueados até validação final da Microsoft.",
     "SHA256 esperado precisa ser preenchido antes de qualquer download/instalação.",
     "Assinatura Authenticode Microsoft precisa ser validada antes de executar.",
+    "Build Tools, Visual Studio Installer, Windows SDK e Windows App Runtime ficam fora do pacote gamer automático.",
   ];
   const readyCount = verification?.readyCount ?? 0;
   const blockedCount = verification?.blockedCount ?? installPlan.blockedPackages;
@@ -190,6 +257,7 @@ export function buildGamerDependencyReadiness(
     installPlan,
     verification,
     blockers,
+    excludedToolchain: GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN,
   };
 }
 
@@ -309,6 +377,7 @@ function fallbackGamerDependencyVerificationReport(): GamerDependencyVerificatio
     cacheDir: "Indisponível fora do backend Tauri",
     totalPackages: GAMER_DEPENDENCY_PACKAGES.length,
     readyCount: 0,
+    installedLocallyCount: 0,
     blockedCount: GAMER_DEPENDENCY_PACKAGES.length,
     packages: GAMER_DEPENDENCY_PACKAGES.map((item) => ({
       packageId: item.id,
@@ -318,6 +387,7 @@ function fallbackGamerDependencyVerificationReport(): GamerDependencyVerificatio
       officialUrl: item.officialUrl,
       cachedPath: "Indisponível",
       fileExists: false,
+      installedLocally: false,
       status: "missing",
       expectedSha256: item.expectedSha256,
       blockedReasons: ["Verificação real disponível apenas no aplicativo Tauri."],

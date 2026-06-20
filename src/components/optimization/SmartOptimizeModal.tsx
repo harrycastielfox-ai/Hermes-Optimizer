@@ -37,10 +37,12 @@ import {
   type ExecutionReportAction,
 } from "@/lib/execution-report";
 import {
+  buildGamerDependencyReadiness,
   downloadOfficialGamerDependencyInstallers,
   installVerifiedGamerDependencies,
   openGamerDependencyCacheDir,
   type GamerDependencyDownloadResult,
+  type GamerDependencyExcludedToolchainItem,
   type GamerDependencyInstallActionResult,
   type GamerDependencyInstallActionStatus,
   type GamerDependencyInstallResult,
@@ -121,6 +123,7 @@ export function SmartOptimizeModal({
   const [recommendedProfileId, setRecommendedProfileId] = useState("seguro");
   const [gameTargets, setGameTargets] = useState<OptimizeAllGameTarget[]>([]);
   const [selectedGameTarget, setSelectedGameTarget] = useState<OptimizeAllGameTarget | null>(null);
+  const [finalExecutionReport, setFinalExecutionReport] = useState<ExecutionReport | null>(null);
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
   const reportActions = useRef<ExecutionReportAction[]>([]);
@@ -144,6 +147,7 @@ export function SmartOptimizeModal({
     setReports({});
     setGameTargets([]);
     setSelectedGameTarget(null);
+    setFinalExecutionReport(null);
     reportActions.current = [];
     resumeState.current = null;
     setRunStatus("running");
@@ -247,21 +251,21 @@ export function SmartOptimizeModal({
     setRunStatus("completed");
     setCurrentStatus("Plano único concluído. Modo teste mantido.");
     appendLog("info", "Otimizar Tudo finalizado em modo teste.");
-    onCompleted?.(
-      buildExecutionReport({
-        phase: "optimize",
-        title: "Otimização Avançada",
-        safeMode: HERMES_SAFE_TEST_MODE,
-        actions: reportActions.current,
-        notes: [
-          "Botão 2 concluído em fluxo guiado.",
-          "A meta de 150 ações e contabilizada por fases do plano Hermes.",
-          HERMES_SAFE_TEST_MODE
-            ? "Modo teste: nenhuma alteração real foi aplicada."
-            : "Modo real: fases implementadas foram executadas.",
-        ],
-      }),
-    );
+    const executionReport = buildExecutionReport({
+      phase: "optimize",
+      title: "Otimização Avançada",
+      safeMode: HERMES_SAFE_TEST_MODE,
+      actions: reportActions.current,
+      notes: [
+        "Botão 2 concluído em fluxo guiado.",
+        "A meta de 150 ações é contabilizada por fases do plano Hermes.",
+        HERMES_SAFE_TEST_MODE
+          ? "Modo teste: nenhuma alteração real foi aplicada."
+          : "Modo real: fases implementadas foram executadas.",
+      ],
+    });
+    setFinalExecutionReport(executionReport);
+    onCompleted?.(executionReport);
   }
 
   function chooseGameTarget(target: OptimizeAllGameTarget) {
@@ -516,6 +520,8 @@ export function SmartOptimizeModal({
               {reports.gamerDependencyVerification && (
                 <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
               )}
+
+              {finalExecutionReport && <ExecutionReportPanel report={finalExecutionReport} />}
             </div>
 
             <aside className="space-y-4">
@@ -679,6 +685,17 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
     });
   }
 
+  if (reports.gamerFocusAdvanced || reports.gamerFocusAdvancedResult) {
+    actions.push({
+      id: "gamer-focus",
+      title: "Fate Trigger / UE5",
+      detail: reports.gamerFocusAdvancedResult
+        ? `${reports.gamerFocusAdvancedResult.appliedActions.length} ajuste(s) MMCSS/CPU validados.`
+        : "Pacote MMCSS Gamer + prioridade Fate Trigger mapeado.",
+      status: reports.gamerFocusAdvancedResult ? "ready" : "pending",
+    });
+  }
+
   actions.push({
     id: "profile",
     title: "Perfil recomendado",
@@ -715,9 +732,15 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "gamer-dependencies",
       title: "VC++/DirectX",
       detail: verification
-        ? `${verification.readyCount}/${verification.totalPackages} pacote(s) prontos; ${verification.blockedCount} bloqueado(s) por hash/assinatura.`
+        ? `${verification.readyCount}/${verification.totalPackages} pacote(s) prontos; ${verification.installedLocallyCount} já instalado(s), ${verification.blockedCount} bloqueado(s).`
         : `${reports.gamerDependencies.totalPackages} pacote(s) mapeados; instalação bloqueada por hash/assinatura.`,
       status: reports.gamerDependencies.readyCount > 0 ? "ready" : "unavailable",
+    });
+    actions.push({
+      id: "developer-toolchain-policy",
+      title: "Toolchain pesada fora",
+      detail: `${reports.gamerDependencies.excludedToolchain.length} item(ns) observados do Peninha ficam fora: Build Tools, Visual Studio Installer, Windows SDK e App Runtime.`,
+      status: "ready",
     });
   }
 
@@ -731,6 +754,95 @@ function ProgressStat({ label, value }: { label: string; value: string }) {
         {label}
       </span>
       <span className="block text-sm font-black text-foreground">{value}</span>
+    </span>
+  );
+}
+
+function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
+  const summary = report.summary;
+  const visibleActions = report.actions.filter((action) => action.status !== "planned").slice(0, 6);
+
+  return (
+    <section className="rounded-2xl border border-success/20 bg-success/10 p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-success">
+            Relatório do Otimizar Tudo
+          </p>
+          <h3 className="mt-1 text-base font-black text-foreground">
+            {summary.completedActions}/{report.targetActions} ações contabilizadas
+          </h3>
+          <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+            {report.safeMode
+              ? "Modo teste: ações foram simuladas, escaneadas ou marcadas como indisponíveis."
+              : "Modo real: ações implementadas foram executadas pelo motor Hermes."}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-5">
+          <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
+          <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
+          <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
+          <ReportStat label="Planejadas" value={summary.plannedOnlyActions} tone="muted" />
+          <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
+        </div>
+      </div>
+
+      {visibleActions.length > 0 && (
+        <div className="mt-4 grid gap-2 lg:grid-cols-2">
+          {visibleActions.map((action) => (
+            <div
+              key={action.id}
+              className="rounded-xl border border-border/60 bg-background/60 px-3 py-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-[12px] font-black text-foreground">{action.title}</p>
+                <div className="flex shrink-0 items-center gap-1">
+                  {action.plannedCount > 1 && (
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">
+                      x{action.plannedCount}
+                    </span>
+                  )}
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${reportStatusClass(action.status)}`}
+                  >
+                    {reportStatusLabel(action.status)}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-1 line-clamp-2 text-[11px] font-medium text-muted-foreground">
+                {action.outputs[0] ?? action.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReportStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "primary" | "success" | "warning" | "muted";
+}) {
+  const className =
+    tone === "success"
+      ? "border-success/20 bg-success/10 text-success"
+      : tone === "warning"
+        ? "border-warning/25 bg-warning/10 text-warning"
+        : tone === "primary"
+          ? "border-primary/20 bg-primary/10 text-primary"
+          : "border-border bg-background/70 text-muted-foreground";
+
+  return (
+    <span className={`rounded-xl border px-3 py-1.5 ${className}`}>
+      <span className="block text-[9px] font-bold uppercase tracking-[0.12em]">{label}</span>
+      <span className="block text-sm font-black">{value}</span>
     </span>
   );
 }
@@ -763,6 +875,7 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
     };
     return order[left.status] - order[right.status] || left.title.localeCompare(right.title);
   });
+  const readiness = buildGamerDependencyReadiness(undefined, currentReport);
   const cacheLabel =
     currentReport.cacheDir.length > 96
       ? `${currentReport.cacheDir.slice(0, 93)}...`
@@ -868,8 +981,13 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
               Abrir cache
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
             <DependencyStat label="Prontas" value={currentReport.readyCount} tone="success" />
+            <DependencyStat
+              label="Instaladas"
+              value={currentReport.installedLocallyCount}
+              tone="success"
+            />
             <DependencyStat label="Bloqueadas" value={currentReport.blockedCount} tone="warning" />
             <DependencyStat label="Total" value={currentReport.totalPackages} tone="primary" />
           </div>
@@ -882,6 +1000,8 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
           installResult={lastInstallResult}
         />
       )}
+
+      <ExcludedToolchainPanel items={readiness.excludedToolchain} />
 
       <div className="mt-4 max-h-64 overflow-auto rounded-xl border border-border/70">
         {sortedPackages.map((item) => (
@@ -902,6 +1022,54 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
         </div>
       )}
     </section>
+  );
+}
+
+function ExcludedToolchainPanel({ items }: { items: GamerDependencyExcludedToolchainItem[] }) {
+  const visibleItems = items.slice(0, 4);
+  const hiddenCount = Math.max(0, items.length - visibleItems.length);
+
+  return (
+    <div className="mt-4 rounded-2xl border border-warning/20 bg-warning/10 p-3">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-warning">
+            Observado, mas fora do pacote gamer
+          </p>
+          <h4 className="mt-1 text-sm font-black text-foreground">
+            Build Tools e SDK não serão instalados automaticamente
+          </h4>
+          <p className="mt-1 text-[11px] font-medium text-muted-foreground">
+            O Hermes mantém apenas runtimes úteis para jogos: VC++ Redistributable e DirectX.
+          </p>
+        </div>
+        <span className="w-fit rounded-full border border-warning/25 bg-warning/10 px-2.5 py-1 text-[10px] font-black text-warning">
+          {items.length} fora
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        {visibleItems.map((item) => (
+          <div
+            key={item.id}
+            className="rounded-xl border border-border/60 bg-background/55 px-3 py-2"
+          >
+            <p className="truncate text-[12px] font-black text-foreground">{item.title}</p>
+            <p className="mt-0.5 line-clamp-2 text-[11px] font-medium text-muted-foreground">
+              {item.reason}
+            </p>
+          </div>
+        ))}
+        {hiddenCount > 0 && (
+          <div className="rounded-xl border border-border/60 bg-background/55 px-3 py-2">
+            <p className="text-[12px] font-black text-foreground">Mais {hiddenCount} item(ns)</p>
+            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+              Mantidos no relatório interno, sem instalação automática.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1008,7 +1176,10 @@ function DependencyExecutionRow({ action }: { action: GamerDependencyInstallActi
 }
 
 function DependencyRow({ item }: { item: GamerDependencyVerificationItem }) {
-  const reason = item.blockedReasons[0] ?? dependencyStatusLabel(item.status);
+  const reason = item.installedLocally
+    ? "Já instalado no Windows; o Hermes não reinstala."
+    : (item.blockedReasons[0] ?? dependencyStatusLabel(item.status));
+  const label = item.installedLocally ? "Instalado" : dependencyStatusLabel(item.status);
 
   return (
     <div className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.95fr)_auto] md:items-center">
@@ -1024,7 +1195,7 @@ function DependencyRow({ item }: { item: GamerDependencyVerificationItem }) {
           item.status,
         )}`}
       >
-        {dependencyStatusLabel(item.status)}
+        {label}
       </span>
     </div>
   );
@@ -1361,6 +1532,26 @@ function planStatusLabel(status: PlanActionStatus) {
   if (status === "ok") return "Ok";
   if (status === "pending") return "Pendente";
   return "Modulo";
+}
+
+function reportStatusClass(status: ExecutionReportAction["status"]) {
+  if (status === "applied") return "border-success/20 bg-success/10 text-success";
+  if (status === "simulated" || status === "scanned") {
+    return "border-primary/20 bg-primary/10 text-primary";
+  }
+  if (status === "failed") return "border-destructive/20 bg-destructive/10 text-destructive";
+  if (status === "unavailable") return "border-warning/25 bg-warning/10 text-warning";
+  return "border-border bg-muted text-muted-foreground";
+}
+
+function reportStatusLabel(status: ExecutionReportAction["status"]) {
+  if (status === "applied") return "Aplicado";
+  if (status === "simulated") return "Simulado";
+  if (status === "scanned") return "Lido";
+  if (status === "unavailable") return "Indisp.";
+  if (status === "failed") return "Falha";
+  if (status === "cancelled") return "Cancelado";
+  return "Planejado";
 }
 
 function dependencyStatusClass(status: GamerDependencyVerificationStatus) {

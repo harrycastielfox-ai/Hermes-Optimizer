@@ -125,6 +125,7 @@ type TranslationKey =
   | "settings.option.recommended"
   | "settings.option.beta"
   | "settings.option.future"
+  | "settings.option.intermediate"
   | "settings.option.blue"
   | "settings.option.gold"
   | "settings.option.auto"
@@ -276,6 +277,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.recommended": "Recomendado",
     "settings.option.beta": "Beta",
     "settings.option.future": "Futuro",
+    "settings.option.intermediate": "Intermediário",
     "settings.option.blue": "Azul Hermes",
     "settings.option.gold": "Dourado",
     "settings.option.auto": "Automático",
@@ -385,6 +387,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.recommended": "Recommended",
     "settings.option.beta": "Beta",
     "settings.option.future": "Future",
+    "settings.option.intermediate": "Intermediate",
     "settings.option.blue": "Hermes Blue",
     "settings.option.gold": "Gold",
     "settings.option.auto": "Automatic",
@@ -496,6 +499,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.recommended": "Recomendado",
     "settings.option.beta": "Beta",
     "settings.option.future": "Futuro",
+    "settings.option.intermediate": "Intermedio",
     "settings.option.blue": "Azul Hermes",
     "settings.option.gold": "Dorado",
     "settings.option.auto": "Automático",
@@ -603,6 +607,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.recommended": "推奨",
     "settings.option.beta": "ベータ",
     "settings.option.future": "今後対応",
+    "settings.option.intermediate": "中級",
     "settings.option.blue": "Hermesブルー",
     "settings.option.gold": "ゴールド",
     "settings.option.auto": "自動",
