@@ -360,6 +360,10 @@ export async function runQuickPrepareExecutor(
       outputs: result.outputs,
       reports: result.reports,
     });
+
+    if (step.id === "check-admin" && result.status === "unavailable") {
+      throw new Error(result.outputs[0] ?? "Preparar PC exige administrador.");
+    }
   }
 
   return state.reports;
@@ -378,6 +382,18 @@ async function runQuickPrepareTask(
     if (step.id === "check-admin") {
       const system = await readSystemSecurityContext();
       state.system = system;
+
+      if (requiresRealAdmin(context) && !system.isElevated) {
+        return {
+          status: "unavailable",
+          reports: { system },
+          outputs: [
+            "Modo real exige administrador antes de iniciar o Preparar PC.",
+            "Abra o Hermes pelo atalho com UAC confirmado e rode a Fase 1 novamente.",
+          ],
+        };
+      }
+
       return {
         status: "completed",
         reports: { system },
@@ -692,6 +708,10 @@ function shouldDryRunTask(
     return true;
   }
   return false;
+}
+
+function requiresRealAdmin(context: QuickPrepareContext) {
+  return context.executionMode === "real" && !HERMES_SAFE_TEST_MODE;
 }
 
 function formatApplyOutputs(
