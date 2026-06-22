@@ -47,6 +47,7 @@ Motivo: DNS, DISM, servicos, hibernacao, dependencias e parte dos ajustes de sis
 
 ### Performance e Windows
 
+- Detectar Economia de energia ativa e trocar para Alto desempenho.
 - Ativar Game Mode.
 - Desativar GameDVR.
 - Desativar Xbox Game Bar/captura profunda quando allowlistado.

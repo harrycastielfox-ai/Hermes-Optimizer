@@ -14,8 +14,15 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
+$releaseGateScript = Join-Path $PSScriptRoot "verify-release-gates.ps1"
 $safeModeValue = if ($Mode -eq "real") { "false" } else { "true" }
 $bundleTargets = if ($Bundles -eq "all") { "msi,nsis" } else { $Bundles }
+
+Write-Host "Validando release gates..."
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $releaseGateScript
+if ($LASTEXITCODE -ne 0) {
+  throw "Build bloqueado: os release gates do Hermes falharam."
+}
 
 $env:VITE_HERMES_SAFE_TEST_MODE = $safeModeValue
 $env:HERMES_SAFE_TEST_MODE = $safeModeValue

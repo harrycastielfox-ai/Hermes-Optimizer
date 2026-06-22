@@ -14,6 +14,17 @@ export type ExecutionReportStatus =
   | "cancelled";
 
 export type ExecutionReportRisk = "info" | "low" | "medium" | "high";
+export type ExecutionVerificationStatus =
+  | "confirmed"
+  | "notConfirmed"
+  | "unavailable"
+  | "notRequired";
+
+export type ExecutionVerification = {
+  status: ExecutionVerificationStatus;
+  detail: string;
+  checkedAt: string;
+};
 
 export type ExecutionReportAction = {
   id: string;
@@ -28,6 +39,7 @@ export type ExecutionReportAction = {
   method?: string;
   risk?: ExecutionReportRisk;
   implemented?: boolean;
+  verification?: ExecutionVerification;
 };
 
 export type ExecutionReportSummary = {
@@ -40,6 +52,9 @@ export type ExecutionReportSummary = {
   unavailableActions: number;
   failedActions: number;
   cancelledActions: number;
+  verifiedActions: number;
+  unconfirmedActions: number;
+  verificationUnavailableActions: number;
   missingToTarget: number;
 };
 
@@ -146,6 +161,9 @@ export function summarizeExecutionActions(
     unavailableActions: 0,
     failedActions: 0,
     cancelledActions: 0,
+    verifiedActions: 0,
+    unconfirmedActions: 0,
+    verificationUnavailableActions: 0,
     missingToTarget: HERMES_ACTION_TARGET,
   };
 
@@ -171,6 +189,14 @@ export function summarizeExecutionActions(
     } else if (action.status === "cancelled") {
       summary.cancelledActions += count;
     }
+
+    if (action.verification?.status === "confirmed") {
+      summary.verifiedActions += count;
+    } else if (action.verification?.status === "notConfirmed") {
+      summary.unconfirmedActions += count;
+    } else if (action.verification?.status === "unavailable") {
+      summary.verificationUnavailableActions += count;
+    }
   }
 
   summary.missingToTarget = Math.max(0, HERMES_ACTION_TARGET - summary.plannedActions);
@@ -193,7 +219,10 @@ export function readExecutionReport(): ExecutionReport | null {
       return null;
     }
 
-    return parsed;
+    return {
+      ...parsed,
+      summary: summarizeExecutionActions(parsed.actions),
+    };
   } catch {
     return null;
   }
@@ -229,7 +258,10 @@ export function readExecutionCycleReport(options?: {
       return null;
     }
 
-    return parsed;
+    return {
+      ...parsed,
+      summary: summarizeExecutionActions(parsed.actions),
+    };
   } catch {
     return null;
   }

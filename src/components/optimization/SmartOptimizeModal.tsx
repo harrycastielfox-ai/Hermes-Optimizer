@@ -36,6 +36,7 @@ import {
   type ExecutionReport,
   type ExecutionReportAction,
 } from "@/lib/execution-report";
+import { verifyExecutionActions } from "@/lib/execution-verification";
 import {
   buildGamerDependencyReadiness,
   downloadOfficialGamerDependencyInstallers,
@@ -184,7 +185,11 @@ export function SmartOptimizeModal({
       }
 
       setRunStatus("failed");
-      setCurrentStatus("Otimização interrompida em modo teste.");
+      setCurrentStatus(
+        HERMES_SAFE_TEST_MODE
+          ? "Otimização interrompida em modo teste."
+          : "Otimização real interrompida.",
+      );
       appendLog("error", errorMessage(error));
     }
   }
@@ -248,14 +253,34 @@ export function SmartOptimizeModal({
       return;
     }
 
+    setCurrentStatus("Confirmando ajustes no Windows.");
+    const verifiedActions = await verifyExecutionActions(
+      reportActions.current,
+      HERMES_SAFE_TEST_MODE,
+    );
+    reportActions.current = verifiedActions;
+
+    if (activeRun.current !== runId) {
+      return;
+    }
+
     setRunStatus("completed");
-    setCurrentStatus("Plano único concluído. Modo teste mantido.");
-    appendLog("info", "Otimizar Tudo finalizado em modo teste.");
+    setCurrentStatus(
+      HERMES_SAFE_TEST_MODE
+        ? "Plano único concluído. Modo teste mantido."
+        : "Plano único concluído. Execução real finalizada.",
+    );
+    appendLog(
+      "info",
+      HERMES_SAFE_TEST_MODE
+        ? "Otimizar Tudo finalizado em modo teste."
+        : "Otimizar Tudo finalizado em modo real.",
+    );
     const executionReport = buildExecutionReport({
       phase: "optimize",
       title: "Otimização Avançada",
       safeMode: HERMES_SAFE_TEST_MODE,
-      actions: reportActions.current,
+      actions: verifiedActions,
       notes: [
         "Botão 2 concluído em fluxo guiado.",
         "A meta de 150 ações é contabilizada por fases do plano Hermes.",
@@ -629,7 +654,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   if (reports.clean) {
     let detail = "Sem volume relevante encontrado.";
     if (reports.cleanResult) {
-      detail = `${reports.cleanResult.plannedEntries} item(ns) validados pela engine.`;
+      detail = `${reports.cleanResult.plannedEntries} item(ns) ${appliedVerb(reports.cleanResult.dryRun)} pela engine.`;
     } else if (reports.clean.totalGb > 0) {
       detail = `${formatGb(reports.clean.totalGb)} GB encontrados para revisar.`;
     }
@@ -645,7 +670,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   if (reports.startup) {
     let detail = `${reports.startup.totalItems} item(ns) monitorados.`;
     if (reports.startupResult) {
-      detail = `${reports.startupResult.selectedItems} item(ns) validados pela engine.`;
+      detail = `${reports.startupResult.selectedItems} item(ns) ${appliedVerb(reports.startupResult.dryRun)} pela engine.`;
     } else if (reports.startup.highImpactCount > 0) {
       detail = `${reports.startup.highImpactCount} item(ns) de alto impacto.`;
     }
@@ -663,7 +688,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "performance",
       title: "Performance",
       detail: reports.performanceResult
-        ? `${reports.performanceResult.appliedActions.length} ajuste(s) validados pela engine.`
+        ? `${reports.performanceResult.appliedActions.length} ajuste(s) ${appliedVerb(reports.performanceResult.dryRun)} pela engine.`
         : `Plano atual: ${reports.performance.powerPlan.activeSchemeName}.`,
       status: "ready",
     });
@@ -672,7 +697,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   if (reports.gamer) {
     let detail = "Sem jogo alvo aberto. Seleção manual será necessária.";
     if (reports.gamerResult) {
-      detail = `${reports.gamerResult.closedProcesses.length} processo(s) validados pela engine.`;
+      detail = `${reports.gamerResult.closedProcesses.length} processo(s) ${reports.gamerResult.dryRun ? "validados" : "fechados"} pela engine.`;
     } else if (reports.gamer.summary.detectedGames > 0) {
       detail = `${reports.gamer.summary.detectedGames} jogo(s) detectado(s).`;
     }
@@ -690,7 +715,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "gamer-focus",
       title: "Fate Trigger / UE5",
       detail: reports.gamerFocusAdvancedResult
-        ? `${reports.gamerFocusAdvancedResult.appliedActions.length} ajuste(s) MMCSS/CPU validados.`
+        ? `${reports.gamerFocusAdvancedResult.appliedActions.length} ajuste(s) MMCSS/CPU ${appliedVerb(reports.gamerFocusAdvancedResult.dryRun)}.`
         : "Pacote MMCSS Gamer + prioridade Fate Trigger mapeado.",
       status: reports.gamerFocusAdvancedResult ? "ready" : "pending",
     });
@@ -700,7 +725,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
     id: "profile",
     title: "Perfil recomendado",
     detail: reports.profileResult
-      ? `${reports.profileResult.engineResults.length} engine(s) do perfil validadas.`
+      ? `${reports.profileResult.engineResults.length} engine(s) do perfil ${appliedVerb(reports.profileResult.dryRun)}.`
       : `${profileLabel(profileId)} será usado como base do plano.`,
     status: "ready",
   });
@@ -710,7 +735,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "advanced",
       title: "Avançado guiado",
       detail: reports.advancedResult
-        ? `${reports.advancedResult.appliedActions.length} comando(s) validados.`
+        ? `${reports.advancedResult.appliedActions.length} comando(s) ${appliedVerb(reports.advancedResult.dryRun)}.`
         : `${reports.advanced.actions.length} comando(s) mapeados.`,
       status: reports.advancedResult ? "ready" : "pending",
     });
@@ -779,10 +804,12 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4 xl:grid-cols-7">
           <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
           <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
           <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
+          <ReportStat label="Confirmadas" value={summary.verifiedActions} tone="success" />
+          <ReportStat label="Não conf." value={summary.unconfirmedActions} tone="warning" />
           <ReportStat label="Planejadas" value={summary.plannedOnlyActions} tone="muted" />
           <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
         </div>
@@ -813,6 +840,11 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
               <p className="mt-1 line-clamp-2 text-[11px] font-medium text-muted-foreground">
                 {action.outputs[0] ?? action.detail}
               </p>
+              {action.verification && action.verification.status !== "notRequired" && (
+                <p className="mt-1 line-clamp-2 text-[10px] font-semibold text-muted-foreground">
+                  Verificação: {action.verification.detail}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -920,8 +952,8 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
       setActionMessage(null);
       setIsInstalling(true);
       const result = await installVerifiedGamerDependencies({
-        confirmed: false,
-        dryRun: true,
+        confirmed: !HERMES_SAFE_TEST_MODE,
+        dryRun: HERMES_SAFE_TEST_MODE,
       });
       setCurrentReport(result.report);
       setLastInstallResult(result);
@@ -1597,6 +1629,10 @@ function profileLabel(profileId: string) {
   if (profileId === "economia") return "Economia";
   if (profileId === "extremo") return "Extremo";
   return "Seguro";
+}
+
+function appliedVerb(dryRun: boolean) {
+  return dryRun ? "validados" : "aplicados";
 }
 
 function gameSourceLabel(target: OptimizeAllGameTarget) {

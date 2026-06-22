@@ -44,6 +44,7 @@ import {
   type ExecutionReportAction,
   type ExecutionReportStatus,
 } from "@/lib/execution-report";
+import { verifyExecutionActions } from "@/lib/execution-verification";
 
 type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "cancelled";
@@ -152,12 +153,23 @@ export function QuickPrepareModal({
         return;
       }
 
+      setCurrentStatus("Confirmando ajustes no Windows.");
+      const verifiedActions = await verifyExecutionActions(
+        reportActions.current,
+        HERMES_SAFE_TEST_MODE,
+      );
+      reportActions.current = verifiedActions;
+
+      if (activeRun.current !== runId) {
+        return;
+      }
+
       setRunStatus("completed");
       const executionReport = buildExecutionReport({
         phase: "prepare",
         title: "Preparação da Máquina",
         safeMode: HERMES_SAFE_TEST_MODE,
-        actions: reportActions.current,
+        actions: verifiedActions,
         notes: [
           "Botão 1 concluído antes da Fase 2.",
           HERMES_SAFE_TEST_MODE
@@ -552,10 +564,12 @@ function PrepareExecutionReportPanel({ report }: { report: ExecutionReport }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-6">
           <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
           <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
           <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
+          <ReportStat label="Confirmadas" value={summary.verifiedActions} tone="success" />
+          <ReportStat label="Não conf." value={summary.unconfirmedActions} tone="warning" />
           <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
         </div>
       </div>
@@ -580,6 +594,11 @@ function PrepareExecutionReportPanel({ report }: { report: ExecutionReport }) {
               <p className="mt-1 line-clamp-2 text-[11px] font-medium text-muted-foreground">
                 {action.outputs[0] ?? action.detail}
               </p>
+              {action.verification && action.verification.status !== "notRequired" && (
+                <p className="mt-1 line-clamp-2 text-[10px] font-semibold text-muted-foreground">
+                  Verificação: {action.verification.detail}
+                </p>
+              )}
             </div>
           ))}
         </div>

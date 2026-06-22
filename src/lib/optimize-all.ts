@@ -244,7 +244,7 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
       `${formatGb(clean.totalGb)} GB candidatos à revisão`,
       `${clean.items.length} área(s) mapeada(s)`,
       result.value
-        ? `${result.value.plannedEntries} item(ns) validados pela Clean Engine`
+        ? `${result.value.plannedEntries} item(ns) ${appliedVerb(result.value.dryRun)} pela Clean Engine`
         : (result.message ?? "Sem item seguro selecionado para validação"),
     ],
   };
@@ -282,7 +282,7 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
       `${startup.totalItems} item(ns) de inicialização`,
       `${startup.highImpactCount} alto impacto`,
       result.value
-        ? `${result.value.selectedItems} item(ns) validados pela Startup Engine`
+        ? `${result.value.selectedItems} item(ns) ${appliedVerb(result.value.dryRun)} pela Startup Engine`
         : (result.message ?? "Sem item de alto impacto controlável agora"),
     ],
   };
@@ -330,7 +330,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
         : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas; ${gamerDependencyVerification.installedLocallyCount} já instalada(s)`,
       `${gamerDependencies.excludedToolchain.length} item(ns) de toolchain pesada ficam fora do pacote gamer`,
       result.value
-        ? `${result.value.appliedActions.length} comando(s) ${result.value.dryRun ? "validados" : "aplicados"}`
+        ? `${result.value.appliedActions.length} comando(s) ${appliedVerb(result.value.dryRun)}`
         : (result.message ?? "Componentes ainda não disponíveis neste PC"),
     ],
   };
@@ -359,7 +359,7 @@ async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseR
       `Plano atual: ${performance.powerPlan.activeSchemeName}`,
       `Modo Jogo: ${performance.gameMode.status}`,
       result.value
-        ? `${result.value.appliedActions.length} ajuste(s) validados pela Performance Engine`
+        ? `${result.value.appliedActions.length} ajuste(s) ${appliedVerb(result.value.dryRun)} pela Performance Engine`
         : (result.message ?? "Sem ajuste controlado disponível agora"),
     ],
   };
@@ -427,7 +427,7 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
       `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo Steam/Discord quando detectados`,
       result.value
-        ? `${result.value.closedProcesses.length} processo(s) validados pela Gamer Engine`
+        ? `${result.value.closedProcesses.length} processo(s) ${result.value.dryRun ? "validados" : "fechados"} pela Gamer Engine`
         : (result.message ?? "Seleção manual de jogo será necessária"),
     ],
   };
@@ -462,10 +462,10 @@ async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
 
   const outputs = [
     actionIds.length
-      ? `Pacote Fate/UE5: ${actionIds.length} ajuste(s) MMCSS/CPU validados`
+      ? `Pacote Fate/UE5: ${actionIds.length} ajuste(s) MMCSS/CPU mapeados`
       : "Pacote Fate/UE5 indisponível neste catálogo",
     advancedResult.value
-      ? `${advancedResult.value.appliedActions.length} ajuste(s) de foco gamer ${advancedResult.value.dryRun ? "simulados" : "aplicados"}`
+      ? `${advancedResult.value.appliedActions.length} ajuste(s) de foco gamer ${appliedVerb(advancedResult.value.dryRun)}`
       : (advancedResult.message ?? "Pacote de foco aguardando motor avançado"),
   ];
 
@@ -510,7 +510,7 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
     outputs: [
       `Perfil sugerido: ${profileLabel(profileId)}`,
       result.value
-        ? `${result.value.engineResults.length} engine(s) validadas pelo perfil`
+        ? `${result.value.engineResults.length} engine(s) ${appliedVerb(result.value.dryRun)} pelo perfil`
         : (result.message ?? "Perfil disponível para revisão manual"),
       HERMES_SAFE_TEST_MODE ? "Nenhuma alteração real aplicada" : "Perfil aplicado no modo real",
     ],
@@ -545,7 +545,7 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
       `${advanced.actions.length} ação(ões) avançadas mapeadas`,
       `${advanced.blockedActions.length} ação(ões) bloqueadas por critério`,
       result.value
-        ? `${result.value.appliedActions.length} comando(s) validados pela Advanced Engine`
+        ? `${result.value.appliedActions.length} comando(s) ${appliedVerb(result.value.dryRun)} pela Advanced Engine`
         : (result.message ?? "Sem comando avançado liberado para validação"),
     ],
   };
@@ -557,6 +557,10 @@ function shouldDryRun() {
 
 function shouldConfirmReal() {
   return !HERMES_SAFE_TEST_MODE;
+}
+
+function appliedVerb(dryRun: boolean) {
+  return dryRun ? "validados" : "aplicados";
 }
 
 function pickProfile(reports: OptimizeAllReports, availableProfiles: string[]) {

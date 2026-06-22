@@ -168,8 +168,8 @@ const QUICK_PREPARE_PERFORMANCE_ACTION_IDS = [
 ];
 
 const QUICK_PREPARE_PERFORMANCE_LABELS: Record<string, string> = {
-  "set-high-performance-power-plan": "Plano Alto desempenho",
-  "disable-transparency": "Transparencias OFF",
+  "set-high-performance-power-plan": "Economia OFF + Alto desempenho",
+  "disable-transparency": "Transparências OFF",
   "disable-window-animations": "Animações OFF",
   "disable-visual-shadows": "Sombras visuais OFF",
 };
@@ -425,6 +425,7 @@ async function runQuickPrepareTask(
         reports: { performance },
         outputs: [
           `Plano atual: ${performance.powerPlan.activeSchemeName}`,
+          getPowerSaverPrepareMessage(performance),
           `Modo Jogo: ${performance.gameMode.status}`,
           `Visual: ${performance.visualEffects.status}`,
         ],
@@ -774,18 +775,18 @@ export async function runQuickPreparePhase(
   }
 
   if (phaseId === "cleanup") {
-    return runCleanupPhase();
+    return runCleanupPhase(context);
   }
 
   if (phaseId === "startup") {
-    return runStartupPhase();
+    return runStartupPhase(context);
   }
 
   if (phaseId === "windows") {
     return runWindowsPhase(context);
   }
 
-  return runProcessesPhase();
+  return runProcessesPhase(context);
 }
 
 async function runScanPhase(): Promise<QuickPreparePhaseResult> {
@@ -801,6 +802,7 @@ async function runScanPhase(): Promise<QuickPreparePhaseResult> {
     reports: { diagnostic, performance, advanced, gamerDependencies, gamerDependencyVerification },
     outputs: [
       `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
+      getPowerSaverPrepareMessage(performance),
       `Modo Jogo: ${performance.gameMode.status}`,
       `${advanced.actions.length} ajuste(s) Windows mapeados`,
       `${gamerDependencyVerification.installedLocallyCount} dependência(s) já instalada(s) no Windows`,
@@ -809,14 +811,18 @@ async function runScanPhase(): Promise<QuickPreparePhaseResult> {
   };
 }
 
-async function runCleanupPhase(): Promise<QuickPreparePhaseResult> {
+async function runCleanupPhase(context: QuickPrepareContext): Promise<QuickPreparePhaseResult> {
   const clean = await refreshCleanScanReport();
   const itemIds = clean.items
     .filter((item) => item.selectedByDefault && item.safeToCleanLater)
     .map((item) => item.id);
   const result = await tryRun(() =>
     itemIds.length
-      ? applyCleanEngine({ confirmed: false, dryRun: true, itemIds })
+      ? applyCleanEngine({
+          confirmed: shouldConfirmPhaseReal(context),
+          dryRun: shouldDryRunPhase(context),
+          itemIds,
+        })
       : Promise.resolve(null),
   );
 
@@ -826,13 +832,15 @@ async function runCleanupPhase(): Promise<QuickPreparePhaseResult> {
       `${formatGb(clean.totalGb)} GB temporários mapeados`,
       `${itemIds.length} área(s) seguras selecionadas`,
       result.value
-        ? `${result.value.plannedEntries} item(ns) validados para limpeza`
+        ? `${result.value.plannedEntries} item(ns) ${
+            result.value.dryRun ? "validados" : "aplicados"
+          } para limpeza`
         : (result.message ?? "Sem lixo seguro para aplicar agora"),
     ],
   };
 }
 
-async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
+async function runStartupPhase(context: QuickPrepareContext): Promise<QuickPreparePhaseResult> {
   const startup = await refreshStartupReport();
   const itemIds = startup.items
     .filter(
@@ -845,7 +853,12 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
     .map((item) => item.id);
   const result = await tryRun(() =>
     itemIds.length
-      ? applyStartupEngine({ confirmed: false, dryRun: true, action: "disable", itemIds })
+      ? applyStartupEngine({
+          confirmed: shouldConfirmPhaseReal(context),
+          dryRun: shouldDryRunPhase(context),
+          action: "disable",
+          itemIds,
+        })
       : Promise.resolve(null),
   );
 
@@ -855,7 +868,9 @@ async function runStartupPhase(): Promise<QuickPreparePhaseResult> {
       `${startup.totalItems} item(ns) de inicialização analisados`,
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
-        ? `${result.value.selectedItems} item(ns) validados para desativar`
+        ? `${result.value.selectedItems} item(ns) ${
+            result.value.dryRun ? "validados" : "aplicados"
+          } para desativar`
         : (result.message ?? "Sem inicialização de alto impacto controlável"),
     ],
   };
@@ -875,8 +890,8 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
   const [performanceResult, advancedResult] = await Promise.all([
     tryRun(() =>
       applyPerformanceControlled({
-        confirmed: false,
-        dryRun: true,
+        confirmed: shouldConfirmPhaseReal(context),
+        dryRun: shouldDryRunPhase(context),
         actionIds: QUICK_PREPARE_PERFORMANCE_ACTION_IDS,
         reason: "Preparar PC",
       }),
@@ -884,8 +899,8 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
     tryRun(() =>
       advancedActionIds.length
         ? applyAdvancedActions({
-            confirmed: false,
-            dryRun: true,
+            confirmed: shouldConfirmPhaseReal(context),
+            dryRun: shouldDryRunPhase(context),
             actionIds: advancedActionIds,
             extremeMode: false,
           })
@@ -904,7 +919,7 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
       advancedResult: advancedResult.value ?? undefined,
     },
     outputs: [
-      `Game Mode ON, Game DVR OFF, DNS ${dnsProvider.label}, visual gamer, privacidade e CMD/DISM`,
+      `Economia OFF, Alto desempenho, Game Mode ON, Game DVR OFF, DNS ${dnsProvider.label}, visual gamer, privacidade e CMD/DISM`,
       `${appliedPerformance + appliedAdvanced} ajuste(s) Windows validados`,
       HERMES_SAFE_TEST_MODE
         ? "Modo teste: nada foi aplicado de verdade"
@@ -917,7 +932,7 @@ export function getDnsProvider(providerId: DnsProviderId) {
   return DNS_PROVIDERS.find((provider) => provider.id === providerId) ?? DNS_PROVIDERS[0];
 }
 
-async function runProcessesPhase(): Promise<QuickPreparePhaseResult> {
+async function runProcessesPhase(context: QuickPrepareContext): Promise<QuickPreparePhaseResult> {
   const gamer = await loadGamerReport();
   const processIds = gamer.suggestedProcesses
     .filter((process) => process.canClose && process.recommendation === "suggestedClose")
@@ -925,8 +940,8 @@ async function runProcessesPhase(): Promise<QuickPreparePhaseResult> {
   const result = await tryRun(() =>
     processIds.length
       ? applyGamerEngine({
-          confirmed: false,
-          dryRun: true,
+          confirmed: shouldConfirmPhaseReal(context),
+          dryRun: shouldDryRunPhase(context),
           processIds,
           includePerformanceProfile: true,
         })
@@ -939,10 +954,42 @@ async function runProcessesPhase(): Promise<QuickPreparePhaseResult> {
       `${processIds.length} processo(s) em segundo plano selecionado(s)`,
       `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo jogo/Steam/Discord quando detectados`,
       result.value
-        ? `${result.value.closedProcesses.length} processo(s) validados pela Gamer Engine`
+        ? `${result.value.closedProcesses.length} processo(s) ${
+            result.value.dryRun ? "validados" : "fechados"
+          } pela Gamer Engine`
         : (result.message ?? "Sem processo seguro para fechar agora"),
     ],
   };
+}
+
+function shouldDryRunPhase(context: QuickPrepareContext) {
+  return context.executionMode !== "real" || HERMES_SAFE_TEST_MODE;
+}
+
+function shouldConfirmPhaseReal(context: QuickPrepareContext) {
+  return !shouldDryRunPhase(context);
+}
+
+function getPowerSaverPrepareMessage(performance: PerformanceReport) {
+  return isPowerSaverPlan(performance)
+    ? "Economia de energia detectada: o Botão 1 troca para Alto desempenho."
+    : `Energia: ${performance.powerPlan.status || "Indisponível"}`;
+}
+
+function isPowerSaverPlan(performance: PerformanceReport) {
+  const normalized = [
+    performance.powerPlan.status,
+    performance.powerPlan.activeSchemeName,
+    performance.powerPlan.activeSchemeGuid,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    normalized.includes("econom") ||
+    normalized.includes("power saver") ||
+    normalized.includes("a1841308-3541-4fab-bc81-f71556f20b4a")
+  );
 }
 
 async function tryRun<T>(task: () => Promise<T | null>): Promise<{ value?: T; message?: string }> {
