@@ -1,40 +1,77 @@
 import { type ExecutionReportAction, type ExecutionVerification } from "@/lib/execution-report";
+import { refreshAdvancedCatalog, type AdvancedCatalog } from "@/lib/advanced";
 import { refreshPerformanceReport, type PerformanceReport } from "@/lib/performance";
 
-type VerificationRule = (report: PerformanceReport) => boolean | undefined;
+type VerificationContext = {
+  performance: PerformanceReport | null;
+  advanced: AdvancedCatalog | null;
+};
+
+type VerificationRule = (context: VerificationContext) => boolean | undefined;
 
 const PERFORMANCE_RULES: Array<{ matches: string[]; verify: VerificationRule; expected: string }> =
   [
     {
       matches: ["PowerPlan.HighPerformance", "performance-set-high-performance-power-plan"],
-      verify: (report) => report.powerPlan.status === "Desempenho",
+      verify: ({ performance }) =>
+        performanceAvailable(performance)
+          ? performance.powerPlan.status === "Desempenho"
+          : undefined,
       expected: "Plano de energia em Alto desempenho",
     },
     {
       matches: ["Visual.Transparency", "performance-disable-transparency"],
-      verify: (report) => booleanState(report.visualEffects.transparencyEnabled, false),
+      verify: ({ performance }) =>
+        booleanState(performance?.visualEffects.transparencyEnabled, false),
       expected: "Transparência desativada",
     },
     {
       matches: ["Visual.Animations", "performance-disable-window-animations"],
-      verify: (report) => booleanState(report.visualEffects.animationsEnabled, false),
+      verify: ({ performance }) =>
+        booleanState(performance?.visualEffects.animationsEnabled, false),
       expected: "Animações desativadas",
     },
     {
       matches: ["Visual.Shadows", "performance-disable-visual-shadows"],
-      verify: (report) => booleanState(report.visualEffects.shadowsEnabled, false),
+      verify: ({ performance }) => booleanState(performance?.visualEffects.shadowsEnabled, false),
       expected: "Sombras visuais desativadas",
     },
     {
       matches: ["GameBar.AllowAutoGameMode", "advanced-enable-game-mode"],
-      verify: (report) => booleanState(report.gameMode.enabled, true),
+      verify: ({ performance }) => booleanState(performance?.gameMode.enabled, true),
       expected: "Modo de Jogo ativado",
     },
     {
       matches: ["GameDVR.AppCapture", "advanced-disable-game-dvr"],
-      verify: (report) => booleanState(report.gameMode.gameDvrEnabled, false),
+      verify: ({ performance }) => booleanState(performance?.gameMode.gameDvrEnabled, false),
       expected: "GameDVR desativado",
     },
+    {
+      matches: ["Power.Hibernate", "advanced-disable-hibernation"],
+      verify: ({ advanced }) => advancedValueEquals(advanced, "disable-hibernation", "0"),
+      expected: "Hibernação desativada",
+    },
+    {
+      matches: ["Explorer.StartupDelay", "advanced-disable-startup-delay"],
+      verify: ({ advanced }) => advancedValueEquals(advanced, "disable-startup-delay", "0"),
+      expected: "Atraso de inicialização desativado",
+    },
+    {
+      matches: [
+        "MMCSS.SystemResponsiveness",
+        "MMCSS.GpuPriority",
+        "MMCSS.Priority",
+        "advanced-set-mmcss-gamer-pack",
+      ],
+      verify: ({ advanced }) => verifyMmcssPack(advanced),
+      expected: "Pacote MMCSS Gamer aplicado",
+    },
+    {
+      matches: ["Steam.GamePriority.FateTrigger", "advanced-set-fate-trigger-cpu-priority-high"],
+      verify: ({ advanced }) => verifyFatePriority(advanced),
+      expected: "Prioridade de CPU do Fate Trigger configurada",
+    },
+    ...dnsVerificationRules(),
   ];
 
 export async function verifyExecutionActions(
@@ -50,22 +87,21 @@ export async function verifyExecutionActions(
     }));
   }
 
-  let performance: PerformanceReport | null = null;
-  try {
-    performance = await refreshPerformanceReport();
-  } catch {
-    performance = null;
-  }
+  const [performance, advanced] = await Promise.all([
+    refreshPerformanceReport().catch(() => null),
+    refreshAdvancedCatalog().catch(() => null),
+  ]);
+  const context = { performance, advanced };
 
   return actions.map((action) => ({
     ...action,
-    verification: verifyAction(action, performance, checkedAt),
+    verification: verifyAction(action, context, checkedAt),
   }));
 }
 
 function verifyAction(
   action: ExecutionReportAction,
-  performance: PerformanceReport | null,
+  context: VerificationContext,
   checkedAt: string,
 ): ExecutionVerification {
   if (action.status !== "applied") {
@@ -77,7 +113,7 @@ function verifyAction(
     candidate.matches.some((match) => identity.includes(match)),
   );
 
-  if (!rule || !performance || performance.engineVersion.includes("fallback")) {
+  if (!rule) {
     return {
       status: "unavailable",
       detail: "Ação executada, mas ainda sem leitura pós-execução específica.",
@@ -85,7 +121,7 @@ function verifyAction(
     };
   }
 
-  const result = rule.verify(performance);
+  const result = rule.verify(context);
   if (result === undefined) {
     return {
       status: "unavailable",
@@ -119,4 +155,61 @@ function notRequiredVerification(
 
 function booleanState(value: boolean | undefined, expected: boolean) {
   return value === undefined ? undefined : value === expected;
+}
+
+function performanceAvailable(report: PerformanceReport | null): report is PerformanceReport {
+  return Boolean(report && !report.engineVersion.includes("fallback"));
+}
+
+function advancedValueEquals(catalog: AdvancedCatalog | null, actionId: string, expected: string) {
+  const value = advancedCurrentValue(catalog, actionId);
+  return value === undefined ? undefined : value.trim() === expected;
+}
+
+function verifyMmcssPack(catalog: AdvancedCatalog | null) {
+  const value = advancedCurrentValue(catalog, "set-mmcss-gamer-pack");
+  if (value === undefined) return undefined;
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("systemresponsiveness=0") &&
+    normalized.includes("gpu priority=8") &&
+    normalized.includes("priority=6") &&
+    normalized.includes("scheduling=high") &&
+    normalized.includes("sfio=high")
+  );
+}
+
+function verifyFatePriority(catalog: AdvancedCatalog | null) {
+  const value = advancedCurrentValue(catalog, "set-fate-trigger-cpu-priority-high");
+  if (value === undefined) return undefined;
+  const normalized = value.toLowerCase();
+  return (
+    normalized.includes("fatetrigger.exe=3") &&
+    normalized.includes("fatetrigger-win64-shipping.exe=3")
+  );
+}
+
+function advancedCurrentValue(catalog: AdvancedCatalog | null, actionId: string) {
+  if (!catalog || catalog.engineVersion.includes("fallback")) return undefined;
+  return catalog.actions.find((action) => action.id === actionId)?.currentValue;
+}
+
+function dnsVerificationRules() {
+  const providers = [
+    ["cloudflare", ["1.1.1.1", "1.0.0.1"]],
+    ["google", ["8.8.8.8", "8.8.4.4"]],
+    ["opendns", ["208.67.222.222", "208.67.220.220"]],
+    ["quad9", ["9.9.9.9", "149.112.112.112"]],
+    ["adguard", ["94.140.14.14", "94.140.15.15"]],
+  ] as const;
+
+  return providers.map(([provider, servers]) => ({
+    matches: [`advanced-set-dns-${provider}`],
+    expected: `DNS ${provider} aplicado`,
+    verify: ({ advanced }: VerificationContext) => {
+      const value = advancedCurrentValue(advanced, `set-dns-${provider}`);
+      if (value === undefined) return undefined;
+      return servers.every((server) => value.includes(server));
+    },
+  }));
 }

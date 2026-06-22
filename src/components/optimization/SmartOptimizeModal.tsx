@@ -804,12 +804,17 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4 xl:grid-cols-7">
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4 xl:grid-cols-8">
           <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
           <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
           <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
           <ReportStat label="Confirmadas" value={summary.verifiedActions} tone="success" />
           <ReportStat label="Não conf." value={summary.unconfirmedActions} tone="warning" />
+          <ReportStat
+            label="Sem leitura"
+            value={summary.verificationUnavailableActions}
+            tone="warning"
+          />
           <ReportStat label="Planejadas" value={summary.plannedOnlyActions} tone="muted" />
           <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
         </div>
