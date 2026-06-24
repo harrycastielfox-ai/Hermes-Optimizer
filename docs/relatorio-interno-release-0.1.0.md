@@ -1,12 +1,12 @@
 # Relatorio Interno de Release - Hermes Optimizer 0.1.0
 
-Data: 2026-06-15
+Data: 2026-06-24
 
 ## Decisao
 
 **NAO PODE LANCAR como release publica final.**
 
-O app esta mais perto de um release candidate tecnico, mas ainda nao deve ser publicado como lancamento oficial porque o build assinado de producao, QA manual completo, validacao real de rollback em maquina controlada e licenciamento definitivo ainda nao foram fechados.
+O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser publicado como lancamento oficial porque o build assinado de producao, QA manual completo e validacao real do fluxo em maquina controlada ainda nao foram fechados.
 
 ## O Que Ja Esta Aprovado Tecnicamente
 
@@ -27,6 +27,10 @@ O app esta mais perto de um release candidate tecnico, mas ainda nao deve ser pu
 - Limpeza, processos Gamer, energia, registro, rede e graficos nao sao alterados pelo Analisar Agora.
 - Rollback real de arquivo da quarentena validado por teste automatizado.
 - Licenciamento esta congelado explicitamente para esta release.
+- Botoes 1 e 2 respeitam modo teste/build real sem `dryRun: true` fixo nos fluxos principais.
+- Relatorio pos-execucao separa aplicado, confirmado, nao confirmado e sem leitura.
+- Manifesto do executavel final foi extraido e confirmou `requireAdministrator`.
+- Release gates automaticos validam manifesto, safe mode, permissoes Tauri, CSP e scripts de build.
 
 ## Evidencias Automatizadas
 
@@ -38,15 +42,20 @@ O app esta mais perto de um release candidate tecnico, mas ainda nao deve ser pu
 - `npx tauri build --debug`: passou e gerou MSI/NSIS debug.
 - Script `npm run build:tauri:signed`: possui guarda obrigatoria para `HERMES_CERT_THUMBPRINT`; sem certificado, falha antes de gerar build.
 - `Get-AuthenticodeSignature` nos instaladores debug: `NotSigned`, esperado enquanto nao houver certificado real.
+- `npm run qa:release`: passou em 2026-06-23.
+- Release gates, TypeScript, lint, build web, build Tauri e Cargo check: passaram.
+- `cargo test --lib`: 10 testes aprovados, 0 falhas.
+- Instalador NSIS release encontrado em `src-tauri/target/release/bundle/nsis/Hermes Optimizer_0.1.0_x64-setup.exe`.
+- Evidencia estruturada salva em `.release/qa-latest.json`.
 
 ## Bloqueios Para GO Publico
 
 - Build de producao assinado ainda depende de certificado real configurado em `HERMES_CERT_THUMBPRINT`.
-- Instaladores gerados sao debug, nao release final assinado.
+- Instalador NSIS release foi gerado, mas continua sem assinatura Authenticode.
 - QA manual de instalacao e navegacao ainda precisa ser executado em maquina limpa.
 - Rollback real automatizado foi validado para arquivo de quarentena; ainda falta validacao manual por fluxo completo em ambiente controlado.
 - Licenciamento esta congelado, nao implementado.
-- `HERMES_SAFE_TEST_MODE` esta ativo; portanto o app nao deve prometer otimizacao real publica.
+- O build padrao continua com `HERMES_SAFE_TEST_MODE` ativo; o build real existe, mas depende de QA controlado antes da distribuicao.
 - Chunk principal do build Tauri excede 500 kB; nao bloqueia sozinho, mas deve entrar em backlog de performance.
 
 ## Condicao Para Virar GO

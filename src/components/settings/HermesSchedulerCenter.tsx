@@ -73,6 +73,12 @@ type NotificationPreferences = {
   performanceAlerts: boolean;
 };
 
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  system: false,
+  cleanupDone: false,
+  performanceAlerts: false,
+};
+
 const TASKS_KEY = "hermes.scheduler.tasks.v1";
 const HISTORY_KEY = "hermes.scheduler.history.v1";
 const ADMIN_PREFS_KEY = "hermes.admin.preferences.v1";
@@ -135,7 +141,7 @@ const visibleTaskTypes = new Set<SchedulerTaskType>(taskOptions.map((option) => 
 
 const frequencyOptions: Array<{ value: SchedulerFrequency; label: string; description: string }> = [
   { value: "manual", label: "Manual", description: "Somente por clique" },
-  { value: "daily", label: "Diario", description: "Quando estiver vencido" },
+  { value: "daily", label: "Diário", description: "Quando estiver vencido" },
   { value: "weekly", label: "Semanal", description: "A cada 7 dias" },
   { value: "monthly", label: "Mensal", description: "A cada 30 dias" },
   { value: "onOpen", label: "Ao abrir", description: "Uma vez ao dia" },
@@ -150,18 +156,22 @@ export function HermesSchedulerCenter() {
   const [taskPendingRemoval, setTaskPendingRemoval] = useState<SchedulerTask | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const notifications = useMemo(readNotificationPreferences, []);
+  const [notifications, setNotifications] = useState<NotificationPreferences>(
+    DEFAULT_NOTIFICATION_PREFERENCES,
+  );
 
   useEffect(() => {
     const { tasks: loadedTasks, removedLegacyDefaults } = readTasks();
+    const loadedNotifications = readNotificationPreferences();
     setTasks(loadedTasks);
     setHistory(readHistory(removedLegacyDefaults && loadedTasks.length === 0));
+    setNotifications(loadedNotifications);
 
     const onOpenTasks = loadedTasks.filter(
       (task) => task.enabled && task.frequency === "onOpen" && isTaskDue(task),
     );
     if (onOpenTasks.length > 0) {
-      void runTaskQueue(onOpenTasks, "Execução ao abrir a central");
+      void runTaskQueue(onOpenTasks, "Execução ao abrir a central", loadedNotifications);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -207,18 +217,22 @@ export function HermesSchedulerCenter() {
     setTasks(normalized);
   }
 
-  async function runTaskQueue(queue: SchedulerTask[], reason: string) {
+  async function runTaskQueue(
+    queue: SchedulerTask[],
+    reason: string,
+    notificationPreferences = notifications,
+  ) {
     if (runningTaskId) {
       return;
     }
 
     setNotice(`${reason}: ${queue.length} tarefa(s) conservadora(s) em fila.`);
     for (const task of queue) {
-      await runTask(task);
+      await runTask(task, notificationPreferences);
     }
   }
 
-  async function runTask(task: SchedulerTask) {
+  async function runTask(task: SchedulerTask, notificationPreferences = notifications) {
     setRunningTaskId(task.id);
     setNotice(null);
     setError(null);
@@ -232,14 +246,22 @@ export function HermesSchedulerCenter() {
         result.message,
         durationMs,
         result.status,
-        shouldPrepareNotification(task.type, notifications),
+        shouldPrepareNotification(task.type, notificationPreferences),
       );
       commitHistory(entry);
       const updatedTask = {
         ...task,
         lastRunAt: new Date().toISOString(),
       };
-      commitTasks(tasks.map((item) => (item.id === task.id ? updatedTask : item)));
+      setTasks((current) => {
+        const next = current.map((item) => (item.id === task.id ? updatedTask : item));
+        const normalized = next.map((item) => ({
+          ...item,
+          nextRunAt: calculateNextRun(item),
+        }));
+        saveTasks(normalized);
+        return normalized;
+      });
       setNotice(result.message);
     } catch (nextError) {
       const durationMs = Math.max(1, Math.round(performance.now() - startedAt));
@@ -270,12 +292,12 @@ export function HermesSchedulerCenter() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-bold tracking-[0.22em] text-primary">AGENDA HERMES</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
                 Manutenção Programada
-              </h2>
+              </h1>
               <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                Organize verificacoes locais em uma agenda simples. Sem servico residente, sem
-                monitoramento continuo e sem ajustes agressivos automaticos.
+                Organize verificações locais em uma agenda simples. Sem serviço residente, sem
+                monitoramento contínuo e sem ajustes agressivos automáticos.
               </p>
             </div>
           </div>
@@ -320,15 +342,15 @@ export function HermesSchedulerCenter() {
         />
         <StatusCard
           icon={History}
-          label="ULTIMA EXECUCAO"
+          label="ÚLTIMA EXECUÇÃO"
           value={latestRun ? statusLabel(latestRun.status) : "Nenhuma"}
-          sub={latestRun ? formatDate(latestRun.startedAt) : `Retencao local: ${MAX_HISTORY}`}
+          sub={latestRun ? formatDate(latestRun.startedAt) : `Retenção local: ${MAX_HISTORY}`}
         />
         <StatusCard
           icon={Bell}
-          label="NOTIFICACOES"
+          label="NOTIFICAÇÕES"
           value={notifications.system ? "Preparadas" : "Desligadas"}
-          sub="Integrado as preferencias locais"
+          sub="Integrado às preferências locais"
           tone={notifications.system ? "primary" : "warning"}
         />
       </div>
@@ -338,10 +360,10 @@ export function HermesSchedulerCenter() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
-                NOVA PROGRAMACAO
+                NOVA PROGRAMAÇÃO
               </h3>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Escolha uma rotina conservadora e a frequencia desejada.
+                Escolha uma rotina conservadora e a frequência desejada.
               </p>
             </div>
             <button
@@ -367,7 +389,7 @@ export function HermesSchedulerCenter() {
               wide
             />
             <OptionGrid
-              label="Frequencia"
+              label="Frequência"
               value={selectedFrequency}
               options={frequencyOptions}
               onChange={setSelectedFrequency}
@@ -416,7 +438,7 @@ export function HermesSchedulerCenter() {
 
           <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
             <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
-              HISTORICO LOCAL
+              HISTÓRICO LOCAL
             </h3>
             <div className="mt-3 space-y-2">
               {history.length > 0 ? (
@@ -425,7 +447,7 @@ export function HermesSchedulerCenter() {
                 <EmptyState
                   icon={History}
                   title="Sem execuções"
-                  sub="Data, tarefa, resultado, duracao e status aparecerão aqui."
+                  sub="Data, tarefa, resultado, duração e status aparecerão aqui."
                 />
               )}
             </div>
@@ -537,7 +559,7 @@ function CalendarWeek({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold tracking-[0.2em] text-primary">SEMANA</p>
-          <h3 className="mt-1 text-base font-bold text-foreground">Calendario local</h3>
+          <h3 className="mt-1 text-base font-bold text-foreground">Calendário local</h3>
         </div>
         <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary">
           Somente sob demanda
@@ -613,14 +635,14 @@ function NextScheduleCard({ task, pendingCount }: { task?: SchedulerTask; pendin
           <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">PROXIMA ROTINA</p>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">PRÓXIMA ROTINA</p>
           <h3 className="mt-1 text-lg font-bold leading-tight text-foreground">
             {config ? config.title : "Nada agendado"}
           </h3>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
             {task?.nextRunAt
               ? formatDate(task.nextRunAt)
-              : "Adicione uma rotina para aparecer no calendario."}
+              : "Adicione uma rotina para aparecer no calendário."}
           </p>
         </div>
       </div>
@@ -639,7 +661,7 @@ function NextScheduleCard({ task, pendingCount }: { task?: SchedulerTask; pendin
       <div className="mt-4 flex items-start gap-2 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3 text-[12px] font-semibold leading-relaxed text-primary">
         <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          O Hermes não fica rodando em segundo plano. A agenda e verificada ao abrir ou por clique.
+          O Hermes não fica rodando em segundo plano. A agenda é verificada ao abrir ou por clique.
         </span>
       </div>
     </div>
@@ -649,7 +671,7 @@ function NextScheduleCard({ task, pendingCount }: { task?: SchedulerTask; pendin
 function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
   return (
     <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
-      <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">PROXIMAS EXECUCOES</h3>
+      <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">PRÓXIMAS EXECUÇÕES</h3>
       <div className="mt-3 space-y-2">
         {tasks.length > 0 ? (
           tasks.slice(0, 5).map((task) => {
@@ -679,7 +701,7 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
           <EmptyState
             icon={CalendarClock}
             title="Agenda livre"
-            sub="As proximas execuções aparecerão aqui."
+            sub="As próximas execuções aparecerão aqui."
           />
         )}
       </div>
@@ -689,7 +711,7 @@ function UpcomingTimeline({ tasks }: { tasks: SchedulerTask[] }) {
 
 function SafetySummary() {
   const items = [
-    "Sem servico residente",
+    "Sem serviço residente",
     "Sem limpeza automática real",
     "Sem Registro automático",
     "Sem comandos de reparo",
@@ -697,10 +719,10 @@ function SafetySummary() {
 
   return (
     <section className="rounded-2xl border border-border/70 bg-background/70 p-4">
-      <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SEGURANCA DA AGENDA</h3>
+      <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">SEGURANÇA DA AGENDA</h3>
       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
         A manutenção programada é conservadora: prepara leituras, scans e relatórios locais, sem
-        mexer no Windows por conta propria.
+        mexer no Windows por conta própria.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2">
         {items.map((item) => (
@@ -1222,30 +1244,24 @@ function saveHistory(history: SchedulerHistoryEntry[]) {
 }
 
 function readNotificationPreferences(): NotificationPreferences {
-  const fallback: NotificationPreferences = {
-    system: false,
-    cleanupDone: false,
-    performanceAlerts: false,
-  };
-
   if (typeof window === "undefined") {
-    return fallback;
+    return DEFAULT_NOTIFICATION_PREFERENCES;
   }
 
   try {
     const raw = window.localStorage.getItem(ADMIN_PREFS_KEY);
     if (!raw) {
-      return fallback;
+      return DEFAULT_NOTIFICATION_PREFERENCES;
     }
 
     const parsed = JSON.parse(raw) as { notifications: Partial<NotificationPreferences> };
     return {
-      ...fallback,
+      ...DEFAULT_NOTIFICATION_PREFERENCES,
       ...parsed.notifications,
     };
   } catch (error) {
     console.warn("Falha ao ler preferencias de notificação Hermes.", error);
-    return fallback;
+    return DEFAULT_NOTIFICATION_PREFERENCES;
   }
 }
 
