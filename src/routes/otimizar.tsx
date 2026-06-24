@@ -85,22 +85,26 @@ function OtimizarPage() {
   const [quickPrepareRunKey, setQuickPrepareRunKey] = useState(0);
   const [isSmartOptimizeOpen, setIsSmartOptimizeOpen] = useState(false);
   const [smartOptimizeRunKey, setSmartOptimizeRunKey] = useState(0);
-  const [selectedDnsProviderId, setSelectedDnsProviderId] = useState<DnsProviderId>(
-    () => readQuickPrepareGate()?.dnsProviderId ?? "cloudflare",
-  );
-  const [quickPrepareGate, setQuickPrepareGate] = useState<QuickPrepareGate | null>(() =>
-    readQuickPrepareGate(),
-  );
+  const [selectedDnsProviderId, setSelectedDnsProviderId] = useState<DnsProviderId>("cloudflare");
+  const [quickPrepareGate, setQuickPrepareGate] = useState<QuickPrepareGate | null>(null);
   const [restartRecommendation, setRestartRecommendation] = useState<RestartRecommendation | null>(
-    () => readRestartRecommendation(),
+    null,
   );
-  const [executionReport, setExecutionReport] = useState<ExecutionReport | null>(() =>
-    readExecutionReport(),
-  );
+  const [executionReport, setExecutionReport] = useState<ExecutionReport | null>(null);
   const [executionCycleReport, setExecutionCycleReport] = useState<ExecutionCycleReport | null>(
-    () => readExecutionCycleReport({ safeMode: HERMES_SAFE_TEST_MODE }),
+    null,
   );
   const [systemBootContext, setSystemBootContext] = useState<SystemBootContext | null>(null);
+
+  useEffect(() => {
+    const storedGate = readQuickPrepareGate();
+
+    setQuickPrepareGate(storedGate);
+    setSelectedDnsProviderId(storedGate?.dnsProviderId ?? "cloudflare");
+    setRestartRecommendation(readRestartRecommendation());
+    setExecutionReport(readExecutionReport());
+    setExecutionCycleReport(readExecutionCycleReport({ safeMode: HERMES_SAFE_TEST_MODE }));
+  }, []);
 
   useEffect(() => {
     let mounted = true;
