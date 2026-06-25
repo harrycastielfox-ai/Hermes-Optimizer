@@ -1,4 +1,4 @@
-# Relatorio Interno de Release - Hermes Optimizer 0.1.0
+﻿# Relatorio Interno de Release - Hermes Optimizer 0.1.0
 
 Data: 2026-06-24
 
@@ -62,7 +62,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 
 1. Executar checklist em `docs/release-qa-checklist.md`.
 2. Validar rollback real em VM ou maquina de teste descartavel.
-3. Definir se o lancamento sera gratuito/sem licenca ou implementar licenciamento LigaHub real.
+3. Definir se o lancamento sera gratuito/sem licenca ou implementar licenciamento Hermes Account real.
 4. Desativar modo seguro somente depois de QA real das allowlists.
 5. Gerar build release assinado com certificado oficial.
 6. Reexecutar lint, build web, build Tauri, testes Rust e instalacao limpa.
@@ -72,3 +72,4 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 **NO-GO para lancamento oficial.**
 
 **GO limitado** apenas para build interno de QA/debug, com modo seguro ativo e sem promessa comercial de otimizacao real.
+

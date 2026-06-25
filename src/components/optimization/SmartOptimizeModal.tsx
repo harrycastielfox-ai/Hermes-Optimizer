@@ -38,6 +38,7 @@ import {
 } from "@/lib/execution-report";
 import { verifyExecutionActions } from "@/lib/execution-verification";
 import {
+  auditOfficialGamerDependencyManifest,
   buildGamerDependencyReadiness,
   downloadOfficialGamerDependencyInstallers,
   installVerifiedGamerDependencies,
@@ -47,6 +48,7 @@ import {
   type GamerDependencyInstallActionResult,
   type GamerDependencyInstallActionStatus,
   type GamerDependencyInstallResult,
+  type GamerDependencyManifestAuditResult,
   type GamerDependencyVerificationItem,
   type GamerDependencyVerificationReport,
   type GamerDependencyVerificationStatus,
@@ -888,8 +890,11 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
   const [currentReport, setCurrentReport] = useState(report);
   const [openError, setOpenError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isAuditing, setIsAuditing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
+  const [lastManifestAuditResult, setLastManifestAuditResult] =
+    useState<GamerDependencyManifestAuditResult | null>(null);
   const [lastDownloadResult, setLastDownloadResult] =
     useState<GamerDependencyDownloadResult | null>(null);
   const [lastInstallResult, setLastInstallResult] = useState<GamerDependencyInstallResult | null>(
@@ -899,6 +904,7 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
   useEffect(() => {
     setCurrentReport(report);
     setActionMessage(null);
+    setLastManifestAuditResult(null);
     setLastDownloadResult(null);
     setLastInstallResult(null);
   }, [report]);
@@ -942,12 +948,31 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
       setLastDownloadResult(result);
       setLastInstallResult(null);
       setActionMessage(
-        `${result.downloadedCount} baixado(s), ${result.skippedCount} já no cache, ${result.failedCount} falha(s).`,
+        `${result.downloadedCount} baixado(s), ${result.skippedCount} pulado(s), ${result.failedCount} falha(s).`,
       );
     } catch (error) {
       setOpenError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsDownloading(false);
+    }
+  }
+
+  async function handleAuditManifest() {
+    try {
+      setOpenError(null);
+      setActionMessage(null);
+      setIsAuditing(true);
+      const result = await auditOfficialGamerDependencyManifest();
+      setLastManifestAuditResult(result);
+      setLastDownloadResult(null);
+      setLastInstallResult(null);
+      setActionMessage(
+        `${result.auditedCount + result.cachedCount} auditado(s), ${result.blockedCount} bloqueado(s), ${result.failedCount} falha(s).`,
+      );
+    } catch (error) {
+      setOpenError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsAuditing(false);
     }
   }
 
@@ -985,8 +1010,21 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
           <div className="flex flex-wrap gap-2 sm:justify-end">
             <button
               type="button"
+              onClick={handleAuditManifest}
+              disabled={isAuditing || isDownloading || isInstalling}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isAuditing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="h-4 w-4" />
+              )}
+              Auditar manifesto
+            </button>
+            <button
+              type="button"
               onClick={handleDownloadOfficial}
-              disabled={isDownloading || isInstalling}
+              disabled={isAuditing || isDownloading || isInstalling}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2 text-xs font-black text-success transition hover:bg-success/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isDownloading ? (
@@ -999,7 +1037,7 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
             <button
               type="button"
               onClick={handleInstallVerified}
-              disabled={isDownloading || isInstalling}
+              disabled={isAuditing || isDownloading || isInstalling}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs font-black text-warning transition hover:bg-warning/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isInstalling ? (
@@ -1031,8 +1069,9 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
         </div>
       </div>
 
-      {(lastDownloadResult || lastInstallResult) && (
+      {(lastManifestAuditResult || lastDownloadResult || lastInstallResult) && (
         <DependencyExecutionReport
+          manifestAuditResult={lastManifestAuditResult}
           downloadResult={lastDownloadResult}
           installResult={lastInstallResult}
         />
@@ -1111,9 +1150,11 @@ function ExcludedToolchainPanel({ items }: { items: GamerDependencyExcludedToolc
 }
 
 function DependencyExecutionReport({
+  manifestAuditResult,
   downloadResult,
   installResult,
 }: {
+  manifestAuditResult: GamerDependencyManifestAuditResult | null;
   downloadResult: GamerDependencyDownloadResult | null;
   installResult: GamerDependencyInstallResult | null;
 }) {
@@ -1156,7 +1197,60 @@ function DependencyExecutionReport({
   }
 
   if (!downloadResult) {
-    return null;
+    if (!manifestAuditResult) {
+      return null;
+    }
+
+    const visibleItems = manifestAuditResult.items.slice(0, 8);
+
+    return (
+      <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+              Relatório da última ação
+            </p>
+            <h4 className="mt-1 text-sm font-black text-foreground">
+              Auditoria de manifesto VC++/DirectX
+            </h4>
+            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+              Gera SHA256 e valida assinatura Microsoft sem liberar instalação automática.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <DependencyStat
+              label="Auditados"
+              value={manifestAuditResult.auditedCount}
+              tone="success"
+            />
+            <DependencyStat label="Cache" value={manifestAuditResult.cachedCount} tone="primary" />
+            <DependencyStat label="Bloq." value={manifestAuditResult.blockedCount} tone="warning" />
+            <DependencyStat label="Falhas" value={manifestAuditResult.failedCount} tone="warning" />
+          </div>
+        </div>
+        <div className="mt-3 overflow-hidden rounded-xl border border-border/60">
+          {visibleItems.map((item) => (
+            <div
+              key={item.packageId}
+              className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-black text-foreground">{item.title}</p>
+                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                  {item.sha256 ?? item.auditPath}
+                </p>
+              </div>
+              <p className="truncate text-[11px] font-medium text-muted-foreground">
+                {item.manifestHint ?? item.message}
+              </p>
+              <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
+                {item.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1173,7 +1267,7 @@ function DependencyExecutionReport({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <DependencyStat label="Baixados" value={downloadResult.downloadedCount} tone="success" />
-          <DependencyStat label="Cache" value={downloadResult.skippedCount} tone="primary" />
+          <DependencyStat label="Pulados" value={downloadResult.skippedCount} tone="primary" />
           <DependencyStat label="Falhas" value={downloadResult.failedCount} tone="warning" />
         </div>
       </div>

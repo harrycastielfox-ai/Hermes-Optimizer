@@ -82,7 +82,7 @@ export function HermesWindowChrome() {
 
   const handleAction = useCallback((action: WindowAction) => {
     void runWindowAction(action).catch((error) => {
-      console.warn("Nao foi possivel controlar a janela do Hermes.", error);
+      console.warn("Não foi possível controlar a janela do Hermes.", error);
     });
   }, []);
 
@@ -96,7 +96,7 @@ export function HermesWindowChrome() {
     }
 
     void startWindowDrag().catch((error) => {
-      console.warn("Nao foi possivel arrastar a janela do Hermes.", error);
+      console.warn("Não foi possível arrastar a janela do Hermes.", error);
     });
   }, []);
 
@@ -110,7 +110,7 @@ export function HermesWindowChrome() {
       event.stopPropagation();
 
       void startWindowResize(direction).catch((error) => {
-        console.warn("Nao foi possivel redimensionar a janela do Hermes.", error);
+        console.warn("Não foi possível redimensionar a janela do Hermes.", error);
       });
     },
     [],

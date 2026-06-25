@@ -745,6 +745,7 @@ function formatGamerDependencyOutputs(
 
   return [
     `${verification.readyCount}/${verification.totalPackages} dependência(s) VC++/DirectX prontas`,
+    `${readiness.installPlan.approvedPackages}/${readiness.installPlan.totalPackages} aprovada(s) no manifesto oficial`,
     `${missingCount} ausente(s), ${blockedCount} bloqueada(s), ${failedCount} falha(s)`,
     `${verification.installedLocallyCount} já instalada(s) no Windows`,
     readiness.detectedSummary,

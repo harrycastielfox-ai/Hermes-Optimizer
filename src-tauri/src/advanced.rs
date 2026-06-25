@@ -513,6 +513,27 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "dism-enable-directplay" => Some(dism_enable_directplay_plan()),
             "winsock-reset" => Some(winsock_reset_plan()),
             "reset-ip-stack" => Some(reset_ip_stack_plan()),
+            "set-network-autotuning-normal" => Some(netsh_tcp_global_plan(
+                "set-network-autotuning-normal",
+                "Auto tuning de rede normal",
+                "Ajusta o TCP Auto-Tuning para normal, evitando estado desativado que pode limitar throughput.",
+                "autotuninglevel=normal",
+                "cmd: netsh int tcp set global autotuninglevel=normal",
+            )),
+            "disable-network-ecn" => Some(netsh_tcp_global_plan(
+                "disable-network-ecn",
+                "ECN de rede seguro",
+                "Desativa ECN para reduzir incompatibilidades com rotas, provedores e equipamentos antigos.",
+                "ecncapability=disabled",
+                "cmd: netsh int tcp set global ecncapability=disabled",
+            )),
+            "enable-network-rss" => Some(netsh_tcp_global_plan(
+                "enable-network-rss",
+                "RSS de rede ativo",
+                "Ativa Receive-Side Scaling para distribuir processamento de rede quando o adaptador suportar.",
+                "rss=enabled",
+                "cmd: netsh int tcp set global rss=enabled",
+            )),
             "set-diagtrack-service-manual" => Some(set_service_manual_plan(
                 "set-diagtrack-service-manual",
                 "Servico de telemetria em manual",
@@ -1233,6 +1254,43 @@ fn reset_ip_stack_plan() -> AdvancedPlan {
         operations: vec![AdvancedOperation::Cmd {
             program: "netsh".to_string(),
             args: vec!["int".to_string(), "ip".to_string(), "reset".to_string()],
+            transient: false,
+        }],
+    }
+}
+
+fn netsh_tcp_global_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    setting: &str,
+    command_preview: &str,
+) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            false,
+            "Estado TCP global atual",
+            &format!("Definir {setting}"),
+            command_preview,
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "netsh".to_string(),
+            args: vec![
+                "int".to_string(),
+                "tcp".to_string(),
+                "set".to_string(),
+                "global".to_string(),
+                setting.to_string(),
+            ],
             transient: false,
         }],
     }
@@ -2141,6 +2199,9 @@ fn default_action_ids() -> Vec<String> {
         "flush-dns-cache".to_string(),
         "dism-analyze-component-store".to_string(),
         "dism-start-component-cleanup".to_string(),
+        "set-network-autotuning-normal".to_string(),
+        "disable-network-ecn".to_string(),
+        "enable-network-rss".to_string(),
         "dism-check-netfx3".to_string(),
         "dism-check-directplay".to_string(),
         "set-diagtrack-service-manual".to_string(),
@@ -2184,6 +2245,9 @@ fn allowed_action_ids() -> Vec<String> {
         "dism-enable-directplay".to_string(),
         "winsock-reset".to_string(),
         "reset-ip-stack".to_string(),
+        "set-network-autotuning-normal".to_string(),
+        "disable-network-ecn".to_string(),
+        "enable-network-rss".to_string(),
         "set-diagtrack-service-manual".to_string(),
         "set-mapsbroker-service-manual".to_string(),
         "allow-hermes-defender-exclusion".to_string(),
@@ -3017,6 +3081,30 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
         "netsh" => {
             normalized_args == ["winsock".to_string(), "reset".to_string()]
                 || normalized_args == ["int".to_string(), "ip".to_string(), "reset".to_string()]
+                || normalized_args
+                    == [
+                        "int".to_string(),
+                        "tcp".to_string(),
+                        "set".to_string(),
+                        "global".to_string(),
+                        "autotuninglevel=normal".to_string(),
+                    ]
+                || normalized_args
+                    == [
+                        "int".to_string(),
+                        "tcp".to_string(),
+                        "set".to_string(),
+                        "global".to_string(),
+                        "ecncapability=disabled".to_string(),
+                    ]
+                || normalized_args
+                    == [
+                        "int".to_string(),
+                        "tcp".to_string(),
+                        "set".to_string(),
+                        "global".to_string(),
+                        "rss=enabled".to_string(),
+                    ]
         }
         "sc.exe" => matches!(
             normalized_args.as_slice(),
@@ -3505,6 +3593,46 @@ mod tests {
         assert!(!is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
             "C:\\Windows\\System32\\notepad.exe"
+        ));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_safe_tcp_global_commands() {
+        let tcp_autotuning = vec![
+            "int".to_string(),
+            "tcp".to_string(),
+            "set".to_string(),
+            "global".to_string(),
+            "autotuninglevel=normal".to_string(),
+        ];
+        let tcp_ecn = vec![
+            "int".to_string(),
+            "tcp".to_string(),
+            "set".to_string(),
+            "global".to_string(),
+            "ecncapability=disabled".to_string(),
+        ];
+        let tcp_rss = vec![
+            "int".to_string(),
+            "tcp".to_string(),
+            "set".to_string(),
+            "global".to_string(),
+            "rss=enabled".to_string(),
+        ];
+        let unsupported_tcp_setting = vec![
+            "int".to_string(),
+            "tcp".to_string(),
+            "set".to_string(),
+            "global".to_string(),
+            "chimney=enabled".to_string(),
+        ];
+
+        assert!(is_allowed_native_command("netsh", &tcp_autotuning));
+        assert!(is_allowed_native_command("netsh", &tcp_ecn));
+        assert!(is_allowed_native_command("netsh", &tcp_rss));
+        assert!(!is_allowed_native_command(
+            "netsh",
+            &unsupported_tcp_setting
         ));
     }
 }

@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Hermes Optimizer desktop engine"
 authors = ["Hermes Optimizer Team"]
 license = "LicenseRef-Proprietary"
-repository = "https://play.ligahub.org"
 edition = "2021"
 rust-version = "1.77.2"
 

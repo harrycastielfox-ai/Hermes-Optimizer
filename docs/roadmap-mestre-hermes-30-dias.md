@@ -1,4 +1,4 @@
-# Hermes Optimizer - Roadmap Mestre de 30 Dias
+﻿# Hermes Optimizer - Roadmap Mestre de 30 Dias
 
 Status: fonte oficial de direcao do produto para o proximo ciclo.
 
@@ -597,7 +597,7 @@ Entregavel: Hermes 0.2 Beta/RC com decisao objetiva de lancamento.
 
 ### P2 - Pode entrar depois
 
-- Conta LigaHub.
+- Conta Hermes Account.
 - Licenciamento WooCommerce.
 - Sincronizacao em nuvem.
 - Atualizador automatico completo.
@@ -615,7 +615,7 @@ Decisao recomendada:
 - Hermes 0.2 Beta funciona localmente sem login.
 - A tela informa claramente que o licenciamento comercial ainda nao esta ativo.
 - Nenhum bloqueio falso ou validacao simulada.
-- A especificacao futura continua em `docs/futuro-ligahub-auth.md`.
+- A especificacao futura continua em `docs/futuro-hermes-auth.md`.
 
 O licenciamento so entra em implementacao quando API, renovacao, revogacao, modo offline e suporte estiverem definidos.
 
@@ -670,7 +670,7 @@ Depois do Hermes 0.2:
 3. Expandir perfis por jogo e aplicativo.
 4. Implementar atualizador seguro.
 5. Decidir modelo comercial.
-6. Implementar licenciamento LigaHub somente com backend pronto.
+6. Implementar licenciamento Hermes Account somente com backend pronto.
 7. Adicionar benchmarks mais profundos e comparacoes historicas.
 8. Criar ecossistema de modulos sem comprometer seguranca.
 
@@ -683,3 +683,4 @@ Quando houver conflito entre "um clique" e "uma alteracao perigosa escondida", o
 Quando um dado nao puder ser coletado, o Hermes diz `Indisponivel`.
 
 Quando uma melhoria nao puder ser medida, o Hermes a apresenta como estimativa, nunca como garantia.
+

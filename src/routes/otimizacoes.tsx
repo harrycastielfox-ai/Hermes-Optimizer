@@ -179,7 +179,7 @@ function OtimizacoesPage() {
                     icon={Gamepad2}
                     label="MODO JOGO"
                     value={report.gameMode.status}
-                    sub="Configuracao do Windows"
+                    sub="Configuração do Windows"
                   />
                   <SummaryCard
                     icon={Palette}
@@ -848,7 +848,7 @@ function performancePresentation(item: PerformanceSetting) {
 
   const presentation = map[item.id] ?? {
     title: item.label,
-    description: "Configuracao de desempenho monitorada pelo Hermes.",
+    description: "Configuração de desempenho monitorada pelo Hermes.",
     impact: "Impacto: depende do estado atual do Windows.",
   };
 

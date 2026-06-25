@@ -1,4 +1,4 @@
-# Hermes Optimizer - Roadmap Funcional
+﻿# Hermes Optimizer - Roadmap Funcional
 
 > Documento historico. A direcao oficial do ciclo atual esta em
 > `docs/roadmap-mestre-hermes-30-dias.md`.
@@ -218,7 +218,7 @@ Itens comerciais e tecnicos tambem permanecem planejados:
 - Restore Center Completo.
 - IA Local Hermes.
 - Licenciamento Comercial.
-- Autenticacao e licenciamento LigaHub/WooCommerce via MU-plugin WordPress real. Requisito salvo em `docs/futuro-ligahub-auth.md`.
+- Autenticacao e licenciamento Hermes Account/WooCommerce via MU-plugin WordPress real. Requisito salvo em `docs/futuro-hermes-auth.md`.
 
 ## Comandos Windows/CMD - Politica
 
@@ -251,3 +251,4 @@ Preservar:
 - cards atuais.
 
 Não realizar redesign sem solicitação explícita.
+

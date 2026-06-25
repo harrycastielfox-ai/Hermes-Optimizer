@@ -862,7 +862,7 @@ function OptimizationPhaseBoard({
                 quickPrepareGate ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
               }`}
             >
-              {quickPrepareGate ? "Concluida" : "Aguardando"}
+              {quickPrepareGate ? "Concluída" : "Aguardando"}
             </span>
           </div>
           <h2 className="text-base font-black text-foreground">Preparação da Máquina</h2>

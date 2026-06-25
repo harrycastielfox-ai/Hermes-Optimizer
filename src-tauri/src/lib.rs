@@ -70,6 +70,7 @@ pub fn run() {
             gamer::gamer_profile_save,
             gamer::gamer_profiles_list,
             gamer::gamer_restore_session,
+            gamer_dependencies::gamer_dependency_audit_official_manifest,
             gamer_dependencies::gamer_dependency_download_official_installers,
             gamer_dependencies::gamer_dependency_install_verified,
             gamer_dependencies::gamer_dependency_open_cache_dir,

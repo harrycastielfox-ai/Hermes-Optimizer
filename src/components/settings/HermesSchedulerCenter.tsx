@@ -164,7 +164,7 @@ export function HermesSchedulerCenter() {
     const { tasks: loadedTasks, removedLegacyDefaults } = readTasks();
     const loadedNotifications = readNotificationPreferences();
     setTasks(loadedTasks);
-    setHistory(readHistory(removedLegacyDefaults && loadedTasks.length === 0));
+    setHistory(readHistory(removedLegacyDefaults));
     setNotifications(loadedNotifications);
 
     const onOpenTasks = loadedTasks.filter(
@@ -489,13 +489,13 @@ function RemoveTaskDialog({
               <Trash2 className="h-6 w-6" />
             </div>
             <p className="text-[10px] font-bold tracking-[0.2em] text-destructive">
-              REMOVER PROGRAMACAO
+              REMOVER PROGRAMAÇÃO
             </p>
             <AlertDialogTitle className="text-xl font-bold tracking-tight text-foreground">
               Remover esta tarefa?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
-              A rotina deixara de aparecer na agenda e não será executada novamente.
+              A rotina deixará de aparecer na agenda e não será executada novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
         </div>
@@ -852,7 +852,7 @@ function TaskRow({
                 {frequencyLabel(task.frequency)}
               </span>
               <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">
-                {task.nextRunAt ? `Proxima: ${formatDate(task.nextRunAt)}` : "Execução manual"}
+                {task.nextRunAt ? `Próxima: ${formatDate(task.nextRunAt)}` : "Execução manual"}
               </span>
             </div>
           </div>
@@ -890,7 +890,7 @@ function TaskRow({
 
       <div className="mt-3">
         <OptionGrid
-          label="Frequencia"
+          label="Frequência"
           value={task.frequency}
           options={frequencyOptions}
           onChange={onFrequencyChange}
@@ -1260,7 +1260,7 @@ function readNotificationPreferences(): NotificationPreferences {
       ...parsed.notifications,
     };
   } catch (error) {
-    console.warn("Falha ao ler preferencias de notificação Hermes.", error);
+    console.warn("Falha ao ler preferências de notificação Hermes.", error);
     return DEFAULT_NOTIFICATION_PREFERENCES;
   }
 }

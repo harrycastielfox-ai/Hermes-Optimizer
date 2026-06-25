@@ -27,15 +27,17 @@ export type GamerDependencyInstallQueueItem = {
   title: string;
   installerFileName: string;
   installCommand: string;
-  blocked: true;
-  blockedReason: string;
+  manifestReady: boolean;
+  blocked: boolean;
+  blockedReason?: string;
   requiredChecks: string[];
 };
 
 export type GamerDependencyInstallPlan = {
   totalPackages: number;
+  approvedPackages: number;
   blockedPackages: number;
-  canExecute: false;
+  canExecute: boolean;
   queue: GamerDependencyInstallQueueItem[];
 };
 
@@ -80,6 +82,36 @@ export type GamerDependencyDownloadResult = {
   report: GamerDependencyVerificationReport;
 };
 
+export type GamerDependencyManifestAuditStatus = "audited" | "cached" | "failed" | "blocked";
+
+export type GamerDependencyManifestAuditItem = {
+  packageId: string;
+  title: string;
+  installerFileName: string;
+  officialUrl?: string;
+  auditPath: string;
+  status: GamerDependencyManifestAuditStatus;
+  message: string;
+  sha256?: string;
+  signatureStatus?: string;
+  signatureSubject?: string;
+  publisherMatches?: boolean;
+  manifestHint?: string;
+};
+
+export type GamerDependencyManifestAuditResult = {
+  generatedAt: string;
+  engineVersion: string;
+  auditDir: string;
+  totalPackages: number;
+  auditedCount: number;
+  cachedCount: number;
+  failedCount: number;
+  blockedCount: number;
+  items: GamerDependencyManifestAuditItem[];
+  messages: string[];
+};
+
 export type GamerDependencyInstallActionStatus =
   | "dryRun"
   | "installed"
@@ -116,6 +148,7 @@ export type GamerDependencyInstallRequest = {
 };
 
 export type GamerDependencyVerifyRequest = {
+  packageIds?: string[];
   packages: Array<{
     id: string;
     title: string;
@@ -175,8 +208,8 @@ export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolcha
     title: "Ferramentas de Build do Visual Studio 2022",
     observedVersion: "17.14.33",
     policy: "neverAutoInstall",
-    reason: "Toolchain de compilacao pesada; nao e runtime necessario para jogar.",
-    relevantWhen: "Somente para desenvolvedores, compilacao nativa ou projetos C++.",
+    reason: "Toolchain de compilação pesada; não é runtime necessário para jogar.",
+    relevantWhen: "Somente para desenvolvedores, compilação nativa ou projetos C++.",
   },
   {
     id: "visual-studio-installer",
@@ -184,8 +217,8 @@ export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolcha
     observedVersion: "4.6.58.48107",
     policy: "neverAutoInstall",
     reason:
-      "Gerenciador de workloads do Visual Studio; nao melhora FPS, latencia ou estabilidade gamer.",
-    relevantWhen: "Somente se o usuario quiser administrar instalacoes do Visual Studio.",
+      "Gerenciador de workloads do Visual Studio; não melhora FPS, latência ou estabilidade gamer.",
+    relevantWhen: "Somente se o usuário quiser administrar instalações do Visual Studio.",
   },
   {
     id: "windows-sdk-addon",
@@ -194,7 +227,7 @@ export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolcha
     policy: "neverAutoInstall",
     reason:
       "Componente de desenvolvimento do Windows SDK; fica fora do pacote gamer do cliente final.",
-    relevantWhen: "Somente para desenvolvimento, depuracao ou build de apps Windows.",
+    relevantWhen: "Somente para desenvolvimento, depuração ou build de apps Windows.",
   },
   {
     id: "windows-sdk-26100",
@@ -202,8 +235,8 @@ export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolcha
     observedVersion: "10.0.26100.7705",
     policy: "neverAutoInstall",
     reason:
-      "SDK completo do Windows e grande e nao substitui DirectX End-User Runtime nem VC++ Redistributable.",
-    relevantWhen: "Somente para desenvolvimento Windows, drivers ou ferramentas tecnicas.",
+      "SDK completo do Windows é grande e não substitui DirectX End-User Runtime nem VC++ Redistributable.",
+    relevantWhen: "Somente para desenvolvimento Windows, drivers ou ferramentas técnicas.",
   },
   {
     id: "vs-core-editor-fonts",
@@ -211,15 +244,15 @@ export const GAMER_DEPENDENCY_EXCLUDED_TOOLCHAIN: GamerDependencyExcludedToolcha
     observedVersion: "17.7.40001",
     policy: "neverAutoInstall",
     reason:
-      "Fonte/asset do Visual Studio; sem beneficio direto para jogos ou otimizacao do sistema.",
-    relevantWhen: "Somente como dependencia visual do ambiente Visual Studio.",
+      "Fonte/asset do Visual Studio; sem benefício direto para jogos ou otimização do sistema.",
+    relevantWhen: "Somente como dependência visual do ambiente Visual Studio.",
   },
   {
     id: "windows-app-runtime-main",
     title: "Windows App Runtime Main",
     policy: "neverAutoInstall",
-    reason: "Runtime do Windows App SDK; so deve ser instalado quando um app especifico exigir.",
-    relevantWhen: "Somente por requisito explicito de outro aplicativo, nao por otimizacao gamer.",
+    reason: "Runtime do Windows App SDK; só deve ser instalado quando um app específico exigir.",
+    relevantWhen: "Somente por requisito explícito de outro aplicativo, não por otimização gamer.",
   },
 ];
 
@@ -262,26 +295,35 @@ export function buildGamerDependencyReadiness(
 }
 
 export function buildGamerDependencyInstallPlan(): GamerDependencyInstallPlan {
-  const queue = GAMER_DEPENDENCY_PACKAGES.map((item) => ({
-    packageId: item.id,
-    title: item.title,
-    installerFileName: item.installerFileName,
-    installCommand: item.installCommand,
-    blocked: true as const,
-    blockedReason:
-      "Aguardando SHA256 esperado, assinatura Authenticode e checagem local antes de instalar.",
-    requiredChecks: [
-      "Fonte oficial Microsoft",
-      "Hash SHA256 esperado",
-      "Assinatura Authenticode: Microsoft Corporation",
-      "Detecção local para evitar reinstalação desnecessária",
-    ],
-  }));
+  const queue = GAMER_DEPENDENCY_PACKAGES.map((item) => {
+    const manifestReady = isGamerDependencyManifestReady(item);
+
+    return {
+      packageId: item.id,
+      title: item.title,
+      installerFileName: item.installerFileName,
+      installCommand: item.installCommand,
+      manifestReady,
+      blocked: !manifestReady,
+      blockedReason: manifestReady
+        ? undefined
+        : "Aguardando SHA256 esperado, assinatura Authenticode e checagem local antes de instalar.",
+      requiredChecks: [
+        "Fonte oficial Microsoft",
+        "Hash SHA256 esperado",
+        "Assinatura Authenticode: Microsoft Corporation",
+        "Detecção local para evitar reinstalação desnecessária",
+      ],
+    };
+  });
+  const approvedPackages = queue.filter((item) => item.manifestReady).length;
+  const blockedPackages = queue.length - approvedPackages;
 
   return {
     totalPackages: queue.length,
-    blockedPackages: queue.length,
-    canExecute: false,
+    approvedPackages,
+    blockedPackages,
+    canExecute: approvedPackages > 0,
     queue,
   };
 }
@@ -300,11 +342,34 @@ export function buildGamerDependencyVerifyRequest(): GamerDependencyVerifyReques
   };
 }
 
+export function approvedGamerDependencyPackageIds() {
+  return GAMER_DEPENDENCY_PACKAGES.filter(isGamerDependencyManifestReady).map((item) => item.id);
+}
+
+export function buildGamerDependencyDownloadPayload(): GamerDependencyVerifyRequest {
+  return {
+    ...buildGamerDependencyVerifyRequest(),
+    packageIds: approvedGamerDependencyPackageIds(),
+  };
+}
+
 export function buildGamerDependencyInstallPayload(request: GamerDependencyInstallRequest) {
   return {
     ...forceSafeDryRun(request),
+    packageIds: request.packageIds ?? approvedGamerDependencyPackageIds(),
     packages: buildGamerDependencyVerifyRequest().packages,
   };
+}
+
+export function isGamerDependencyManifestReady(item: GamerDependencyPackage) {
+  return Boolean(
+    item.officialUrl &&
+    /^https:\/\/(aka\.ms\/|www\.microsoft\.com\/|download\.microsoft\.com\/)/i.test(
+      item.officialUrl,
+    ) &&
+    item.expectedSha256 &&
+    /^[a-f0-9]{64}$/i.test(item.expectedSha256),
+  );
 }
 
 export async function verifyGamerDependencyInstallers(): Promise<GamerDependencyVerificationReport> {
@@ -343,6 +408,20 @@ export async function downloadOfficialGamerDependencyInstallers(): Promise<Gamer
   const { invoke } = await import("@tauri-apps/api/core");
   return await invoke<GamerDependencyDownloadResult>(
     "gamer_dependency_download_official_installers",
+    {
+      request: buildGamerDependencyDownloadPayload(),
+    },
+  );
+}
+
+export async function auditOfficialGamerDependencyManifest(): Promise<GamerDependencyManifestAuditResult> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    throw new Error("Auditoria oficial disponivel apenas no aplicativo Hermes.");
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<GamerDependencyManifestAuditResult>(
+    "gamer_dependency_audit_official_manifest",
     {
       request: buildGamerDependencyVerifyRequest(),
     },
@@ -412,6 +491,7 @@ function vcRedist(
     installerFileName: `vcredist_${normalizedYear}_${architecture}.exe`,
     officialSourcePage: source.sourcePage,
     officialUrl: source.downloadUrl,
+    expectedSha256: source.expectedSha256,
     requiredPublisher: "Microsoft Corporation",
     installCommand: `vcredist_${normalizedYear}_${architecture}.exe /quiet /norestart`,
     officialSourceStatus: source.downloadUrl ? "downloadUrlVerified" : "sourcePageVerified",
@@ -423,7 +503,7 @@ function vcRedist(
 function vcRedistSource(
   year: (typeof VCRUNTIME_YEARS)[number],
   architecture: "x86" | "x64",
-): { sourcePage: string; downloadUrl?: string } {
+): { sourcePage: string; downloadUrl?: string; expectedSha256?: string } {
   const learnPage =
     "https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170";
 
@@ -431,6 +511,10 @@ function vcRedistSource(
     return {
       sourcePage: learnPage,
       downloadUrl: `https://aka.ms/vc14/vc_redist.${architecture}.exe`,
+      expectedSha256:
+        architecture === "x64"
+          ? "843068991DAAA1F73AD9F6239BCE4D0F6A07A51F18C37EA2A867E9BECA71295C"
+          : "F0BAB33A302B3CDB2E11113760D016F54FD3D2632C65BA7834FAC4F0ABD7F1A3",
     };
   }
 

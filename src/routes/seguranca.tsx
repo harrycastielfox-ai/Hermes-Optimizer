@@ -139,7 +139,7 @@ function SecurityRecoveryPage() {
       setValidation(validationResult);
 
       const restoreConfirmed = window.confirm(
-        `Restaurar este snapshot agora?\n\n${snapshot.name}\nAcoes reversiveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executara apenas rollback suportado pelo manifesto seguro.`,
+        `Restaurar este snapshot agora?\n\n${snapshot.name}\nAções reversíveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executará apenas rollback suportado pelo manifesto seguro.`,
       );
       if (!restoreConfirmed) {
         setNotice("Restauração cancelada após validação segura.");

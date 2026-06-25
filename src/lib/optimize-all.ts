@@ -146,6 +146,9 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "dism-enable-directplay",
   "winsock-reset",
   "reset-ip-stack",
+  "set-network-autotuning-normal",
+  "disable-network-ecn",
+  "enable-network-rss",
   "set-high-performance-power-plan",
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
@@ -328,6 +331,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       gamerDependencyInstallResult.value
         ? gamerDependencyInstallResult.value.message
         : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas; ${gamerDependencyVerification.installedLocallyCount} já instalada(s)`,
+      `${gamerDependencies.installPlan.approvedPackages}/${gamerDependencies.installPlan.totalPackages} dependência(s) com manifesto oficial aprovado`,
       `${gamerDependencies.excludedToolchain.length} item(ns) de toolchain pesada ficam fora do pacote gamer`,
       result.value
         ? `${result.value.appliedActions.length} comando(s) ${appliedVerb(result.value.dryRun)}`

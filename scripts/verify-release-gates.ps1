@@ -29,6 +29,9 @@ $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
+$cargoToml = Read-Text (Join-Path $root "src-tauri\Cargo.toml")
+$oldBrand = 'liga' + 'hub'
+$oldBrandPattern = "play\.$oldBrand|org\.$oldBrand"
 $manifest = Read-Text $manifestPath
 $buildRs = Read-Text $buildRsPath
 $capability = Read-Text $capabilityPath | ConvertFrom-Json
@@ -39,6 +42,22 @@ Assert-True ($manifest -match 'requestedExecutionLevel\s+level="requireAdministr
   "Manifest Windows precisa exigir requireAdministrator."
 Assert-True ($buildRs -match 'windows-app-manifest\.xml') `
   "build.rs precisa embutir windows-app-manifest.xml."
+Assert-True ([string]$tauriConfig.identifier -eq "com.hermesoptimizer.desktop") `
+  "Identifier Tauri precisa usar o namespace Hermes: com.hermesoptimizer.desktop."
+Assert-True ([string]$tauriConfig.identifier -notmatch $oldBrand) `
+  "Identifier Tauri nao pode conter branding tecnico antigo."
+Assert-True ((Read-Text $tauriConfigPath) -notmatch $oldBrandPattern) `
+  "tauri.conf.json nao pode manter branding tecnico antigo."
+Assert-True ($cargoToml -notmatch $oldBrandPattern) `
+  "Cargo.toml nao pode manter repository/branding tecnico antigo."
+
+& node (Join-Path $root "scripts\verify-optimization-catalog.mjs")
+Assert-True ($LASTEXITCODE -eq 0) `
+  "Catalogo de Otimizar Tudo precisa manter a meta tecnica de 150+ acoes."
+
+& node (Join-Path $root "scripts\verify-gamer-dependency-manifest.mjs")
+Assert-True ($LASTEXITCODE -eq 0) `
+  "Manifesto de dependencias gamer precisa manter instalacao bloqueada ate URL, SHA256 e assinatura."
 
 Assert-True ($safeModeTs -match 'VITE_HERMES_SAFE_TEST_MODE') `
   "Frontend precisa ler VITE_HERMES_SAFE_TEST_MODE."

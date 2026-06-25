@@ -1,10 +1,10 @@
-# Futuro - Autenticacao e Licenciamento LigaHub
+﻿# Futuro - Autenticacao e Licenciamento Hermes Account
 
 Status: requisito futuro salvo. Nao implementar sem aprovacao explicita.
 
 ## Objetivo
 
-Criar o fluxo comercial real do Hermes usando a LigaHub como autenticadora e o WooCommerce como fonte de autorizacao da assinatura.
+Criar o fluxo comercial real do Hermes usando a Hermes Account como autenticadora e o WooCommerce como fonte de autorizacao da assinatura.
 
 O recurso deve proteger a interface principal do app: o Hermes so deve liberar a experiencia completa quando o usuario estiver autenticado e possuir acesso ativo ao produto/assinatura WooCommerce `30921`.
 
@@ -17,7 +17,7 @@ App desktop:
 - Rust
 
 Autenticacao externa:
-- LigaHub
+- Hermes Account
 - WordPress
 - WooCommerce
 - MU-plugin WordPress real
@@ -27,7 +27,7 @@ Autenticacao externa:
 O MU-plugin WordPress e obrigatorio. Nao usar mock, API simulada, site ponte ou apenas UI local.
 
 Fonte da verdade:
-- Login: WordPress/LigaHub
+- Login: WordPress/Hermes Account
 - Assinatura: WooCommerce
 - Produto/assinatura: `30921`
 - API de autenticacao: MU-plugin WordPress
@@ -37,9 +37,9 @@ Fonte da verdade:
 
 ## Fluxo esperado
 
-1. Usuario clica em `Entrar com LigaHub` no Hermes.
+1. Usuario clica em `Entrar com Hermes Account` no Hermes.
 2. Tauri abre o navegador padrao no endpoint `/start` do MU-plugin.
-3. LigaHub/WordPress autentica o usuario.
+3. Hermes Account/WordPress autentica o usuario.
 4. MU-plugin verifica se o usuario possui acesso ativo ao produto/assinatura WooCommerce `30921`.
 5. MU-plugin gera um `AUTH_CODE` temporario, seguro, de uso unico e curta duracao.
 6. MU-plugin redireciona diretamente para:
@@ -59,7 +59,7 @@ hermes://auth/callback?code=AUTH_CODE&state=STATE_VALUE
 Link de compra:
 
 ```text
-https://play.ligahub.org/hub/hermes/
+{HERMES_PURCHASE_URL}
 ```
 
 ## MU-plugin WordPress
@@ -83,7 +83,7 @@ Responsabilidades:
 - receber `app`, `state` e `redirect_uri`;
 - validar `redirect_uri`;
 - permitir apenas callback seguro como `hermes://auth/callback`;
-- redirecionar para login LigaHub/WordPress se o usuario nao estiver logado;
+- redirecionar para login Hermes Account/WordPress se o usuario nao estiver logado;
 - continuar o fluxo automaticamente apos login;
 - verificar acesso ativo ao produto/assinatura `30921`;
 - gerar `AUTH_CODE` temporario, de uso unico e expiracao curta;
@@ -133,7 +133,7 @@ Exemplo sem assinatura:
   "authorized": false,
   "reason": "subscription_required",
   "product_id": 30921,
-  "purchase_url": "https://play.ligahub.org/hub/hermes/"
+  "purchase_url": "{HERMES_PURCHASE_URL}"
 }
 ```
 
@@ -146,7 +146,7 @@ O app deve:
 - abrir o navegador padrao para:
 
 ```text
-https://play.ligahub.org/wp-json/hermes-auth/v1/start?app=hermes-desktop&state=STATE_VALUE&redirect_uri=hermes%3A%2F%2Fauth%2Fcallback
+{HERMES_AUTH_BASE_URL}/wp-json/hermes-auth/v1/start?app=hermes-desktop&state=STATE_VALUE&redirect_uri=hermes%3A%2F%2Fauth%2Fcallback
 ```
 
 - receber `hermes://auth/callback?code=AUTH_CODE&state=STATE_VALUE`;
@@ -179,21 +179,21 @@ Estados de UI:
 
 Tela de login:
 - exibida quando nao houver sessao valida;
-- botao `Entrar com LigaHub`;
+- botao `Entrar com Hermes Account`;
 - nao renderizar interface principal antes da autorizacao.
 
 Tela bloqueada:
 - exibida quando usuario nao tiver assinatura ativa;
-- mensagem: `Este aplicativo requer uma assinatura ativa do Hermes na LigaHub.`;
+- mensagem: `Este aplicativo requer uma assinatura ativa do Hermes na Hermes Account.`;
 - botao `Assinar Hermes`;
-- link: `https://play.ligahub.org/hub/hermes/`.
+- link: `{HERMES_PURCHASE_URL}`.
 
 Tela principal protegida:
 - renderizar apenas quando usuario estiver autenticado, sessao valida e `/access` confirmar `authorized: true`.
 
 ## Seguranca obrigatoria
 
-- Nao pedir senha dentro do app se o fluxo usar navegador LigaHub.
+- Nao pedir senha dentro do app se o fluxo usar navegador Hermes Account.
 - Nao expor tokens no frontend React.
 - Nao salvar senha.
 - Nao colocar segredos no React.
@@ -202,7 +202,7 @@ Tela principal protegida:
 - `AUTH_CODE` deve ser de uso unico e expiracao curta.
 - Validar `state`.
 - Validar `redirect_uri`.
-- Usar HTTPS nas chamadas para LigaHub.
+- Usar HTTPS nas chamadas para Hermes Account.
 - Revalidar acesso periodicamente com `/access`.
 - Bloquear o app se assinatura expirar ou for cancelada.
 - Usar Rust/Tauri para armazenamento seguro e operacoes sensiveis.
@@ -232,8 +232,8 @@ Tela principal protegida:
 
 ## Checklist de testes futuro
 
-- App abre sem sessao e mostra `Entrar com LigaHub`.
-- Botao abre navegador na LigaHub.
+- App abre sem sessao e mostra `Entrar com Hermes Account`.
+- Botao abre navegador na Hermes Account.
 - `/start` funciona.
 - Usuario nao logado e redirecionado para login.
 - Fluxo continua apos login.
@@ -257,4 +257,5 @@ Tela principal protegida:
 ## Criterio de conclusao
 
 A fase so sera considerada completa quando existir MU-plugin WordPress real, endpoints REST funcionais, verificacao WooCommerce do produto `30921`, deep link `hermes://`, validacao segura em Rust/Tauri, telas de login/bloqueio e protecao real da interface principal.
+
 

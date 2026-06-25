@@ -11,12 +11,14 @@ use tauri::{AppHandle, Manager};
 
 const DEPENDENCY_ENGINE_VERSION: &str = "gamer-dependencies-verifier-v1";
 const DEPENDENCY_INSTALL_ENGINE_VERSION: &str = "gamer-dependencies-install-v1";
+const DEPENDENCY_MANIFEST_AUDIT_ENGINE_VERSION: &str = "gamer-dependencies-manifest-audit-v1";
 const INSTALLER_TIMEOUT_SECONDS: u64 = 900;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GamerDependencyVerifyRequest {
     pub packages: Vec<GamerDependencyVerifyPackage>,
+    pub package_ids: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -62,6 +64,47 @@ pub struct GamerDependencyDownloadResult {
     pub failed_count: usize,
     pub messages: Vec<String>,
     pub report: GamerDependencyVerificationReport,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GamerDependencyManifestAuditResult {
+    pub generated_at: String,
+    pub engine_version: String,
+    pub audit_dir: String,
+    pub total_packages: usize,
+    pub audited_count: usize,
+    pub cached_count: usize,
+    pub failed_count: usize,
+    pub blocked_count: usize,
+    pub items: Vec<GamerDependencyManifestAuditItem>,
+    pub messages: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GamerDependencyManifestAuditItem {
+    pub package_id: String,
+    pub title: String,
+    pub installer_file_name: String,
+    pub official_url: Option<String>,
+    pub audit_path: String,
+    pub status: GamerDependencyManifestAuditStatus,
+    pub message: String,
+    pub sha256: Option<String>,
+    pub signature_status: Option<String>,
+    pub signature_subject: Option<String>,
+    pub publisher_matches: Option<bool>,
+    pub manifest_hint: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GamerDependencyManifestAuditStatus {
+    Audited,
+    Cached,
+    Failed,
+    Blocked,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -166,6 +209,16 @@ pub async fn gamer_dependency_download_official_installers(
 }
 
 #[tauri::command]
+pub async fn gamer_dependency_audit_official_manifest(
+    app: AppHandle,
+    request: GamerDependencyVerifyRequest,
+) -> Result<GamerDependencyManifestAuditResult, String> {
+    tauri::async_runtime::spawn_blocking(move || audit_manifest_blocking(app, request))
+        .await
+        .map_err(|err| format!("Falha ao auditar manifesto gamer em segundo plano: {err}"))?
+}
+
+#[tauri::command]
 pub async fn gamer_dependency_install_verified(
     app: AppHandle,
     request: GamerDependencyInstallRequest,
@@ -225,9 +278,20 @@ fn download_installers_blocking(
     let mut skipped_count = 0;
     let mut failed_count = 0;
     let mut messages = Vec::new();
+    let package_ids = normalized_package_ids(request.package_ids.as_ref());
+    let downloadable_packages = request
+        .packages
+        .iter()
+        .filter(|package| {
+            package_ids
+                .as_ref()
+                .map(|ids| ids.iter().any(|id| id == &package.id))
+                .unwrap_or(true)
+        })
+        .collect::<Vec<_>>();
 
     if !cfg!(target_os = "windows") {
-        let package_count = request.packages.len();
+        let package_count = downloadable_packages.len();
         let report = verify_installers_blocking(app, request)?;
         return Ok(GamerDependencyDownloadResult {
             downloaded_count,
@@ -238,7 +302,7 @@ fn download_installers_blocking(
         });
     }
 
-    for package in &request.packages {
+    for package in downloadable_packages {
         match download_package(&cache_dir, package) {
             Ok(DownloadOutcome::Downloaded(message)) => {
                 downloaded_count += 1;
@@ -265,6 +329,95 @@ fn download_installers_blocking(
     })
 }
 
+fn normalized_package_ids(package_ids: Option<&Vec<String>>) -> Option<Vec<String>> {
+    package_ids
+        .map(|items| {
+            items
+                .iter()
+                .map(|item| item.trim().to_string())
+                .filter(|item| !item.is_empty())
+                .collect::<Vec<_>>()
+        })
+        .filter(|items| !items.is_empty())
+}
+
+fn audit_manifest_blocking(
+    app: AppHandle,
+    request: GamerDependencyVerifyRequest,
+) -> Result<GamerDependencyManifestAuditResult, String> {
+    let audit_dir = dependency_audit_dir(&app)?;
+    let mut items = Vec::new();
+    let mut messages = Vec::new();
+
+    if !cfg!(target_os = "windows") {
+        let total_packages = request.packages.len();
+        return Ok(GamerDependencyManifestAuditResult {
+            generated_at: now_timestamp(),
+            engine_version: DEPENDENCY_MANIFEST_AUDIT_ENGINE_VERSION.to_string(),
+            audit_dir: audit_dir.to_string_lossy().to_string(),
+            total_packages,
+            audited_count: 0,
+            cached_count: 0,
+            failed_count: 0,
+            blocked_count: total_packages,
+            items: request
+                .packages
+                .iter()
+                .map(|package| {
+                    manifest_audit_item(
+                        package,
+                        package.installer_file_name.clone(),
+                        None,
+                        audit_dir.join(&package.installer_file_name),
+                        GamerDependencyManifestAuditStatus::Blocked,
+                        "Auditoria de assinatura Authenticode disponivel apenas no Windows."
+                            .to_string(),
+                        None,
+                        None,
+                    )
+                })
+                .collect(),
+            messages: vec!["Auditoria oficial disponivel apenas no Windows.".to_string()],
+        });
+    }
+
+    for package in &request.packages {
+        let item = audit_manifest_package(&audit_dir, package);
+        messages.push(format!("{}: {}", package.title, item.message));
+        items.push(item);
+    }
+
+    let audited_count = items
+        .iter()
+        .filter(|item| matches!(item.status, GamerDependencyManifestAuditStatus::Audited))
+        .count();
+    let cached_count = items
+        .iter()
+        .filter(|item| matches!(item.status, GamerDependencyManifestAuditStatus::Cached))
+        .count();
+    let failed_count = items
+        .iter()
+        .filter(|item| matches!(item.status, GamerDependencyManifestAuditStatus::Failed))
+        .count();
+    let blocked_count = items
+        .iter()
+        .filter(|item| matches!(item.status, GamerDependencyManifestAuditStatus::Blocked))
+        .count();
+
+    Ok(GamerDependencyManifestAuditResult {
+        generated_at: now_timestamp(),
+        engine_version: DEPENDENCY_MANIFEST_AUDIT_ENGINE_VERSION.to_string(),
+        audit_dir: audit_dir.to_string_lossy().to_string(),
+        total_packages: request.packages.len(),
+        audited_count,
+        cached_count,
+        failed_count,
+        blocked_count,
+        items,
+        messages,
+    })
+}
+
 fn install_verified_blocking(
     app: AppHandle,
     request: GamerDependencyInstallRequest,
@@ -281,19 +434,10 @@ fn install_verified_blocking(
 
     let verify_request = GamerDependencyVerifyRequest {
         packages: request.packages.clone(),
+        package_ids: None,
     };
     let verification = verify_installers_blocking(app.clone(), verify_request)?;
-    let selected_ids = request
-        .package_ids
-        .as_ref()
-        .map(|items| {
-            items
-                .iter()
-                .map(|item| item.trim().to_string())
-                .filter(|item| !item.is_empty())
-                .collect::<Vec<_>>()
-        })
-        .filter(|items| !items.is_empty());
+    let selected_ids = normalized_package_ids(request.package_ids.as_ref());
 
     let mut actions = Vec::new();
     for package in &request.packages {
@@ -330,6 +474,7 @@ fn install_verified_blocking(
         app,
         GamerDependencyVerifyRequest {
             packages: request.packages,
+            package_ids: None,
         },
     )?;
 
@@ -560,9 +705,18 @@ fn download_package(
     package: &GamerDependencyVerifyPackage,
 ) -> Result<DownloadOutcome, String> {
     let installer_file_name = sanitize_installer_file_name(&package.installer_file_name)?;
-    let official_url = clean_optional(package.official_url.clone()).ok_or_else(|| {
-        "URL direta oficial ainda nao foi aprovada no manifesto; download pulado.".to_string()
-    })?;
+    let Some(official_url) = clean_optional(package.official_url.clone()) else {
+        return Ok(DownloadOutcome::Skipped(format!(
+            "{} pulado: URL direta oficial ainda nao foi aprovada no manifesto.",
+            package.title
+        )));
+    };
+    let Some(expected_sha256) = clean_optional(package.expected_sha256.clone()) else {
+        return Ok(DownloadOutcome::Skipped(format!(
+            "{} pulado: SHA256 esperado ainda nao foi aprovado no manifesto.",
+            package.title
+        )));
+    };
     validate_official_download_url(&official_url)?;
 
     let cached_path = cache_dir.join(&installer_file_name);
@@ -625,16 +779,14 @@ fn download_package(
         return Err("Download assinado, mas publicador nao confirma Microsoft Corporation.".into());
     }
 
-    if let Some(expected_sha256) = clean_optional(package.expected_sha256.clone()) {
-        let sha256_matches = probe
-            .sha256
-            .as_ref()
-            .map(|actual| actual.eq_ignore_ascii_case(&expected_sha256))
-            .unwrap_or(false);
-        if !sha256_matches {
-            let _ = fs::remove_file(&temp_path);
-            return Err("Hash SHA256 do download nao confere com o manifesto.".to_string());
-        }
+    let sha256_matches = probe
+        .sha256
+        .as_ref()
+        .map(|actual| actual.eq_ignore_ascii_case(&expected_sha256))
+        .unwrap_or(false);
+    if !sha256_matches {
+        let _ = fs::remove_file(&temp_path);
+        return Err("Hash SHA256 do download nao confere com o manifesto.".to_string());
     }
 
     fs::rename(&temp_path, &cached_path)
@@ -644,6 +796,200 @@ fn download_package(
         "{} baixado e assinado pela Microsoft.",
         package.title
     )))
+}
+
+fn audit_manifest_package(
+    audit_dir: &Path,
+    package: &GamerDependencyVerifyPackage,
+) -> GamerDependencyManifestAuditItem {
+    let installer_file_name = match sanitize_installer_file_name(&package.installer_file_name) {
+        Ok(file_name) => file_name,
+        Err(error) => {
+            return manifest_audit_item(
+                package,
+                package.installer_file_name.clone(),
+                None,
+                audit_dir.join(&package.installer_file_name),
+                GamerDependencyManifestAuditStatus::Blocked,
+                error,
+                None,
+                None,
+            );
+        }
+    };
+    let official_url = match clean_optional(package.official_url.clone()) {
+        Some(url) => url,
+        None => {
+            return manifest_audit_item(
+                package,
+                installer_file_name.clone(),
+                None,
+                audit_dir.join(&installer_file_name),
+                GamerDependencyManifestAuditStatus::Blocked,
+                "URL direta oficial ainda nao foi aprovada no manifesto.".to_string(),
+                None,
+                None,
+            );
+        }
+    };
+    if let Err(error) = validate_official_download_url(&official_url) {
+        return manifest_audit_item(
+            package,
+            installer_file_name.clone(),
+            Some(official_url),
+            audit_dir.join(&installer_file_name),
+            GamerDependencyManifestAuditStatus::Blocked,
+            error,
+            None,
+            None,
+        );
+    }
+
+    let audit_path = audit_dir.join(&installer_file_name);
+    let mut status = GamerDependencyManifestAuditStatus::Cached;
+    if !audit_path.is_file() {
+        let temp_path = audit_dir.join(format!("{installer_file_name}.audit-download"));
+        if temp_path.exists() {
+            let _ = fs::remove_file(&temp_path);
+        }
+        if let Err(error) = download_file_with_powershell(&official_url, &temp_path) {
+            let _ = fs::remove_file(&temp_path);
+            return manifest_audit_item(
+                package,
+                installer_file_name,
+                Some(official_url),
+                audit_path,
+                GamerDependencyManifestAuditStatus::Failed,
+                error,
+                None,
+                None,
+            );
+        }
+        match fs::metadata(&temp_path) {
+            Ok(metadata) if metadata.len() >= 1024 => {}
+            _ => {
+                let _ = fs::remove_file(&temp_path);
+                return manifest_audit_item(
+                    package,
+                    installer_file_name,
+                    Some(official_url),
+                    audit_path,
+                    GamerDependencyManifestAuditStatus::Failed,
+                    "Download retornou arquivo muito pequeno para ser um instalador valido."
+                        .to_string(),
+                    None,
+                    None,
+                );
+            }
+        }
+        if let Err(error) = fs::rename(&temp_path, &audit_path) {
+            let _ = fs::remove_file(&temp_path);
+            return manifest_audit_item(
+                package,
+                installer_file_name,
+                Some(official_url),
+                audit_path,
+                GamerDependencyManifestAuditStatus::Failed,
+                format!("Nao foi possivel salvar auditoria do instalador: {error}"),
+                None,
+                None,
+            );
+        }
+        status = GamerDependencyManifestAuditStatus::Audited;
+    }
+
+    let probe = match probe_file_security(&audit_path) {
+        Ok(probe) => probe,
+        Err(error) => {
+            return manifest_audit_item(
+                package,
+                installer_file_name,
+                Some(official_url),
+                audit_path,
+                GamerDependencyManifestAuditStatus::Failed,
+                error,
+                None,
+                None,
+            );
+        }
+    };
+    let signature_ok = probe
+        .signature_status
+        .as_deref()
+        .map(|value| value.eq_ignore_ascii_case("Valid"))
+        .unwrap_or(false);
+    let publisher_matches = probe.signature_subject.as_ref().map(|subject| {
+        subject
+            .to_ascii_lowercase()
+            .contains(&package.required_publisher.to_ascii_lowercase())
+    });
+    let sha256 = probe.sha256.clone();
+    let manifest_hint = sha256
+        .as_ref()
+        .filter(|_| signature_ok && publisher_matches == Some(true))
+        .map(|value| format!("{} expectedSha256={value}", package.id));
+    let final_status = if signature_ok && publisher_matches == Some(true) {
+        status
+    } else {
+        GamerDependencyManifestAuditStatus::Failed
+    };
+    let message = if signature_ok && publisher_matches == Some(true) {
+        "Instalador oficial auditado; copie o SHA256 para o manifesto antes de liberar instalacao."
+            .to_string()
+    } else if !signature_ok {
+        "Assinatura Authenticode do instalador auditado nao esta valida.".to_string()
+    } else {
+        "Assinatura valida, mas publicador nao confirma Microsoft Corporation.".to_string()
+    };
+
+    manifest_audit_item(
+        package,
+        installer_file_name,
+        Some(official_url),
+        audit_path,
+        final_status,
+        message,
+        Some(probe),
+        manifest_hint,
+    )
+}
+
+fn manifest_audit_item(
+    package: &GamerDependencyVerifyPackage,
+    installer_file_name: String,
+    official_url: Option<String>,
+    audit_path: PathBuf,
+    status: GamerDependencyManifestAuditStatus,
+    message: String,
+    probe: Option<FileSecurityProbe>,
+    manifest_hint: Option<String>,
+) -> GamerDependencyManifestAuditItem {
+    let publisher_matches = probe.as_ref().and_then(|probe| {
+        probe.signature_subject.as_ref().map(|subject| {
+            subject
+                .to_ascii_lowercase()
+                .contains(&package.required_publisher.to_ascii_lowercase())
+        })
+    });
+
+    GamerDependencyManifestAuditItem {
+        package_id: package.id.clone(),
+        title: package.title.clone(),
+        installer_file_name,
+        official_url,
+        audit_path: audit_path.to_string_lossy().to_string(),
+        status,
+        message,
+        sha256: probe.as_ref().and_then(|probe| probe.sha256.clone()),
+        signature_status: probe
+            .as_ref()
+            .and_then(|probe| probe.signature_status.clone()),
+        signature_subject: probe
+            .as_ref()
+            .and_then(|probe| probe.signature_subject.clone()),
+        publisher_matches,
+        manifest_hint,
+    }
 }
 
 fn verify_package(
@@ -716,6 +1062,11 @@ fn verify_package(
             publisher_matches: None,
             blocked_reasons,
         };
+    }
+
+    if expected_sha256.is_none() {
+        blocked_reasons
+            .push("SHA256 esperado ainda nao foi aprovado no manifesto.".to_string());
     }
 
     let probe = match probe_file_security(&cached_path) {
@@ -1071,6 +1422,17 @@ fn dependency_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir)
 }
 
+fn dependency_audit_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let mut dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("Nao foi possivel localizar AppData: {error}"))?;
+    dir.push("installer-audit");
+    fs::create_dir_all(&dir)
+        .map_err(|error| format!("Nao foi possivel criar pasta de auditoria: {error}"))?;
+    Ok(dir)
+}
+
 fn open_directory(path: &Path) -> Result<(), String> {
     if !cfg!(target_os = "windows") {
         return Err("Cache de instaladores disponivel apenas no Windows.".to_string());
@@ -1141,4 +1503,52 @@ fn now_timestamp() -> String {
         .unwrap_or_default()
         .as_millis();
     millis.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_package(expected_sha256: Option<&str>) -> GamerDependencyVerifyPackage {
+        GamerDependencyVerifyPackage {
+            id: "vc-redist-2015-2022-x64".to_string(),
+            title: "Microsoft Visual C++ 2015-2022 Redistributable x64".to_string(),
+            installer_file_name: "vc_redist.x64.exe".to_string(),
+            official_source_page:
+                "https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist"
+                    .to_string(),
+            official_url: Some("https://aka.ms/vs/17/release/vc_redist.x64.exe".to_string()),
+            expected_sha256: expected_sha256.map(ToString::to_string),
+            required_publisher: "Microsoft Corporation".to_string(),
+        }
+    }
+
+    #[test]
+    fn dependency_download_skips_without_expected_sha256_before_network() {
+        let cache_dir = std::env::temp_dir().join(format!(
+            "hermes-dependency-test-{}",
+            now_timestamp()
+        ));
+        fs::create_dir_all(&cache_dir).expect("temp cache dir");
+
+        let result = download_package(&cache_dir, &test_package(None));
+
+        let _ = fs::remove_dir_all(&cache_dir);
+        match result {
+            Ok(DownloadOutcome::Skipped(message)) => {
+                assert!(message.contains("SHA256 esperado ainda nao foi aprovado"));
+            }
+            Ok(DownloadOutcome::Downloaded(_)) => {
+                panic!("download sem SHA256 esperado deveria ser pulado")
+            }
+            Err(error) => panic!("download sem SHA256 nao deveria virar falha: {error}"),
+        }
+    }
+
+    #[test]
+    fn dependency_installer_name_must_be_plain_exe_file() {
+        assert!(sanitize_installer_file_name("vc_redist.x64.exe").is_ok());
+        assert!(sanitize_installer_file_name("..\\vc_redist.x64.exe").is_err());
+        assert!(sanitize_installer_file_name("vc_redist.x64.msi").is_err());
+    }
 }

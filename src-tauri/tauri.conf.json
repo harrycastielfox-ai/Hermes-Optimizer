@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Hermes Optimizer",
   "version": "0.1.0",
-  "identifier": "org.ligahub.hermesoptimizer",
+  "identifier": "com.hermesoptimizer.desktop",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:8080",
@@ -37,7 +37,6 @@
     "active": true,
     "targets": ["msi", "nsis"],
     "publisher": "Hermes Optimizer Team",
-    "homepage": "https://play.ligahub.org/hub/hermes/",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
