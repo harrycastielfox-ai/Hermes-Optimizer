@@ -38,7 +38,8 @@ import {
 } from "@/lib/advanced";
 import {
   buildGamerDependencyReadiness,
-  installVerifiedGamerDependencies,
+  prepareAndInstallVerifiedGamerDependencies,
+  type GamerDependencyDownloadResult,
   type GamerDependencyInstallResult,
   type GamerDependencyReadiness,
   type GamerDependencyVerificationReport,
@@ -76,6 +77,7 @@ export type OptimizeAllReports = {
   gamerGraphicsPreferenceResult?: AdvancedApplyResult;
   gamerDependencies?: GamerDependencyReadiness;
   gamerDependencyVerification?: GamerDependencyVerificationReport;
+  gamerDependencyDownloadResult?: GamerDependencyDownloadResult;
   gamerDependencyInstallResult?: GamerDependencyInstallResult;
 };
 
@@ -296,12 +298,17 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
     refreshAdvancedCatalog(),
     verifyGamerDependencyInstallers(),
   ]);
-  const gamerDependencies = buildGamerDependencyReadiness(advanced, gamerDependencyVerification);
-  const gamerDependencyInstallResult = await tryRun(() =>
-    installVerifiedGamerDependencies({
+  const gamerDependencyPreparedResult = await tryRun(() =>
+    prepareAndInstallVerifiedGamerDependencies({
       confirmed: shouldConfirmReal(),
       dryRun: shouldDryRun(),
     }),
+  );
+  const finalGamerDependencyVerification =
+    gamerDependencyPreparedResult.value?.report ?? gamerDependencyVerification;
+  const gamerDependencies = buildGamerDependencyReadiness(
+    advanced,
+    finalGamerDependencyVerification,
   );
   const availableIds = new Set(advanced.actions.map((action) => action.id));
   const actionIds = HERMES_COMPONENT_CMD_ACTION_IDS.filter((id) => availableIds.has(id));
@@ -321,9 +328,9 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       advanced,
       advancedResult: result.value ?? undefined,
       gamerDependencies,
-      gamerDependencyVerification:
-        gamerDependencyInstallResult.value?.report ?? gamerDependencyVerification,
-      gamerDependencyInstallResult: gamerDependencyInstallResult.value ?? undefined,
+      gamerDependencyVerification: finalGamerDependencyVerification,
+      gamerDependencyDownloadResult: gamerDependencyPreparedResult.value?.downloadResult,
+      gamerDependencyInstallResult: gamerDependencyPreparedResult.value?.installResult,
     },
     outputs: [
       `${actionIds.length} comando(s) CMD/DISM mapeados`,

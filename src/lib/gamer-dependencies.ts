@@ -141,6 +141,12 @@ export type GamerDependencyInstallResult = {
   report: GamerDependencyVerificationReport;
 };
 
+export type GamerDependencyPreparedInstallResult = {
+  downloadResult: GamerDependencyDownloadResult;
+  installResult: GamerDependencyInstallResult;
+  report: GamerDependencyVerificationReport;
+};
+
 export type GamerDependencyInstallRequest = {
   confirmed: boolean;
   dryRun?: boolean;
@@ -196,7 +202,10 @@ export const GAMER_DEPENDENCY_PACKAGES: GamerDependencyPackage[] = [
     requiredPublisher: "Microsoft Corporation",
     installCommand: "dxwebsetup.exe /Q",
     officialSourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=35",
-    officialSourceStatus: "sourcePageVerified",
+    officialUrl:
+      "https://download.microsoft.com/download/1/7/1/1718ccc4-6315-4d8e-9543-8e28a4e18c4c/dxwebsetup.exe",
+    expectedSha256: "2CF71D098C608C56E07F4655855A886C3102553F648DF88458DF616B26FD612F",
+    officialSourceStatus: "downloadUrlVerified",
     expectedSha256Status: "requiredBeforeInstall",
     signatureStatus: "requiredBeforeInstall",
   },
@@ -441,6 +450,19 @@ export async function installVerifiedGamerDependencies(
   });
 }
 
+export async function prepareAndInstallVerifiedGamerDependencies(
+  request: GamerDependencyInstallRequest,
+): Promise<GamerDependencyPreparedInstallResult> {
+  const downloadResult = await downloadOfficialGamerDependencyInstallers();
+  const installResult = await installVerifiedGamerDependencies(request);
+
+  return {
+    downloadResult,
+    installResult,
+    report: installResult.report,
+  };
+}
+
 export function isGamerDependencyInstallerAction(actionId: string) {
   return (
     actionId.startsWith("vc-redist-") ||
@@ -521,28 +543,68 @@ function vcRedistSource(
   if (year === "2012") {
     return {
       sourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=30679",
+      downloadUrl:
+        architecture === "x64"
+          ? "https://download.microsoft.com/download/1/6/b/16b06f60-3b20-4ff2-b699-5e9b7962f9ae/VSU_4/vcredist_x64.exe"
+          : "https://download.microsoft.com/download/1/6/b/16b06f60-3b20-4ff2-b699-5e9b7962f9ae/VSU_4/vcredist_x86.exe",
+      expectedSha256:
+        architecture === "x64"
+          ? "681BE3E5BA9FD3DA02C09D7E565ADFA078640ED66A0D58583EFAD2C1E3CC4064"
+          : "B924AD8062EAF4E70437C8BE50FA612162795FF0839479546CE907FFA8D6E386",
     };
   }
 
   if (year === "2010") {
     return {
       sourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=26999",
+      downloadUrl:
+        architecture === "x64"
+          ? "https://download.microsoft.com/download/1/6/5/165255e7-1014-4d0a-b094-b6a430a6bffc/vcredist_x64.exe"
+          : "https://download.microsoft.com/download/1/6/5/165255e7-1014-4d0a-b094-b6a430a6bffc/vcredist_x86.exe",
+      expectedSha256:
+        architecture === "x64"
+          ? "F3B7A76D84D23F91957AA18456A14B4E90609E4CE8194C5653384ED38DADA6F3"
+          : "99DCE3C841CC6028560830F7866C9CE2928C98CF3256892EF8E6CF755147B0D8",
     };
   }
 
   if (year === "2008") {
     return {
       sourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=11895",
+      downloadUrl:
+        architecture === "x64"
+          ? "https://download.microsoft.com/download/9/7/7/977b481a-7ba6-4e30-ac40-ed51eb2028f2/vcredist_x64.exe"
+          : "https://download.microsoft.com/download/9/7/7/977b481a-7ba6-4e30-ac40-ed51eb2028f2/vcredist_x86.exe",
+      expectedSha256:
+        architecture === "x64"
+          ? "06ABF71E4B4CFC446D311ED12BAD2266139DF6901820B23BA44FC3038F40365F"
+          : "1336C1B517CB9384DC86300C934A58D5902205A6DC846D2E2F517E4C139B56C7",
     };
   }
 
   if (year === "2013") {
     return {
       sourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=40784",
+      downloadUrl:
+        architecture === "x64"
+          ? "https://download.microsoft.com/download/2/e/6/2e61cfa4-993b-4dd4-91da-3737cd5cd6e3/vcredist_x64.exe"
+          : "https://download.microsoft.com/download/2/e/6/2e61cfa4-993b-4dd4-91da-3737cd5cd6e3/vcredist_x86.exe",
+      expectedSha256:
+        architecture === "x64"
+          ? "E554425243E3E8CA1CD5FE550DB41E6FA58A007C74FAD400274B128452F38FB8"
+          : "A22895E55B26202EAE166838EDBE2EA6AAD00D7EA600C11F8A31EDE5CBCE2048",
     };
   }
 
   return {
     sourcePage: "https://www.microsoft.com/en-us/download/details.aspx?id=26347",
+    downloadUrl:
+      architecture === "x64"
+        ? "https://download.microsoft.com/download/8/b/4/8b42259f-5d70-43f4-ac2e-4b208fd8d66a/vcredist_x64.EXE"
+        : "https://download.microsoft.com/download/8/b/4/8b42259f-5d70-43f4-ac2e-4b208fd8d66a/vcredist_x86.EXE",
+    expectedSha256:
+      architecture === "x64"
+        ? "4487570BD86E2E1AAC29DB2A1D0A91EB63361FCAAC570808EB327CD4E0E2240D"
+        : "8648C5FC29C44B9112FE52F9A33F80E7FC42D10F3B5B42B2121542A13E44ADFD",
   };
 }
