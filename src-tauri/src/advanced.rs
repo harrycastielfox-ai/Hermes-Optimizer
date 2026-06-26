@@ -238,6 +238,10 @@ struct RawAdvancedState {
     background_apps_global_disabled: Option<i64>,
     push_notifications_toast_enabled: Option<i64>,
     notification_toasts_enabled: Option<i64>,
+    focus_assist_allow_sound: Option<i64>,
+    focus_assist_allow_notification_sound: Option<i64>,
+    focus_assist_allow_toasts_above_lock: Option<i64>,
+    focus_assist_allow_critical_toasts_above_lock: Option<i64>,
     recall_disable_ai_data_analysis: Option<i64>,
     hibernate_enabled: Option<i64>,
     diagtrack_start_mode: Option<String>,
@@ -269,6 +273,7 @@ struct RawAdvancedState {
     usb_selective_suspend_dc: Option<String>,
     pcie_link_state_ac: Option<String>,
     pcie_link_state_dc: Option<String>,
+    timer_policy_summary: Option<String>,
     #[serde(default)]
     defender_exclusion_paths: Vec<String>,
 }
@@ -527,6 +532,7 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             }
             "disable-background-apps" => Some(disable_background_apps_plan(state)),
             "disable-notification-toasts" => Some(disable_notification_toasts_plan(state)),
+            "set-focus-assist-gamer" => Some(set_focus_assist_gamer_plan(state)),
             "disable-recall-user" => Some(disable_recall_user_plan(state)),
             "disable-hibernation" => Some(disable_hibernation_plan(state)),
             "flush-dns-cache" => Some(flush_dns_cache_plan()),
@@ -635,6 +641,7 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "disable-pcie-link-state-power-management" => {
                 Some(disable_pcie_link_state_power_management_plan(state))
             }
+            "check-timer-resolution-policy" => Some(check_timer_resolution_policy_plan(state)),
             "set-mmcss-gamer-pack" => Some(set_mmcss_gamer_pack_plan(state)),
             "set-fate-trigger-cpu-priority-high" => {
                 Some(set_fate_trigger_cpu_priority_high_plan(state))
@@ -1204,6 +1211,62 @@ fn disable_notification_toasts_plan(state: &RawAdvancedState) -> AdvancedPlan {
     }
 }
 
+fn set_focus_assist_gamer_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-focus-assist-gamer",
+            "Focus Assist gamer",
+            "Reduz sons e notificacoes acima da tela bloqueada para manter foco durante jogos, sem desligar a central de seguranca.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "Sound={}, NotificationSound={}, AboveLock={}, CriticalAboveLock={}",
+                display_optional(state.focus_assist_allow_sound),
+                display_optional(state.focus_assist_allow_notification_sound),
+                display_optional(state.focus_assist_allow_toasts_above_lock),
+                display_optional(state.focus_assist_allow_critical_toasts_above_lock)
+            ),
+            "Aplicar foco gamer nas notificacoes do usuario atual",
+            "PowerShell New-ItemProperty em HKCU Notifications\\Settings",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+                "NOC_GLOBAL_SETTING_ALLOW_SOUND",
+                0,
+                state.focus_assist_allow_sound,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+                "NOC_GLOBAL_SETTING_ALLOW_NOTIFICATION_SOUND",
+                0,
+                state.focus_assist_allow_notification_sound,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+                "NOC_GLOBAL_SETTING_ALLOW_TOASTS_ABOVE_LOCK",
+                0,
+                state.focus_assist_allow_toasts_above_lock,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+                "NOC_GLOBAL_SETTING_ALLOW_CRITICAL_TOASTS_ABOVE_LOCK",
+                0,
+                state.focus_assist_allow_critical_toasts_above_lock,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
 fn disable_recall_user_plan(state: &RawAdvancedState) -> AdvancedPlan {
     registry_dword_tweak_plan(
         "disable-recall-user",
@@ -1686,6 +1749,34 @@ fn disable_pcie_link_state_power_management_plan(state: &RawAdvancedState) -> Ad
         state.pcie_link_state_ac.clone(),
         state.pcie_link_state_dc.clone(),
     )
+}
+
+fn check_timer_resolution_policy_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "check-timer-resolution-policy",
+            "Timer resolution seguro",
+            "Audita politica de timer do bootloader para evitar tweaks agressivos de HPET/dynamic tick. Nao instala driver e nao altera kernel.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Low,
+            true,
+            false,
+            true,
+            false,
+            false,
+            state
+                .timer_policy_summary
+                .as_deref()
+                .unwrap_or("BCDEdit ainda nao auditado"),
+            "Executar leitura bcdedit /enum e manter politica segura",
+            "cmd: bcdedit /enum",
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "bcdedit".to_string(),
+            args: vec!["/enum".to_string()],
+            transient: true,
+        }],
+    }
 }
 
 fn power_setting_plan(
@@ -2725,6 +2816,22 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
                 "noc_global_setting_toasts_enabled"
             )
             | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\notifications\\settings",
+                "noc_global_setting_allow_sound"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\notifications\\settings",
+                "noc_global_setting_allow_notification_sound"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\notifications\\settings",
+                "noc_global_setting_allow_toasts_above_lock"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\notifications\\settings",
+                "noc_global_setting_allow_critical_toasts_above_lock"
+            )
+            | (
                 "hkcu:\\software\\policies\\microsoft\\windows\\windowsai",
                 "disableaidataanalysis"
             )
@@ -3335,6 +3442,7 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
 
     match normalized_program.as_str() {
         "ipconfig" => normalized_args == ["/flushdns".to_string()],
+        "bcdedit" | "bcdedit.exe" => normalized_args == ["/enum".to_string()],
         "powercfg" => {
             normalized_args == ["/l".to_string()]
                 || normalized_args == ["/list".to_string()]
@@ -3658,6 +3766,10 @@ fn fallback_state() -> RawAdvancedState {
         background_apps_global_disabled: None,
         push_notifications_toast_enabled: None,
         notification_toasts_enabled: None,
+        focus_assist_allow_sound: None,
+        focus_assist_allow_notification_sound: None,
+        focus_assist_allow_toasts_above_lock: None,
+        focus_assist_allow_critical_toasts_above_lock: None,
         recall_disable_ai_data_analysis: None,
         hibernate_enabled: None,
         diagtrack_start_mode: None,
@@ -3688,6 +3800,7 @@ fn fallback_state() -> RawAdvancedState {
         usb_selective_suspend_dc: None,
         pcie_link_state_ac: None,
         pcie_link_state_dc: None,
+        timer_policy_summary: None,
         defender_exclusion_paths: Vec::new(),
     }
 }
@@ -3813,6 +3926,23 @@ $directXPath = 'HKLM:\SOFTWARE\Microsoft\DirectX'
 $usbPower = Get-PowerSettingValues '2a737441-1930-4402-8d77-b2bebba308a3' '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'
 $pciePower = Get-PowerSettingValues '501a4d13-42af-4429-9fd1-a8218c268e20' 'ee12f906-d277-404b-b6da-e5fa1a576df5'
 
+$timerPolicySummary = 'BCDEdit indisponivel'
+try {
+  $bcdOutput = @(bcdedit /enum 2>&1)
+  if ($LASTEXITCODE -eq 0) {
+    $timerFlags = @($bcdOutput | Where-Object { [string]$_ -match 'useplatformclock|disabledynamictick|useplatformtick' })
+    if ($timerFlags.Count -gt 0) {
+      $timerPolicySummary = (($timerFlags | ForEach-Object { ([string]$_).Trim() }) -join '; ')
+    } else {
+      $timerPolicySummary = 'Sem flags BCDEdit de timer customizadas detectadas'
+    }
+  } else {
+    $timerPolicySummary = (($bcdOutput | Select-Object -First 2 | ForEach-Object { ([string]$_).Trim() }) -join ' ')
+  }
+} catch {
+  $timerPolicySummary = 'BCDEdit indisponivel'
+}
+
 $powerPlanGuid = $null
 $powerPlanName = $null
 $ultimatePerformanceAvailable = $false
@@ -3899,6 +4029,10 @@ try {
   backgroundAppsGlobalDisabled = Get-Dword $backgroundAppsPath 'GlobalUserDisabled'
   pushNotificationsToastEnabled = Get-Dword $pushNotificationsPath 'ToastEnabled'
   notificationToastsEnabled = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_TOASTS_ENABLED'
+  focusAssistAllowSound = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_ALLOW_SOUND'
+  focusAssistAllowNotificationSound = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_ALLOW_NOTIFICATION_SOUND'
+  focusAssistAllowToastsAboveLock = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_ALLOW_TOASTS_ABOVE_LOCK'
+  focusAssistAllowCriticalToastsAboveLock = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_ALLOW_CRITICAL_TOASTS_ABOVE_LOCK'
   recallDisableAiDataAnalysis = Get-Dword $windowsAiPath 'DisableAIDataAnalysis'
   hibernateEnabled = Get-Dword $powerPath 'HibernateEnabled'
   diagtrackStartMode = Get-ServiceStartMode 'DiagTrack'
@@ -3929,6 +4063,7 @@ try {
   usbSelectiveSuspendDc = $usbPower.dc
   pcieLinkStateAc = $pciePower.ac
   pcieLinkStateDc = $pciePower.dc
+  timerPolicySummary = $timerPolicySummary
   defenderExclusionPaths = $defenderExclusionPaths
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
@@ -3978,6 +4113,22 @@ mod tests {
         assert!(is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
             "NOC_GLOBAL_SETTING_TOASTS_ENABLED"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "NOC_GLOBAL_SETTING_ALLOW_SOUND"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "NOC_GLOBAL_SETTING_ALLOW_NOTIFICATION_SOUND"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "NOC_GLOBAL_SETTING_ALLOW_TOASTS_ABOVE_LOCK"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "NOC_GLOBAL_SETTING_ALLOW_CRITICAL_TOASTS_ABOVE_LOCK"
         ));
         assert!(!is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
@@ -4065,5 +4216,19 @@ mod tests {
         assert!(is_allowed_native_command("powercfg", &duplicate_ultimate));
         assert!(!is_allowed_native_command("powercfg", &usb_ac_on));
         assert!(!is_allowed_native_command("powercfg", &unsupported_setting));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_only_timer_policy_probe() {
+        let timer_probe = vec!["/enum".to_string()];
+        let timer_write = vec![
+            "/set".to_string(),
+            "useplatformclock".to_string(),
+            "true".to_string(),
+        ];
+
+        assert!(is_allowed_native_command("bcdedit", &timer_probe));
+        assert!(is_allowed_native_command("bcdedit.exe", &timer_probe));
+        assert!(!is_allowed_native_command("bcdedit", &timer_write));
     }
 }

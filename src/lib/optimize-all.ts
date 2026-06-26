@@ -153,15 +153,18 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "enable-network-rss",
   "disable-background-apps",
   "disable-notification-toasts",
+  "set-focus-assist-gamer",
   "set-high-performance-power-plan",
   "disable-usb-selective-suspend",
   "disable-pcie-link-state-power-management",
+  "check-timer-resolution-policy",
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
   "disable-storage-sense-auto-cleanup",
 ] as const;
 
 const HERMES_GAMER_FOCUS_ACTION_IDS = [
+  "set-focus-assist-gamer",
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
 ] as const;

@@ -28,8 +28,8 @@ Data base: 2026-06-25
 
 - [x] `npm run qa:release` executado em 2026-06-25.
 - [x] Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test passaram.
-- [x] Testes Rust: 23 aprovados, 0 falhas.
-- [x] Catalogo de otimizacao: 150 acoes auditaveis, 148 implementadas/motoradas e 2 planejadas ou indisponiveis.
+- [x] Testes Rust: 24 aprovados, 0 falhas.
+- [x] Catalogo de otimizacao: 150 acoes auditaveis, 150 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - [x] Instalador NSIS release encontrado.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.

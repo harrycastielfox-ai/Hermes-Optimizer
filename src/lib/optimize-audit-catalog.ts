@@ -820,8 +820,8 @@ function performanceSeeds(): AuditSeed[] {
       "timer-resolution",
       "Timer resolution policy",
       "Timer.Resolution",
-      "planejado: timer policy seguro",
-      false,
+      "advanced.check-timer-resolution-policy",
+      true,
     ],
     [
       "ultimate-performance",
@@ -858,7 +858,13 @@ function performanceSeeds(): AuditSeed[] {
       "advanced.disable-notification-toasts",
       true,
     ],
-    ["focus-assist", "Assistente de foco", "FocusAssist.Gaming", "HKCU QuietHours", false],
+    [
+      "focus-assist",
+      "Assistente de foco",
+      "FocusAssist.Gaming",
+      "advanced.set-focus-assist-gamer",
+      true,
+    ],
   ].map(([slug, title, technical, command, implemented]) =>
     a(
       String(slug),

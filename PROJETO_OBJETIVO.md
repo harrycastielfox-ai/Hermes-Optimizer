@@ -46,7 +46,7 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 - Recomendacao de reinicio e leitura de boot do Windows.
 - Selecionador de DNS.
 - Status de execucao por fase com dados tecnicos internos.
-- Contagem tecnica de acoes por pacote: 150 acoes auditaveis, 148 implementadas/motoradas e 2 planejadas ou indisponiveis na validacao de 2026-06-26.
+- Contagem tecnica de acoes por pacote: 150 acoes auditaveis, 150 implementadas/motoradas e 0 planejadas ou indisponiveis na validacao de 2026-06-26.
 - Startup Engine ampliado com leitura de pasta Startup, tarefas agendadas de logon/boot, OneDrive, Teams, launchers, updaters e baseline de boot.
 - Advanced Engine ampliado com Ultimate Performance opcional, suspensao seletiva USB OFF e PCIe Link State OFF por `powercfg` allowlistado.
 - Gamer Engine ampliado com revisao de overlays Steam/Xbox/GPU, excecoes OBS/BlueStacks/WSL e prioridade transiente do jogo ativo.
