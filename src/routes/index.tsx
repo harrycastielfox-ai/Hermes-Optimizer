@@ -415,31 +415,45 @@ function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }
     100,
     Math.round((cycle.summary.plannedActions / cycle.targetActions) * 100),
   );
+  const hasFullCycle = Boolean(cycle.reports.prepare && cycle.reports.optimize);
+  const completedLabel = cycle.safeMode
+    ? cycle.summary.simulatedActions
+    : cycle.summary.appliedActions;
   const phaseLabel = cycle.reports.optimize
-    ? "Preparar PC + Otimizar Tudo"
+    ? "Hermes preparado para jogar"
     : cycle.reports.prepare
-      ? "Preparar PC concluído"
+      ? "Preparo concluído"
       : "Ciclo iniciado";
 
   return (
-    <section className="mb-4 rounded-2xl border border-primary/20 bg-card/82 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_30px_-24px_rgba(37,99,235,0.28)]">
+    <section className="mb-4 rounded-2xl border border-success/20 bg-card/82 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_30px_-24px_rgba(34,197,94,0.28)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">
-            ÚLTIMO CICLO HERMES
-          </p>
-          <h2 className="mt-1 text-lg font-black text-foreground">{phaseLabel}</h2>
-          <p className="mt-1 text-[12px] text-muted-foreground">
-            Atualizado em {formatDateTime(cycle.updatedAt)}.{" "}
-            {cycle.safeMode ? "Modo teste." : "Modo real."}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-success text-success-foreground">
+            <CheckCircle2 className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-success">
+              STATUS DA OTIMIZAÇÃO
+            </p>
+            <h2 className="mt-1 text-lg font-black text-foreground">{phaseLabel}</h2>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Atualizado em {formatDateTime(cycle.updatedAt)}.{" "}
+              {hasFullCycle
+                ? "Reinicie quando o Hermes pedir para consolidar o ganho."
+                : "Continue pela área Otimizar para finalizar as duas fases."}
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <DashboardCycleStat label="Meta" value={`${cycle.targetActions}`} />
-          <DashboardCycleStat label="Mapeadas" value={`${cycle.summary.plannedActions}`} />
-          <DashboardCycleStat label="Concluídas" value={`${cycle.summary.completedActions}`} />
-          <DashboardCycleStat label="Faltam" value={`${cycle.summary.missingToTarget}`} />
+          <DashboardCycleStat label="Plano" value={`${cycle.targetActions}+`} />
+          <DashboardCycleStat label="Status" value={hasFullCycle ? "Ok" : "Em curso"} />
+          <DashboardCycleStat
+            label={cycle.safeMode ? "Validadas" : "Aplicadas"}
+            value={`${completedLabel}`}
+          />
+          <DashboardCycleStat label="Modo" value={cycle.safeMode ? "Teste" : "Real"} />
         </div>
       </div>
 
@@ -448,12 +462,9 @@ function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }
       </div>
 
       <div className="mt-3 flex flex-col gap-2 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          {cycle.summary.simulatedActions} simuladas • {cycle.summary.scannedActions} leituras •{" "}
-          {cycle.summary.unavailableActions} indisponíveis
-        </span>
+        <span>{progress}% do plano Hermes mapeado para este ciclo.</span>
         <Link to="/otimizar" className="font-bold text-primary hover:underline">
-          Ver relatório completo →
+          Ver status da otimização →
         </Link>
       </div>
     </section>

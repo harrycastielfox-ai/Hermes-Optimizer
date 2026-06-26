@@ -22,6 +22,11 @@ const MISSING_REGISTRY_VALUE: &str = "__HERMES_MISSING__";
 const BALANCED_POWER_PLAN_GUID: &str = "381b4222-f694-41f0-9685-ff5bb260df2e";
 const HIGH_PERFORMANCE_POWER_PLAN_GUID: &str = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";
 const POWER_SAVER_POWER_PLAN_GUID: &str = "a1841308-3541-4fab-bc81-f71556f20b4a";
+const ULTIMATE_PERFORMANCE_POWER_PLAN_GUID: &str = "e9a42b02-d5df-448d-aa00-03f14749eb61";
+const USB_SETTINGS_SUBGROUP_GUID: &str = "2a737441-1930-4402-8d77-b2bebba308a3";
+const USB_SELECTIVE_SUSPEND_SETTING_GUID: &str = "48e6b7a6-50f5-4782-a5d4-53bb8f07e226";
+const PCI_EXPRESS_SUBGROUP_GUID: &str = "501a4d13-42af-4429-9fd1-a8218c268e20";
+const PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID: &str = "ee12f906-d277-404b-b6da-e5fa1a576df5";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -173,6 +178,15 @@ enum AdvancedOperation {
         previous_guid: Option<String>,
         previous_name: Option<String>,
     },
+    PowerSetting {
+        id: String,
+        subgroup_guid: String,
+        setting_guid: String,
+        ac_value: i64,
+        dc_value: i64,
+        previous_ac_value: Option<String>,
+        previous_dc_value: Option<String>,
+    },
     DnsProvider {
         provider_id: String,
         provider_label: String,
@@ -221,6 +235,9 @@ struct RawAdvancedState {
     upload_user_activities: Option<i64>,
     location_consent_value: Option<String>,
     storage_sense_enabled: Option<i64>,
+    background_apps_global_disabled: Option<i64>,
+    push_notifications_toast_enabled: Option<i64>,
+    notification_toasts_enabled: Option<i64>,
     recall_disable_ai_data_analysis: Option<i64>,
     hibernate_enabled: Option<i64>,
     diagtrack_start_mode: Option<String>,
@@ -247,6 +264,11 @@ struct RawAdvancedState {
     dns_interfaces: Vec<DnsInterfaceState>,
     power_plan_guid: Option<String>,
     power_plan_name: Option<String>,
+    ultimate_performance_available: Option<bool>,
+    usb_selective_suspend_ac: Option<String>,
+    usb_selective_suspend_dc: Option<String>,
+    pcie_link_state_ac: Option<String>,
+    pcie_link_state_dc: Option<String>,
     #[serde(default)]
     defender_exclusion_paths: Vec<String>,
 }
@@ -503,6 +525,8 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "disable-storage-sense-auto-cleanup" => {
                 Some(disable_storage_sense_auto_cleanup_plan(state))
             }
+            "disable-background-apps" => Some(disable_background_apps_plan(state)),
+            "disable-notification-toasts" => Some(disable_notification_toasts_plan(state)),
             "disable-recall-user" => Some(disable_recall_user_plan(state)),
             "disable-hibernation" => Some(disable_hibernation_plan(state)),
             "flush-dns-cache" => Some(flush_dns_cache_plan()),
@@ -604,6 +628,13 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
                 POWER_SAVER_POWER_PLAN_GUID,
                 AdvancedRisk::Low,
             )),
+            "duplicate-ultimate-performance-power-plan" => {
+                Some(duplicate_ultimate_performance_power_plan(state))
+            }
+            "disable-usb-selective-suspend" => Some(disable_usb_selective_suspend_plan(state)),
+            "disable-pcie-link-state-power-management" => {
+                Some(disable_pcie_link_state_power_management_plan(state))
+            }
             "set-mmcss-gamer-pack" => Some(set_mmcss_gamer_pack_plan(state)),
             "set-fate-trigger-cpu-priority-high" => {
                 Some(set_fate_trigger_cpu_priority_high_plan(state))
@@ -1119,6 +1150,60 @@ fn disable_storage_sense_auto_cleanup_plan(state: &RawAdvancedState) -> Advanced
     )
 }
 
+fn disable_background_apps_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    registry_dword_tweak_plan(
+        "disable-background-apps",
+        "Reduzir apps em segundo plano",
+        "Bloqueia permissao global de apps em segundo plano no usuario atual para reduzir carga fora do jogo.",
+        AdvancedRisk::Medium,
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+        "GlobalUserDisabled",
+        1,
+        state.background_apps_global_disabled,
+        false,
+    )
+}
+
+fn disable_notification_toasts_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "disable-notification-toasts",
+            "Desativar notificacoes gamer",
+            "Desativa banners/toasts de notificacao do Windows no usuario atual para reduzir interrupcoes durante jogos.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "ToastEnabled={}, NOC_GLOBAL_SETTING_TOASTS_ENABLED={}",
+                display_optional(state.push_notifications_toast_enabled),
+                display_optional(state.notification_toasts_enabled)
+            ),
+            "Definir notificacoes toast como 0",
+            "PowerShell New-ItemProperty em HKCU PushNotifications/Notifications\\Settings",
+        ),
+        operations: vec![
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PushNotifications",
+                "ToastEnabled",
+                0,
+                state.push_notifications_toast_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+                "NOC_GLOBAL_SETTING_TOASTS_ENABLED",
+                0,
+                state.notification_toasts_enabled,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+        ],
+    }
+}
+
 fn disable_recall_user_plan(state: &RawAdvancedState) -> AdvancedPlan {
     registry_dword_tweak_plan(
         "disable-recall-user",
@@ -1538,6 +1623,112 @@ fn set_power_plan_plan(
             guid: guid.to_string(),
             previous_guid: state.power_plan_guid.clone(),
             previous_name: state.power_plan_name.clone(),
+        }],
+    }
+}
+
+fn duplicate_ultimate_performance_power_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    let available = state
+        .ultimate_performance_available
+        .map(|item| if item { "Disponivel" } else { "Nao detectado" })
+        .unwrap_or("Nao detectado");
+
+    AdvancedPlan {
+        action: action(
+            "duplicate-ultimate-performance-power-plan",
+            "Disponibilizar Ultimate Performance",
+            "Cria/expoe o plano Ultimate Performance quando o Windows permitir. O fluxo comum continua usando Alto desempenho.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            false,
+            true,
+            false,
+            available,
+            "Executar powercfg /duplicatescheme Ultimate Performance",
+            &format!("cmd: powercfg /duplicatescheme {ULTIMATE_PERFORMANCE_POWER_PLAN_GUID}"),
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "powercfg".to_string(),
+            args: vec![
+                "/duplicatescheme".to_string(),
+                ULTIMATE_PERFORMANCE_POWER_PLAN_GUID.to_string(),
+            ],
+            transient: false,
+        }],
+    }
+}
+
+fn disable_usb_selective_suspend_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    power_setting_plan(
+        "disable-usb-selective-suspend",
+            "Desativar suspensao seletiva USB",
+            "Desativa a suspensao seletiva USB no plano atual para reduzir cortes de perifericos durante jogos.",
+        USB_SETTINGS_SUBGROUP_GUID,
+        USB_SELECTIVE_SUSPEND_SETTING_GUID,
+        0,
+        0,
+        state.usb_selective_suspend_ac.clone(),
+        state.usb_selective_suspend_dc.clone(),
+    )
+}
+
+fn disable_pcie_link_state_power_management_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    power_setting_plan(
+        "disable-pcie-link-state-power-management",
+        "Desativar economia PCIe",
+            "Desativa o Link State Power Management no plano atual para priorizar estabilidade de GPU/NVMe durante jogos.",
+        PCI_EXPRESS_SUBGROUP_GUID,
+        PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID,
+        0,
+        0,
+        state.pcie_link_state_ac.clone(),
+        state.pcie_link_state_dc.clone(),
+    )
+}
+
+fn power_setting_plan(
+    id: &str,
+    title: &str,
+    description: &str,
+    subgroup_guid: &str,
+    setting_guid: &str,
+    ac_value: i64,
+    dc_value: i64,
+    previous_ac_value: Option<String>,
+    previous_dc_value: Option<String>,
+) -> AdvancedPlan {
+    let current_value = format!(
+        "AC={} | DC={}",
+        previous_ac_value.as_deref().unwrap_or("Nao detectado"),
+        previous_dc_value.as_deref().unwrap_or("Nao detectado")
+    );
+
+    AdvancedPlan {
+        action: action(
+            id,
+            title,
+            description,
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            false,
+            true,
+            false,
+            current_value,
+            &format!("Definir AC={ac_value} e DC={dc_value} no plano atual"),
+            "cmd: powercfg /SETACVALUEINDEX + /SETDCVALUEINDEX SCHEME_CURRENT",
+        ),
+        operations: vec![AdvancedOperation::PowerSetting {
+            id: id.to_string(),
+            subgroup_guid: subgroup_guid.to_string(),
+            setting_guid: setting_guid.to_string(),
+            ac_value,
+            dc_value,
+            previous_ac_value,
+            previous_dc_value,
         }],
     }
 }
@@ -2194,6 +2385,8 @@ fn default_action_ids() -> Vec<String> {
         "disable-consumer-features".to_string(),
         "disable-activity-history".to_string(),
         "disable-location-tracking".to_string(),
+        "disable-background-apps".to_string(),
+        "disable-notification-toasts".to_string(),
         "disable-recall-user".to_string(),
         "disable-hibernation".to_string(),
         "flush-dns-cache".to_string(),
@@ -2209,6 +2402,8 @@ fn default_action_ids() -> Vec<String> {
         "set-dns-cloudflare".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
+        "disable-usb-selective-suspend".to_string(),
+        "disable-pcie-link-state-power-management".to_string(),
         "set-mmcss-gamer-pack".to_string(),
         "set-fate-trigger-cpu-priority-high".to_string(),
         "check-gamer-dependencies".to_string(),
@@ -2235,6 +2430,8 @@ fn allowed_action_ids() -> Vec<String> {
         "disable-activity-history".to_string(),
         "disable-location-tracking".to_string(),
         "disable-storage-sense-auto-cleanup".to_string(),
+        "disable-background-apps".to_string(),
+        "disable-notification-toasts".to_string(),
         "disable-recall-user".to_string(),
         "disable-hibernation".to_string(),
         "flush-dns-cache".to_string(),
@@ -2260,6 +2457,9 @@ fn allowed_action_ids() -> Vec<String> {
         "set-high-performance-power-plan".to_string(),
         "set-balanced-power-plan".to_string(),
         "set-power-saver-power-plan".to_string(),
+        "duplicate-ultimate-performance-power-plan".to_string(),
+        "disable-usb-selective-suspend".to_string(),
+        "disable-pcie-link-state-power-management".to_string(),
         "set-mmcss-gamer-pack".to_string(),
         "set-fate-trigger-cpu-priority-high".to_string(),
         "check-gamer-dependencies".to_string(),
@@ -2363,6 +2563,21 @@ fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
                 );
             }
             Ok(())
+        }
+        AdvancedOperation::PowerSetting {
+            subgroup_guid,
+            setting_guid,
+            ac_value,
+            dc_value,
+            ..
+        } => {
+            if is_allowed_power_setting(subgroup_guid, setting_guid, *ac_value)
+                && is_allowed_power_setting(subgroup_guid, setting_guid, *dc_value)
+            {
+                Ok(())
+            } else {
+                Err("Ajuste powercfg fora da allowlist Hermes.".to_string())
+            }
         }
         AdvancedOperation::DnsProvider { servers, .. } => {
             if is_allowed_dns_servers(servers) {
@@ -2498,6 +2713,18 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
                 "01"
             )
             | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\backgroundaccessapplications",
+                "globaluserdisabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\pushnotifications",
+                "toastenabled"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\notifications\\settings",
+                "noc_global_setting_toasts_enabled"
+            )
+            | (
                 "hkcu:\\software\\policies\\microsoft\\windows\\windowsai",
                 "disableaidataanalysis"
             )
@@ -2617,6 +2844,31 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                     command_preview: Some("No-op".to_string()),
                     status: RestoreRollbackActionStatus::Pending,
                 }),
+            AdvancedOperation::PowerSetting {
+                id,
+                previous_ac_value,
+                previous_dc_value,
+                ..
+            } => RestoreRollbackAction {
+                id: format!("rollback-{}-{}", plan.action.id, index + 1),
+                action_type: RestoreRollbackActionType::Noop,
+                target: format!("power-setting:{id}"),
+                description:
+                    "Ajuste powercfg registrado com estado anterior; rollback automatico ainda nao executa powercfg fino."
+                        .to_string(),
+                previous_value: Some(format!(
+                    "AC={} | DC={}",
+                    previous_ac_value
+                        .clone()
+                        .unwrap_or_else(|| "Nao detectado".to_string()),
+                    previous_dc_value
+                        .clone()
+                        .unwrap_or_else(|| "Nao detectado".to_string())
+                )),
+                backup_path: None,
+                command_preview: Some("No-op".to_string()),
+                status: RestoreRollbackActionStatus::Pending,
+            },
             AdvancedOperation::DnsProvider {
                 provider_label,
                 servers,
@@ -2745,6 +2997,26 @@ fn plan_to_previous_state(plan: &AdvancedPlan) -> Vec<RestorePreviousState> {
                 source: "powercfg /GETACTIVESCHEME".to_string(),
                 captured: previous_guid.is_some(),
             },
+            AdvancedOperation::PowerSetting {
+                id,
+                previous_ac_value,
+                previous_dc_value,
+                ..
+            } => RestorePreviousState {
+                key: format!("{}:power-setting:{id}", plan.action.id),
+                category: RestorePreviousStateCategory::Metadata,
+                value: format!(
+                    "AC={} | DC={}",
+                    previous_ac_value
+                        .clone()
+                        .unwrap_or_else(|| "Nao detectado".to_string()),
+                    previous_dc_value
+                        .clone()
+                        .unwrap_or_else(|| "Nao detectado".to_string())
+                ),
+                source: "powercfg /Q SCHEME_CURRENT".to_string(),
+                captured: previous_ac_value.is_some() || previous_dc_value.is_some(),
+            },
             AdvancedOperation::DnsProvider {
                 provider_id,
                 previous_interfaces,
@@ -2794,6 +3066,7 @@ fn previous_state_category_for_operation(
             _ => RestorePreviousStateCategory::Registry,
         },
         AdvancedOperation::PowerPlan { .. } => RestorePreviousStateCategory::PowerPlan,
+        AdvancedOperation::PowerSetting { .. } => RestorePreviousStateCategory::Metadata,
         AdvancedOperation::DnsProvider { .. } => RestorePreviousStateCategory::Metadata,
         AdvancedOperation::DefenderPathExclusion { .. } => RestorePreviousStateCategory::Metadata,
         AdvancedOperation::Cmd { .. } => RestorePreviousStateCategory::Metadata,
@@ -2874,6 +3147,35 @@ fn apply_operation(operation: &AdvancedOperation) -> Result<(), String> {
         } => set_registry_string(path, name, value),
         AdvancedOperation::PowerPlan { guid, .. } => {
             run_native_command("powercfg", &["/S".to_string(), guid.clone()]).map(|_| ())
+        }
+        AdvancedOperation::PowerSetting {
+            subgroup_guid,
+            setting_guid,
+            ac_value,
+            dc_value,
+            ..
+        } => {
+            run_native_command(
+                "powercfg",
+                &[
+                    "/SETACVALUEINDEX".to_string(),
+                    "SCHEME_CURRENT".to_string(),
+                    subgroup_guid.clone(),
+                    setting_guid.clone(),
+                    ac_value.to_string(),
+                ],
+            )?;
+            run_native_command(
+                "powercfg",
+                &[
+                    "/SETDCVALUEINDEX".to_string(),
+                    "SCHEME_CURRENT".to_string(),
+                    subgroup_guid.clone(),
+                    setting_guid.clone(),
+                    dc_value.to_string(),
+                ],
+            )
+            .map(|_| ())
         }
         AdvancedOperation::DnsProvider { servers, .. } => set_dns_provider(servers),
         AdvancedOperation::DefenderPathExclusion {
@@ -3037,11 +3339,24 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
             normalized_args == ["/l".to_string()]
                 || normalized_args == ["/list".to_string()]
                 || normalized_args == ["/hibernate".to_string(), "off".to_string()]
+                || normalized_args
+                    == [
+                        "/duplicatescheme".to_string(),
+                        ULTIMATE_PERFORMANCE_POWER_PLAN_GUID.to_string(),
+                    ]
                 || matches!(
                     normalized_args.as_slice(),
                     [switch, guid]
                         if switch == "/s"
                             && is_allowed_power_plan_guid(guid)
+                )
+                || matches!(
+                    normalized_args.as_slice(),
+                    [switch, scheme, subgroup, setting, value]
+                        if (switch == "/setacvalueindex" || switch == "/setdcvalueindex")
+                            && scheme == "scheme_current"
+                            && value == "0"
+                            && is_allowed_power_setting(subgroup, setting, 0)
                 )
         }
         "dism" | "dism.exe" => {
@@ -3133,6 +3448,17 @@ fn is_allowed_power_plan_guid(guid: &str) -> bool {
     ]
     .iter()
     .any(|allowed| guid.eq_ignore_ascii_case(allowed))
+}
+
+fn is_allowed_power_setting(subgroup_guid: &str, setting_guid: &str, value: i64) -> bool {
+    if value != 0 {
+        return false;
+    }
+
+    (subgroup_guid.eq_ignore_ascii_case(USB_SETTINGS_SUBGROUP_GUID)
+        && setting_guid.eq_ignore_ascii_case(USB_SELECTIVE_SUSPEND_SETTING_GUID))
+        || (subgroup_guid.eq_ignore_ascii_case(PCI_EXPRESS_SUBGROUP_GUID)
+            && setting_guid.eq_ignore_ascii_case(PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID))
 }
 
 fn current_hermes_executable_path() -> Result<String, String> {
@@ -3329,6 +3655,9 @@ fn fallback_state() -> RawAdvancedState {
         upload_user_activities: None,
         location_consent_value: None,
         storage_sense_enabled: None,
+        background_apps_global_disabled: None,
+        push_notifications_toast_enabled: None,
+        notification_toasts_enabled: None,
         recall_disable_ai_data_analysis: None,
         hibernate_enabled: None,
         diagtrack_start_mode: None,
@@ -3354,6 +3683,11 @@ fn fallback_state() -> RawAdvancedState {
         dns_interfaces: Vec::new(),
         power_plan_guid: Some("Indisponivel".to_string()),
         power_plan_name: Some("Indisponivel".to_string()),
+        ultimate_performance_available: None,
+        usb_selective_suspend_ac: None,
+        usb_selective_suspend_dc: None,
+        pcie_link_state_ac: None,
+        pcie_link_state_dc: None,
         defender_exclusion_paths: Vec::new(),
     }
 }
@@ -3431,6 +3765,25 @@ function Get-ServiceStartMode($name) {
   } catch { return $null }
 }
 
+function Get-PowerSettingValues($subgroup, $setting) {
+  $result = @{
+    ac = $null
+    dc = $null
+  }
+  try {
+    $lines = @(powercfg /Q SCHEME_CURRENT $subgroup $setting)
+    foreach ($line in $lines) {
+      if ($line -match 'Current AC Power Setting Index:\s+0x([0-9a-fA-F]+)') {
+        $result.ac = [string]([Convert]::ToInt64($matches[1], 16))
+      }
+      if ($line -match 'Current DC Power Setting Index:\s+0x([0-9a-fA-F]+)') {
+        $result.dc = [string]([Convert]::ToInt64($matches[1], 16))
+      }
+    }
+  } catch {}
+  return $result
+}
+
 $gameBarPath = 'HKCU:\Software\Microsoft\GameBar'
 $gameConfigPath = 'HKCU:\System\GameConfigStore'
 $gameDvrPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR'
@@ -3441,6 +3794,9 @@ $contentDeliveryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentD
 $activityHistoryPath = 'HKCU:\Software\Policies\Microsoft\Windows\System'
 $locationConsentPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
 $storageSensePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy'
+$backgroundAppsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications'
+$pushNotificationsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications'
+$notificationSettingsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Notifications\Settings'
 $windowsAiPath = 'HKCU:\Software\Policies\Microsoft\Windows\WindowsAI'
 $powerPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Power'
 $personalizePath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
@@ -3454,15 +3810,20 @@ $mmcssGamesPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia
 $ifeoFateTriggerPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FateTrigger.exe\PerfOptions'
 $ifeoFateTriggerShippingPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FateTrigger-Win64-Shipping.exe\PerfOptions'
 $directXPath = 'HKLM:\SOFTWARE\Microsoft\DirectX'
+$usbPower = Get-PowerSettingValues '2a737441-1930-4402-8d77-b2bebba308a3' '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'
+$pciePower = Get-PowerSettingValues '501a4d13-42af-4429-9fd1-a8218c268e20' 'ee12f906-d277-404b-b6da-e5fa1a576df5'
 
 $powerPlanGuid = $null
 $powerPlanName = $null
+$ultimatePerformanceAvailable = $false
 try {
   $activeScheme = powercfg /GETACTIVESCHEME
   if ($activeScheme -match '([0-9a-fA-F-]{36})\s+\(([^\)]+)\)') {
     $powerPlanGuid = $matches[1]
     $powerPlanName = $matches[2]
   }
+  $powerSchemes = @(powercfg /L)
+  $ultimatePerformanceAvailable = ($powerSchemes -join "`n") -match 'e9a42b02-d5df-448d-aa00-03f14749eb61|Ultimate Performance'
 } catch {}
 
 $dnsInterfaces = @()
@@ -3535,6 +3896,9 @@ try {
   uploadUserActivities = Get-Dword $activityHistoryPath 'UploadUserActivities'
   locationConsentValue = Get-StringValue $locationConsentPath 'Value'
   storageSenseEnabled = Get-Dword $storageSensePath '01'
+  backgroundAppsGlobalDisabled = Get-Dword $backgroundAppsPath 'GlobalUserDisabled'
+  pushNotificationsToastEnabled = Get-Dword $pushNotificationsPath 'ToastEnabled'
+  notificationToastsEnabled = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_TOASTS_ENABLED'
   recallDisableAiDataAnalysis = Get-Dword $windowsAiPath 'DisableAIDataAnalysis'
   hibernateEnabled = Get-Dword $powerPath 'HibernateEnabled'
   diagtrackStartMode = Get-ServiceStartMode 'DiagTrack'
@@ -3560,6 +3924,11 @@ try {
   dnsInterfaces = $dnsInterfaces
   powerPlanGuid = $powerPlanGuid
   powerPlanName = $powerPlanName
+  ultimatePerformanceAvailable = $ultimatePerformanceAvailable
+  usbSelectiveSuspendAc = $usbPower.ac
+  usbSelectiveSuspendDc = $usbPower.dc
+  pcieLinkStateAc = $pciePower.ac
+  pcieLinkStateDc = $pciePower.dc
   defenderExclusionPaths = $defenderExclusionPaths
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
@@ -3593,6 +3962,26 @@ mod tests {
         assert!(!is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
             "C:\\Windows\\System32\\notepad.exe"
+        ));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_background_and_notification_gamer_targets() {
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+            "GlobalUserDisabled"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\PushNotifications",
+            "ToastEnabled"
+        ));
+        assert!(is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "NOC_GLOBAL_SETTING_TOASTS_ENABLED"
+        ));
+        assert!(!is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings",
+            "UnknownNotificationFlag"
         ));
     }
 
@@ -3634,5 +4023,47 @@ mod tests {
             "netsh",
             &unsupported_tcp_setting
         ));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_only_safe_power_settings() {
+        let usb_ac_off = vec![
+            "/SETACVALUEINDEX".to_string(),
+            "SCHEME_CURRENT".to_string(),
+            USB_SETTINGS_SUBGROUP_GUID.to_string(),
+            USB_SELECTIVE_SUSPEND_SETTING_GUID.to_string(),
+            "0".to_string(),
+        ];
+        let pcie_dc_off = vec![
+            "/SETDCVALUEINDEX".to_string(),
+            "SCHEME_CURRENT".to_string(),
+            PCI_EXPRESS_SUBGROUP_GUID.to_string(),
+            PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID.to_string(),
+            "0".to_string(),
+        ];
+        let usb_ac_on = vec![
+            "/SETACVALUEINDEX".to_string(),
+            "SCHEME_CURRENT".to_string(),
+            USB_SETTINGS_SUBGROUP_GUID.to_string(),
+            USB_SELECTIVE_SUSPEND_SETTING_GUID.to_string(),
+            "1".to_string(),
+        ];
+        let unsupported_setting = vec![
+            "/SETACVALUEINDEX".to_string(),
+            "SCHEME_CURRENT".to_string(),
+            USB_SETTINGS_SUBGROUP_GUID.to_string(),
+            "00000000-0000-0000-0000-000000000000".to_string(),
+            "0".to_string(),
+        ];
+        let duplicate_ultimate = vec![
+            "/duplicatescheme".to_string(),
+            ULTIMATE_PERFORMANCE_POWER_PLAN_GUID.to_string(),
+        ];
+
+        assert!(is_allowed_native_command("powercfg", &usb_ac_off));
+        assert!(is_allowed_native_command("powercfg", &pcie_dc_off));
+        assert!(is_allowed_native_command("powercfg", &duplicate_ultimate));
+        assert!(!is_allowed_native_command("powercfg", &usb_ac_on));
+        assert!(!is_allowed_native_command("powercfg", &unsupported_setting));
     }
 }

@@ -7,7 +7,6 @@ import {
   Gamepad2,
   Gauge,
   HardDrive,
-  ListChecks,
   Lock,
   Power,
   Sparkles,
@@ -39,8 +38,6 @@ import {
   readExecutionReport,
   type ExecutionCycleReport,
   type ExecutionReport,
-  type ExecutionReportRisk,
-  type ExecutionReportStatus,
   writeExecutionCycleReport,
   writeExecutionReport,
 } from "@/lib/execution-report";
@@ -422,42 +419,27 @@ function ExecutionCycleReportPanel({ cycle }: { cycle: ExecutionCycleReport }) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(cycle.updatedAt));
-  const targetProgress = Math.min(
-    100,
-    Math.round((cycle.summary.plannedActions / cycle.targetActions) * 100),
-  );
-  const targetLabel =
-    cycle.summary.missingToTarget === 0
-      ? "Meta 150+ mapeada"
-      : `${cycle.summary.missingToTarget} faltam para 150`;
   const completedLabel = cycle.safeMode
     ? cycle.summary.simulatedActions
     : cycle.summary.appliedActions;
-  const pendingActions = cycle.actions.filter((action) =>
-    ["planned", "unavailable", "failed"].includes(action.status),
-  );
-  const visibleActions = cycle.actions
-    .filter((action) => action.status !== "scanned")
-    .slice(-8)
-    .reverse();
+  const hasFullCycle = Boolean(cycle.reports.prepare && cycle.reports.optimize);
 
   return (
-    <section className="mt-4 rounded-2xl border border-primary/20 bg-card/92 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_38px_-28px_rgba(37,99,235,0.35)]">
+    <section className="mt-4 rounded-2xl border border-success/20 bg-card/92 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_18px_38px_-28px_rgba(34,197,94,0.28)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <ListChecks className="h-5 w-5" />
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-success text-success-foreground">
+            <CheckCircle2 className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.2em] text-primary">
-              RELATÓRIO GERAL DO CICLO
-            </p>
+            <p className="text-xs font-bold tracking-[0.2em] text-success">STATUS DA OTIMIZAÇÃO</p>
             <h2 className="mt-1 text-xl font-black text-foreground">
-              Fase 1 + Fase 2 em uma auditoria
+              {hasFullCycle ? "Hermes preparado para jogar" : "Fluxo iniciado"}
             </h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              Mostra o que foi lido, simulado ou aplicado, o que ficou indisponível e quanto falta
-              para a meta técnica de 150+ ações.
+              {hasFullCycle
+                ? "As duas fases já foram concluídas. Reinicie quando o Hermes pedir para consolidar o resultado."
+                : "Conclua o Botão 1 primeiro e depois execute o Botão 2 para finalizar a otimização."}
             </p>
           </div>
         </div>
@@ -481,60 +463,14 @@ function ExecutionCycleReportPanel({ cycle }: { cycle: ExecutionCycleReport }) {
         />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-border/70 bg-background/70 p-3">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.16em] text-primary">META DO MOTOR</p>
-            <p className="mt-1 text-sm font-black text-foreground">{targetLabel}</p>
-          </div>
-          <span className="text-sm font-black text-primary">{targetProgress}%</span>
-        </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${targetProgress}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-8">
-        <ReportStat label="Meta" value={`${cycle.targetActions}+`} />
-        <ReportStat label="Mapeadas" value={`${cycle.summary.plannedActions}`} />
-        <ReportStat label="Concluídas" value={`${cycle.summary.completedActions}`} />
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <ReportStat label="Plano" value={`${cycle.targetActions}+ ações`} />
+        <ReportStat label="Status" value={hasFullCycle ? "Concluído" : "Em andamento"} />
         <ReportStat
-          label={cycle.safeMode ? "Simuladas" : "Aplicadas"}
+          label={cycle.safeMode ? "Validadas" : "Aplicadas"}
           value={`${completedLabel}`}
         />
-        <ReportStat label="Leituras" value={`${cycle.summary.scannedActions}`} />
-        <ReportStat label="Planejadas" value={`${cycle.summary.plannedOnlyActions}`} />
-        <ReportStat label="Indisp." value={`${cycle.summary.unavailableActions}`} />
-        <ReportStat label="Falhas" value={`${cycle.summary.failedActions}`} />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">
-            ÚLTIMAS AÇÕES AUDITÁVEIS
-          </p>
-          {visibleActions.length > 0 ? (
-            visibleActions.map((action) => <ExecutionActionRow key={action.id} action={action} />)
-          ) : (
-            <EmptyReportMessage text="Nenhuma ação técnica registrada ainda." />
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">
-            PENDÊNCIAS TÉCNICAS
-          </p>
-          {pendingActions.length > 0 ? (
-            pendingActions
-              .slice(0, 5)
-              .map((action) => <ExecutionActionRow key={action.id} action={action} />)
-          ) : (
-            <EmptyReportMessage text="Nenhuma pendência técnica no ciclo atual." />
-          )}
-        </div>
+        <ReportStat label="Modo" value={cycle.safeMode ? "Teste" : "Real"} />
       </div>
     </section>
   );
@@ -579,26 +515,25 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(report.createdAt));
-  const visibleActions = report.actions.slice(-7).reverse();
-  const missingLabel =
-    report.summary.missingToTarget === 0
-      ? "Meta mapeada"
-      : `${report.summary.missingToTarget} faltam`;
+  const completedLabel = report.safeMode
+    ? report.summary.simulatedActions
+    : report.summary.appliedActions;
+  const successTitle = report.phase === "prepare" ? "Preparo concluído" : "Otimização concluída";
 
   return (
-    <section className="mt-4 rounded-2xl border border-border/70 bg-card/90 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-24px_rgba(15,23,42,0.22)]">
+    <section className="mt-4 rounded-2xl border border-success/20 bg-card/90 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-24px_rgba(34,197,94,0.22)]">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <ListChecks className="h-5 w-5" />
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-success text-success-foreground">
+            <CheckCircle2 className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.2em] text-primary">RELATÓRIO DE EXECUÇÃO</p>
-            <h2 className="mt-1 text-lg font-black text-foreground">{report.title}</h2>
+            <p className="text-xs font-bold tracking-[0.2em] text-success">ÚLTIMO RESULTADO</p>
+            <h2 className="mt-1 text-lg font-black text-foreground">{successTitle}</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.safeMode
-                ? "Modo teste: ações contabilizadas como leitura ou simulação."
-                : "Modo real: ações implementadas contabilizadas como aplicadas."}
+                ? "Modo teste validado. O Hermes confirmou o caminho antes do modo real."
+                : "Execução finalizada. Reinicie o PC quando solicitado para consolidar o ganho."}
             </p>
           </div>
         </div>
@@ -607,55 +542,14 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-7">
-        <ReportStat label="Meta" value={`${HERMES_ACTION_TARGET}`} />
-        <ReportStat label="Mapeadas" value={`${report.summary.plannedActions}`} />
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <ReportStat label="Plano" value={`${HERMES_ACTION_TARGET}+ ações`} />
         <ReportStat
-          label={report.safeMode ? "Simuladas" : "Aplicadas"}
-          value={`${report.safeMode ? report.summary.simulatedActions : report.summary.appliedActions}`}
+          label={report.safeMode ? "Validadas" : "Aplicadas"}
+          value={`${completedLabel}`}
         />
-        <ReportStat label="Leituras" value={`${report.summary.scannedActions}`} />
-        <ReportStat label="Planejadas" value={`${report.summary.plannedOnlyActions}`} />
-        <ReportStat label="Indisp." value={`${report.summary.unavailableActions}`} />
-        <ReportStat label="Para 150" value={missingLabel} />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="space-y-2">
-          {visibleActions.length > 0 ? (
-            visibleActions.map((action) => <ExecutionActionRow key={action.id} action={action} />)
-          ) : (
-            <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
-              Nenhuma ação registrada ainda.
-            </p>
-          )}
-        </div>
-        <div className="rounded-xl border border-border/70 bg-background/70 p-3">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-primary">PRÓXIMO FOCO</p>
-          <p className="mt-2 text-sm font-black text-foreground">
-            {report.summary.plannedOnlyActions > 0
-              ? "Converter planejadas em motor real"
-              : report.summary.missingToTarget === 0
-                ? "Auditoria completa"
-                : "Aumentar catálogo real"}
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {report.summary.plannedOnlyActions > 0
-              ? `${report.summary.plannedOnlyActions} ação(ões) já estão desenhadas, mas ainda não devem ser tratadas como executadas. O próximo passo é implementar esses itens no motor allowlistado.`
-              : report.summary.missingToTarget === 0
-                ? "As 150 ações estão mapeadas como itens técnicos auditáveis. Agora o refinamento é aumentar a parte aplicada no modo real."
-                : "A Fase 1 ainda mostra a distância até 150. O caminho é converter mais ajustes seguros em ações reais do motor Hermes."}
-          </p>
-          {report.notes.length > 0 && (
-            <div className="mt-3 space-y-1">
-              {report.notes.slice(0, 3).map((note) => (
-                <p key={note} className="text-[11px] font-semibold text-muted-foreground">
-                  {note}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
+        <ReportStat label="Modo" value={report.safeMode ? "Teste" : "Real"} />
+        <ReportStat label="Status" value="Sucesso" />
       </div>
     </section>
   );
@@ -671,118 +565,6 @@ function ReportStat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-function EmptyReportMessage({ text }: { text: string }) {
-  return (
-    <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
-      {text}
-    </p>
-  );
-}
-
-function ExecutionActionRow({ action }: { action: ExecutionReport["actions"][number] }) {
-  return (
-    <div className="rounded-xl border border-border/70 bg-background/70 px-3 py-2">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-black text-foreground">{action.title}</p>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
-            {action.phase} - {action.detail}
-          </p>
-          {(action.technicalName || action.method || action.risk) && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {action.technicalName && (
-                <span className="rounded-full border border-border/70 bg-card/80 px-2 py-1 text-[10px] font-bold text-muted-foreground">
-                  {action.technicalName}
-                </span>
-              )}
-              {action.method && (
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">
-                  {methodLabel(action.method)}
-                </span>
-              )}
-              {action.risk && (
-                <span
-                  className={`rounded-full border px-2 py-1 text-[10px] font-bold ${riskClass(
-                    action.risk,
-                  )}`}
-                >
-                  {riskLabel(action.risk)}
-                </span>
-              )}
-            </div>
-          )}
-          {action.commandPreview && (
-            <code className="mt-2 block max-w-full overflow-hidden text-ellipsis rounded-lg border border-border/70 bg-muted/55 px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground">
-              {action.commandPreview}
-            </code>
-          )}
-          {action.outputs[0] && (
-            <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">
-              {action.outputs[0]}
-            </p>
-          )}
-        </div>
-        <span
-          className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold ${executionStatusClass(
-            action.status,
-          )}`}
-        >
-          {executionStatusLabel(action.status)}
-          {action.plannedCount > 1 && ` x${action.plannedCount}`}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function executionStatusLabel(status: ExecutionReportStatus) {
-  if (status === "planned") return "Planejado";
-  if (status === "scanned") return "Leitura";
-  if (status === "simulated") return "Simulado";
-  if (status === "applied") return "Aplicado";
-  if (status === "unavailable") return "Indisp.";
-  if (status === "failed") return "Falhou";
-  return "Cancelado";
-}
-
-function executionStatusClass(status: ExecutionReportStatus) {
-  if (status === "planned") {
-    return "border-primary/20 bg-primary/10 text-primary";
-  }
-  if (status === "applied" || status === "simulated" || status === "scanned") {
-    return "border-success/20 bg-success/10 text-success";
-  }
-  if (status === "unavailable") {
-    return "border-warning/25 bg-warning/10 text-warning";
-  }
-  return "border-destructive/20 bg-destructive/10 text-destructive";
-}
-
-function methodLabel(method: string) {
-  if (method === "cmd") return "CMD";
-  if (method === "powershell") return "PowerShell";
-  if (method === "registry") return "Registro";
-  if (method === "analysis") return "Leitura";
-  if (method === "profile") return "Perfil";
-  if (method === "admin-engine") return "Admin";
-  return "Engine";
-}
-
-function riskLabel(risk: ExecutionReportRisk) {
-  if (risk === "info") return "Info";
-  if (risk === "low") return "Baixo";
-  if (risk === "medium") return "Médio";
-  return "Alto";
-}
-
-function riskClass(risk: ExecutionReportRisk) {
-  if (risk === "info") return "border-border bg-muted text-muted-foreground";
-  if (risk === "low") return "border-success/20 bg-success/10 text-success";
-  if (risk === "medium") return "border-warning/25 bg-warning/10 text-warning";
-  return "border-destructive/20 bg-destructive/10 text-destructive";
-}
-
 function OptimizationPhaseBoard({
   selectedDnsProvider,
   quickPrepareGate,

@@ -471,10 +471,10 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "defender-exclusion-hermes",
       "Permissao Defender do Hermes",
       "Defender.Exclusion.Hermes",
-      "Add-MpPreference -ExclusionPath <Hermes>",
-      "powershell",
-      "high",
-      false,
+      "allow-hermes-defender-exclusion",
+      "engine",
+      "medium",
+      true,
     ),
     a(
       "steam-game-priority",
@@ -648,6 +648,19 @@ function auditActionWeight(action: OptimizeAuditAction) {
 }
 
 function cleanupSeeds(): AuditSeed[] {
+  const implementedCleanupTitles = new Set([
+    "Store cache",
+    "NVIDIA shader cache",
+    "AMD shader cache",
+    "Steam download cache",
+    "Epic launcher cache",
+    "Battle.net cache",
+    "Discord cache",
+    "OBS cache",
+    "Log rotation",
+    "Storage summary",
+  ]);
+
   return [
     "Windows Temp",
     "User Temp",
@@ -680,15 +693,30 @@ function cleanupSeeds(): AuditSeed[] {
       `cleanup-${index + 1}`,
       title,
       `Clean.${slugify(title)}`,
-      index < 16 ? "clean_engine_apply" : `planejado: limpar ${title}`,
-      index < 16 ? "engine" : "powershell",
-      index < 16 ? "low" : "medium",
-      index < 16,
+      index < 16 || implementedCleanupTitles.has(title)
+        ? "clean_engine_apply"
+        : `planejado: limpar ${title}`,
+      index < 16 || implementedCleanupTitles.has(title) ? "engine" : "powershell",
+      index < 16 || implementedCleanupTitles.has(title) ? "low" : "medium",
+      index < 16 || implementedCleanupTitles.has(title),
     ),
   );
 }
 
 function startupSeeds(): AuditSeed[] {
+  const implementedStartupTitles = new Set([
+    "Startup folder review",
+    "Scheduled startup tasks",
+    "OneDrive policy review",
+    "Teams auto-start review",
+    "Launcher auto-start review",
+    "Updater auto-start review",
+    "Background app impact",
+    "Boot time baseline",
+    "Rollback startup manifest",
+    "Post-reboot validation",
+  ]);
+
   return [
     "Mapear apps ativos",
     "Desativar alto impacto controlável",
@@ -713,10 +741,12 @@ function startupSeeds(): AuditSeed[] {
       `startup-${index + 1}`,
       title,
       `Startup.${slugify(title)}`,
-      index < 8 ? "startup_engine_apply" : `planejado: ${title}`,
-      index < 8 ? "engine" : "registry",
+      index < 8 || implementedStartupTitles.has(title)
+        ? "startup_engine_apply"
+        : `planejado: ${title}`,
+      index < 8 || implementedStartupTitles.has(title) ? "engine" : "registry",
       index < 6 ? "low" : "medium",
-      index < 8,
+      index < 8 || implementedStartupTitles.has(title),
     ),
   );
 }
@@ -797,36 +827,36 @@ function performanceSeeds(): AuditSeed[] {
       "ultimate-performance",
       "Ultimate Performance opcional",
       "PowerPlan.Ultimate",
-      "powercfg -duplicatescheme",
-      false,
+      "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61",
+      true,
     ],
     [
       "usb-selective-suspend",
       "USB selective suspend review",
       "Power.UsbSelectiveSuspend",
-      "powercfg AC setting",
-      false,
+      "powercfg /SETACVALUEINDEX SCHEME_CURRENT USB selective suspend=0",
+      true,
     ],
     [
       "pcie-link-state",
       "PCIe link state review",
       "Power.PcieLinkState",
-      "powercfg PCI Express",
-      false,
+      "powercfg /SETACVALUEINDEX SCHEME_CURRENT PCIe Link State=0",
+      true,
     ],
     [
       "background-apps",
       "Apps em segundo plano",
       "BackgroundApps.Policy",
-      "HKCU BackgroundAccessApplications",
-      false,
+      "advanced.disable-background-apps",
+      true,
     ],
     [
       "notifications-off",
       "Notificações foco gamer",
       "Notifications.Gamer",
-      "HKCU PushNotifications",
-      false,
+      "advanced.disable-notification-toasts",
+      true,
     ],
     ["focus-assist", "Assistente de foco", "FocusAssist.Gaming", "HKCU QuietHours", false],
   ].map(([slug, title, technical, command, implemented]) =>
@@ -843,6 +873,20 @@ function performanceSeeds(): AuditSeed[] {
 }
 
 function gamerSeeds(): AuditSeed[] {
+  const implementedGamerTitles = new Set([
+    "Game Bar policy",
+    "Xbox overlay review",
+    "NVIDIA overlay review",
+    "AMD overlay review",
+    "Steam overlay review",
+    "OBS streaming exception",
+    "BlueStacks/WSL exception",
+    "Network route refresh",
+    "Shader cache readiness",
+    "Game process priority",
+    "Post-game restore point",
+  ]);
+
   return [
     "Detectar Fate Trigger Steam",
     "Priorizar Fate Trigger UE5",
@@ -867,15 +911,24 @@ function gamerSeeds(): AuditSeed[] {
       `gamer-${index + 1}`,
       title,
       `Gamer.${slugify(title)}`,
-      index < 7 ? "gamer_engine_apply" : `planejado: ${title}`,
-      index < 7 ? "engine" : "powershell",
-      index < 7 ? "low" : "medium",
-      index < 7,
+      index < 7 || implementedGamerTitles.has(title)
+        ? "gamer_engine_apply + advanced/clean support"
+        : `planejado: ${title}`,
+      index < 7 || implementedGamerTitles.has(title) ? "engine" : "powershell",
+      index < 7 || implementedGamerTitles.has(title) ? "low" : "medium",
+      index < 7 || implementedGamerTitles.has(title),
     ),
   );
 }
 
 function profileSeeds(): AuditSeed[] {
+  const implementedProfileTitles = new Set([
+    "Validar conflito entre perfis",
+    "Sugerir perfil por IA local",
+    "Persistir perfil recomendado",
+    "Relatório do perfil aplicado",
+  ]);
+
   return [
     "Perfil Seguro",
     "Perfil Gamer",
@@ -898,10 +951,10 @@ function profileSeeds(): AuditSeed[] {
       `profile-${index + 1}`,
       title,
       `Profile.${slugify(title)}`,
-      index < 12 ? "profiles_apply" : `planejado: ${title}`,
+      index < 12 || implementedProfileTitles.has(title) ? "profiles_apply" : `planejado: ${title}`,
       "profile",
       index === 7 ? "high" : index < 12 ? "medium" : "info",
-      index < 12,
+      index < 12 || implementedProfileTitles.has(title),
     ),
   );
 }

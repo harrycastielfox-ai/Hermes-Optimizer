@@ -1,8 +1,6 @@
 import {
   AlertTriangle,
   CheckCircle2,
-  Download,
-  FolderOpen,
   Gauge,
   HardDrive,
   Loader2,
@@ -26,20 +24,7 @@ import {
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 import type { DiagnosticReport } from "@/lib/diagnostic";
 import { RestartPrompt } from "@/components/optimization/RestartPrompt";
-import {
-  auditOfficialGamerDependencyManifest,
-  downloadOfficialGamerDependencyInstallers,
-  installVerifiedGamerDependencies,
-  openGamerDependencyCacheDir,
-  type GamerDependencyDownloadResult,
-  type GamerDependencyInstallActionResult,
-  type GamerDependencyInstallActionStatus,
-  type GamerDependencyInstallResult,
-  type GamerDependencyManifestAuditResult,
-  type GamerDependencyVerificationItem,
-  type GamerDependencyVerificationReport,
-  type GamerDependencyVerificationStatus,
-} from "@/lib/gamer-dependencies";
+import { type GamerDependencyVerificationReport } from "@/lib/gamer-dependencies";
 import {
   buildExecutionReport,
   type ExecutionReport,
@@ -390,9 +375,7 @@ export function QuickPrepareModal({
                 <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
               )}
 
-              {finalExecutionReport && (
-                <PrepareExecutionReportPanel report={finalExecutionReport} />
-              )}
+              {finalExecutionReport && <PrepareSuccessPanel report={finalExecutionReport} />}
             </div>
 
             <aside className="space-y-4">
@@ -547,492 +530,84 @@ function PreparePhaseCard({ phase }: { phase: PreparePhase }) {
   );
 }
 
-function PrepareExecutionReportPanel({ report }: { report: ExecutionReport }) {
-  const summary = report.summary;
-  const visibleActions = report.actions.filter((action) => action.status !== "planned").slice(0, 5);
-
+function PrepareSuccessPanel({ report }: { report: ExecutionReport }) {
   return (
-    <section className="rounded-2xl border border-success/20 bg-success/10 p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-success">
-            Relatório do Preparar PC
-          </p>
-          <h3 className="mt-1 text-base font-black text-foreground">
-            {summary.completedActions} ação(ões) contabilizada(s)
-          </h3>
-          <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-            Reinicie o PC antes de rodar o Botão 2 para seguir com mais estabilidade.
-          </p>
+    <section className="overflow-hidden rounded-2xl border border-success/25 bg-success/10">
+      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-success text-success-foreground shadow-[0_18px_34px_-24px_rgba(34,197,94,0.9)]">
+            <CheckCircle2 className="h-7 w-7" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-success">
+              Sucesso
+            </p>
+            <h3 className="mt-1 text-xl font-black text-foreground">Preparo concluído</h3>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {report.safeMode
+                ? "Modo teste validado. Reinicie o PC antes de seguir para o Botão 2."
+                : "Base do PC preparada com sucesso. Reinicie antes de executar o Botão 2."}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4 xl:grid-cols-7">
-          <ReportStat label="Lidas" value={summary.scannedActions} tone="primary" />
-          <ReportStat label="Simuladas" value={summary.simulatedActions} tone="primary" />
-          <ReportStat label="Aplicadas" value={summary.appliedActions} tone="success" />
-          <ReportStat label="Confirmadas" value={summary.verifiedActions} tone="success" />
-          <ReportStat label="Não conf." value={summary.unconfirmedActions} tone="warning" />
-          <ReportStat
-            label="Sem leitura"
-            value={summary.verificationUnavailableActions}
-            tone="warning"
-          />
-          <ReportStat label="Indisp." value={summary.unavailableActions} tone="warning" />
+        <div className="grid grid-cols-2 gap-2 text-right">
+          <span className="rounded-xl border border-success/20 bg-background/70 px-3 py-2">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-success">
+              Base
+            </span>
+            <span className="block text-sm font-black text-foreground">Pronta</span>
+          </span>
+          <span className="rounded-xl border border-primary/20 bg-primary/10 px-3 py-2">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+              Modo
+            </span>
+            <span className="block text-sm font-black text-foreground">
+              {report.safeMode ? "Teste" : "Real"}
+            </span>
+          </span>
         </div>
       </div>
-
-      {visibleActions.length > 0 && (
-        <div className="mt-4 grid gap-2 lg:grid-cols-2">
-          {visibleActions.map((action) => (
-            <div
-              key={action.id}
-              className="rounded-xl border border-border/60 bg-background/60 px-3 py-2"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[12px] font-black text-foreground">{action.title}</p>
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${reportStatusClass(
-                    action.status,
-                  )}`}
-                >
-                  {reportStatusLabel(action.status)}
-                </span>
-              </div>
-              <p className="mt-1 line-clamp-2 text-[11px] font-medium text-muted-foreground">
-                {action.outputs[0] ?? action.detail}
-              </p>
-              {action.verification && action.verification.status !== "notRequired" && (
-                <p className="mt-1 line-clamp-2 text-[10px] font-semibold text-muted-foreground">
-                  Verificação: {action.verification.detail}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </section>
-  );
-}
-
-function ReportStat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "primary" | "success" | "warning";
-}) {
-  const className =
-    tone === "success"
-      ? "border-success/20 bg-success/10 text-success"
-      : tone === "warning"
-        ? "border-warning/25 bg-warning/10 text-warning"
-        : "border-primary/20 bg-primary/10 text-primary";
-
-  return (
-    <span className={`rounded-xl border px-3 py-1.5 ${className}`}>
-      <span className="block text-[9px] font-bold uppercase tracking-[0.12em]">{label}</span>
-      <span className="block text-sm font-black">{value}</span>
-    </span>
   );
 }
 
 function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificationReport }) {
-  const [currentReport, setCurrentReport] = useState(report);
-  const [openError, setOpenError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isInstalling, setIsInstalling] = useState(false);
-  const [lastManifestAuditResult, setLastManifestAuditResult] =
-    useState<GamerDependencyManifestAuditResult | null>(null);
-  const [lastDownloadResult, setLastDownloadResult] =
-    useState<GamerDependencyDownloadResult | null>(null);
-  const [lastInstallResult, setLastInstallResult] = useState<GamerDependencyInstallResult | null>(
-    null,
-  );
-
-  useEffect(() => {
-    setCurrentReport(report);
-    setActionMessage(null);
-    setLastManifestAuditResult(null);
-    setLastDownloadResult(null);
-    setLastInstallResult(null);
-  }, [report]);
-
-  const sortedPackages = [...currentReport.packages].sort((left, right) => {
-    const order: Record<GamerDependencyVerificationStatus, number> = {
-      failed: 0,
-      blocked: 1,
-      missing: 2,
-      verified: 3,
-    };
-    return order[left.status] - order[right.status] || left.title.localeCompare(right.title);
-  });
-  const cacheLabel =
-    currentReport.cacheDir.length > 96
-      ? `${currentReport.cacheDir.slice(0, 93)}...`
-      : currentReport.cacheDir;
-  const warnings = [
-    ...(openError ? [openError] : []),
-    ...(actionMessage ? [actionMessage] : []),
-    ...currentReport.warnings,
-  ];
-
-  async function handleOpenCache() {
-    try {
-      setOpenError(null);
-      await openGamerDependencyCacheDir();
-    } catch (error) {
-      setOpenError(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function handleDownloadOfficial() {
-    try {
-      setOpenError(null);
-      setActionMessage(null);
-      setIsDownloading(true);
-      const result = await downloadOfficialGamerDependencyInstallers();
-      setCurrentReport(result.report);
-      setLastDownloadResult(result);
-      setLastInstallResult(null);
-      setActionMessage(
-        `${result.downloadedCount} baixado(s), ${result.skippedCount} pulado(s), ${result.failedCount} falha(s).`,
-      );
-    } catch (error) {
-      setOpenError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsDownloading(false);
-    }
-  }
-
-  async function handleAuditManifest() {
-    try {
-      setOpenError(null);
-      setActionMessage(null);
-      setIsAuditing(true);
-      const result = await auditOfficialGamerDependencyManifest();
-      setLastManifestAuditResult(result);
-      setLastDownloadResult(null);
-      setLastInstallResult(null);
-      setActionMessage(
-        `${result.auditedCount + result.cachedCount} auditado(s), ${result.blockedCount} bloqueado(s), ${result.failedCount} falha(s).`,
-      );
-    } catch (error) {
-      setOpenError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsAuditing(false);
-    }
-  }
-
-  async function handleInstallVerified() {
-    try {
-      setOpenError(null);
-      setActionMessage(null);
-      setIsInstalling(true);
-      const result = await installVerifiedGamerDependencies({
-        confirmed: !HERMES_SAFE_TEST_MODE,
-        dryRun: HERMES_SAFE_TEST_MODE,
-      });
-      setCurrentReport(result.report);
-      setLastInstallResult(result);
-      setLastDownloadResult(null);
-      setActionMessage(result.message);
-    } catch (error) {
-      setOpenError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsInstalling(false);
-    }
-  }
+  const warning = report.warnings[0];
 
   return (
     <section className="rounded-2xl border border-border/70 bg-background/72 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">VC++ / DIRECTX</p>
-          <h3 className="mt-1 text-base font-black text-foreground">
-            Dependências verificadas no cache local
-          </h3>
-          <p className="mt-1 truncate text-[12px] text-muted-foreground">Cache: {cacheLabel}</p>
-        </div>
-        <div className="flex flex-col gap-2 sm:items-end">
-          <div className="flex flex-wrap gap-2 sm:justify-end">
-            <button
-              type="button"
-              onClick={handleAuditManifest}
-              disabled={isAuditing || isDownloading || isInstalling}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isAuditing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ShieldCheck className="h-4 w-4" />
-              )}
-              Auditar manifesto
-            </button>
-            <button
-              type="button"
-              onClick={handleDownloadOfficial}
-              disabled={isAuditing || isDownloading || isInstalling}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2 text-xs font-black text-success transition hover:bg-success/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isDownloading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              Baixar oficiais
-            </button>
-            <button
-              type="button"
-              onClick={handleInstallVerified}
-              disabled={isAuditing || isDownloading || isInstalling}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs font-black text-warning transition hover:bg-warning/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isInstalling ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ShieldCheck className="h-4 w-4" />
-              )}
-              Instalar verificados
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenCache}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-xs font-black text-primary transition hover:bg-primary/15"
-            >
-              <FolderOpen className="h-4 w-4" />
-              Abrir cache
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
-            <DependencyStat label="Prontas" value={currentReport.readyCount} tone="success" />
-            <DependencyStat
-              label="Instaladas"
-              value={currentReport.installedLocallyCount}
-              tone="success"
-            />
-            <DependencyStat label="Bloqueadas" value={currentReport.blockedCount} tone="warning" />
-            <DependencyStat label="Total" value={currentReport.totalPackages} tone="primary" />
-          </div>
-        </div>
-      </div>
-
-      {(lastManifestAuditResult || lastDownloadResult || lastInstallResult) && (
-        <DependencyExecutionReport
-          manifestAuditResult={lastManifestAuditResult}
-          downloadResult={lastDownloadResult}
-          installResult={lastInstallResult}
-        />
-      )}
-
-      <div className="mt-4 max-h-64 overflow-auto rounded-xl border border-border/70">
-        {sortedPackages.map((item) => (
-          <DependencyRow key={item.packageId} item={item} />
-        ))}
-      </div>
-
-      {warnings.length > 0 && (
-        <div className="mt-3 space-y-1">
-          {warnings.slice(0, 2).map((warning) => (
-            <p
-              key={warning}
-              className="rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-[11px] font-semibold text-warning"
-            >
-              {warning}
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-primary">VC++ / DIRECTX</p>
+            <h3 className="mt-1 text-base font-black text-foreground">
+              Dependências gamer verificadas
+            </h3>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              O Hermes cuida dos runtimes dentro dos botões principais, sem etapa manual.
             </p>
-          ))}
+          </div>
         </div>
+        <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
+          <DependencyStat label="Prontas" value={report.readyCount} tone="success" />
+          <DependencyStat label="Instaladas" value={report.installedLocallyCount} tone="success" />
+          <DependencyStat label="Pendentes" value={report.blockedCount} tone="warning" />
+          <DependencyStat label="Total" value={report.totalPackages} tone="primary" />
+        </div>
+      </div>
+
+      {warning && (
+        <p className="mt-3 rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-[11px] font-semibold text-warning">
+          {warning}
+        </p>
       )}
     </section>
   );
 }
-
-function DependencyExecutionReport({
-  manifestAuditResult,
-  downloadResult,
-  installResult,
-}: {
-  manifestAuditResult: GamerDependencyManifestAuditResult | null;
-  downloadResult: GamerDependencyDownloadResult | null;
-  installResult: GamerDependencyInstallResult | null;
-}) {
-  if (installResult) {
-    const visibleActions = installResult.actions.slice(0, 8);
-
-    return (
-      <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
-              Relatório da última ação
-            </p>
-            <h4 className="mt-1 text-sm font-black text-foreground">
-              Instalação controlada VC++/DirectX
-            </h4>
-            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-              {installResult.message}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <DependencyStat
-              label="Simulados"
-              value={countInstallStatus(installResult, "dryRun")}
-              tone="primary"
-            />
-            <DependencyStat label="Pulados" value={installResult.skippedCount} tone="primary" />
-            <DependencyStat label="Bloq." value={installResult.blockedCount} tone="warning" />
-            <DependencyStat label="Falhas" value={installResult.failedCount} tone="warning" />
-          </div>
-        </div>
-
-        <div className="mt-3 overflow-hidden rounded-xl border border-border/60">
-          {visibleActions.map((action) => (
-            <DependencyExecutionRow key={action.packageId} action={action} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!downloadResult) {
-    if (!manifestAuditResult) {
-      return null;
-    }
-
-    const visibleItems = manifestAuditResult.items.slice(0, 8);
-
-    return (
-      <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 p-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
-              Relatório da última ação
-            </p>
-            <h4 className="mt-1 text-sm font-black text-foreground">
-              Auditoria de manifesto VC++/DirectX
-            </h4>
-            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-              Gera SHA256 e valida assinatura Microsoft sem liberar instalação automática.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <DependencyStat
-              label="Auditados"
-              value={manifestAuditResult.auditedCount}
-              tone="success"
-            />
-            <DependencyStat label="Cache" value={manifestAuditResult.cachedCount} tone="primary" />
-            <DependencyStat label="Bloq." value={manifestAuditResult.blockedCount} tone="warning" />
-            <DependencyStat label="Falhas" value={manifestAuditResult.failedCount} tone="warning" />
-          </div>
-        </div>
-        <div className="mt-3 overflow-hidden rounded-xl border border-border/60">
-          {visibleItems.map((item) => (
-            <div
-              key={item.packageId}
-              className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-[12px] font-black text-foreground">{item.title}</p>
-                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                  {item.sha256 ?? item.auditPath}
-                </p>
-              </div>
-              <p className="truncate text-[11px] font-medium text-muted-foreground">
-                {item.manifestHint ?? item.message}
-              </p>
-              <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary">
-                {item.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4 rounded-2xl border border-success/15 bg-success/5 p-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-success">
-            Relatório da última ação
-          </p>
-          <h4 className="mt-1 text-sm font-black text-foreground">Download oficial para cache</h4>
-          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-            Baixa apenas URLs Microsoft/aka.ms e valida assinatura antes de salvar no cache.
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <DependencyStat label="Baixados" value={downloadResult.downloadedCount} tone="success" />
-          <DependencyStat label="Pulados" value={downloadResult.skippedCount} tone="primary" />
-          <DependencyStat label="Falhas" value={downloadResult.failedCount} tone="warning" />
-        </div>
-      </div>
-      {downloadResult.messages.length > 0 && (
-        <div className="mt-3 space-y-1">
-          {downloadResult.messages.slice(0, 4).map((message) => (
-            <p
-              key={message}
-              className="truncate rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-[11px] font-semibold text-muted-foreground"
-            >
-              {message}
-            </p>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DependencyExecutionRow({ action }: { action: GamerDependencyInstallActionResult }) {
-  return (
-    <div className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center">
-      <div className="min-w-0">
-        <p className="truncate text-[12px] font-black text-foreground">{action.title}</p>
-        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{action.commandPreview}</p>
-      </div>
-      <p className="truncate text-[11px] font-medium text-muted-foreground">{action.message}</p>
-      <span
-        className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-black ${dependencyInstallStatusClass(
-          action.status,
-        )}`}
-      >
-        {dependencyInstallStatusLabel(action.status)}
-      </span>
-    </div>
-  );
-}
-
-function DependencyRow({ item }: { item: GamerDependencyVerificationItem }) {
-  const reason = item.installedLocally
-    ? "Já instalado no Windows; o Hermes não reinstala."
-    : (item.blockedReasons[0] ?? dependencyStatusLabel(item.status));
-  const label = item.installedLocally ? "Instalado" : dependencyStatusLabel(item.status);
-
-  return (
-    <div className="grid gap-2 border-b border-border/60 bg-background/50 px-3 py-2.5 last:border-b-0 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.95fr)_auto] md:items-center">
-      <div className="min-w-0">
-        <p className="truncate text-[12px] font-black text-foreground">{item.title}</p>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-          {item.installerFileName}
-        </p>
-      </div>
-      <p className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">{reason}</p>
-      <span
-        className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-black ${dependencyStatusClass(
-          item.status,
-        )}`}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
-
 function DependencyStat({
   label,
   value,
@@ -1213,26 +788,6 @@ function quickPrepareAdvancedActionWeight(actionId: string) {
   return weights[actionId] ?? 1;
 }
 
-function reportStatusClass(status: ExecutionReportAction["status"]) {
-  if (status === "applied") return "border-success/20 bg-success/10 text-success";
-  if (status === "simulated" || status === "scanned") {
-    return "border-primary/20 bg-primary/10 text-primary";
-  }
-  if (status === "failed") return "border-destructive/20 bg-destructive/10 text-destructive";
-  if (status === "unavailable") return "border-warning/25 bg-warning/10 text-warning";
-  return "border-border bg-muted text-muted-foreground";
-}
-
-function reportStatusLabel(status: ExecutionReportAction["status"]) {
-  if (status === "applied") return "Aplicado";
-  if (status === "simulated") return "Simulado";
-  if (status === "scanned") return "Lido";
-  if (status === "unavailable") return "Indisp.";
-  if (status === "failed") return "Falha";
-  if (status === "cancelled") return "Cancelado";
-  return "Planejado";
-}
-
 function phaseIconClass(status: PhaseStatus) {
   if (status === "completed") return "bg-success/10 text-success";
   if (status === "running") return "bg-primary/10 text-primary";
@@ -1255,43 +810,6 @@ function phaseStatusLabel(status: PhaseStatus) {
   if (status === "unavailable") return "Indisp.";
   if (status === "cancelled") return "Cancelado";
   return "Pendente";
-}
-
-function dependencyStatusClass(status: GamerDependencyVerificationStatus) {
-  if (status === "verified") return "border-success/20 bg-success/10 text-success";
-  if (status === "failed") return "border-destructive/20 bg-destructive/10 text-destructive";
-  if (status === "blocked") return "border-warning/25 bg-warning/10 text-warning";
-  return "border-border bg-muted text-muted-foreground";
-}
-
-function dependencyStatusLabel(status: GamerDependencyVerificationStatus) {
-  if (status === "verified") return "Pronto";
-  if (status === "failed") return "Falha";
-  if (status === "blocked") return "Bloqueado";
-  return "Ausente";
-}
-
-function countInstallStatus(
-  result: GamerDependencyInstallResult,
-  status: GamerDependencyInstallActionStatus,
-) {
-  return result.actions.filter((item) => item.status === status).length;
-}
-
-function dependencyInstallStatusClass(status: GamerDependencyInstallActionStatus) {
-  if (status === "installed") return "border-success/20 bg-success/10 text-success";
-  if (status === "dryRun") return "border-primary/20 bg-primary/10 text-primary";
-  if (status === "skipped") return "border-border bg-muted text-muted-foreground";
-  if (status === "failed") return "border-destructive/20 bg-destructive/10 text-destructive";
-  return "border-warning/25 bg-warning/10 text-warning";
-}
-
-function dependencyInstallStatusLabel(status: GamerDependencyInstallActionStatus) {
-  if (status === "installed") return "Instalado";
-  if (status === "dryRun") return "Simulado";
-  if (status === "skipped") return "Pulado";
-  if (status === "failed") return "Falha";
-  return "Bloqueado";
 }
 
 function formatScore(value?: number) {

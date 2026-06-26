@@ -24,6 +24,7 @@ const MAX_CLEAN_CANDIDATES_PER_PATH: usize = 500;
 const MIN_ENTRY_AGE_SECONDS: u64 = 600;
 const MIN_OLD_LOG_AGE_SECONDS: u64 = 24 * 60 * 60;
 const MIN_WINDOWS_UPDATE_CACHE_AGE_SECONDS: u64 = 24 * 60 * 60;
+const MIN_STEAM_DOWNLOAD_CACHE_AGE_SECONDS: u64 = 60 * 60;
 const QUARANTINE_RETENTION_SECONDS: u64 = 14 * 24 * 60 * 60;
 const MAX_QUARANTINE_PURGE_ENTRIES: usize = 200;
 
@@ -457,16 +458,18 @@ fn build_report(raw: RawCleanScanReport, warnings: Vec<String>) -> CleanScanRepo
 }
 
 fn build_item(raw: RawCleanScanItem) -> CleanScanItem {
+    let id = value_or(raw.id, "unknown");
+    let scan_only = matches!(id.as_str(), "log-rotation" | "storage-summary");
     let estimated_bytes = raw.estimated_bytes.unwrap_or_default().max(0.0) as u64;
     CleanScanItem {
-        id: value_or(raw.id, "unknown"),
+        id,
         label: value_or(raw.label, "Item de limpeza"),
         description: value_or(raw.description, "Somente leitura"),
         estimated_bytes,
         estimated_gb: round1(bytes_to_gb(estimated_bytes as f64)),
         paths: raw.paths.unwrap_or_default(),
-        selected_by_default: true,
-        safe_to_clean_later: true,
+        selected_by_default: !scan_only,
+        safe_to_clean_later: !scan_only,
     }
 }
 
@@ -512,7 +515,19 @@ fn selected_clean_items(
 fn is_supported_clean_item(id: &str) -> bool {
     matches!(
         id,
-        "temp" | "cache" | "logs" | "thumbnails" | "windows-update-cache"
+        "temp"
+            | "cache"
+            | "logs"
+            | "thumbnails"
+            | "windows-update-cache"
+            | "store-cache"
+            | "nvidia-shader-cache"
+            | "amd-shader-cache"
+            | "steam-download-cache"
+            | "epic-launcher-cache"
+            | "battle-net-cache"
+            | "discord-cache"
+            | "obs-cache"
     )
 }
 
@@ -1250,6 +1265,43 @@ fn allowed_clean_roots() -> Vec<String> {
         roots.push(normalize_path_text(
             local.join("Microsoft\\Windows\\Explorer"),
         ));
+        roots.push(normalize_path_text(local.join(
+            "Packages\\Microsoft.WindowsStore_8wekyb3d8bbwe\\LocalCache",
+        )));
+        roots.push(normalize_path_text(
+            local.join("Packages\\Microsoft.WindowsStore_8wekyb3d8bbwe\\AC\\Temp"),
+        ));
+        roots.push(normalize_path_text(local.join("NVIDIA\\DXCache")));
+        roots.push(normalize_path_text(local.join("NVIDIA\\GLCache")));
+        roots.push(normalize_path_text(local.join("AMD\\DxCache")));
+        roots.push(normalize_path_text(local.join("AMD\\GLCache")));
+        roots.push(normalize_path_text(local.join("AMD\\VkCache")));
+        roots.push(normalize_path_text(
+            local.join("EpicGamesLauncher\\Saved\\webcache"),
+        ));
+        roots.push(normalize_path_text(
+            local.join("EpicGamesLauncher\\Saved\\webcache_4147"),
+        ));
+        roots.push(normalize_path_text(
+            local.join("EpicGamesLauncher\\Saved\\webcache_4430"),
+        ));
+        roots.push(normalize_path_text(local.join("Battle.net\\Cache")));
+        roots.push(normalize_path_text(local.join("Discord\\Cache")));
+        roots.push(normalize_path_text(local.join("Discord\\Code Cache")));
+        roots.push(normalize_path_text(local.join("Discord\\GPUCache")));
+    }
+    if let Ok(app_data) = std::env::var("APPDATA") {
+        let roaming = Path::new(&app_data);
+        roots.push(normalize_path_text(roaming.join("obs-studio\\cache")));
+    }
+    for key in ["PROGRAMFILES(X86)", "PROGRAMFILES"] {
+        if let Ok(program_files) = std::env::var(key) {
+            let steam = Path::new(&program_files).join("Steam");
+            roots.push(normalize_path_text(steam.join("steamapps\\downloading")));
+            roots.push(normalize_path_text(steam.join("steamapps\\temp")));
+            roots.push(normalize_path_text(steam.join("appcache\\httpcache")));
+            roots.push(normalize_path_text(steam.join("depotcache")));
+        }
     }
     roots
         .into_iter()
@@ -1276,6 +1328,7 @@ fn is_old_enough_for_item(item_id: &str, path: &Path) -> bool {
     let min_age = match item_id {
         "logs" => MIN_OLD_LOG_AGE_SECONDS,
         "windows-update-cache" => MIN_WINDOWS_UPDATE_CACHE_AGE_SECONDS,
+        "steam-download-cache" => MIN_STEAM_DOWNLOAD_CACHE_AGE_SECONDS,
         _ => MIN_ENTRY_AGE_SECONDS,
     };
 
@@ -1458,6 +1511,54 @@ fn now_nanos() -> u128 {
         .unwrap_or_default()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clean_engine_supports_gamer_cache_items() {
+        for id in [
+            "store-cache",
+            "nvidia-shader-cache",
+            "amd-shader-cache",
+            "steam-download-cache",
+            "epic-launcher-cache",
+            "battle-net-cache",
+            "discord-cache",
+            "obs-cache",
+        ] {
+            assert!(is_supported_clean_item(id), "{id} should be supported");
+        }
+    }
+
+    #[test]
+    fn clean_engine_keeps_user_locations_protected() {
+        assert!(has_protected_user_location(
+            "c:\\users\\player\\downloads\\setup.exe"
+        ));
+        assert!(has_protected_user_location(
+            "c:\\users\\player\\desktop\\clip.mp4"
+        ));
+        assert!(!has_protected_user_location(
+            "c:\\users\\player\\appdata\\local\\discord\\cache"
+        ));
+    }
+
+    #[test]
+    fn clean_engine_marks_summary_items_as_scan_only() {
+        let item = build_item(RawCleanScanItem {
+            id: Some("storage-summary".to_string()),
+            label: Some("Storage summary".to_string()),
+            description: Some("Resumo somente leitura".to_string()),
+            estimated_bytes: Some(0.0),
+            paths: Some(Vec::new()),
+        });
+
+        assert!(!item.selected_by_default);
+        assert!(!item.safe_to_clean_later);
+    }
+}
+
 const POWERSHELL_CLEAN_SCAN_SCRIPT: &str = r#"
 $ErrorActionPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -1494,6 +1595,7 @@ function Get-HermesLogSizeBytes($paths) {
 }
 
 $localAppData = [Environment]::GetFolderPath('LocalApplicationData')
+$roamingAppData = [Environment]::GetFolderPath('ApplicationData')
 $windowsDir = $env:WINDIR
 
 $tempPaths = @($env:TEMP, (Join-Path $windowsDir 'Temp')) | Where-Object { $_ } | Sort-Object -Unique
@@ -1510,6 +1612,45 @@ $logPaths = @(
 ) | Where-Object { $_ } | Sort-Object -Unique
 $thumbnailPaths = @((Join-Path $localAppData 'Microsoft\Windows\Explorer')) | Where-Object { $_ } | Sort-Object -Unique
 $windowsUpdatePaths = @((Join-Path $windowsDir 'SoftwareDistribution\Download')) | Where-Object { $_ } | Sort-Object -Unique
+$storeCachePaths = @(
+  (Join-Path $localAppData 'Packages\Microsoft.WindowsStore_8wekyb3d8bbwe\LocalCache'),
+  (Join-Path $localAppData 'Packages\Microsoft.WindowsStore_8wekyb3d8bbwe\AC\Temp')
+) | Where-Object { $_ } | Sort-Object -Unique
+$nvidiaShaderCachePaths = @(
+  (Join-Path $localAppData 'NVIDIA\DXCache'),
+  (Join-Path $localAppData 'NVIDIA\GLCache')
+) | Where-Object { $_ } | Sort-Object -Unique
+$amdShaderCachePaths = @(
+  (Join-Path $localAppData 'AMD\DxCache'),
+  (Join-Path $localAppData 'AMD\GLCache'),
+  (Join-Path $localAppData 'AMD\VkCache')
+) | Where-Object { $_ } | Sort-Object -Unique
+$epicLauncherCachePaths = @(
+  (Join-Path $localAppData 'EpicGamesLauncher\Saved\webcache'),
+  (Join-Path $localAppData 'EpicGamesLauncher\Saved\webcache_4147'),
+  (Join-Path $localAppData 'EpicGamesLauncher\Saved\webcache_4430')
+) | Where-Object { $_ } | Sort-Object -Unique
+$battleNetCachePaths = @((Join-Path $localAppData 'Battle.net\Cache')) | Where-Object { $_ } | Sort-Object -Unique
+$discordCachePaths = @(
+  (Join-Path $localAppData 'Discord\Cache'),
+  (Join-Path $localAppData 'Discord\Code Cache'),
+  (Join-Path $localAppData 'Discord\GPUCache')
+) | Where-Object { $_ } | Sort-Object -Unique
+$obsCachePaths = @((Join-Path $roamingAppData 'obs-studio\cache')) | Where-Object { $_ } | Sort-Object -Unique
+$steamRoots = @(
+  (Join-Path ${env:ProgramFiles(x86)} 'Steam'),
+  (Join-Path $env:ProgramFiles 'Steam')
+) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Sort-Object -Unique
+$steamDownloadCachePaths = @()
+foreach ($steamRoot in @($steamRoots)) {
+  $steamDownloadCachePaths += @(
+    (Join-Path $steamRoot 'steamapps\downloading'),
+    (Join-Path $steamRoot 'steamapps\temp'),
+    (Join-Path $steamRoot 'appcache\httpcache'),
+    (Join-Path $steamRoot 'depotcache')
+  )
+}
+$steamDownloadCachePaths = @($steamDownloadCachePaths) | Where-Object { $_ } | Sort-Object -Unique
 
 $thumbnailBytes = 0
 foreach ($path in @($thumbnailPaths)) {
@@ -1557,6 +1698,76 @@ foreach ($path in @($thumbnailPaths)) {
       description = 'Pacotes baixados pelo Windows Update'
       estimatedBytes = (Get-HermesFolderSizeBytes $windowsUpdatePaths)
       paths = @($windowsUpdatePaths)
+    }
+    [pscustomobject]@{
+      id = 'store-cache'
+      label = 'Store cache'
+      description = 'Cache seguro da Microsoft Store'
+      estimatedBytes = (Get-HermesFolderSizeBytes $storeCachePaths)
+      paths = @($storeCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'nvidia-shader-cache'
+      label = 'NVIDIA shader cache'
+      description = 'Cache de shaders NVIDIA que pode ser recriado pelo driver'
+      estimatedBytes = (Get-HermesFolderSizeBytes $nvidiaShaderCachePaths)
+      paths = @($nvidiaShaderCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'amd-shader-cache'
+      label = 'AMD shader cache'
+      description = 'Cache de shaders AMD que pode ser recriado pelo driver'
+      estimatedBytes = (Get-HermesFolderSizeBytes $amdShaderCachePaths)
+      paths = @($amdShaderCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'steam-download-cache'
+      label = 'Steam download cache'
+      description = 'Downloads temporarios, temp, depotcache e httpcache da Steam; nao toca jogos instalados'
+      estimatedBytes = (Get-HermesFolderSizeBytes $steamDownloadCachePaths)
+      paths = @($steamDownloadCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'epic-launcher-cache'
+      label = 'Epic launcher cache'
+      description = 'Cache web seguro do Epic Games Launcher'
+      estimatedBytes = (Get-HermesFolderSizeBytes $epicLauncherCachePaths)
+      paths = @($epicLauncherCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'battle-net-cache'
+      label = 'Battle.net cache'
+      description = 'Cache seguro do Battle.net'
+      estimatedBytes = (Get-HermesFolderSizeBytes $battleNetCachePaths)
+      paths = @($battleNetCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'discord-cache'
+      label = 'Discord cache'
+      description = 'Cache, code cache e GPU cache do Discord'
+      estimatedBytes = (Get-HermesFolderSizeBytes $discordCachePaths)
+      paths = @($discordCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'obs-cache'
+      label = 'OBS cache'
+      description = 'Cache local do OBS Studio'
+      estimatedBytes = (Get-HermesFolderSizeBytes $obsCachePaths)
+      paths = @($obsCachePaths)
+    }
+    [pscustomobject]@{
+      id = 'log-rotation'
+      label = 'Log rotation'
+      description = 'Rotacao interna dos historicos do Hermes; mantem apenas eventos recentes'
+      estimatedBytes = 0
+      paths = @()
+    }
+    [pscustomobject]@{
+      id = 'storage-summary'
+      label = 'Storage summary'
+      description = 'Resumo local somente leitura para recomendacoes de armazenamento'
+      estimatedBytes = 0
+      paths = @()
     }
   )
 } | ConvertTo-Json -Depth 5 -Compress

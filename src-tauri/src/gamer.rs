@@ -110,6 +110,13 @@ pub struct GamerSummary {
     pub optional_to_close: usize,
     pub protected_count: usize,
     pub estimated_ram_to_free_mb: u64,
+    pub overlay_count: usize,
+    pub launcher_count: usize,
+    pub steam_overlay_count: usize,
+    pub xbox_overlay_count: usize,
+    pub gpu_overlay_count: usize,
+    pub streaming_exception_count: usize,
+    pub emulator_exception_count: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -173,7 +180,17 @@ pub struct GamerApplyResult {
     pub post_game_restore_available: bool,
     pub active_game: GamerActiveGame,
     pub closed_processes: Vec<GamerCloseResult>,
+    pub priority_result: Option<GamerPriorityResult>,
     pub performance_result: Option<PerformanceApplyResult>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GamerPriorityResult {
+    pub pid: u32,
+    pub name: String,
+    pub status: GamerCloseStatus,
     pub message: String,
 }
 
@@ -398,6 +415,8 @@ pub(crate) fn gamer_engine_apply_blocking(
     } else {
         close_selected_processes(&app, &snapshot.id, &selected_processes)?
     };
+    let priority_result =
+        apply_active_game_priority(&app, &snapshot.id, &report.active_game, dry_run)?;
 
     let failed = closed_processes
         .iter()
@@ -433,6 +452,7 @@ pub(crate) fn gamer_engine_apply_blocking(
         post_game_restore_available: true,
         active_game: report.active_game,
         closed_processes,
+        priority_result,
         performance_result,
         message,
     })
@@ -543,6 +563,41 @@ fn build_report(
                 .count(),
             protected_count: protected_processes.len(),
             estimated_ram_to_free_mb,
+            overlay_count: processes
+                .iter()
+                .filter(|process| process.category == GamerProcessCategory::Overlay)
+                .count(),
+            launcher_count: processes
+                .iter()
+                .filter(|process| process.category == GamerProcessCategory::Launcher)
+                .count(),
+            steam_overlay_count: processes
+                .iter()
+                .filter(|process| process_matches_any(process, steam_overlay_patterns()))
+                .count(),
+            xbox_overlay_count: processes
+                .iter()
+                .filter(|process| process_matches_any(process, xbox_overlay_patterns()))
+                .count(),
+            gpu_overlay_count: processes
+                .iter()
+                .filter(|process| process_matches_any(process, gpu_overlay_patterns()))
+                .count(),
+            streaming_exception_count: processes
+                .iter()
+                .filter(|process| {
+                    is_streaming_exception_process(
+                        &process.name,
+                        process.executable_path.as_deref(),
+                    )
+                })
+                .count(),
+            emulator_exception_count: processes
+                .iter()
+                .filter(|process| {
+                    is_emulator_exception_process(&process.name, process.executable_path.as_deref())
+                })
+                .count(),
         },
         detected_games,
         suggested_processes,
@@ -749,6 +804,12 @@ fn recommendation_for(
 ) -> GamerRecommendation {
     let normalized = name.to_ascii_lowercase();
     if is_critical_process(&normalized) {
+        return GamerRecommendation::NeverClose;
+    }
+    if is_streaming_exception_process(&normalized, executable_path) {
+        return GamerRecommendation::NeverClose;
+    }
+    if is_emulator_exception_process(&normalized, executable_path) {
         return GamerRecommendation::NeverClose;
     }
     if is_primary_discord_process(&normalized) {
@@ -1054,6 +1115,18 @@ fn build_gamer_snapshot_request(
             requires_admin: false,
         });
     }
+    if report.active_game.detected {
+        planned_actions.push(RestorePlannedAction {
+            id: "gamer-active-priority-high".to_string(),
+            engine: "Gamer Engine".to_string(),
+            title: "Priorizar jogo ativo".to_string(),
+            description: "Ajuste transiente para prioridade alta do processo de jogo detectado."
+                .to_string(),
+            risk: RestoreRiskLevel::Low,
+            will_modify_system: true,
+            requires_admin: false,
+        });
+    }
 
     RestoreCreateSnapshotRequest {
         name: Some("Gamer Engine - Snapshot de seguranca".to_string()),
@@ -1147,6 +1220,27 @@ fn gamer_previous_state(
             captured: true,
         });
     }
+    if report.active_game.detected {
+        state.push(RestorePreviousState {
+            key: "gamer-active-priority".to_string(),
+            category: RestorePreviousStateCategory::Metadata,
+            value: format!(
+                "{} | PID {}",
+                report
+                    .active_game
+                    .display_name
+                    .clone()
+                    .unwrap_or_else(|| "jogo ativo".to_string()),
+                report
+                    .active_game
+                    .pid
+                    .map(|pid| pid.to_string())
+                    .unwrap_or_else(|| "indisponivel".to_string())
+            ),
+            source: "Gamer Engine priority transient".to_string(),
+            captured: report.active_game.pid.is_some(),
+        });
+    }
 
     state
 }
@@ -1174,6 +1268,87 @@ fn close_selected_processes(
     }
 
     Ok(results)
+}
+
+fn apply_active_game_priority(
+    app: &AppHandle,
+    snapshot_id: &str,
+    active_game: &GamerActiveGame,
+    dry_run: bool,
+) -> Result<Option<GamerPriorityResult>, String> {
+    if !active_game.detected {
+        return Ok(None);
+    }
+
+    let Some(pid) = active_game.pid else {
+        return Ok(None);
+    };
+
+    if !is_allowed_priority_game(active_game) {
+        return Ok(Some(GamerPriorityResult {
+            pid,
+            name: active_game
+                .display_name
+                .clone()
+                .unwrap_or_else(|| "Jogo ativo".to_string()),
+            status: GamerCloseStatus::Skipped,
+            message: "Prioridade nao aplicada: alvo nao entrou na allowlist gamer.".to_string(),
+        }));
+    }
+
+    let name = active_game.display_name.clone().unwrap_or_else(|| {
+        active_game
+            .process_name
+            .clone()
+            .unwrap_or_else(|| "Jogo ativo".to_string())
+    });
+
+    let result = if dry_run {
+        GamerPriorityResult {
+            pid,
+            name,
+            status: GamerCloseStatus::DryRun,
+            message: format!(
+                "{} - prioridade alta validada; processo nao foi alterado.",
+                safe_mode::mode_prefix(dry_run)
+            ),
+        }
+    } else {
+        match set_process_priority_high(pid) {
+            Ok(()) => GamerPriorityResult {
+                pid,
+                name,
+                status: GamerCloseStatus::Closed,
+                message: "Prioridade alta aplicada ao jogo ativo.".to_string(),
+            },
+            Err(error) => GamerPriorityResult {
+                pid,
+                name,
+                status: GamerCloseStatus::Failed,
+                message: error,
+            },
+        }
+    };
+
+    append_gamer_event(
+        app,
+        if matches!(result.status, GamerCloseStatus::Failed) {
+            GamerEventLevel::Warning
+        } else {
+            GamerEventLevel::Info
+        },
+        Some(snapshot_id.to_string()),
+        &format!("Prioridade gamer: {}", result.message),
+    )?;
+
+    Ok(Some(result))
+}
+
+fn set_process_priority_high(pid: u32) -> Result<(), String> {
+    let script = format!(
+        "$ErrorActionPreference = 'Stop'; $p = Get-Process -Id {pid} -ErrorAction Stop; $p.PriorityClass = 'High'; 'ok'"
+    );
+    run_powershell(&script).map(|_| ())
 }
 
 fn close_process_gracefully(process: &GamerProcess) -> GamerCloseResult {
@@ -1442,6 +1617,67 @@ fn is_critical_process(value: &str) -> bool {
     contains_any(&normalized, critical_process_names())
 }
 
+fn process_matches_any(process: &GamerProcess, patterns: &[&str]) -> bool {
+    let haystack = format!(
+        "{} {} {}",
+        process.name.to_ascii_lowercase(),
+        process
+            .executable_path
+            .clone()
+            .unwrap_or_default()
+            .to_ascii_lowercase(),
+        process
+            .command_line
+            .clone()
+            .unwrap_or_default()
+            .to_ascii_lowercase()
+    );
+    contains_any(&haystack, patterns)
+}
+
+fn is_streaming_exception_process(name: &str, executable_path: Option<&str>) -> bool {
+    let haystack = format!(
+        "{} {}",
+        name.to_ascii_lowercase(),
+        executable_path.unwrap_or_default().to_ascii_lowercase()
+    );
+    contains_any(&haystack, &["obs", "obs64", "obs32", "obs-studio"])
+}
+
+fn is_emulator_exception_process(name: &str, executable_path: Option<&str>) -> bool {
+    let haystack = format!(
+        "{} {}",
+        name.to_ascii_lowercase(),
+        executable_path.unwrap_or_default().to_ascii_lowercase()
+    );
+    contains_any(
+        &haystack,
+        &[
+            "hd-player",
+            "bluestacks",
+            "bstk",
+            "msi app player",
+            "msiappplayer",
+            "wsl.exe",
+            "wslhost",
+            "vmmem",
+            "vmmemwsl",
+        ],
+    )
+}
+
+fn is_allowed_priority_game(active_game: &GamerActiveGame) -> bool {
+    let haystack = format!(
+        "{} {} {} {}",
+        active_game.process_name.clone().unwrap_or_default(),
+        active_game.display_name.clone().unwrap_or_default(),
+        active_game.executable_path.clone().unwrap_or_default(),
+        active_game.window_title.clone().unwrap_or_default()
+    )
+    .to_ascii_lowercase();
+    contains_any(&haystack, game_patterns())
+}
+
 fn critical_process_names() -> &'static [&'static str] {
     &[
         "system",
@@ -1482,6 +1718,10 @@ fn game_patterns() -> &'static [&'static str] {
         "hd-player",
         "bluestacks",
         "bstk",
+        "wsl.exe",
+        "wslhost",
+        "vmmem",
+        "vmmemwsl",
         "msi app player",
         "msiappplayer",
         "valorant",
@@ -1548,6 +1788,30 @@ fn overlay_patterns() -> &'static [&'static str] {
     ]
 }
 
+fn steam_overlay_patterns() -> &'static [&'static str] {
+    &["steamwebhelper", "gameoverlayui"]
+}
+
+fn xbox_overlay_patterns() -> &'static [&'static str] {
+    &[
+        "gamebar",
+        "xboxgamebar",
+        "gamebarftserver",
+        "gamebarpresencewriter",
+    ]
+}
+
+fn gpu_overlay_patterns() -> &'static [&'static str] {
+    &[
+        "geforce experience",
+        "nvidia share",
+        "nvcontainer",
+        "nvsphelper",
+        "amdow",
+        "radeonsoftware",
+    ]
+}
+
 fn communication_patterns() -> &'static [&'static str] {
     &["discord", "teams", "skype", "telegram", "whatsapp", "slack"]
 }
@@ -1568,6 +1832,10 @@ fn cloud_patterns() -> &'static [&'static str] {
 
 fn creative_patterns() -> &'static [&'static str] {
     &[
+        "obs",
+        "obs64",
+        "obs32",
+        "obs-studio",
         "photoshop",
         "illustrator",
         "premiere",
@@ -1697,11 +1965,11 @@ $interesting = @(
   'steam','steamwebhelper','epicgameslauncher','battle.net','battlenet',
   'epicwebhelper','eosoverlayrenderer','riotclientservices','ubisoftconnect','eadesktop','goggalaxy',
   'chrome','msedge','firefox','brave','opera','vivaldi',
-  'gamebar','xboxgamebar','gamebarftserver','nvidia share','geforce experience',
-  'nvcontainer','nvsphelper','overwolf','razer','medal','msiafterburner','rtss',
-  'photoshop','illustrator','premiere','afterfx','lightroom',
+  'gamebar','xboxgamebar','gamebarftserver','gamebarpresencewriter','gameoverlayui','nvidia share','geforce experience',
+  'nvcontainer','nvsphelper','amdow','radeonsoftware','overwolf','razer','medal','msiafterburner','rtss',
+  'obs','obs64','obs32','obs-studio','photoshop','illustrator','premiere','afterfx','lightroom',
   'fate trigger','fatetrigger','fate_trigger','fate-trigger','fatetrigger-win64-shipping',
-  'unrealengine','unreal engine','ue5','win64-shipping',
+  'unrealengine','unreal engine','ue5','win64-shipping','hd-player','bluestacks','bstk','wsl','wslhost','vmmem','vmmemwsl',
   'valorant','leagueclient','r5apex','fortniteclient','cs2','dota2',
   'destiny2','eldenring','cyberpunk2077','gta5','minecraft','robloxplayerbeta',
   'fivem','overwatch','rocketleague','forza','witcher3','starfield'
@@ -1787,5 +2055,46 @@ mod tests {
                 "Gamer Engine must keep visual action {action} opt-in and separate"
             );
         }
+    }
+
+    #[test]
+    fn gamer_exceptions_protect_streaming_and_virtualization() {
+        assert!(is_streaming_exception_process("obs64.exe", None));
+        assert!(is_emulator_exception_process(
+            "HD-Player.exe",
+            Some("C:\\Program Files\\BlueStacks_nxt\\HD-Player.exe")
+        ));
+        assert!(is_emulator_exception_process("vmmemWSL", None));
+        assert!(!is_streaming_exception_process("chrome.exe", None));
+    }
+
+    #[test]
+    fn gamer_priority_is_scoped_to_detected_games() {
+        let fate = GamerActiveGame {
+            detected: true,
+            confidence: GamerDetectionConfidence::High,
+            pid: Some(123),
+            process_name: Some("FateTrigger-Win64-Shipping.exe".to_string()),
+            display_name: Some("Fate Trigger".to_string()),
+            executable_path: Some(
+                "C:\\SteamLibrary\\steamapps\\common\\FateTrigger\\FateTrigger-Win64-Shipping.exe"
+                    .to_string(),
+            ),
+            window_title: Some("Fate Trigger".to_string()),
+            matched_profile: None,
+            recommended_plan: None,
+            requires_manual_selection: false,
+            message: "Detectado".to_string(),
+        };
+        let notepad = GamerActiveGame {
+            process_name: Some("notepad.exe".to_string()),
+            display_name: Some("Notepad".to_string()),
+            executable_path: Some("C:\\Windows\\System32\\notepad.exe".to_string()),
+            window_title: Some("Untitled - Notepad".to_string()),
+            ..fate.clone()
+        };
+
+        assert!(is_allowed_priority_game(&fate));
+        assert!(!is_allowed_priority_game(&notepad));
     }
 }

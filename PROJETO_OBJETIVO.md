@@ -2,7 +2,7 @@
 
 ## Objetivo geral
 
-O Hermes Optimizer deve ser um aplicativo Windows de otimizacao local, direto e confiavel, com foco em poucos cliques: o usuario entende o estado do PC, executa um fluxo guiado e recebe um relatorio claro do que foi analisado, aplicado, simulado, indisponivel ou planejado.
+O Hermes Optimizer deve ser um aplicativo Windows de otimizacao local, direto e confiavel, com foco em poucos cliques: o usuario entende o estado do PC, executa um fluxo guiado e recebe status claro de sucesso, progresso e proximo passo. Detalhes tecnicos de execucao ficam salvos internamente para suporte/debug, sem virar a experiencia principal do jogador.
 
 A meta de produto e competir com otimizadores de alto nivel do mercado, unindo dashboard tecnico, otimizacao gamer, recomendacoes locais e automacao segura em uma experiencia simples.
 
@@ -32,7 +32,8 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 - Dependencias gamer devem focar runtimes: VC++ Redistributable 2005-2022 x86/x64 e DirectX End-User Runtime.
 - Build Tools, Visual Studio Installer, Windows SDK e Windows App Runtime nao devem ser instalados automaticamente como parte gamer.
 - Toda dependencia baixada deve passar por fonte oficial, hash e assinatura antes de instalar.
-- Relatorios devem mostrar contagem rumo a 150 acoes sem fingir funcao inexistente.
+- A interface principal deve mostrar sucesso/status e progresso rumo a mais de 150 acoes reais, sem fingir funcao inexistente.
+- Dados tecnicos de execucao devem existir para suporte/debug, mas nao devem virar uma tela longa para o jogador comum.
 - Japones existe como idioma intermediario.
 
 ## Funcionalidades existentes
@@ -41,11 +42,15 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 - Area Otimizar separada.
 - Fluxo de dois botoes: Preparar PC e Otimizar Tudo.
 - Bloqueio da Fase 2 antes da Fase 1.
-- Persistencia local de diagnostico, relatorios e ciclo de execucao.
+- Persistencia local de diagnostico, status e ciclo de execucao.
 - Recomendacao de reinicio e leitura de boot do Windows.
 - Selecionador de DNS.
-- Painel de relatorio de execucao por fase.
-- Contagem tecnica de acoes por pacote.
+- Status de execucao por fase com dados tecnicos internos.
+- Contagem tecnica de acoes por pacote: 150 acoes auditaveis, 148 implementadas/motoradas e 2 planejadas ou indisponiveis na validacao de 2026-06-26.
+- Startup Engine ampliado com leitura de pasta Startup, tarefas agendadas de logon/boot, OneDrive, Teams, launchers, updaters e baseline de boot.
+- Advanced Engine ampliado com Ultimate Performance opcional, suspensao seletiva USB OFF e PCIe Link State OFF por `powercfg` allowlistado.
+- Gamer Engine ampliado com revisao de overlays Steam/Xbox/GPU, excecoes OBS/BlueStacks/WSL e prioridade transiente do jogo ativo.
+- Profiles Engine ampliado com validacao de conflitos, persistencia local do perfil recomendado e resumo interno do perfil aplicado.
 - Verificacao de admin.
 - Manifesto Windows com `requireAdministrator`.
 - Catalogo advanced allowlistado com Game Mode, GameDVR, DNS, DISM, visual gamer, hibernacao, servicos, MMCSS e prioridade Fate Trigger.
@@ -71,12 +76,14 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
   - MMCSS Gamer Pack.
   - Prioridade Fate Trigger/UE5.
   - Ajustes avancados de rede.
+  - Apps em segundo plano e notificacoes gamer via Advanced Engine.
   - Perfil recomendado.
   - Processos seguros com preservacao de Discord/Steam/anti-cheat.
-- Historico visivel do que foi feito em execucoes anteriores.
+- Historico interno do que foi feito em execucoes anteriores para suporte/debug.
 - Checklist de QA e testes manuais.
 - Build instalavel assinado.
 - Licenciamento congelado oficialmente ou implementado.
+- Politica futura de licenca expirada: pausar recursos premium e, se aprovado, oferecer/automatizar retorno ao baseline inicial do proprio usuario; nunca piorar o PC propositalmente.
 - Relatorio interno de release: pode lancar / nao pode lancar.
 
 ## Regras de preservacao de recursos
@@ -97,7 +104,7 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 - Poucos cliques, feedback visual forte e progresso por porcentagem/fase.
 - Visual premium, limpo e gamer, sem poluir o usuario com botoes tecnicos demais.
 - Dashboard deve informar; Otimizar deve agir.
-- Relatorios devem explicar o que aconteceu sem parecer tela de programador.
+- O jogador deve ver sucesso, status e proximo passo; detalhes tecnicos ficam internos para nao parecer tela de programador.
 - Estados importantes devem ser claros: aguardando, bloqueado, em teste, aplicado, indisponivel, planejado.
 - A sidebar deve conter apenas areas principais.
 - Componentes devem respeitar as cores escolhidas nas configuracoes.
@@ -109,7 +116,7 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 - O fluxo principal sera em dois botoes.
 - Fate Trigger/UE5 e prioridade especial do Perfil Gamer.
 - O modo de teste nao e o produto final, mas e mantido ate o motor real ser confiavel.
-- Rollback/snapshot nao deve bloquear o desejo de funcionamento, mas relatorio e reversibilidade continuam importantes para confianca.
+- Rollback/snapshot nao deve bloquear o desejo de funcionamento, mas dados internos e reversibilidade continuam importantes para confianca.
 - Inspiracao em outros apps deve ser usada como referencia de experiencia e categorias, sem copiar codigo, marca ou comportamento fechado.
 - O Hermes deve salvar estado localmente para continuar depois de fechar, abrir ou reiniciar.
 - O projeto deve evoluir passo a passo, sempre validando TypeScript, lint, build Tauri e o app aberto quando possivel.

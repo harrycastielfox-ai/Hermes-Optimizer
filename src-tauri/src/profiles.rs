@@ -48,7 +48,7 @@ pub struct HermesProfile {
     pub safeguards: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum ProfileRisk {
     Low,
@@ -85,6 +85,9 @@ pub struct ProfileApplyResult {
     pub rollback_available: bool,
     pub applied_actions: Vec<PerformanceApplyActionResult>,
     pub engine_results: Vec<ProfileEngineResult>,
+    pub conflict_warnings: Vec<String>,
+    pub recommended_profile_persisted: bool,
+    pub profile_summary: String,
     pub message: String,
 }
 
@@ -187,6 +190,9 @@ fn profiles_apply_blocking(
     let mut snapshot_ids = Vec::new();
     let mut applied_actions = Vec::new();
     let mut failed = false;
+    let conflict_warnings = validate_profile_conflicts(&profile);
+    let recommended_profile_persisted =
+        persist_recommended_profile(&app, &profile, dry_run).is_ok();
 
     run_profile_performance(
         &app,
@@ -278,8 +284,8 @@ fn profiles_apply_blocking(
     Ok(ProfileApplyResult {
         generated_at: now_timestamp(),
         engine_version: "profiles-engine-v1".to_string(),
-        profile_id: profile.id,
-        profile_name: profile.name,
+        profile_id: profile.id.clone(),
+        profile_name: profile.name.clone(),
         dry_run,
         snapshot_id: snapshot_ids
             .first()
@@ -291,6 +297,9 @@ fn profiles_apply_blocking(
             .any(|result| result.rollback_available),
         applied_actions,
         engine_results,
+        conflict_warnings,
+        recommended_profile_persisted,
+        profile_summary: build_profile_summary(&profile),
         message,
     })
 }
@@ -548,6 +557,90 @@ fn has_profile_failure(results: &[ProfileEngineResult]) -> bool {
     results
         .iter()
         .any(|result| result.status == ProfileEngineStatus::Failed)
+}
+
+fn validate_profile_conflicts(profile: &HermesProfile) -> Vec<String> {
+    let mut warnings = Vec::new();
+    let has_high_performance = profile
+        .performance_action_ids
+        .iter()
+        .any(|item| item == "set-high-performance-power-plan");
+    let has_power_saver = profile
+        .performance_action_ids
+        .iter()
+        .any(|item| item == "set-power-saver-power-plan");
+
+    if has_high_performance && has_power_saver {
+        warnings.push(
+            "Perfil contem Alto Desempenho e Economia ao mesmo tempo; aplicacao deve ser bloqueada em revisao."
+                .to_string(),
+        );
+    }
+
+    if profile.gamer_enabled && has_power_saver {
+        warnings.push(
+            "Perfil Gamer nao deve usar Economia de Energia como plano principal.".to_string(),
+        );
+    }
+
+    if profile.requires_extra_confirmation && profile.risk != ProfileRisk::High {
+        warnings
+            .push("Confirmacao extra deve ficar reservada para perfil de alto risco.".to_string());
+    }
+
+    warnings
+}
+
+fn build_profile_summary(profile: &HermesProfile) -> String {
+    format!(
+        "{}: {} | performance={} clean={} startup={} gamer={} advanced={}",
+        profile.name,
+        profile.summary,
+        profile.performance_action_ids.len(),
+        profile.clean_item_ids.len(),
+        if profile.startup_action.is_some() {
+            "sim"
+        } else {
+            "nao"
+        },
+        if profile.gamer_enabled { "sim" } else { "nao" },
+        profile.advanced_action_ids.len()
+    )
+}
+
+fn persist_recommended_profile(
+    app: &AppHandle,
+    profile: &HermesProfile,
+    dry_run: bool,
+) -> Result<(), String> {
+    let path = recommended_profile_path(app)?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|err| format!("Nao foi possivel criar pasta de perfil recomendado: {err}"))?;
+    }
+
+    let payload = serde_json::json!({
+        "generatedAt": now_timestamp(),
+        "profileId": profile.id,
+        "profileName": profile.name,
+        "dryRun": dry_run,
+        "summary": build_profile_summary(profile),
+    });
+    fs::write(
+        &path,
+        serde_json::to_string_pretty(&payload)
+            .map_err(|err| format!("Nao foi possivel serializar perfil recomendado: {err}"))?,
+    )
+    .map_err(|err| format!("Nao foi possivel salvar perfil recomendado: {err}"))
+}
+
+fn recommended_profile_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let mut dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|err| format!("Nao foi possivel localizar AppData do Hermes: {err}"))?;
+    dir.push("recommended_profile.json");
+    Ok(dir)
 }
 
 fn status_from_dry_run(dry_run: bool) -> ProfileEngineStatus {
@@ -856,5 +949,22 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn profile_conflict_validation_flags_incompatible_energy() {
+        let mut profile = profile_definitions()
+            .into_iter()
+            .find(|item| item.id == "gamer")
+            .expect("gamer profile");
+        assert!(validate_profile_conflicts(&profile).is_empty());
+
+        profile
+            .performance_action_ids
+            .push("set-power-saver-power-plan".to_string());
+        let warnings = validate_profile_conflicts(&profile);
+        assert!(warnings
+            .iter()
+            .any(|item| item.contains("Economia de Energia")));
     }
 }

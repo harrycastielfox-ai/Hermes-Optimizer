@@ -75,6 +75,13 @@ export type GamerReport = {
     optionalToClose: number;
     protectedCount: number;
     estimatedRamToFreeMb: number;
+    overlayCount: number;
+    launcherCount: number;
+    steamOverlayCount: number;
+    xboxOverlayCount: number;
+    gpuOverlayCount: number;
+    streamingExceptionCount: number;
+    emulatorExceptionCount: number;
   };
   safeguards: string[];
   warnings: string[];
@@ -102,6 +109,12 @@ export type GamerApplyResult = {
     status: GamerCloseStatus;
     message: string;
   }>;
+  priorityResult?: {
+    pid: number;
+    name: string;
+    status: GamerCloseStatus;
+    message: string;
+  };
   performanceResult?: PerformanceApplyResult;
   message: string;
 };
@@ -163,6 +176,13 @@ export const fallbackGamerReport: GamerReport = {
     optionalToClose: 0,
     protectedCount: 0,
     estimatedRamToFreeMb: 0,
+    overlayCount: 0,
+    launcherCount: 0,
+    steamOverlayCount: 0,
+    xboxOverlayCount: 0,
+    gpuOverlayCount: 0,
+    streamingExceptionCount: 0,
+    emulatorExceptionCount: 0,
   },
   safeguards: [
     "Nunca fecha processos críticos do Windows.",

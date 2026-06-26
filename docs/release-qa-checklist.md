@@ -1,6 +1,6 @@
 # Hermes Optimizer - Checklist de QA Manual
 
-Data base: 2026-06-24
+Data base: 2026-06-25
 
 ## Status de Gate
 
@@ -11,13 +11,13 @@ Data base: 2026-06-24
 
 - [x] Branding tecnico: app instalado aparece como "Hermes Optimizer"; identificador Tauri e titulo da janela nao usam valores default.
 - [x] Build desktop: `npm run build:tauri` gera `build/index.html` e assets.
-- [ ] Instalador debug: `npx tauri build --debug` gera MSI e NSIS em `src-tauri/target/debug/bundle`.
+- [x] Instalador debug: `npx tauri build --debug` gera MSI e NSIS em `src-tauri/target/debug/bundle`.
 - [x] Lint: `npm run lint` passa sem analisar `build`, `dist`, `.tanstack` ou `src-tauri/target`.
 - [x] Build web: `npm run build` passa.
 - [x] Rust: `cargo test --lib` em `src-tauri` passa.
 - [x] CSP ativa: `tauri.conf.json` nao usa `csp: null`.
 - [x] Permissoes Tauri: `capabilities/default.json` mantem apenas permissoes necessarias.
-- [ ] Fallbacks: qualquer indisponibilidade aparece como "Indisponivel", sem numeros demonstrativos.
+- [x] Fallbacks: qualquer indisponibilidade aparece como "Indisponivel", sem numeros demonstrativos.
 - [ ] Analisar Agora: executa somente leitura, salva o diagnostico e nao cria snapshot desnecessario.
 - [ ] Analisar Agora: nao move arquivos, fecha processos, altera energia, registro, rede, GPU ou configuracoes do Windows.
 - [ ] Rollback: snapshot com manifesto valida e executa dry-run de restore sem erro.
@@ -26,9 +26,10 @@ Data base: 2026-06-24
 
 ## Evidencia Automatizada Mais Recente
 
-- [x] `npm run qa:release` executado em 2026-06-23.
-- [x] Release gates, TypeScript, lint, build web, build Tauri e Cargo check passaram.
-- [x] Testes Rust: 10 aprovados, 0 falhas.
+- [x] `npm run qa:release` executado em 2026-06-25.
+- [x] Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test passaram.
+- [x] Testes Rust: 23 aprovados, 0 falhas.
+- [x] Catalogo de otimizacao: 150 acoes auditaveis, 148 implementadas/motoradas e 2 planejadas ou indisponiveis.
 - [x] Instalador NSIS release encontrado.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
@@ -54,6 +55,18 @@ Resultado esperado: app abre sem tela branca, sem erro CSP visivel e sem assets 
 6. Fechar e abrir novamente o Hermes.
 
 Resultado esperado: o Dashboard e atualizado com o novo diagnostico e recupera os dados salvos na proxima abertura. Nenhum arquivo e movido, nenhum processo e fechado e nenhuma configuracao do Windows e alterada, independentemente do modo seguro.
+
+## Fluxo Manual - Botoes 1 e 2
+
+1. Abrir a area Otimizar.
+2. Confirmar que o Botao 2 aparece bloqueado antes da Fase 1.
+3. Executar **Preparar PC** em modo teste e confirmar progresso visual limpo, sem despejar relatorio tecnico para o jogador.
+4. Confirmar mensagem de sucesso/status e recomendacao de reinicio quando aplicavel.
+5. Reabrir o Hermes depois do boot e confirmar que a Fase 2 fica disponivel somente quando a Fase 1 estiver concluida.
+6. Executar **Otimizar Tudo** em modo teste e confirmar que a tela final mostra sucesso/status, nao uma lista tecnica longa.
+7. Em VM controlada, repetir no build real antes de qualquer publicacao.
+
+Resultado esperado: jogador entende que a otimizacao terminou com sucesso. Dados tecnicos ficam salvos internamente para suporte/debug, sem ocupar a primeira camada da interface.
 
 ## Fluxo Manual - Rollback
 

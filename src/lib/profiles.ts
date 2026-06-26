@@ -63,6 +63,9 @@ export type ProfileApplyResult = {
     rollbackAvailable: boolean;
     message: string;
   }>;
+  conflictWarnings: string[];
+  recommendedProfilePersisted: boolean;
+  profileSummary: string;
   message: string;
 };
 

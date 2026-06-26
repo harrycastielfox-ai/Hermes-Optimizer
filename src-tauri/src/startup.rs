@@ -32,6 +32,16 @@ pub struct StartupReport {
     pub high_impact_count: usize,
     pub medium_impact_count: usize,
     pub low_impact_count: usize,
+    pub startup_folder_items: usize,
+    pub scheduled_task_items: usize,
+    pub onedrive_items: usize,
+    pub teams_items: usize,
+    pub launcher_items: usize,
+    pub updater_items: usize,
+    pub boot_time: Option<String>,
+    pub boot_age_minutes: Option<i64>,
+    pub post_reboot_validation_available: bool,
+    pub post_reboot_recent: bool,
     pub items: Vec<StartupItem>,
     pub warnings: Vec<String>,
 }
@@ -177,6 +187,8 @@ struct DisabledStartupItem {
 #[serde(rename_all = "camelCase")]
 struct RawStartupReport {
     items: Option<Vec<RawStartupItem>>,
+    boot_time: Option<String>,
+    boot_age_minutes: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -389,6 +401,8 @@ fn build_report(
     disabled_items: Vec<DisabledStartupItem>,
     warnings: Vec<String>,
 ) -> StartupReport {
+    let boot_time = raw.boot_time.clone();
+    let boot_age_minutes = raw.boot_age_minutes;
     let mut items = raw
         .items
         .unwrap_or_default()
@@ -426,6 +440,34 @@ fn build_report(
         .iter()
         .filter(|item| matches!(item.status, StartupStatus::Disabled))
         .count();
+    let startup_folder_items = items
+        .iter()
+        .filter(|item| is_startup_folder_location(&item.location))
+        .count();
+    let scheduled_task_items = items
+        .iter()
+        .filter(|item| is_scheduled_task_location(&item.location))
+        .count();
+    let onedrive_items = items
+        .iter()
+        .filter(|item| is_onedrive_startup_item(item))
+        .count();
+    let teams_items = items
+        .iter()
+        .filter(|item| is_teams_startup_item(item))
+        .count();
+    let launcher_items = items
+        .iter()
+        .filter(|item| is_launcher_startup_item(item))
+        .count();
+    let updater_items = items
+        .iter()
+        .filter(|item| is_updater_startup_item(item))
+        .count();
+    let post_reboot_validation_available = boot_age_minutes.is_some();
+    let post_reboot_recent = boot_age_minutes
+        .map(|minutes| (0..=30).contains(&minutes))
+        .unwrap_or(false);
 
     StartupReport {
         generated_at: now_timestamp(),
@@ -436,6 +478,16 @@ fn build_report(
         high_impact_count,
         medium_impact_count,
         low_impact_count,
+        startup_folder_items,
+        scheduled_task_items,
+        onedrive_items,
+        teams_items,
+        launcher_items,
+        updater_items,
+        boot_time,
+        boot_age_minutes,
+        post_reboot_validation_available,
+        post_reboot_recent,
         items,
         warnings,
     }
@@ -1040,6 +1092,47 @@ fn contains_any(value: &str, patterns: &[&str]) -> bool {
     patterns.iter().any(|pattern| value.contains(pattern))
 }
 
+fn startup_item_text(item: &StartupItem) -> String {
+    format!("{} {}", item.name, item.command).to_lowercase()
+}
+
+fn is_startup_folder_location(location: &str) -> bool {
+    location.to_ascii_lowercase().starts_with("startupfolder:")
+}
+
+fn is_scheduled_task_location(location: &str) -> bool {
+    location.to_ascii_lowercase().starts_with("scheduledtask:")
+}
+
+fn is_onedrive_startup_item(item: &StartupItem) -> bool {
+    contains_any(&startup_item_text(item), &["onedrive"])
+}
+
+fn is_teams_startup_item(item: &StartupItem) -> bool {
+    contains_any(&startup_item_text(item), &["teams", "ms-teams"])
+}
+
+fn is_launcher_startup_item(item: &StartupItem) -> bool {
+    contains_any(
+        &startup_item_text(item),
+        &[
+            "steam",
+            "epic",
+            "battle.net",
+            "battlenet",
+            "riotclient",
+            "ubisoft",
+            "eadesktop",
+            "gog",
+            "launcher",
+        ],
+    )
+}
+
+fn is_updater_startup_item(item: &StartupItem) -> bool {
+    contains_any(&startup_item_text(item), &["update", "updater", "helper"])
+}
+
 fn impact_rank(impact: &StartupImpact) -> u8 {
     match impact {
         StartupImpact::High => 0,
@@ -1067,6 +1160,8 @@ fn fallback_report() -> StartupReport {
 fn fallback_raw_report() -> RawStartupReport {
     RawStartupReport {
         items: Some(Vec::new()),
+        boot_time: None,
+        boot_age_minutes: None,
     }
 }
 
@@ -1169,20 +1264,151 @@ fn now_nanos() -> u128 {
         .unwrap_or_default()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn startup_report_counts_sources_and_known_apps() {
+        let report = build_report(
+            RawStartupReport {
+                boot_time: Some("2026-06-26T10:00:00.0000000-03:00".to_string()),
+                boot_age_minutes: Some(125),
+                items: Some(vec![
+                    RawStartupItem {
+                        name: Some("Discord".to_string()),
+                        command: Some("Discord.exe".to_string()),
+                        location: Some(
+                            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run".to_string(),
+                        ),
+                        user: Some("Player".to_string()),
+                    },
+                    RawStartupItem {
+                        name: Some("Teams".to_string()),
+                        command: Some("ms-teams.exe".to_string()),
+                        location: Some("StartupFolder:CurrentUser:C:\\Startup".to_string()),
+                        user: Some("CurrentUser".to_string()),
+                    },
+                    RawStartupItem {
+                        name: Some("Epic Games Launcher".to_string()),
+                        command: Some("EpicGamesLauncher.exe".to_string()),
+                        location: Some("ScheduledTask:\\Epic\\Launcher".to_string()),
+                        user: Some("Task Scheduler".to_string()),
+                    },
+                    RawStartupItem {
+                        name: Some("OneDrive Updater".to_string()),
+                        command: Some("OneDrive.exe /background update".to_string()),
+                        location: Some(
+                            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run".to_string(),
+                        ),
+                        user: Some("Player".to_string()),
+                    },
+                ]),
+            },
+            Vec::new(),
+            Vec::new(),
+        );
+
+        assert_eq!(report.startup_folder_items, 1);
+        assert_eq!(report.scheduled_task_items, 1);
+        assert_eq!(report.teams_items, 1);
+        assert_eq!(report.launcher_items, 1);
+        assert_eq!(report.onedrive_items, 1);
+        assert_eq!(report.updater_items, 1);
+        assert_eq!(report.boot_age_minutes, Some(125));
+        assert!(report.post_reboot_validation_available);
+        assert!(!report.post_reboot_recent);
+    }
+
+    #[test]
+    fn startup_location_helpers_detect_review_sources() {
+        assert!(is_startup_folder_location(
+            "StartupFolder:CurrentUser:C:\\Users\\Player\\Startup"
+        ));
+        assert!(is_scheduled_task_location(
+            "ScheduledTask:\\Vendor\\TaskName"
+        ));
+        assert!(!is_scheduled_task_location(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        ));
+    }
+}
+
 const POWERSHELL_STARTUP_SCRIPT: &str = r#"
 $ErrorActionPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$startupItems = @(Get-CimInstance Win32_StartupCommand | Where-Object { $_.Name })
-[pscustomobject]@{
-  items = @(
-    $startupItems | ForEach-Object {
-      [pscustomobject]@{
-        name = $_.Name
-        command = $_.Command
-        location = $_.Location
-        user = $_.User
+
+function Get-HermesStartupFolderItems($path, $scope) {
+  if (-not $path -or -not (Test-Path -LiteralPath $path)) { return @() }
+  return @(
+    Get-ChildItem -LiteralPath $path -Force -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Extension -in @('.lnk', '.url', '.cmd', '.bat', '.ps1', '.vbs') } |
+      ForEach-Object {
+        [pscustomobject]@{
+          name = $_.BaseName
+          command = $_.FullName
+          location = ('StartupFolder:{0}:{1}' -f $scope, $path)
+          user = $scope
+        }
       }
-    }
   )
+}
+
+function Get-HermesScheduledStartupTasks() {
+  try {
+    return @(
+      Get-ScheduledTask -ErrorAction SilentlyContinue |
+        Where-Object {
+          $_.State -ne 'Disabled' -and
+          $_.TaskPath -notlike '\Microsoft\*' -and
+          @($_.Triggers | Where-Object { $_.CimClass.CimClassName -match 'Logon|Boot' }).Count -gt 0
+        } |
+        Select-Object -First 80 |
+        ForEach-Object {
+          $command = @($_.Actions | ForEach-Object {
+            (([string]$_.Execute) + ' ' + ([string]$_.Arguments)).Trim()
+          }) -join ' | '
+          [pscustomobject]@{
+            name = $_.TaskName
+            command = $command
+            location = ('ScheduledTask:{0}{1}' -f $_.TaskPath, $_.TaskName)
+            user = 'Task Scheduler'
+          }
+        }
+    )
+  } catch {
+    return @()
+  }
+}
+
+$bootTime = $null
+$bootAgeMinutes = $null
+try {
+  $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+  if ($null -ne $os -and $null -ne $os.LastBootUpTime) {
+    $boot = [datetime]$os.LastBootUpTime
+    $bootTime = $boot.ToString('o')
+    $bootAgeMinutes = [int][Math]::Max(0, ((Get-Date) - $boot).TotalMinutes)
+  }
+} catch {}
+
+$startupItems = @(Get-CimInstance Win32_StartupCommand | Where-Object { $_.Name } | ForEach-Object {
+  [pscustomobject]@{
+    name = $_.Name
+    command = $_.Command
+    location = $_.Location
+    user = $_.User
+  }
+})
+$userStartup = [Environment]::GetFolderPath('Startup')
+$commonStartup = [Environment]::GetFolderPath('CommonStartup')
+$startupItems += @(Get-HermesStartupFolderItems $userStartup 'CurrentUser')
+$startupItems += @(Get-HermesStartupFolderItems $commonStartup 'AllUsers')
+$startupItems += @(Get-HermesScheduledStartupTasks)
+
+[pscustomobject]@{
+  bootTime = $bootTime
+  bootAgeMinutes = $bootAgeMinutes
+  items = @($startupItems)
 } | ConvertTo-Json -Depth 5 -Compress
 "#;

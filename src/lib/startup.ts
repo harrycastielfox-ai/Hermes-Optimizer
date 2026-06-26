@@ -31,6 +31,16 @@ export type StartupReport = {
   highImpactCount: number;
   mediumImpactCount: number;
   lowImpactCount: number;
+  startupFolderItems: number;
+  scheduledTaskItems: number;
+  onedriveItems: number;
+  teamsItems: number;
+  launcherItems: number;
+  updaterItems: number;
+  bootTime?: string;
+  bootAgeMinutes?: number;
+  postRebootValidationAvailable: boolean;
+  postRebootRecent: boolean;
   items: StartupItem[];
   warnings: string[];
 };
@@ -73,6 +83,14 @@ export const fallbackStartupReport: StartupReport = {
   highImpactCount: 0,
   mediumImpactCount: 0,
   lowImpactCount: 0,
+  startupFolderItems: 0,
+  scheduledTaskItems: 0,
+  onedriveItems: 0,
+  teamsItems: 0,
+  launcherItems: 0,
+  updaterItems: 0,
+  postRebootValidationAvailable: false,
+  postRebootRecent: false,
   items: [],
   warnings: ["Leitura real de inicialização indisponível. Nenhum app demonstrativo foi exibido."],
 };

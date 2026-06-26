@@ -151,7 +151,11 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "set-network-autotuning-normal",
   "disable-network-ecn",
   "enable-network-rss",
+  "disable-background-apps",
+  "disable-notification-toasts",
   "set-high-performance-power-plan",
+  "disable-usb-selective-suspend",
+  "disable-pcie-link-state-power-management",
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
   "disable-storage-sense-auto-cleanup",
@@ -286,6 +290,19 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
     outputs: [
       `${startup.totalItems} item(ns) de inicialização`,
       `${startup.highImpactCount} alto impacto`,
+      `${startup.startupFolderItems} item(ns) na pasta Startup`,
+      `${startup.scheduledTaskItems} tarefa(s) agendada(s) de logon/boot`,
+      `${
+        startup.onedriveItems + startup.teamsItems + startup.launcherItems + startup.updaterItems
+      } item(ns) conhecidos: OneDrive, Teams, launchers e updaters`,
+      startup.bootAgeMinutes === undefined
+        ? "Boot baseline indisponível"
+        : `Boot atual: ${formatBootAge(startup.bootAgeMinutes)}`,
+      startup.postRebootRecent
+        ? "Validação pós-reinício: recente"
+        : startup.postRebootValidationAvailable
+          ? "Validação pós-reinício: disponível"
+          : "Validação pós-reinício: indisponível",
       result.value
         ? `${result.value.selectedItems} item(ns) ${appliedVerb(result.value.dryRun)} pela Startup Engine`
         : (result.message ?? "Sem item de alto impacto controlável agora"),
@@ -440,7 +457,12 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
       ...focusPackage.outputs,
       target ? `Jogo alvo: ${target.label}` : "Jogo alvo não selecionado",
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
+      `${gamer.summary.overlayCount} overlay(s) revisado(s); Steam/Xbox/GPU: ${gamer.summary.steamOverlayCount}/${gamer.summary.xboxOverlayCount}/${gamer.summary.gpuOverlayCount}`,
+      `${gamer.summary.streamingExceptionCount + gamer.summary.emulatorExceptionCount} excecao(oes) protegida(s): OBS/BlueStacks/WSL`,
       `${gamer.summary.protectedCount} processo(s) protegido(s), incluindo Steam/Discord quando detectados`,
+      result.value?.priorityResult
+        ? `Prioridade do jogo: ${result.value.priorityResult.status}`
+        : "Prioridade do jogo aguardando deteccao",
       result.value
         ? `${result.value.closedProcesses.length} processo(s) ${result.value.dryRun ? "validados" : "fechados"} pela Gamer Engine`
         : (result.message ?? "Seleção manual de jogo será necessária"),
@@ -524,6 +546,12 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
     },
     outputs: [
       `Perfil sugerido: ${profileLabel(profileId)}`,
+      result.value?.recommendedProfilePersisted
+        ? "Perfil recomendado salvo localmente"
+        : "Perfil recomendado aguardando persistencia",
+      result.value?.conflictWarnings.length
+        ? `${result.value.conflictWarnings.length} conflito(s) de perfil detectado(s)`
+        : "Perfil sem conflito critico",
       result.value
         ? `${result.value.engineResults.length} engine(s) ${appliedVerb(result.value.dryRun)} pelo perfil`
         : (result.message ?? "Perfil disponível para revisão manual"),
@@ -802,6 +830,13 @@ function formatGb(value: number) {
   }).format(value);
 }
 
+function formatBootAge(minutes: number) {
+  const safeMinutes = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(safeMinutes / 60);
+  const remainingMinutes = safeMinutes % 60;
+  if (hours <= 0) return `${remainingMinutes} min`;
+  return `${hours}h ${remainingMinutes}min`;
+}
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
