@@ -545,7 +545,11 @@ export function SmartOptimizeModal({
               </div>
 
               {reports.gamerDependencyVerification && (
-                <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
+                <GamerDependenciesPanel
+                  report={reports.gamerDependencyVerification}
+                  automaticDownloadResult={reports.gamerDependencyDownloadResult}
+                  automaticInstallResult={reports.gamerDependencyInstallResult}
+                />
               )}
 
               {finalExecutionReport && <ExecutionReportPanel report={finalExecutionReport} />}
@@ -886,7 +890,15 @@ function ReportStat({
   );
 }
 
-function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificationReport }) {
+function GamerDependenciesPanel({
+  report,
+  automaticDownloadResult,
+  automaticInstallResult,
+}: {
+  report: GamerDependencyVerificationReport;
+  automaticDownloadResult?: GamerDependencyDownloadResult;
+  automaticInstallResult?: GamerDependencyInstallResult;
+}) {
   const [currentReport, setCurrentReport] = useState(report);
   const [openError, setOpenError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -903,11 +915,11 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
 
   useEffect(() => {
     setCurrentReport(report);
-    setActionMessage(null);
+    setActionMessage(automaticInstallResult?.message ?? null);
     setLastManifestAuditResult(null);
-    setLastDownloadResult(null);
-    setLastInstallResult(null);
-  }, [report]);
+    setLastDownloadResult(automaticDownloadResult ?? null);
+    setLastInstallResult(automaticInstallResult ?? null);
+  }, [automaticDownloadResult, automaticInstallResult, report]);
 
   const sortedPackages = [...currentReport.packages].sort((left, right) => {
     const order: Record<GamerDependencyVerificationStatus, number> = {
@@ -1176,6 +1188,13 @@ function DependencyExecutionReport({
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {downloadResult && (
+              <DependencyStat
+                label="Baixados"
+                value={downloadResult.downloadedCount}
+                tone="success"
+              />
+            )}
             <DependencyStat
               label="Simulados"
               value={countInstallStatus(installResult, "dryRun")}
@@ -1183,9 +1202,26 @@ function DependencyExecutionReport({
             />
             <DependencyStat label="Pulados" value={installResult.skippedCount} tone="primary" />
             <DependencyStat label="Bloq." value={installResult.blockedCount} tone="warning" />
-            <DependencyStat label="Falhas" value={installResult.failedCount} tone="warning" />
+            <DependencyStat
+              label="Falhas"
+              value={installResult.failedCount + (downloadResult?.failedCount ?? 0)}
+              tone="warning"
+            />
           </div>
         </div>
+
+        {downloadResult && downloadResult.messages.length > 0 && (
+          <div className="mt-3 space-y-1">
+            {downloadResult.messages.slice(0, 3).map((message) => (
+              <p
+                key={message}
+                className="truncate rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-[11px] font-semibold text-success"
+              >
+                {message}
+              </p>
+            ))}
+          </div>
+        )}
 
         <div className="mt-3 overflow-hidden rounded-xl border border-border/60">
           {visibleActions.map((action) => (

@@ -335,9 +335,13 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
     outputs: [
       `${actionIds.length} comando(s) CMD/DISM mapeados`,
       "Windows Update Component Cleanup, NetFx3 e DirectPlay entram no plano",
-      gamerDependencyInstallResult.value
-        ? gamerDependencyInstallResult.value.message
+      gamerDependencyPreparedResult.value
+        ? `${gamerDependencyPreparedResult.value.downloadResult.downloadedCount} baixado(s), ${gamerDependencyPreparedResult.value.downloadResult.skippedCount} pulado(s), ${gamerDependencyPreparedResult.value.downloadResult.failedCount} falha(s) no cache oficial`
         : `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas; ${gamerDependencyVerification.installedLocallyCount} já instalada(s)`,
+      gamerDependencyPreparedResult.value
+        ? gamerDependencyPreparedResult.value.installResult.message
+        : (gamerDependencyPreparedResult.message ??
+          "Dependências gamer aguardando aplicativo Tauri"),
       `${gamerDependencies.installPlan.approvedPackages}/${gamerDependencies.installPlan.totalPackages} dependência(s) com manifesto oficial aprovado`,
       `${gamerDependencies.excludedToolchain.length} item(ns) de toolchain pesada ficam fora do pacote gamer`,
       result.value
