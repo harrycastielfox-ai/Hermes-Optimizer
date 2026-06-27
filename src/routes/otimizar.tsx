@@ -661,6 +661,7 @@ function OptimizationPhaseBoard({
           </div>
           <button
             type="button"
+            data-testid="hermes-prepare-start"
             onClick={onPrepare}
             disabled={isQuickPrepareOpen}
             className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-black text-primary-foreground shadow-[0_14px_34px_-24px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-70"
@@ -713,7 +714,10 @@ function OptimizationPhaseBoard({
             />
           </div>
           {optimizeLocked ? (
-            <div className="mt-4 rounded-xl border border-border/60 bg-muted/70 px-4 py-3 text-center">
+            <div
+              data-testid="hermes-optimize-locked"
+              className="mt-4 rounded-xl border border-border/60 bg-muted/70 px-4 py-3 text-center"
+            >
               <p className="text-sm font-black text-foreground">Conclua a Fase 1 primeiro</p>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
                 Faça a Preparação da Máquina antes. O Hermes libera este botão depois.
@@ -724,6 +728,7 @@ function OptimizationPhaseBoard({
               <Phase2RebootReadiness completedLabel={completedLabel} status={prepareRebootStatus} />
               <button
                 type="button"
+                data-testid="hermes-optimize-start"
                 onClick={onOptimize}
                 disabled={isSmartOptimizeOpen}
                 className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-black text-primary-foreground shadow-[0_14px_34px_-24px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-70"

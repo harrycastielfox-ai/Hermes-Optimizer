@@ -1,6 +1,6 @@
 # Hermes Optimizer - Checklist de QA Manual
 
-Data base: 2026-06-25
+Data base: 2026-06-26
 
 ## Status de Gate
 
@@ -26,11 +26,23 @@ Data base: 2026-06-25
 
 ## Evidencia Automatizada Mais Recente
 
-- [x] `npm run qa:release` executado em 2026-06-25.
+- [x] `npm run qa:release` executado em 2026-06-26.
 - [x] Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test passaram.
 - [x] Testes Rust: 24 aprovados, 0 falhas.
 - [x] Catalogo de otimizacao: 150 acoes auditaveis, 150 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - [x] Instalador NSIS release encontrado.
+- [x] Instalador MSI release encontrado.
+- [x] Build Windows modo teste: `npm run build:windows:test` passou em 2026-06-26.
+- [x] Smoke local via Vite em 2026-06-26: Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes carregaram sem erro de console.
+- [x] Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
+- [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
+- [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
+- [x] Pipeline assinado endurecido: valida certificado, chave privada, MSI/NSIS e Authenticode; sem certificado o build assinado bloqueia.
+- [x] `npm run release:candidate`: gera pacote interno com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO.
+- [x] `npm run release:candidate:verify`: valida integridade do pacote RC, hashes, manifesto e Authenticode antes de teste manual.
+- [x] `npm run qa:manual:new`: gera sessao preenchivel de QA manual para maquina limpa/VM.
+- [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
+- [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -98,8 +110,12 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 ## Evidencias Necessarias
 
 - [ ] Print do app instalado aberto.
-- [x] Evidencia automatizada salva em `.release/qa-latest.json` por `npm run qa:release`.
+- [x] Evidencia automatizada salva em `.release/qa-latest.json` por `npm run qa:release`, incluindo MSI/NSIS e SHA256.
+- [x] Pacote interno de release candidate gerado em `.release/candidates/` por `npm run release:candidate`.
+- [x] Integridade do pacote interno validada por `npm run release:candidate:verify`.
+- [x] Sessao de QA manual gerada em `.release/manual-qa/` por `npm run qa:manual:new`.
+- [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.
-- [ ] Caminhos do MSI e NSIS gerados.
+- [x] Caminhos do MSI e NSIS gerados.
 - [ ] Snapshot de restore validado.
 - [ ] Decisao final de release: pode lancar / nao pode lancar.

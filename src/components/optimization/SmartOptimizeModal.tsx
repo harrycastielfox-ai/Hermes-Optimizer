@@ -424,7 +424,10 @@ export function SmartOptimizeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-3 py-4 backdrop-blur-sm">
+    <div
+      data-testid="hermes-optimize-modal"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-3 py-4 backdrop-blur-sm"
+    >
       <div className="relative flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-border/80 bg-card/95 text-card-foreground shadow-[0_30px_90px_-40px_rgba(15,23,42,0.55)] backdrop-blur-xl">
         <header className="flex items-start justify-between gap-4 border-b border-border/70 px-5 py-4 lg:px-6">
           <div className="flex min-w-0 items-center gap-4">
@@ -786,7 +789,10 @@ function ProgressStat({ label, value }: { label: string; value: string }) {
 
 function OptimizationSuccessPanel({ report }: { report: ExecutionReport }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-success/25 bg-success/10">
+    <section
+      data-testid="hermes-optimize-success"
+      className="overflow-hidden rounded-2xl border border-success/25 bg-success/10"
+    >
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-success text-success-foreground shadow-[0_18px_34px_-24px_rgba(34,197,94,0.9)]">
@@ -939,7 +945,10 @@ function GameTargetPicker({
   onSkip: () => void;
 }) {
   return (
-    <section className="rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-[0_18px_42px_-34px_rgba(37,99,235,0.7)]">
+    <section
+      data-testid="hermes-game-target-picker"
+      className="rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-[0_18px_42px_-34px_rgba(37,99,235,0.7)]"
+    >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[11px] font-bold tracking-[0.18em] text-primary">SESSAO GAMER</p>
@@ -951,6 +960,7 @@ function GameTargetPicker({
         </div>
         <button
           type="button"
+          data-testid="hermes-game-target-skip"
           onClick={onSkip}
           className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
         >
@@ -965,6 +975,7 @@ function GameTargetPicker({
             <button
               key={target.id}
               type="button"
+              data-testid={`hermes-game-target-${target.id}`}
               onClick={() => onSelect(target)}
               className={`group flex min-h-24 items-center gap-3 rounded-2xl border p-4 text-left transition ${
                 active
