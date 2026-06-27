@@ -11,6 +11,13 @@ const files = {
   rootRoute: read("src/routes/__root.tsx"),
   errorPage: read("src/lib/error-page.ts"),
   errorReporting: read("src/lib/lovable-error-reporting.ts"),
+  dashboardRoute: read("src/routes/index.tsx"),
+  otimizarRoute: read("src/routes/otimizar.tsx"),
+  quickPrepareModal: read("src/components/optimization/QuickPrepareModal.tsx"),
+  smartOptimizeModal: read("src/components/optimization/SmartOptimizeModal.tsx"),
+  sidebar: read("src/components/dashboard/Sidebar.tsx"),
+  configuracoesRoute: read("src/routes/configuracoes.tsx"),
+  manutencaoRoute: read("src/routes/manutencao-programada.tsx"),
 };
 
 const forbiddenRootCopy = [
@@ -23,7 +30,33 @@ const forbiddenRootCopy = [
   "Go home",
 ];
 
-const mojibakePatterns = ["Ã£", "Ã¡", "Ã©", "Ã­", "Ã³", "Ãº", "Ã§", "NÃ", "nÃ", "Â"];
+const mojibakePatterns = [
+  "\u00c3\u00a1",
+  "\u00c3\u00a0",
+  "\u00c3\u00a2",
+  "\u00c3\u00a3",
+  "\u00c3\u00a7",
+  "\u00c3\u00a9",
+  "\u00c3\u00aa",
+  "\u00c3\u00ad",
+  "\u00c3\u00b3",
+  "\u00c3\u00b4",
+  "\u00c3\u00b5",
+  "\u00c3\u00ba",
+  "\u00c3\u0081",
+  "\u00c3\u0089",
+  "\u00c3\u0093",
+  "\u00c3\u009a",
+  "\u00c3\u0087",
+  "\u00c2",
+  "\ufffd",
+];
+
+const coreCopyFiles = Object.entries(files);
+
+function hasNoMojibake(content) {
+  return mojibakePatterns.every((fragment) => !content.includes(fragment));
+}
 
 const checks = [
   {
@@ -58,9 +91,25 @@ const checks = [
   },
   {
     name: "Arquivos de copy principal nao possuem mojibake",
-    ok: Object.values(files).every((content) =>
-      mojibakePatterns.every((fragment) => !content.includes(fragment)),
-    ),
+    ok: coreCopyFiles.every(([, content]) => hasNoMojibake(content)),
+  },
+  {
+    name: "Tela Otimizar mantem copy principal com acentos corretos",
+    ok:
+      files.otimizarRoute.includes("PROJETO DE OTIMIZAÇÃO") &&
+      files.otimizarRoute.includes("Preparação da Máquina") &&
+      files.otimizarRoute.includes("Otimização Avançada") &&
+      files.otimizarRoute.includes("Reinício não verificado"),
+  },
+  {
+    name: "Modais dos botoes mantem copy principal com acentos corretos",
+    ok:
+      files.quickPrepareModal.includes("Preparação da Máquina") &&
+      files.quickPrepareModal.includes("Reinício recomendado") &&
+      files.quickPrepareModal.includes("Dependências gamer") &&
+      files.smartOptimizeModal.includes("Permissões e confirmação") &&
+      files.smartOptimizeModal.includes("Plano único concluído") &&
+      files.smartOptimizeModal.includes("Dependências gamer"),
   },
 ];
 

@@ -75,6 +75,54 @@ function Get-InstallerReport {
   }
 }
 
+function Find-SignToolOrNull {
+  $pathCommand = Get-Command "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($pathCommand) {
+    return [pscustomobject]@{
+      path   = $pathCommand.Source
+      source = "PATH"
+    }
+  }
+
+  $candidateRoots = @(
+    (Join-Path $env:ProgramFiles "Windows Kits\10\bin"),
+    (Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"),
+    (Join-Path $env:ProgramFiles "Windows Kits\8.1\bin"),
+    (Join-Path ${env:ProgramFiles(x86)} "Windows Kits\8.1\bin")
+  ) | Where-Object {
+    -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_ -PathType Container)
+  }
+
+  $candidates = foreach ($candidateRoot in $candidateRoots) {
+    Get-ChildItem -LiteralPath $candidateRoot -Recurse -Filter "signtool.exe" -File -ErrorAction SilentlyContinue |
+      ForEach-Object {
+        $score = 0
+        if ($_.FullName -match "\\x64\\signtool\.exe$") { $score += 100 }
+        if ($_.FullName -match "\\x86\\signtool\.exe$") { $score += 50 }
+        if ($_.FullName -match "\\arm64\\signtool\.exe$") { $score += 10 }
+        if ($_.FullName -match "\\10\.0\.(\d+)\.") {
+          $score += [int]$Matches[1]
+        }
+
+        [pscustomobject]@{
+          path   = $_.FullName
+          source = "WindowsKits"
+          score  = $score
+        }
+      }
+  }
+
+  $bestCandidate = $candidates | Sort-Object score, path -Descending | Select-Object -First 1
+  if (-not $bestCandidate) {
+    return $null
+  }
+
+  return [pscustomobject]@{
+    path   = $bestCandidate.path
+    source = $bestCandidate.source
+  }
+}
+
 if ([string]::IsNullOrWhiteSpace($TimestampUrl)) {
   $TimestampUrl = "http://timestamp.digicert.com"
 }
@@ -87,7 +135,7 @@ $normalizedThumbprint = if ([string]::IsNullOrWhiteSpace($CertificateThumbprint)
 
 $certificateMatch = Get-SigningCertificateOrNull -Thumbprint $CertificateThumbprint
 $certificate = if ($certificateMatch) { $certificateMatch.certificate } else { $null }
-$signtool = Get-Command "signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+$signtool = Find-SignToolOrNull
 
 $installerReports = @(
   Get-InstallerReport -Kind "nsis" -Path (Join-Path $root "src-tauri\target\release\bundle\nsis\Hermes Optimizer_0.1.0_x64-setup.exe")
@@ -111,7 +159,7 @@ if ([string]::IsNullOrWhiteSpace($CertificateThumbprint)) {
 }
 
 if (-not $signtool) {
-  $warnings.Add("signtool.exe nao encontrado no PATH. Tauri pode assinar via configuracao, mas o SDK ajuda na verificacao manual.")
+  $warnings.Add("signtool.exe nao encontrado no PATH nem no Windows Kits. Tauri pode assinar via configuracao, mas o SDK ajuda na verificacao manual.")
 }
 
 foreach ($installer in $installerReports) {
@@ -137,7 +185,8 @@ $report = [pscustomobject]@{
   certificateHasPrivateKey = if ($certificate) { [bool]$certificate.HasPrivateKey } else { $false }
   timestampUrl             = $TimestampUrl
   tsp                      = [bool]$Tsp
-  signtoolPath             = if ($signtool) { $signtool.Source } else { $null }
+  signtoolPath             = if ($signtool) { $signtool.path } else { $null }
+  signtoolSource           = if ($signtool) { $signtool.source } else { $null }
   installers               = $installerReports
   blockers                 = @($blockers)
   warnings                 = @($warnings)
@@ -155,7 +204,7 @@ $markdown.Add("- Instaladores ja assinados: **$(if ($allInstallersSigned) { 'SIM
 $markdown.Add("- Certificado encontrado: $(if ($certificateMatch) { 'sim' } else { 'nao' })")
 $markdown.Add("- Chave privada: $(if ($certificate -and $certificate.HasPrivateKey) { 'sim' } else { 'nao' })")
 $markdown.Add("- Timestamp: $TimestampUrl")
-$markdown.Add("- SignTool: $(if ($signtool) { $signtool.Source } else { 'nao encontrado no PATH' })")
+$markdown.Add("- SignTool: $(if ($signtool) { "$($signtool.path) ($($signtool.source))" } else { 'nao encontrado' })")
 $markdown.Add("")
 $markdown.Add("## Instaladores")
 $markdown.Add("")

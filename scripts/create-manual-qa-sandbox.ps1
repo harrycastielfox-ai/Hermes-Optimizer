@@ -38,6 +38,9 @@ if ([string]::IsNullOrWhiteSpace($candidatePath) -or -not (Test-Path -LiteralPat
   throw "Release candidate da sessao nao encontrado: $candidatePath"
 }
 
+$installSmokeScript = Join-Path $PSScriptRoot "create-manual-qa-install-smoke.ps1"
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installSmokeScript -SessionPath $SessionPath
+
 $sandboxPath = Join-Path $SessionPath "hermes-manual-qa.wsb"
 $sandboxLogonCommand = @"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process explorer.exe 'C:\Users\WDAGUtilityAccount\Desktop\HermesRC'; Start-Process notepad.exe 'C:\Users\WDAGUtilityAccount\Desktop\HermesRC\LEIA-ME-TESTE.md'"
@@ -92,9 +95,10 @@ $guide.Add("")
 $guide.Add("1. Abra `hermes-manual-qa.wsb` em uma maquina com Windows Sandbox habilitado.")
 $guide.Add("2. Dentro do Sandbox, abra `Desktop\HermesRC\installers`.")
 $guide.Add("3. Instale primeiro `Hermes-Optimizer-0.1.0-nsis.exe`.")
-$guide.Add("4. Teste janela, rotas, scroll, Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao e Configuracoes.")
-$guide.Add("5. Salve prints ou notas em `Desktop\HermesQA`, que esta mapeado de volta para esta sessao.")
-$guide.Add('6. Atualize o resultado no host com `npm run qa:manual:item`.')
+$guide.Add("4. Opcional para acelerar instalacao: rode `Desktop\HermesQA\run-install-smoke.ps1` no PowerShell do Sandbox.")
+$guide.Add("5. Teste janela, rotas, scroll, Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao e Configuracoes.")
+$guide.Add("6. Salve prints ou notas em `Desktop\HermesQA`, que esta mapeado de volta para esta sessao.")
+$guide.Add('7. Atualize o resultado no host com `npm run qa:manual:item`.')
 $guide.Add("")
 $guide.Add("## Observacoes")
 $guide.Add("")

@@ -16,6 +16,23 @@ $env:HERMES_CERT_THUMBPRINT = "SHA1_THUMBPRINT_DO_CERTIFICADO"
 $env:HERMES_TIMESTAMP_URL = "http://timestamp.digicert.com"
 ```
 
+Para listar certificados candidatos instalados no Windows Store:
+
+```powershell
+npm run release:signing:certs
+```
+
+Para escolher um thumbprint especifico e gerar um template local em `.release/.env.signing.local.example`:
+
+```powershell
+npm run release:signing:certs -- -Thumbprint "SHA1_THUMBPRINT_DO_CERTIFICADO" -WriteEnvTemplate
+```
+
+O assistente nao instala certificados e nao assina builds. Ele apenas valida candidatos e gera evidencia em:
+
+- `.release/signing-certificate-candidates.json`
+- `.release/signing-certificate-candidates.md`
+
 Se o provedor exigir RFC 3161/TSP:
 
 ```powershell
@@ -71,7 +88,13 @@ Ele grava:
 - `.release/signing-preflight.json`
 - `.release/signing-preflight.md`
 
-O preflight confere thumbprint, certificado no Store, chave privada, timestamp, `signtool.exe` quando disponivel e assinatura atual dos MSI/NSIS.
+O preflight confere thumbprint, certificado no Store, chave privada, timestamp, `signtool.exe` no PATH ou no Windows Kits e assinatura atual dos MSI/NSIS.
+
+Quando o Windows SDK esta instalado, o Hermes tenta localizar automaticamente caminhos como:
+
+```text
+C:\Program Files (x86)\Windows Kits\10\bin\<versao>\x64\signtool.exe
+```
 
 ```powershell
 Get-AuthenticodeSignature "src-tauri/target/release/bundle/nsis/Hermes Optimizer_0.1.0_x64-setup.exe"

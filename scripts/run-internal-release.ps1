@@ -14,6 +14,7 @@ $createCandidateScript = Join-Path $PSScriptRoot "create-release-candidate.ps1"
 $verifyCandidateScript = Join-Path $PSScriptRoot "verify-release-candidate.ps1"
 $newManualQaScript = Join-Path $PSScriptRoot "new-manual-qa-session.ps1"
 $manualQaStatusScript = Join-Path $PSScriptRoot "verify-manual-qa-session.ps1"
+$manualQaSyncScript = Join-Path $PSScriptRoot "sync-manual-qa-automated.ps1"
 $signingPreflightScript = Join-Path $PSScriptRoot "signing-preflight.ps1"
 $releaseStatusScript = Join-Path $PSScriptRoot "release-status.ps1"
 
@@ -53,12 +54,16 @@ try {
     Invoke-HermesStep "Criar sessao de QA manual" {
       & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $newManualQaScript
     }
-  } else {
-    Write-Host "Sessao de QA manual: pulada por -SkipManualSession." -ForegroundColor Yellow
-  }
 
-  Invoke-HermesStep "Resumo da sessao de QA manual" {
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $manualQaStatusScript -AllowPending
+    Invoke-HermesStep "Sincronizar QA manual automatizavel" {
+      & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $manualQaSyncScript
+    }
+
+    Invoke-HermesStep "Resumo da sessao de QA manual" {
+      & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $manualQaStatusScript -AllowPending
+    }
+  } else {
+    Write-Host "Sessao de QA manual, sincronizacao e resumo: pulados por -SkipManualSession." -ForegroundColor Yellow
   }
 
   if (-not $SkipSigningPreflight) {

@@ -107,7 +107,10 @@ $pendingLines = if ($p0Pending.Count -gt 0) {
 }
 
 $failedLines = if ($p0Failed.Count -gt 0) {
-  ($p0Failed | ForEach-Object { "- FAIL [$($_.id)] $($_.title)" }) -join "`r`n"
+  ($p0Failed | ForEach-Object {
+      $label = if ($_.status -eq "blocked") { "BLOCKED" } else { "FAIL" }
+      "- $label [$($_.id)] $($_.title)"
+    }) -join "`r`n"
 } else {
   "- Nenhum P0 falhou/bloqueou."
 }

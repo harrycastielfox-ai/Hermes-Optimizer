@@ -122,10 +122,13 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Proximo item de QA manual consultavel por `npm run qa:manual:next`.
 - [x] Alvo do item de QA manual preparavel por `npm run qa:manual:start`.
 - [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
+- [x] Smoke de instalacao NSIS/MSI para Sandbox geravel por `npm run qa:manual:install-smoke`.
+- [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI e resultados `install-smoke-*` quando existirem.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo o resultado do preflight de assinatura quando existir.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
+- [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.
 - [x] Caminhos do MSI e NSIS gerados.
