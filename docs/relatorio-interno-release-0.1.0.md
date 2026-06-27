@@ -69,8 +69,10 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run release:candidate`: gera pacote interno em `.release/candidates/` com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO para teste manual em maquina limpa.
 - `npm run release:candidate:verify`: valida o pacote RC antes da instalacao manual, conferindo manifesto, hashes, tamanhos, Authenticode e decisao GO/NO-GO.
 - `npm run qa:manual:new`: gera sessao preenchivel de QA manual em `.release/manual-qa/`, vinculada ao release candidate mais recente.
+- `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.
+- `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC e sessao/status de QA manual.
 
 ## Decisao de UX da Release
 
