@@ -85,7 +85,8 @@ function Set-ManualQaItemResult {
     [string]$Status,
     [string]$Evidence,
     [string]$Notes,
-    [switch]$OnlyPending
+    [switch]$OnlyPending,
+    [switch]$OnlyPendingOrBlocked
   )
 
   $item = $items | Where-Object { $_.id -eq $ItemId } | Select-Object -First 1
@@ -97,9 +98,80 @@ function Set-ManualQaItemResult {
     return
   }
 
+  if ($OnlyPendingOrBlocked -and $item.status -ne "pending" -and $item.status -ne "blocked") {
+    return
+  }
+
   $item.status = $Status
   $item.evidence = $Evidence
   $item.notes = $Notes
+}
+
+function Add-EvidenceLine {
+  param(
+    [string]$Current,
+    [string]$Line
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Current)) {
+    return $Line
+  }
+
+  if ($Current.Contains($Line)) {
+    return $Current
+  }
+
+  return "$Current $Line"
+}
+
+function Reset-CleanInstallBlockedItems {
+  param(
+    [string]$InstallSmokePath,
+    [bool]$HasLaunchEvidence
+  )
+
+  if (-not $HasLaunchEvidence) {
+    return 0
+  }
+
+  $dependentItemIds = @(
+    "normal-window",
+    "sidebar-routes",
+    "scroll",
+    "dashboard-read-only",
+    "phase2-locked",
+    "prepare-test",
+    "restart-gate",
+    "optimize-test-fate",
+    "safe-mode-no-real-change"
+  )
+  $unblocked = 0
+  $evidenceLine = "Prerequisito de instalacao limpa atendido por install smoke com launch detectado: $InstallSmokePath."
+  $notesLine = "Item reaberto automaticamente para validacao manual no app instalado."
+
+  foreach ($itemId in $dependentItemIds) {
+    $item = $items | Where-Object { $_.id -eq $itemId } | Select-Object -First 1
+    if (-not $item -or $item.status -ne "blocked") {
+      continue
+    }
+
+    $evidence = [string]$item.evidence
+    $notes = [string]$item.notes
+    $isCleanInstallBlock =
+      $evidence -match "instalacao do RC em maquina limpa|WindowsSandbox\.exe|install-smoke" -or
+      $notes -match "Retomar apos validar NSIS/MSI|Windows Sandbox ou VM limpa"
+
+    if (-not $isCleanInstallBlock) {
+      continue
+    }
+
+    $item.status = "pending"
+    $item.evidence = Add-EvidenceLine -Current $evidence -Line $evidenceLine
+    $item.notes = Add-EvidenceLine -Current $notes -Line $notesLine
+    $unblocked += 1
+  }
+
+  return $unblocked
 }
 
 function Get-LatestInstallSmokeReport {
@@ -238,7 +310,9 @@ if ($brandingOk) {
 }
 
 $installSmoke = Get-LatestInstallSmokeReport
+$installSmokeUnblocked = 0
 if ($installSmoke) {
+  $smokeLaunchPassed = $false
   foreach ($result in @($installSmoke.report.results)) {
     $kind = [string]$result.kind
     $itemId = switch ($kind) {
@@ -254,6 +328,9 @@ if ($installSmoke) {
     $resultStatus = if ([bool]$result.passed) { "passed" } else { "failed" }
     $resultLabel = if ([bool]$result.passed) { "PASSOU" } else { "FALHOU" }
     $launchPassed = if ($result.PSObject.Properties.Name -contains "launch") { [bool]$result.launch.passed } else { $false }
+    if ([bool]$result.passed -and $launchPassed) {
+      $smokeLaunchPassed = $true
+    }
     $resultEvidence = "Install smoke $resultLabel ($kind): ExitCode=$($result.exitCode); Authenticode=$($result.signatureStatus); Exe=$($result.executableFound); Registry=$($result.registryFound); Launch=$launchPassed; JSON=$($installSmoke.path)"
     $resultNotes = "Sincronizado automaticamente a partir do smoke de instalacao em Sandbox. Revisar o JSON/Markdown antes de publicar."
 
@@ -262,8 +339,12 @@ if ($installSmoke) {
       -Status $resultStatus `
       -Evidence $resultEvidence `
       -Notes $resultNotes `
-      -OnlyPending
+      -OnlyPendingOrBlocked
   }
+
+  $installSmokeUnblocked = Reset-CleanInstallBlockedItems `
+    -InstallSmokePath $installSmoke.path `
+    -HasLaunchEvidence $smokeLaunchPassed
 }
 
 $session.status = "in-progress"
@@ -284,6 +365,7 @@ foreach ($precheck in $precheckReports) {
 }
 if ($installSmoke) {
   Write-Host "Install smoke: sincronizado de $($installSmoke.path)"
+  Write-Host "Itens reabertos por install smoke: $installSmokeUnblocked"
 } else {
   Write-Host "Install smoke: nenhum resultado encontrado nesta sessao."
 }

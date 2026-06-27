@@ -125,7 +125,12 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
 - [x] Smoke de instalacao NSIS/MSI para Sandbox geravel por `npm run qa:manual:install-smoke`.
 - [x] Pacote portatil de QA para VM/maquina limpa geravel por `npm run qa:manual:portable`.
+- [x] Pacote portatil gera manifesto e `.sha256` do ZIP para conferir integridade antes de copiar/extrair.
+- [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
+- [x] Evidencia manual de VM importavel em lote por `npm run qa:manual:import`, usando `manual-qa-evidence.json` gerado pelo pacote portatil.
+- [x] Retorno completo da VM consolidado por `npm run qa:manual:receive`, rodando sync/import/status/release-status em uma unica rotina.
 - [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*` quando existirem.
+- [x] Depois que um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` aprova NSIS/MSI conforme o resultado e reabre os P0 bloqueados por ambiente limpo como pendentes para revisao manual.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo preflight de assinatura e candidatos de certificado quando existirem.

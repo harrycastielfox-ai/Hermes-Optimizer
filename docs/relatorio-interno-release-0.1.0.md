@@ -76,8 +76,11 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:start`: prepara o alvo do item manual atual, mostrando o instalador/checklist correto e abrindo apenas quando usado com `-Launch`.
 - `npm run qa:manual:sandbox`: gera `.wsb` e guia de Windows Sandbox para testar o release candidate em ambiente descartavel.
 - `npm run qa:manual:install-smoke`: gera `run-install-smoke.ps1` para rodar dentro do Windows Sandbox, validar hash/tamanho/AuthentiCode, testar instalacao silenciosa NSIS/MSI e confirmar que o Hermes instalado abre processo/janela detectavel, com evidencias em JSON/Markdown.
-- `npm run qa:manual:portable`: gera ZIP autocontido para VM/maquina limpa com RC, instaladores, smoke script, checklist e guia de retorno das evidencias.
+- `npm run qa:manual:portable`: gera ZIP autocontido para VM/maquina limpa com RC, instaladores, manifesto/hash do ZIP, verificador de integridade, smoke script, checklist e guia de retorno das evidencias.
 - `npm run qa:manual:sync`: sincroniza itens de QA verificaveis por maquina, como Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*`, marcando `authenticode` como `passed` quando MSI/NSIS estiverem `Valid` ou `blocked` quando ainda estiverem `NotSigned`.
+- Quando um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` atualiza `install-nsis`/`install-msi` mesmo se estavam bloqueados e reabre os P0 dependentes de instalacao limpa para revisao manual.
+- `npm run qa:manual:import`: importa em lote `manual-qa-evidence.json` gerado na VM/maquina limpa e atualiza os P0 visuais/fluxos sem passar item por item.
+- `npm run qa:manual:receive`: rotina unica para receber retorno da VM, sincronizando smoke/prechecks, importando evidencia manual quando existir e atualizando status manual/release.
 - `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.

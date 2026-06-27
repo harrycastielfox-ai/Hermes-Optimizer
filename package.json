@@ -29,6 +29,8 @@
     "qa:manual:sandbox": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-manual-qa-sandbox.ps1",
     "qa:manual:install-smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-manual-qa-install-smoke.ps1",
     "qa:manual:portable": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-manual-qa-portable.ps1",
+    "qa:manual:import": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/import-manual-qa-evidence.ps1",
+    "qa:manual:receive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/receive-manual-qa-evidence.ps1",
     "qa:manual:sync": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-manual-qa-automated.ps1",
     "qa:manual:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-manual-qa-session.ps1 -AllowPending",
     "qa:manual:verify": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-manual-qa-session.ps1",
