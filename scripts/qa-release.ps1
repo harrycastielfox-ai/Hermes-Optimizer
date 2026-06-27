@@ -62,6 +62,7 @@ try {
   Invoke-QaStep "Branding and copy" "npm.cmd" @("run", "verify:branding-copy")
   Invoke-QaStep "UI shell" "npm.cmd" @("run", "verify:ui-shell")
   Invoke-QaStep "Optimization flow" "npm.cmd" @("run", "verify:optimization-flow")
+  Invoke-QaStep "Safe mode flow" "npm.cmd" @("run", "verify:safe-mode-flow")
   Invoke-QaStep "TypeScript" "npx.cmd" @("tsc", "--noEmit")
   Invoke-QaStep "Lint" "npm.cmd" @("run", "lint")
   Invoke-QaStep "Build web" "npm.cmd" @("run", "build")

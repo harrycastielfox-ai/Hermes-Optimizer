@@ -211,6 +211,23 @@ if ($optimizationFlowOk) {
     -Notes "Ainda exige executar o fluxo em modo teste no app instalado em maquina limpa."
 }
 
+$safeModeFlowOk = Invoke-NpmPrecheck -ScriptName "verify:safe-mode-flow"
+$precheckReports += [pscustomobject]@{ name = "verify:safe-mode-flow"; passed = $safeModeFlowOk }
+if ($safeModeFlowOk) {
+  Add-ManualQaPrecheckEvidence `
+    -ItemId "dashboard-read-only" `
+    -Evidence "Precheck tecnico passou: npm run verify:safe-mode-flow validou Dashboard/Analise Agora como somente leitura." `
+    -Notes "Ainda exige confirmar a tela no app instalado em maquina limpa."
+  Add-ManualQaPrecheckEvidence `
+    -ItemId "prepare-test" `
+    -Evidence "Precheck tecnico passou: npm run verify:safe-mode-flow validou Botao 1 em dry-run quando o modo teste esta ativo." `
+    -Notes "Ainda exige rodar o fluxo no app instalado em maquina limpa."
+  Add-ManualQaPrecheckEvidence `
+    -ItemId "safe-mode-no-real-change" `
+    -Evidence "Precheck tecnico passou: npm run verify:safe-mode-flow validou Botao 1, Botao 2 e verificacao pos-execucao sem alteracao real em modo teste." `
+    -Notes "Ainda exige comparacao manual em maquina limpa antes do GO."
+}
+
 $brandingOk = Invoke-NpmPrecheck -ScriptName "verify:branding-copy"
 $precheckReports += [pscustomobject]@{ name = "verify:branding-copy"; passed = $brandingOk }
 if ($brandingOk) {

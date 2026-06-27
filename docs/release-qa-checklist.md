@@ -37,6 +37,7 @@ Data base: 2026-06-26
 - [x] Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
 - [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
+- [x] `npm run verify:safe-mode-flow`: valida Dashboard/Analise Agora como somente leitura e Botao 1/2 sem alteracao real em modo teste.
 - [x] `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
 - [x] `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - [x] Pipeline assinado endurecido: valida certificado, chave privada, MSI/NSIS e Authenticode; sem certificado o build assinado bloqueia.
@@ -123,10 +124,11 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Alvo do item de QA manual preparavel por `npm run qa:manual:start`.
 - [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
 - [x] Smoke de instalacao NSIS/MSI para Sandbox geravel por `npm run qa:manual:install-smoke`.
-- [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI e resultados `install-smoke-*` quando existirem.
+- [x] Pacote portatil de QA para VM/maquina limpa geravel por `npm run qa:manual:portable`.
+- [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*` quando existirem.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
-- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo o resultado do preflight de assinatura quando existir.
+- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo preflight de assinatura e candidatos de certificado quando existirem.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.
