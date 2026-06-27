@@ -45,6 +45,7 @@ Data base: 2026-06-26
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual.
+- [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, assinatura e bloqueios atuais.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -116,8 +117,10 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Pacote interno de release candidate gerado em `.release/candidates/` por `npm run release:candidate`.
 - [x] Integridade do pacote interno validada por `npm run release:candidate:verify`.
 - [x] Sessao de QA manual gerada em `.release/manual-qa/` por `npm run qa:manual:new`.
+- [x] Proximo item de QA manual consultavel por `npm run qa:manual:next`.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
+- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.
 - [x] Caminhos do MSI e NSIS gerados.
 - [ ] Snapshot de restore validado.
