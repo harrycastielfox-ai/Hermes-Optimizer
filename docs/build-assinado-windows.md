@@ -60,6 +60,19 @@ npm run build:tauri:signed -- -Bundles msi
 
 ## Verificacao
 
+Antes de tentar assinar, rode o preflight:
+
+```powershell
+npm run release:signing:preflight
+```
+
+Ele grava:
+
+- `.release/signing-preflight.json`
+- `.release/signing-preflight.md`
+
+O preflight confere thumbprint, certificado no Store, chave privada, timestamp, `signtool.exe` quando disponivel e assinatura atual dos MSI/NSIS.
+
 ```powershell
 Get-AuthenticodeSignature "src-tauri/target/release/bundle/nsis/Hermes Optimizer_0.1.0_x64-setup.exe"
 Get-AuthenticodeSignature "src-tauri/target/release/bundle/msi/Hermes Optimizer_0.1.0_x64_en-US.msi"

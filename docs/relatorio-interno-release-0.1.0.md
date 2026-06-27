@@ -64,17 +64,23 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
 - Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - `npm run verify:optimization-flow`: passou e valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
+- `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
+- `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - Pipeline assinado endurecido em 2026-06-26: `build:tauri:signed` delega para o build controlado, valida certificado/chave privada antes do build e valida Authenticode/mesmo thumbprint em MSI/NSIS apos o build.
 - Teste negativo do build assinado sem `HERMES_CERT_THUMBPRINT`: bloqueou corretamente antes de gerar release assinada falsa.
 - `npm run release:candidate`: gera pacote interno em `.release/candidates/` com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO para teste manual em maquina limpa.
 - `npm run release:candidate:verify`: valida o pacote RC antes da instalacao manual, conferindo manifesto, hashes, tamanhos, Authenticode e decisao GO/NO-GO.
 - `npm run qa:manual:new`: gera sessao preenchivel de QA manual em `.release/manual-qa/`, vinculada ao release candidate mais recente.
 - `npm run qa:manual:next`: mostra o proximo item pendente do QA manual e grava `.release/manual-qa/<sessao>/manual-qa-next.md` com comandos de aprovacao/falha/bloqueio.
+- `npm run qa:manual:start`: prepara o alvo do item manual atual, mostrando o instalador/checklist correto e abrindo apenas quando usado com `-Launch`.
+- `npm run qa:manual:sandbox`: gera `.wsb` e guia de Windows Sandbox para testar o release candidate em ambiente descartavel.
 - `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.
-- `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC e sessao/status de QA manual.
-- `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual e assinatura.
+- `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
+- `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual e preflight de assinatura.
+- `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
+- `npm run release:signing:preflight`: verifica certificado, chave privada, timestamp, SignTool e assinatura atual dos instaladores antes do build assinado.
 
 ## Decisao de UX da Release
 

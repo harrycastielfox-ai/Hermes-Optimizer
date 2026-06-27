@@ -76,6 +76,8 @@ foreach ($item in $selectedItems) {
   $passCommand = 'npm run qa:manual:item -- -ItemId {0} -Status passed -Evidence "DESCREVA A EVIDENCIA"' -f $item.id
   $failCommand = 'npm run qa:manual:item -- -ItemId {0} -Status failed -Evidence "DESCREVA A FALHA"' -f $item.id
   $blockCommand = 'npm run qa:manual:item -- -ItemId {0} -Status blocked -Evidence "DESCREVA O BLOQUEIO"' -f $item.id
+  $startCommand = 'npm run qa:manual:start -- -ItemId {0}' -f $item.id
+  $launchCommand = 'npm run qa:manual:start -- -ItemId {0} -Launch' -f $item.id
 
   Write-Host ""
   Write-Host "[$($item.priority)] $($item.id) - $($item.title)"
@@ -83,12 +85,23 @@ foreach ($item in $selectedItems) {
   Write-Host "Esperado: $($item.expected)"
   Write-Host "Marcar passou:"
   Write-Host $passCommand
+  Write-Host "Preparar alvo:"
+  Write-Host $startCommand
 
   $markdown.Add("## [$($item.priority)] $($item.id) - $($item.title)")
   $markdown.Add("")
   $markdown.Add("- Area: $($item.area)")
   $markdown.Add("- Status atual: $($item.status)")
   $markdown.Add("- Esperado: $($item.expected)")
+  $markdown.Add("")
+  $markdown.Add("### Preparar alvo")
+  $markdown.Add("")
+  $markdown.Add("~~~powershell")
+  $markdown.Add($startCommand)
+  $markdown.Add($launchCommand)
+  $markdown.Add("~~~")
+  $markdown.Add("")
+  $markdown.Add("### Marcar resultado")
   $markdown.Add("")
   $markdown.Add("~~~powershell")
   $markdown.Add($passCommand)

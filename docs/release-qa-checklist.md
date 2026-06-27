@@ -37,6 +37,8 @@ Data base: 2026-06-26
 - [x] Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
 - [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
+- [x] `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
+- [x] `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - [x] Pipeline assinado endurecido: valida certificado, chave privada, MSI/NSIS e Authenticode; sem certificado o build assinado bloqueia.
 - [x] `npm run release:candidate`: gera pacote interno com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO.
 - [x] `npm run release:candidate:verify`: valida integridade do pacote RC, hashes, manifesto e Authenticode antes de teste manual.
@@ -44,8 +46,8 @@ Data base: 2026-06-26
 - [x] `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza item individual da sessao manual com evidencia/notas.
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
-- [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual.
-- [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, assinatura e bloqueios atuais.
+- [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
+- [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, preflight de assinatura e bloqueios atuais.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -118,9 +120,13 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Integridade do pacote interno validada por `npm run release:candidate:verify`.
 - [x] Sessao de QA manual gerada em `.release/manual-qa/` por `npm run qa:manual:new`.
 - [x] Proximo item de QA manual consultavel por `npm run qa:manual:next`.
+- [x] Alvo do item de QA manual preparavel por `npm run qa:manual:start`.
+- [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
-- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`.
+- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo o resultado do preflight de assinatura quando existir.
+- [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
+- [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.
 - [x] Caminhos do MSI e NSIS gerados.
 - [ ] Snapshot de restore validado.

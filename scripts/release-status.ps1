@@ -1,7 +1,8 @@
 param(
   [string]$QaReportPath,
   [string]$CandidatesRoot,
-  [string]$ManualQaRoot
+  [string]$ManualQaRoot,
+  [string]$SigningPreflightPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +16,9 @@ if ([string]::IsNullOrWhiteSpace($CandidatesRoot)) {
 }
 if ([string]::IsNullOrWhiteSpace($ManualQaRoot)) {
   $ManualQaRoot = Join-Path $root ".release\manual-qa"
+}
+if ([string]::IsNullOrWhiteSpace($SigningPreflightPath)) {
+  $SigningPreflightPath = Join-Path $root ".release\signing-preflight.json"
 }
 
 function Read-JsonFileOrNull {
@@ -54,6 +58,8 @@ if ($latestManualQa) {
   $manualQaVerification = Read-JsonFileOrNull -Path (Join-Path $latestManualQa.FullName "manual-qa-verification.json")
 }
 
+$signingPreflight = Read-JsonFileOrNull -Path $SigningPreflightPath
+
 $blockers = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 
@@ -76,6 +82,9 @@ if (-not $candidateVerification) {
 if (-not $manualQaVerification) {
   $blockers.Add("QA manual sem resumo. Rode npm run qa:manual:status.")
 } else {
+  if ($latestCandidate -and [string]$manualQaVerification.candidateName -ne $latestCandidate.Name) {
+    $blockers.Add("QA manual pertence a outro RC: $($manualQaVerification.candidateName). Gere uma sessao nova com npm run qa:manual:new.")
+  }
   if ([string]$manualQaVerification.manualDecision -ne "GO") {
     $blockers.Add("QA manual ainda esta $($manualQaVerification.manualDecision).")
   }
@@ -92,6 +101,20 @@ if ($qaReport) {
   $unsignedInstallers = @($qaReport.installers | Where-Object { $_.signatureStatus -ne "Valid" })
   if ($unsignedInstallers.Count -gt 0) {
     $blockers.Add("$($unsignedInstallers.Count) instalador(es) sem Authenticode Valid.")
+  }
+}
+
+if ($unsignedInstallers.Count -gt 0) {
+  if (-not $signingPreflight) {
+    $blockers.Add("Preflight de assinatura ausente. Rode npm run release:signing:preflight.")
+  } else {
+    foreach ($signingBlocker in @($signingPreflight.blockers)) {
+      $blockers.Add("Assinatura: $signingBlocker")
+    }
+
+    foreach ($signingWarning in @($signingPreflight.warnings)) {
+      $warnings.Add("Assinatura: $signingWarning")
+    }
   }
 }
 
@@ -114,6 +137,11 @@ $status = [pscustomobject]@{
   p0Pending                = if ($manualQaVerification) { [int]$manualQaVerification.p0Pending } else { 0 }
   p0FailedOrBlocked        = if ($manualQaVerification) { [int]$manualQaVerification.p0FailedOrBlocked } else { 0 }
   unsignedInstallerCount   = $unsignedInstallers.Count
+  signingPreflightPath     = if ($signingPreflight) { (Resolve-Path $SigningPreflightPath).Path } else { $null }
+  signingReadyToSign       = if ($signingPreflight) { [bool]$signingPreflight.readyToSign } else { $false }
+  signingAllInstallersSigned = if ($signingPreflight) { [bool]$signingPreflight.allInstallersSigned } else { $false }
+  signingCertificateFound  = if ($signingPreflight) { [bool]$signingPreflight.certificateFound } else { $false }
+  signingCertificateHasPrivateKey = if ($signingPreflight) { [bool]$signingPreflight.certificateHasPrivateKey } else { $false }
   blockers                 = @($blockers)
   warnings                 = @($warnings)
 }
@@ -134,14 +162,24 @@ $candidateSummary = if ($latestCandidate) {
   "ausente"
 }
 
+$signingSummary = if ($signingPreflight) {
+  "pronto para assinar: $(if ($status.signingReadyToSign) { 'sim' } else { 'nao' })"
+} else {
+  "preflight ausente"
+}
+
 $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
   "Rode ``npm run qa:release``."
 } elseif (-not $candidateManifest -or -not $candidateVerification) {
   "Rode ``npm run release:internal``."
 } elseif (-not $manualQaVerification -or [string]$status.manualDecision -ne "GO") {
   "Rode ``npm run qa:manual:next`` para ver o proximo item pendente e atualize com ``npm run qa:manual:item``."
+} elseif ($status.unsignedInstallerCount -gt 0 -and -not $signingPreflight) {
+  "Rode ``npm run release:signing:preflight`` e depois ``npm run build:windows:real:signed``."
+} elseif ($status.unsignedInstallerCount -gt 0 -and -not $status.signingReadyToSign) {
+  "Resolva os bloqueios em ``.release/signing-preflight.md`` e rode ``npm run build:windows:real:signed``."
 } elseif ($status.unsignedInstallerCount -gt 0) {
-  "Configure o certificado e rode ``npm run build:windows:real:signed``."
+  "Rode ``npm run build:windows:real:signed``."
 } else {
   "Pronto para revisao final de release."
 }
@@ -154,6 +192,7 @@ $markdown.Add("- QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 
 $markdown.Add("- QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' }) ($manualSummary)")
 $markdown.Add("- Release candidate: $candidateSummary")
 $markdown.Add("- Instaladores sem Authenticode Valid: $($status.unsignedInstallerCount)")
+$markdown.Add("- Assinatura: $signingSummary")
 $markdown.Add("")
 $markdown.Add("## Bloqueios")
 $markdown.Add("")

@@ -59,6 +59,8 @@ try {
     "-ExecutionPolicy", "Bypass",
     "-File", (Join-Path $PSScriptRoot "verify-release-gates.ps1")
   )
+  Invoke-QaStep "Branding and copy" "npm.cmd" @("run", "verify:branding-copy")
+  Invoke-QaStep "UI shell" "npm.cmd" @("run", "verify:ui-shell")
   Invoke-QaStep "Optimization flow" "npm.cmd" @("run", "verify:optimization-flow")
   Invoke-QaStep "TypeScript" "npx.cmd" @("tsc", "--noEmit")
   Invoke-QaStep "Lint" "npm.cmd" @("run", "lint")
