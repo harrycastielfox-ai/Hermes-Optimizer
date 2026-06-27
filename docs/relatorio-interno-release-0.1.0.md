@@ -81,11 +81,12 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - Quando um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` atualiza `install-nsis`/`install-msi` mesmo se estavam bloqueados e reabre os P0 dependentes de instalacao limpa para revisao manual.
 - `npm run qa:manual:import`: importa em lote `manual-qa-evidence.json` gerado na VM/maquina limpa e atualiza os P0 visuais/fluxos sem passar item por item.
 - `npm run qa:manual:receive`: rotina unica para receber retorno da VM, sincronizando smoke/prechecks, importando evidencia manual quando existir e atualizando status manual/release.
+- `npm run qa:manual:receive -- -EvidenceDropPath <pasta>`: aceita a pasta `HermesQA` copiada da VM, a pasta extraida do pacote ou uma pasta contendo `manual-qa-evidence.json`/`install-smoke-*`, copiando tudo para `incoming-qa` da sessao antes de sincronizar.
 - `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.
 - `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
-- `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, preflight de assinatura e candidatos de certificado.
+- `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado.
 - `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
 - `npm run release:signing:certs`: lista certificados de assinatura candidatos no Windows Store, valida Code Signing/chave privada/expiracao e pode gerar template local de variaveis.
 - `npm run release:signing:preflight`: verifica certificado, chave privada, timestamp, SignTool e assinatura atual dos instaladores antes do build assinado.

@@ -48,7 +48,7 @@ Data base: 2026-06-26
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
-- [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, preflight de assinatura e bloqueios atuais.
+- [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, pacote QA portatil, preflight de assinatura e bloqueios atuais.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -129,11 +129,12 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
 - [x] Evidencia manual de VM importavel em lote por `npm run qa:manual:import`, usando `manual-qa-evidence.json` gerado pelo pacote portatil.
 - [x] Retorno completo da VM consolidado por `npm run qa:manual:receive`, rodando sync/import/status/release-status em uma unica rotina.
+- [x] `qa:manual:receive` aceita `-EvidenceDropPath` apontando para a pasta `HermesQA` copiada da VM, para a pasta extraida do pacote ou para uma pasta com `manual-qa-evidence.json`/`install-smoke-*`.
 - [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*` quando existirem.
 - [x] Depois que um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` aprova NSIS/MSI conforme o resultado e reabre os P0 bloqueados por ambiente limpo como pendentes para revisao manual.
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
-- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo preflight de assinatura e candidatos de certificado quando existirem.
+- [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado quando existirem.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.

@@ -331,16 +331,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
 
 ## Como voltar a evidencia
 
-Depois do smoke e da evidencia manual, copie a pasta `HermesQA\install-smoke-*` e o arquivo `HermesQA\manual-qa-evidence.json` de volta para:
+Depois do smoke e da evidencia manual, copie a pasta `HermesQA` inteira de volta para o host. Pode ser em qualquer pasta local, por exemplo:
 
 ~~~text
-$SessionPath
+C:\Temp\HermesQA
 ~~~
 
 No host do projeto, rode:
 
 ~~~powershell
-npm run qa:manual:receive
+npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"
 ~~~
 
 Se precisar depurar em etapas, use `npm run qa:manual:sync`, `npm run qa:manual:import`, `npm run qa:manual:status` e `npm run release:status` separadamente.
@@ -413,7 +413,9 @@ Depois confira as telas/fluxos do app instalado e gere a evidencia manual:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
 ~~~
 
-Depois copie de volta para esta sessao:
+Depois copie a pasta `HermesQA` inteira de volta para qualquer pasta local no host, por exemplo `C:\Temp\HermesQA`. O recebimento copia a evidencia para a sessao correta.
+
+Se preferir copiar manualmente para a sessao, os arquivos principais sao:
 
 - `HermesQA\install-smoke-*`
 - `HermesQA\manual-qa-evidence.json`, se ele foi gerado
@@ -421,7 +423,7 @@ Depois copie de volta para esta sessao:
 No host do projeto, rode:
 
 ~~~powershell
-npm run qa:manual:receive
+npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"
 ~~~
 
 Quando o smoke voltar com launch detectado, o recebimento tira os P0 dependentes de maquina limpa do estado bloqueado e deixa esses itens prontos para aprovacao manual.

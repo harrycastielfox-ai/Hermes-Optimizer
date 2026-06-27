@@ -1,6 +1,7 @@
 param(
   [string]$SessionPath,
   [string]$SessionsRoot,
+  [string]$EvidenceDropPath,
   [string]$EvidencePath,
   [switch]$AllowOverwrite,
   [switch]$AllowWithoutInstallSmoke
@@ -33,6 +34,71 @@ if (-not (Test-Path -LiteralPath $SessionPath -PathType Container)) {
   throw "Sessao de QA manual nao encontrada: $SessionPath"
 }
 
+function Copy-ExternalEvidenceDrop {
+  param(
+    [string]$DropPath,
+    [string]$TargetSessionPath
+  )
+
+  if ([string]::IsNullOrWhiteSpace($DropPath)) {
+    return $null
+  }
+
+  if (-not (Test-Path -LiteralPath $DropPath -PathType Container)) {
+    throw "Pasta de evidencias nao encontrada: $DropPath"
+  }
+
+  $resolvedDrop = Resolve-Path -LiteralPath $DropPath
+  $sourcePath = $resolvedDrop.Path
+  $hermesQaPath = Join-Path $sourcePath "HermesQA"
+  if (Test-Path -LiteralPath $hermesQaPath -PathType Container) {
+    $sourcePath = $hermesQaPath
+  }
+
+  $manualEvidence = Get-ChildItem -LiteralPath $sourcePath -Filter "manual-qa-evidence.json" -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+  $smokeDirs = @(Get-ChildItem -LiteralPath $sourcePath -Directory -Filter "install-smoke-*" -ErrorAction SilentlyContinue)
+
+  if (-not $manualEvidence -and $smokeDirs.Count -eq 0) {
+    throw "Nenhuma evidencia esperada encontrada em $sourcePath. Informe a pasta HermesQA ou uma pasta com manual-qa-evidence.json/install-smoke-*."
+  }
+
+  $intakeRoot = Join-Path $TargetSessionPath "incoming-qa"
+  New-Item -ItemType Directory -Force -Path $intakeRoot | Out-Null
+
+  $sourceLabel = (Split-Path -Leaf $sourcePath)
+  if ([string]::IsNullOrWhiteSpace($sourceLabel)) {
+    $sourceLabel = "drop"
+  }
+  $safeSourceLabel = $sourceLabel -replace "[^a-zA-Z0-9_.-]", "-"
+  $dropName = "drop-{0}-{1}" -f (Get-Date -Format "yyyyMMdd-HHmmss"), $safeSourceLabel
+  $dropTarget = Join-Path $intakeRoot $dropName
+  New-Item -ItemType Directory -Force -Path $dropTarget | Out-Null
+
+  foreach ($smokeDir in $smokeDirs) {
+    Copy-Item -LiteralPath $smokeDir.FullName -Destination (Join-Path $dropTarget $smokeDir.Name) -Recurse -Force
+  }
+
+  if ($manualEvidence) {
+    Copy-Item -LiteralPath $manualEvidence.FullName -Destination (Join-Path $dropTarget $manualEvidence.Name) -Force
+  }
+
+  $dropSummary = [pscustomobject]@{
+    generatedAt          = (Get-Date).ToString("o")
+    sourcePath           = $sourcePath
+    targetPath           = $dropTarget
+    manualEvidenceCopied = [bool]$manualEvidence
+    smokeDirectories     = @($smokeDirs | ForEach-Object { $_.Name })
+  }
+  $summaryPath = Join-Path $dropTarget "incoming-qa-drop.json"
+  $dropSummary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $summaryPath -Encoding UTF8
+
+  return $dropSummary
+}
+
+$externalDrop = Copy-ExternalEvidenceDrop -DropPath $EvidenceDropPath -TargetSessionPath $SessionPath
+
 if ([string]::IsNullOrWhiteSpace($EvidencePath)) {
   $latestEvidence = Get-ChildItem -LiteralPath $SessionPath -Recurse -Filter "manual-qa-evidence.json" -File -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending |
@@ -45,6 +111,10 @@ if ([string]::IsNullOrWhiteSpace($EvidencePath)) {
 Write-Host ""
 Write-Host "== Receber evidencias do QA manual =="
 Write-Host "Sessao: $SessionPath"
+if ($externalDrop) {
+  Write-Host "Entrada externa: $($externalDrop.sourcePath)"
+  Write-Host "Copiada para: $($externalDrop.targetPath)"
+}
 
 $syncScript = Join-Path $PSScriptRoot "sync-manual-qa-automated.ps1"
 Write-Host ""
@@ -107,6 +177,8 @@ $summary = [pscustomobject]@{
   generatedAt             = (Get-Date).ToString("o")
   sessionPath             = (Resolve-Path $SessionPath).Path
   candidateName           = $session.candidateName
+  evidenceDropPath        = if ($externalDrop) { $externalDrop.sourcePath } else { $null }
+  evidenceDropImportedTo  = if ($externalDrop) { $externalDrop.targetPath } else { $null }
   manualEvidencePath      = if ($manualEvidenceImported) { (Resolve-Path $EvidencePath).Path } else { $null }
   manualEvidenceImported  = $manualEvidenceImported
   p0Passed                = if ($verification) { [int]$verification.p0Passed } else { 0 }

@@ -47,6 +47,32 @@ function Get-LatestDirectoryOrNull {
     Select-Object -First 1
 }
 
+function Get-LatestPortableQaPackageOrNull {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+    return $null
+  }
+
+  $manifestFile = Get-ChildItem -LiteralPath $Path -Recurse -File -Filter "hermes-manual-qa-portable-*-manifest.json" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+  if (-not $manifestFile) {
+    return $null
+  }
+
+  $manifest = Read-JsonFileOrNull -Path $manifestFile.FullName
+  if (-not $manifest) {
+    return $null
+  }
+
+  return [pscustomobject]@{
+    path     = $manifestFile.FullName
+    manifest = $manifest
+  }
+}
+
 $qaReport = Read-JsonFileOrNull -Path $QaReportPath
 $latestCandidate = Get-LatestDirectoryOrNull -Path $CandidatesRoot
 $candidateManifest = $null
@@ -61,6 +87,7 @@ $manualQaVerification = $null
 if ($latestManualQa) {
   $manualQaVerification = Read-JsonFileOrNull -Path (Join-Path $latestManualQa.FullName "manual-qa-verification.json")
 }
+$latestPortableQaPackage = Get-LatestPortableQaPackageOrNull -Path $ManualQaRoot
 
 $signingPreflight = Read-JsonFileOrNull -Path $SigningPreflightPath
 $signingCertificateCandidates = Read-JsonFileOrNull -Path $SigningCertificateCandidatesPath
@@ -149,6 +176,10 @@ $status = [pscustomobject]@{
   qaReleaseReady           = if ($qaReport) { [bool]$qaReport.releaseReady } else { $false }
   latestCandidate          = if ($latestCandidate) { $latestCandidate.FullName } else { $null }
   latestManualQa           = if ($latestManualQa) { $latestManualQa.FullName } else { $null }
+  latestManualQaPortableManifest = if ($latestPortableQaPackage) { $latestPortableQaPackage.path } else { $null }
+  latestManualQaPortableZip = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.zipPath } else { $null }
+  latestManualQaPortableZipSha256 = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.zipSha256 } else { $null }
+  latestManualQaPortableGeneratedAt = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.generatedAt } else { $null }
   manualDecision           = if ($manualQaVerification) { $manualQaVerification.manualDecision } else { $null }
   manualPublicDecision     = if ($manualQaVerification) { $manualQaVerification.publicDecision } else { $null }
   p0Passed                 = if ($manualQaVerification) { [int]$manualQaVerification.p0Passed } else { 0 }
@@ -199,7 +230,7 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0Pending -gt 0) {
   "Rode ``npm run qa:manual:next`` para ver o proximo item pendente e atualize com ``npm run qa:manual:item``."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0FailedOrBlocked -gt 0) {
-  "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:portable`` e execute o ZIP em VM/maquina limpa; depois copie o ``install-smoke-*`` de volta e sincronize com ``npm run qa:manual:sync``."
+  "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:portable`` e execute o ZIP em VM/maquina limpa; depois copie ``HermesQA`` de volta e consolide com ``npm run qa:manual:receive -- -EvidenceDropPath <pasta-HermesQA>``."
 } elseif ([string]$status.manualDecision -ne "GO") {
   "Revise ``.release/manual-qa`` e rode ``npm run qa:manual:status`` para atualizar a decisao manual."
 } elseif ($status.unsignedInstallerCount -gt 0 -and -not $signingPreflight) {
@@ -223,6 +254,7 @@ $markdown.Add("- Status: **$overallStatus**")
 $markdown.Add("- QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 'PENDENTE/FALHOU' })")
 $markdown.Add("- QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' }) ($manualSummary)")
 $markdown.Add("- Release candidate: $candidateSummary")
+$markdown.Add("- Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })")
 $markdown.Add("- Instaladores sem Authenticode Valid: $($status.unsignedInstallerCount)")
 $markdown.Add("- Assinatura: $signingSummary")
 $markdown.Add("- Certificados candidatos: $($status.signingCertificateCandidateCount)")
@@ -257,6 +289,7 @@ Write-Host "Hermes release status: $overallStatus"
 Write-Host "QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 'PENDENTE/FALHOU' })"
 Write-Host "QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' })"
 Write-Host "P0 manual: $($status.p0Passed)/$($status.p0Total) aprovados"
+Write-Host "Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })"
 Write-Host "Instaladores sem Authenticode Valid: $($status.unsignedInstallerCount)"
 
 if ($blockers.Count -gt 0) {
