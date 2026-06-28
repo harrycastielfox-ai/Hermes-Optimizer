@@ -40,6 +40,8 @@
     "release:beta": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-beta-internal.ps1",
     "release:beta:handoff": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-beta-handoff.ps1",
     "release:beta:verify": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-beta-handoff.ps1",
+    "release:beta:ready": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-beta-ready-to-send.ps1",
+    "release:beta:drop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-beta-test-drop.ps1",
     "release:signing:certs": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-signing-certificate.ps1",
     "release:signing:preflight": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/signing-preflight.ps1",
     "release:candidate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-release-candidate.ps1",

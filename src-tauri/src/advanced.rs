@@ -211,6 +211,13 @@ struct DnsInterfaceState {
     server_addresses: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct ServiceStartModeState {
+    name: String,
+    start_mode: Option<String>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RawAdvancedState {
@@ -244,8 +251,11 @@ struct RawAdvancedState {
     focus_assist_allow_critical_toasts_above_lock: Option<i64>,
     recall_disable_ai_data_analysis: Option<i64>,
     hibernate_enabled: Option<i64>,
+    boot_timeout_seconds: Option<i64>,
     diagtrack_start_mode: Option<String>,
     mapsbroker_start_mode: Option<String>,
+    #[serde(default)]
+    optional_service_start_modes: Vec<ServiceStartModeState>,
     enable_transparency: Option<i64>,
     min_animate: Option<String>,
     drag_full_windows: Option<String>,
@@ -535,6 +545,7 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             "set-focus-assist-gamer" => Some(set_focus_assist_gamer_plan(state)),
             "disable-recall-user" => Some(disable_recall_user_plan(state)),
             "disable-hibernation" => Some(disable_hibernation_plan(state)),
+            "set-boot-timeout-fast" => Some(set_boot_timeout_fast_plan(state)),
             "flush-dns-cache" => Some(flush_dns_cache_plan()),
             "dism-analyze-component-store" => Some(dism_analyze_component_store_plan()),
             "dism-start-component-cleanup" => Some(dism_start_component_cleanup_plan()),
@@ -577,6 +588,69 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
                 "Coloca o servico MapsBroker em inicializacao manual para reduzir servicos pouco usados durante jogos.",
                 "MapsBroker",
                 state.mapsbroker_start_mode.as_deref(),
+            )),
+            "set-wersvc-service-manual" => Some(set_service_manual_plan(
+                "set-wersvc-service-manual",
+                "Relatorio de erros em manual",
+                "Coloca o Windows Error Reporting em manual para reduzir carga no boot sem remover diagnosticos do sistema.",
+                "WerSvc",
+                service_start_mode(state, "WerSvc").as_deref(),
+            )),
+            "set-wmpnetworksvc-service-manual" => Some(set_service_manual_plan(
+                "set-wmpnetworksvc-service-manual",
+                "Compartilhamento de midia em manual",
+                "Coloca o Windows Media Player Network Sharing em manual quando existir, evitando servico de midia no boot.",
+                "WMPNetworkSvc",
+                service_start_mode(state, "WMPNetworkSvc").as_deref(),
+            )),
+            "set-fax-service-manual" => Some(set_service_manual_plan(
+                "set-fax-service-manual",
+                "Fax em manual",
+                "Coloca o servico Fax em manual quando existir. Computadores gamer raramente precisam iniciar Fax no boot.",
+                "Fax",
+                service_start_mode(state, "Fax").as_deref(),
+            )),
+            "set-retaildemo-service-manual" => Some(set_service_manual_plan(
+                "set-retaildemo-service-manual",
+                "Demo de varejo em manual",
+                "Coloca RetailDemo em manual quando existir, mantendo fora do boot de computadores pessoais.",
+                "RetailDemo",
+                service_start_mode(state, "RetailDemo").as_deref(),
+            )),
+            "set-phonesvc-service-manual" => Some(set_service_manual_plan(
+                "set-phonesvc-service-manual",
+                "Vincular telefone em manual",
+                "Coloca PhoneSvc em manual para reduzir servicos de integracao com celular no boot.",
+                "PhoneSvc",
+                service_start_mode(state, "PhoneSvc").as_deref(),
+            )),
+            "set-walletservice-manual" => Some(set_service_manual_plan(
+                "set-walletservice-manual",
+                "Carteira do Windows em manual",
+                "Coloca WalletService em manual quando existir, sem remover o recurso do Windows.",
+                "WalletService",
+                service_start_mode(state, "WalletService").as_deref(),
+            )),
+            "set-xbl-auth-manager-manual" => Some(set_service_manual_plan(
+                "set-xbl-auth-manager-manual",
+                "Xbox Live Auth em manual",
+                "Coloca XblAuthManager em manual para reduzir carga Xbox no boot, preservando inicio sob demanda.",
+                "XblAuthManager",
+                service_start_mode(state, "XblAuthManager").as_deref(),
+            )),
+            "set-xbl-game-save-manual" => Some(set_service_manual_plan(
+                "set-xbl-game-save-manual",
+                "Xbox Game Save em manual",
+                "Coloca XblGameSave em manual, mantendo compatibilidade sob demanda para jogos Xbox.",
+                "XblGameSave",
+                service_start_mode(state, "XblGameSave").as_deref(),
+            )),
+            "set-xbox-net-api-svc-manual" => Some(set_service_manual_plan(
+                "set-xbox-net-api-svc-manual",
+                "Xbox Live Networking em manual",
+                "Coloca XboxNetApiSvc em manual para evitar inicializacao permanente de rede Xbox no boot.",
+                "XboxNetApiSvc",
+                service_start_mode(state, "XboxNetApiSvc").as_deref(),
             )),
             "allow-hermes-defender-exclusion" => allow_hermes_defender_exclusion_plan(state),
             "set-dns-cloudflare" => Some(set_dns_provider_plan(

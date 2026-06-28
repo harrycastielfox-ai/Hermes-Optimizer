@@ -93,6 +93,8 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run release:beta:handoff`: gera `.release/beta-handoff/hermes-beta-interno-*` com RC, instaladores, pacote QA portatil, doctor, status de release, evidencias de assinatura e instrucoes para beta controlado.
 - `npm run release:beta:verify`: valida o beta handoff mais recente, conferindo manifesto, ZIP, `.sha256`, estrutura interna, QA portatil e instaladores contra seus manifestos.
 - O beta interno agora inclui `GUIA-TESTADOR-BETA.md`, um roteiro direto para testador validar VM/maquina limpa, comandos obrigatorios, checklist visual e retorno da pasta `HermesQA`.
+- `npm run release:beta:ready`: valida se o beta interno esta pronto para envio controlado, mantendo a distincao entre `BETA-INTERNAL-OK` e `NO-GO` publico.
+- `npm run release:beta:drop`: prepara uma pasta pronta para VM/Windows Sandbox com QA portatil extraido, runner `RODAR-DENTRO-DA-VM.ps1`, arquivo `.wsb` e instrucoes de retorno.
 - `npm run release:signing:certs`: lista certificados de assinatura candidatos no Windows Store, valida Code Signing/chave privada/expiracao e pode gerar template local de variaveis.
 - `npm run release:signing:preflight`: verifica certificado, chave privada, timestamp, SignTool e assinatura atual dos instaladores antes do build assinado.
 
