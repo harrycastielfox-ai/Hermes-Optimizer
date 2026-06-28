@@ -49,6 +49,9 @@ Data base: 2026-06-26
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
 - [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, pacote QA portatil, preflight de assinatura e bloqueios atuais.
+- [x] `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, criando ponteiros `latest-beta-*`.
+- [x] `npm run release:beta:handoff`: gera pacote de beta interno separado do release publico, com RC, QA portatil, status, doctor e evidencias.
+- [x] `npm run release:beta:verify`: valida o pacote de beta interno mais recente, conferindo estrutura, manifesto, ZIP, SHA256, QA portatil e instaladores.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -127,6 +130,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Pacote portatil de QA para VM/maquina limpa geravel por `npm run qa:manual:portable`.
 - [x] Pacote portatil gera manifesto e `.sha256` do ZIP para conferir integridade antes de copiar/extrair.
 - [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
+- [x] Pacote portatil auditavel por `npm run qa:manual:doctor`, validando manifesto, ZIP, SHA256, comandos obrigatorios e status de release.
 - [x] Evidencia manual de VM importavel em lote por `npm run qa:manual:import`, usando `manual-qa-evidence.json` gerado pelo pacote portatil.
 - [x] Retorno completo da VM consolidado por `npm run qa:manual:receive`, rodando sync/import/status/release-status em uma unica rotina.
 - [x] `qa:manual:receive` aceita `-EvidenceDropPath` apontando para a pasta `HermesQA` copiada da VM, para a pasta extraida do pacote ou para uma pasta com `manual-qa-evidence.json`/`install-smoke-*`.
@@ -136,6 +140,9 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado quando existirem.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
+- [x] Pacote de beta interno geravel por `npm run release:beta:handoff`, mantendo aviso de `NO-GO` publico quando assinatura/QA manual ainda nao fecharam.
+- [x] Pacote de beta interno verificavel por `npm run release:beta:verify`, gerando `beta-handoff-verification.json/md`.
+- [x] Ponteiros do beta mais recente gerados em `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.

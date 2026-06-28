@@ -77,6 +77,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:sandbox`: gera `.wsb` e guia de Windows Sandbox para testar o release candidate em ambiente descartavel.
 - `npm run qa:manual:install-smoke`: gera `run-install-smoke.ps1` para rodar dentro do Windows Sandbox, validar hash/tamanho/AuthentiCode, testar instalacao silenciosa NSIS/MSI e confirmar que o Hermes instalado abre processo/janela detectavel, com evidencias em JSON/Markdown.
 - `npm run qa:manual:portable`: gera ZIP autocontido para VM/maquina limpa com RC, instaladores, manifesto/hash do ZIP, verificador de integridade, smoke script, checklist e guia de retorno das evidencias.
+- `npm run qa:manual:doctor`: valida o pacote portatil mais recente antes de enviar para VM, conferindo manifesto, ZIP, `.sha256`, comandos obrigatorios, `VERIFY-QA-PACKAGE.ps1` e status consolidado de release.
 - `npm run qa:manual:sync`: sincroniza itens de QA verificaveis por maquina, como Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*`, marcando `authenticode` como `passed` quando MSI/NSIS estiverem `Valid` ou `blocked` quando ainda estiverem `NotSigned`.
 - Quando um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` atualiza `install-nsis`/`install-msi` mesmo se estavam bloqueados e reabre os P0 dependentes de instalacao limpa para revisao manual.
 - `npm run qa:manual:import`: importa em lote `manual-qa-evidence.json` gerado na VM/maquina limpa e atualiza os P0 visuais/fluxos sem passar item por item.
@@ -88,6 +89,9 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
 - `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado.
 - `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
+- `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, atualizando `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
+- `npm run release:beta:handoff`: gera `.release/beta-handoff/hermes-beta-interno-*` com RC, instaladores, pacote QA portatil, doctor, status de release, evidencias de assinatura e instrucoes para beta controlado.
+- `npm run release:beta:verify`: valida o beta handoff mais recente, conferindo manifesto, ZIP, `.sha256`, estrutura interna, QA portatil e instaladores contra seus manifestos.
 - `npm run release:signing:certs`: lista certificados de assinatura candidatos no Windows Store, valida Code Signing/chave privada/expiracao e pode gerar template local de variaveis.
 - `npm run release:signing:preflight`: verifica certificado, chave privada, timestamp, SignTool e assinatura atual dos instaladores antes do build assinado.
 
