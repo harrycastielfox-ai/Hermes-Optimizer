@@ -279,7 +279,7 @@ export function SmartOptimizeModal({
       actions: detailedActions,
       notes: [
         "Botão 2 concluído em fluxo guiado.",
-        "A meta de 150 ações é contabilizada por fases do plano Hermes.",
+        `O catálogo atual possui ${OPTIMIZE_AUDIT_ACTION_TARGET} ações auditáveis por fases do plano Hermes.`,
         ...gamerDependencyReportNotes(nextReports),
         HERMES_SAFE_TEST_MODE
           ? "Modo teste: nenhuma alteração real foi aplicada."

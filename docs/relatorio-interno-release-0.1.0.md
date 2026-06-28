@@ -45,12 +45,13 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `Get-AuthenticodeSignature` nos instaladores debug: `NotSigned`, esperado enquanto nao houver certificado real.
 - `npm run qa:release`: passou em 2026-06-26.
 - Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test: passaram.
-- `cargo test --lib`: 24 testes aprovados, 0 falhas.
-- Catalogo de otimizacao em 2026-06-26: 150 acoes auditaveis, 150 implementadas/motoradas e 0 planejadas ou indisponiveis.
+- `cargo test --lib`: 25 testes aprovados, 0 falhas.
+- Catalogo de otimizacao em 2026-06-28: 160 acoes auditaveis, 160 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - Botao 2 recebeu lote real adicional no Advanced Engine: reducao de apps em segundo plano e notificacoes gamer, ambos com rollback/allowlist.
 - Clean Engine recebeu lote real adicional: Store cache, NVIDIA shader cache, AMD shader cache, Epic launcher cache, Battle.net cache, Discord cache e OBS cache com quarentena reversivel.
 - Startup Engine recebeu lote real adicional: pasta Startup, tarefas agendadas de logon/boot, OneDrive, Teams, launchers, updaters e baseline de boot.
 - Advanced Engine recebeu lote real adicional de energia gamer: Ultimate Performance opcional, suspensao seletiva USB OFF e PCIe Link State OFF com allowlist de `powercfg`.
+- Advanced Engine recebeu lote real adicional de boot/servicos: `bcdedit /timeout 5` e servicos opcionais allowlistados sob demanda (`WerSvc`, `WMPNetworkSvc`, `Fax`, `RetailDemo`, `PhoneSvc`, `WalletService`, `XblAuthManager`, `XblGameSave`, `XboxNetApiSvc`), sem limitar CPU/RAM e sem desativar servicos Microsoft em massa.
 - Gamer Engine recebeu lote real adicional: revisao de overlays Steam/Xbox/GPU, excecoes OBS/BlueStacks/WSL e prioridade transiente do jogo ativo.
 - Profiles Engine recebeu lote real adicional: validacao de conflitos, persistencia local do perfil recomendado e resumo interno do perfil aplicado.
 - Build Windows em modo teste (`npm run build:windows:test`) passou em 2026-06-26 e gerou MSI/NSIS release com safe mode ativo.

@@ -225,7 +225,7 @@ function OtimizarPage() {
   const healthScore = Math.round(diagnostic.healthScore);
   const projectStats = [
     { label: "Saúde", value: `${healthScore}/100` },
-    { label: "Meta", value: "150 ações" },
+    { label: "Meta", value: `${HERMES_ACTION_TARGET} ações` },
     { label: "Modo", value: HERMES_SAFE_TEST_MODE ? "Teste" : "Real" },
   ];
   const machineFacts = [
@@ -704,12 +704,12 @@ function OptimizationPhaseBoard({
             />
             <PhaseActionRow
               index="2"
-              label="Otimizar sistema e perfil recomendado"
+              label="Boot rápido, sistema e perfil recomendado"
               ready={!optimizeLocked}
             />
             <PhaseActionRow
               index="3"
-              label="Otimizar rede, Gamer e Fate Trigger"
+              label="Rede, serviços sob demanda, Gamer e Fate Trigger"
               ready={!optimizeLocked}
             />
           </div>

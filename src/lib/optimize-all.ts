@@ -161,6 +161,16 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "set-mmcss-gamer-pack",
   "set-fate-trigger-cpu-priority-high",
   "disable-storage-sense-auto-cleanup",
+  "set-boot-timeout-fast",
+  "set-wersvc-service-manual",
+  "set-wmpnetworksvc-service-manual",
+  "set-fax-service-manual",
+  "set-retaildemo-service-manual",
+  "set-phonesvc-service-manual",
+  "set-walletservice-manual",
+  "set-xbl-auth-manager-manual",
+  "set-xbl-game-save-manual",
+  "set-xbox-net-api-svc-manual",
 ] as const;
 
 const HERMES_GAMER_FOCUS_ACTION_IDS = [

@@ -53,7 +53,7 @@ Assert-True ($cargoToml -notmatch $oldBrandPattern) `
 
 & node (Join-Path $root "scripts\verify-optimization-catalog.mjs")
 Assert-True ($LASTEXITCODE -eq 0) `
-  "Catalogo de Otimizar Tudo precisa manter a meta tecnica de 150+ acoes."
+  "Catalogo de Otimizar Tudo precisa manter 150+ acoes e a meta HERMES_ACTION_TARGET sincronizada."
 
 & node (Join-Path $root "scripts\verify-gamer-dependency-manifest.mjs")
 Assert-True ($LASTEXITCODE -eq 0) `

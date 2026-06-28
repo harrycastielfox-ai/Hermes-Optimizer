@@ -10,6 +10,7 @@ const files = {
     "utf8",
   ),
   optimizeAll: readFileSync(join(root, "src", "lib", "optimize-all.ts"), "utf8"),
+  executionReport: readFileSync(join(root, "src", "lib", "execution-report.ts"), "utf8"),
 };
 
 const checks = [
@@ -57,6 +58,19 @@ const checks = [
       files.smartModal.includes('data-testid="hermes-optimize-success"') &&
       files.smartModal.includes("Otimiza") &&
       files.smartModal.includes("conclu"),
+  },
+  {
+    name: "Botao 2 comunica boot rapido e servicos sob demanda",
+    ok:
+      files.otimizarRoute.includes("Boot rápido, sistema e perfil recomendado") &&
+      files.otimizarRoute.includes("Rede, serviços sob demanda, Gamer e Fate Trigger"),
+  },
+  {
+    name: "Meta visual usa alvo central de 160 acoes",
+    ok:
+      files.executionReport.includes("HERMES_ACTION_TARGET = 160") &&
+      files.otimizarRoute.includes("value: `${HERMES_ACTION_TARGET} ações`") &&
+      files.smartModal.includes("${OPTIMIZE_AUDIT_ACTION_TARGET} ações auditáveis"),
   },
 ];
 

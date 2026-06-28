@@ -3,7 +3,9 @@ import vm from "node:vm";
 import ts from "typescript";
 
 const catalogPath = "src/lib/optimize-audit-catalog.ts";
+const executionReportPath = "src/lib/execution-report.ts";
 const source = fs.readFileSync(catalogPath, "utf8");
+const executionReportSource = fs.readFileSync(executionReportPath, "utf8");
 const executableStart = source.indexOf("export const OPTIMIZE_AUDIT_PHASES");
 
 if (executableStart < 0) {
@@ -58,6 +60,16 @@ assert(
   "O catalogo de Otimizar Tudo precisa manter pelo menos 150 acoes auditaveis.",
 );
 
+const actionTargetMatch = executionReportSource.match(
+  /export\s+const\s+HERMES_ACTION_TARGET\s*=\s*(\d+)/,
+);
+assert(actionTargetMatch, "HERMES_ACTION_TARGET nao encontrado em execution-report.ts.");
+const actionTarget = Number(actionTargetMatch[1]);
+assert(
+  actionTarget === OPTIMIZE_AUDIT_ACTIONS.length,
+  "HERMES_ACTION_TARGET precisa bater com o tamanho real do catalogo.",
+);
+
 const actualPhases = new Set(OPTIMIZE_AUDIT_PHASES.map((phase) => phase.phaseId));
 for (const phaseId of expectedPhases) {
   assert(actualPhases.has(phaseId), `Fase obrigatoria ausente: ${phaseId}.`);
@@ -74,6 +86,7 @@ console.log("Hermes optimization catalog: OK");
 console.log(`- Acoes auditaveis: ${OPTIMIZE_AUDIT_ACTIONS.length}`);
 console.log(`- Acoes implementadas/motoradas: ${implementedActions}`);
 console.log(`- Acoes planejadas ou indisponiveis: ${plannedActions}`);
+console.log(`- Meta de execucao: ${actionTarget}`);
 console.log(`- Fases: ${OPTIMIZE_AUDIT_PHASES.length}`);
 
 function assert(condition, message) {

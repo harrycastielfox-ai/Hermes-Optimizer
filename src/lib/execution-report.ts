@@ -1,4 +1,4 @@
-export const HERMES_ACTION_TARGET = 150;
+export const HERMES_ACTION_TARGET = 160;
 export const EXECUTION_REPORT_STORAGE_KEY = "hermes.execution.report.v1";
 export const EXECUTION_CYCLE_STORAGE_KEY = "hermes.execution.cycle.v1";
 

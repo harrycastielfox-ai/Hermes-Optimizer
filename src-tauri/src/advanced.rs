@@ -577,78 +577,78 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
             )),
             "set-diagtrack-service-manual" => Some(set_service_manual_plan(
                 "set-diagtrack-service-manual",
-                "Servico de telemetria em manual",
-                "Coloca o servico DiagTrack em inicializacao manual para reduzir carga em segundo plano sem remover o servico.",
+                "Telemetria sob demanda",
+                "Coloca o servico DiagTrack sob demanda para reduzir carga em segundo plano sem remover o servico.",
                 "DiagTrack",
                 state.diagtrack_start_mode.as_deref(),
             )),
             "set-mapsbroker-service-manual" => Some(set_service_manual_plan(
                 "set-mapsbroker-service-manual",
-                "Servico de mapas em manual",
-                "Coloca o servico MapsBroker em inicializacao manual para reduzir servicos pouco usados durante jogos.",
+                "Mapas sob demanda",
+                "Coloca o servico MapsBroker sob demanda para reduzir servicos pouco usados durante jogos.",
                 "MapsBroker",
                 state.mapsbroker_start_mode.as_deref(),
             )),
             "set-wersvc-service-manual" => Some(set_service_manual_plan(
                 "set-wersvc-service-manual",
-                "Relatorio de erros em manual",
-                "Coloca o Windows Error Reporting em manual para reduzir carga no boot sem remover diagnosticos do sistema.",
+                "Relatorio de erros sob demanda",
+                "Coloca o Windows Error Reporting sob demanda para reduzir carga no boot sem remover diagnosticos do sistema.",
                 "WerSvc",
                 service_start_mode(state, "WerSvc").as_deref(),
             )),
             "set-wmpnetworksvc-service-manual" => Some(set_service_manual_plan(
                 "set-wmpnetworksvc-service-manual",
-                "Compartilhamento de midia em manual",
-                "Coloca o Windows Media Player Network Sharing em manual quando existir, evitando servico de midia no boot.",
+                "Compartilhamento de midia sob demanda",
+                "Coloca o Windows Media Player Network Sharing sob demanda quando existir, evitando servico de midia no boot.",
                 "WMPNetworkSvc",
                 service_start_mode(state, "WMPNetworkSvc").as_deref(),
             )),
             "set-fax-service-manual" => Some(set_service_manual_plan(
                 "set-fax-service-manual",
-                "Fax em manual",
-                "Coloca o servico Fax em manual quando existir. Computadores gamer raramente precisam iniciar Fax no boot.",
+                "Fax sob demanda",
+                "Coloca o servico Fax sob demanda quando existir. Computadores gamer raramente precisam iniciar Fax no boot.",
                 "Fax",
                 service_start_mode(state, "Fax").as_deref(),
             )),
             "set-retaildemo-service-manual" => Some(set_service_manual_plan(
                 "set-retaildemo-service-manual",
-                "Demo de varejo em manual",
-                "Coloca RetailDemo em manual quando existir, mantendo fora do boot de computadores pessoais.",
+                "Demo de varejo sob demanda",
+                "Coloca RetailDemo sob demanda quando existir, mantendo fora do boot de computadores pessoais.",
                 "RetailDemo",
                 service_start_mode(state, "RetailDemo").as_deref(),
             )),
             "set-phonesvc-service-manual" => Some(set_service_manual_plan(
                 "set-phonesvc-service-manual",
-                "Vincular telefone em manual",
-                "Coloca PhoneSvc em manual para reduzir servicos de integracao com celular no boot.",
+                "Vincular telefone sob demanda",
+                "Coloca PhoneSvc sob demanda para reduzir servicos de integracao com celular no boot.",
                 "PhoneSvc",
                 service_start_mode(state, "PhoneSvc").as_deref(),
             )),
             "set-walletservice-manual" => Some(set_service_manual_plan(
                 "set-walletservice-manual",
-                "Carteira do Windows em manual",
-                "Coloca WalletService em manual quando existir, sem remover o recurso do Windows.",
+                "Carteira do Windows sob demanda",
+                "Coloca WalletService sob demanda quando existir, sem remover o recurso do Windows.",
                 "WalletService",
                 service_start_mode(state, "WalletService").as_deref(),
             )),
             "set-xbl-auth-manager-manual" => Some(set_service_manual_plan(
                 "set-xbl-auth-manager-manual",
-                "Xbox Live Auth em manual",
-                "Coloca XblAuthManager em manual para reduzir carga Xbox no boot, preservando inicio sob demanda.",
+                "Xbox Live Auth sob demanda",
+                "Coloca XblAuthManager sob demanda para reduzir carga Xbox no boot, preservando inicio quando necessario.",
                 "XblAuthManager",
                 service_start_mode(state, "XblAuthManager").as_deref(),
             )),
             "set-xbl-game-save-manual" => Some(set_service_manual_plan(
                 "set-xbl-game-save-manual",
-                "Xbox Game Save em manual",
-                "Coloca XblGameSave em manual, mantendo compatibilidade sob demanda para jogos Xbox.",
+                "Xbox Game Save sob demanda",
+                "Coloca XblGameSave sob demanda, mantendo compatibilidade quando jogos Xbox precisarem.",
                 "XblGameSave",
                 service_start_mode(state, "XblGameSave").as_deref(),
             )),
             "set-xbox-net-api-svc-manual" => Some(set_service_manual_plan(
                 "set-xbox-net-api-svc-manual",
-                "Xbox Live Networking em manual",
-                "Coloca XboxNetApiSvc em manual para evitar inicializacao permanente de rede Xbox no boot.",
+                "Xbox Live Networking sob demanda",
+                "Coloca XboxNetApiSvc sob demanda para evitar inicializacao permanente de rede Xbox no boot.",
                 "XboxNetApiSvc",
                 service_start_mode(state, "XboxNetApiSvc").as_deref(),
             )),
@@ -1380,6 +1380,34 @@ fn disable_hibernation_plan(state: &RawAdvancedState) -> AdvancedPlan {
     }
 }
 
+fn set_boot_timeout_fast_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    AdvancedPlan {
+        action: action(
+            "set-boot-timeout-fast",
+            "Boot menu rapido",
+            "Define o timeout do menu de boot para 5 segundos quando houver menu de inicializacao, sem limitar processadores ou memoria.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::Medium,
+            true,
+            false,
+            true,
+            true,
+            true,
+            state
+                .boot_timeout_seconds
+                .map(|value| format!("{value} segundos"))
+                .unwrap_or_else(|| "Nao detectado".to_string()),
+            "Executar bcdedit /timeout 5",
+            "cmd: bcdedit /timeout 5",
+        ),
+        operations: vec![AdvancedOperation::Cmd {
+            program: "bcdedit".to_string(),
+            args: vec!["/timeout".to_string(), "5".to_string()],
+            transient: false,
+        }],
+    }
+}
+
 fn flush_dns_cache_plan() -> AdvancedPlan {
     AdvancedPlan {
         action: action(
@@ -1538,7 +1566,7 @@ fn set_service_manual_plan(
             true,
             false,
             current_mode.unwrap_or("Nao detectado"),
-            "Definir inicializacao como Manual",
+            "Definir inicializacao como Sob demanda",
             &format!("cmd: sc.exe config {service_name} start= demand"),
         ),
         operations: vec![AdvancedOperation::Cmd {
@@ -1552,6 +1580,14 @@ fn set_service_manual_plan(
             transient: false,
         }],
     }
+}
+
+fn service_start_mode(state: &RawAdvancedState, service_name: &str) -> Option<String> {
+    state
+        .optional_service_start_modes
+        .iter()
+        .find(|item| item.name.eq_ignore_ascii_case(service_name))
+        .and_then(|item| item.start_mode.clone())
 }
 
 fn dism_check_netfx3_plan() -> AdvancedPlan {
@@ -2470,6 +2506,33 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
             true,
             false,
         ),
+        blocked(
+            "msconfig-max-processors",
+            "Limitar numero de processadores no boot",
+            "Bloqueado: esta opcao do msconfig pode limitar a CPU em vez de otimizar. O Hermes mantem processadores e memoria sem teto artificial.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::High,
+            true,
+            true,
+        ),
+        blocked(
+            "msconfig-max-memory",
+            "Limitar memoria maxima no boot",
+            "Bloqueado: esta opcao pode fazer o Windows iniciar com menos RAM disponivel. O Hermes nao aplica teto de memoria.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::High,
+            true,
+            true,
+        ),
+        blocked(
+            "disable-all-microsoft-services",
+            "Desativar todos os servicos Microsoft",
+            "Bloqueado: o Hermes usa uma allowlist de servicos opcionais sob demanda e preserva seguranca, rede, audio, drivers, Windows Update e anticheat.",
+            AdvancedMethod::Cmd,
+            AdvancedRisk::High,
+            true,
+            true,
+        ),
     ];
     actions.extend(blocked_gamer_dependency_installers());
     actions
@@ -2554,6 +2617,7 @@ fn default_action_ids() -> Vec<String> {
         "disable-notification-toasts".to_string(),
         "disable-recall-user".to_string(),
         "disable-hibernation".to_string(),
+        "set-boot-timeout-fast".to_string(),
         "flush-dns-cache".to_string(),
         "dism-analyze-component-store".to_string(),
         "dism-start-component-cleanup".to_string(),
@@ -2564,6 +2628,15 @@ fn default_action_ids() -> Vec<String> {
         "dism-check-directplay".to_string(),
         "set-diagtrack-service-manual".to_string(),
         "set-mapsbroker-service-manual".to_string(),
+        "set-wersvc-service-manual".to_string(),
+        "set-wmpnetworksvc-service-manual".to_string(),
+        "set-fax-service-manual".to_string(),
+        "set-retaildemo-service-manual".to_string(),
+        "set-phonesvc-service-manual".to_string(),
+        "set-walletservice-manual".to_string(),
+        "set-xbl-auth-manager-manual".to_string(),
+        "set-xbl-game-save-manual".to_string(),
+        "set-xbox-net-api-svc-manual".to_string(),
         "set-dns-cloudflare".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
@@ -2599,6 +2672,7 @@ fn allowed_action_ids() -> Vec<String> {
         "disable-notification-toasts".to_string(),
         "disable-recall-user".to_string(),
         "disable-hibernation".to_string(),
+        "set-boot-timeout-fast".to_string(),
         "flush-dns-cache".to_string(),
         "dism-analyze-component-store".to_string(),
         "dism-start-component-cleanup".to_string(),
@@ -2612,6 +2686,15 @@ fn allowed_action_ids() -> Vec<String> {
         "enable-network-rss".to_string(),
         "set-diagtrack-service-manual".to_string(),
         "set-mapsbroker-service-manual".to_string(),
+        "set-wersvc-service-manual".to_string(),
+        "set-wmpnetworksvc-service-manual".to_string(),
+        "set-fax-service-manual".to_string(),
+        "set-retaildemo-service-manual".to_string(),
+        "set-phonesvc-service-manual".to_string(),
+        "set-walletservice-manual".to_string(),
+        "set-xbl-auth-manager-manual".to_string(),
+        "set-xbl-game-save-manual".to_string(),
+        "set-xbox-net-api-svc-manual".to_string(),
         "allow-hermes-defender-exclusion".to_string(),
         "set-dns-cloudflare".to_string(),
         "set-dns-google".to_string(),
@@ -3516,7 +3599,10 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
 
     match normalized_program.as_str() {
         "ipconfig" => normalized_args == ["/flushdns".to_string()],
-        "bcdedit" | "bcdedit.exe" => normalized_args == ["/enum".to_string()],
+        "bcdedit" | "bcdedit.exe" => {
+            normalized_args == ["/enum".to_string()]
+                || normalized_args == ["/timeout".to_string(), "5".to_string()]
+        }
         "powercfg" => {
             normalized_args == ["/l".to_string()]
                 || normalized_args == ["/list".to_string()]
@@ -3607,7 +3693,7 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
             normalized_args.as_slice(),
             [config, service, start_equals, mode]
                 if config == "config"
-                    && (service == "diagtrack" || service == "mapsbroker")
+                    && is_allowed_manual_service(service)
                     && start_equals == "start="
                     && mode == "demand"
         ),
@@ -3620,6 +3706,23 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
         }
         _ => false,
     }
+}
+
+fn is_allowed_manual_service(service: &str) -> bool {
+    matches!(
+        service,
+        "diagtrack"
+            | "mapsbroker"
+            | "wersvc"
+            | "wmpnetworksvc"
+            | "fax"
+            | "retaildemo"
+            | "phonesvc"
+            | "walletservice"
+            | "xblauthmanager"
+            | "xblgamesave"
+            | "xboxnetapisvc"
+    )
 }
 
 fn is_allowed_power_plan_guid(guid: &str) -> bool {
@@ -3846,8 +3949,10 @@ fn fallback_state() -> RawAdvancedState {
         focus_assist_allow_critical_toasts_above_lock: None,
         recall_disable_ai_data_analysis: None,
         hibernate_enabled: None,
+        boot_timeout_seconds: None,
         diagtrack_start_mode: None,
         mapsbroker_start_mode: None,
+        optional_service_start_modes: Vec::new(),
         enable_transparency: None,
         min_animate: None,
         drag_full_windows: None,
@@ -3952,6 +4057,18 @@ function Get-ServiceStartMode($name) {
   } catch { return $null }
 }
 
+function Get-BootTimeoutSeconds() {
+  try {
+    $lines = @(bcdedit /enum '{bootmgr}' 2>&1)
+    foreach ($line in $lines) {
+      if ([string]$line -match '^\s*timeout\s+(\d+)\s*$') {
+        return [int64]$matches[1]
+      }
+    }
+    return $null
+  } catch { return $null }
+}
+
 function Get-PowerSettingValues($subgroup, $setting) {
   $result = @{
     ac = $null
@@ -3999,6 +4116,23 @@ $ifeoFateTriggerShippingPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersi
 $directXPath = 'HKLM:\SOFTWARE\Microsoft\DirectX'
 $usbPower = Get-PowerSettingValues '2a737441-1930-4402-8d77-b2bebba308a3' '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'
 $pciePower = Get-PowerSettingValues '501a4d13-42af-4429-9fd1-a8218c268e20' 'ee12f906-d277-404b-b6da-e5fa1a576df5'
+$optionalServiceNames = @(
+  'WerSvc',
+  'WMPNetworkSvc',
+  'Fax',
+  'RetailDemo',
+  'PhoneSvc',
+  'WalletService',
+  'XblAuthManager',
+  'XblGameSave',
+  'XboxNetApiSvc'
+)
+$optionalServiceStartModes = @($optionalServiceNames | ForEach-Object {
+  [pscustomobject]@{
+    name = [string]$_
+    startMode = Get-ServiceStartMode $_
+  }
+})
 
 $timerPolicySummary = 'BCDEdit indisponivel'
 try {
@@ -4109,8 +4243,10 @@ try {
   focusAssistAllowCriticalToastsAboveLock = Get-Dword $notificationSettingsPath 'NOC_GLOBAL_SETTING_ALLOW_CRITICAL_TOASTS_ABOVE_LOCK'
   recallDisableAiDataAnalysis = Get-Dword $windowsAiPath 'DisableAIDataAnalysis'
   hibernateEnabled = Get-Dword $powerPath 'HibernateEnabled'
+  bootTimeoutSeconds = Get-BootTimeoutSeconds
   diagtrackStartMode = Get-ServiceStartMode 'DiagTrack'
   mapsbrokerStartMode = Get-ServiceStartMode 'MapsBroker'
+  optionalServiceStartModes = $optionalServiceStartModes
   enableTransparency = Get-Dword $personalizePath 'EnableTransparency'
   minAnimate = $minAnimateValue
   dragFullWindows = Get-StringValue $desktopPath 'DragFullWindows'
@@ -4295,6 +4431,8 @@ mod tests {
     #[test]
     fn advanced_allowlist_accepts_only_timer_policy_probe() {
         let timer_probe = vec!["/enum".to_string()];
+        let boot_timeout = vec!["/timeout".to_string(), "5".to_string()];
+        let boot_timeout_zero = vec!["/timeout".to_string(), "0".to_string()];
         let timer_write = vec![
             "/set".to_string(),
             "useplatformclock".to_string(),
@@ -4303,6 +4441,48 @@ mod tests {
 
         assert!(is_allowed_native_command("bcdedit", &timer_probe));
         assert!(is_allowed_native_command("bcdedit.exe", &timer_probe));
+        assert!(is_allowed_native_command("bcdedit", &boot_timeout));
+        assert!(!is_allowed_native_command("bcdedit", &boot_timeout_zero));
         assert!(!is_allowed_native_command("bcdedit", &timer_write));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_only_optional_services_as_manual() {
+        let wersvc_manual = vec![
+            "config".to_string(),
+            "WerSvc".to_string(),
+            "start=".to_string(),
+            "demand".to_string(),
+        ];
+        let xbox_manual = vec![
+            "config".to_string(),
+            "XboxNetApiSvc".to_string(),
+            "start=".to_string(),
+            "demand".to_string(),
+        ];
+        let defender_disabled = vec![
+            "config".to_string(),
+            "WinDefend".to_string(),
+            "start=".to_string(),
+            "disabled".to_string(),
+        ];
+        let spooler_disabled = vec![
+            "config".to_string(),
+            "Spooler".to_string(),
+            "start=".to_string(),
+            "disabled".to_string(),
+        ];
+        let random_service_manual = vec![
+            "config".to_string(),
+            "RandomService".to_string(),
+            "start=".to_string(),
+            "demand".to_string(),
+        ];
+
+        assert!(is_allowed_native_command("sc.exe", &wersvc_manual));
+        assert!(is_allowed_native_command("sc.exe", &xbox_manual));
+        assert!(!is_allowed_native_command("sc.exe", &defender_disabled));
+        assert!(!is_allowed_native_command("sc.exe", &spooler_disabled));
+        assert!(!is_allowed_native_command("sc.exe", &random_service_manual));
     }
 }

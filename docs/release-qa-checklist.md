@@ -28,8 +28,8 @@ Data base: 2026-06-26
 
 - [x] `npm run qa:release` executado em 2026-06-26.
 - [x] Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test passaram.
-- [x] Testes Rust: 24 aprovados, 0 falhas.
-- [x] Catalogo de otimizacao: 150 acoes auditaveis, 150 implementadas/motoradas e 0 planejadas ou indisponiveis.
+- [x] Testes Rust: 25 aprovados, 0 falhas.
+- [x] Catalogo de otimizacao: 160 acoes auditaveis, 160 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - [x] Instalador NSIS release encontrado.
 - [x] Instalador MSI release encontrado.
 - [x] Build Windows modo teste: `npm run build:windows:test` passou em 2026-06-26.
@@ -38,6 +38,7 @@ Data base: 2026-06-26
 - [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
 - [x] `npm run verify:safe-mode-flow`: valida Dashboard/Analise Agora como somente leitura e Botao 1/2 sem alteracao real em modo teste.
+- [x] Botao 2 recebeu lote de boot/servicos opcionais: `bcdedit /timeout 5` e servicos allowlistados sob demanda, sem limitar CPU/RAM e sem desativar servicos Microsoft em massa.
 - [x] `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
 - [x] `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - [x] Pipeline assinado endurecido: valida certificado, chave privada, MSI/NSIS e Authenticode; sem certificado o build assinado bloqueia.
