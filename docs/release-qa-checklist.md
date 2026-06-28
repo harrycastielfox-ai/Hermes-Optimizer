@@ -52,6 +52,7 @@ Data base: 2026-06-26
 - [x] `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, criando ponteiros `latest-beta-*`.
 - [x] `npm run release:beta:handoff`: gera pacote de beta interno separado do release publico, com RC, QA portatil, status, doctor e evidencias.
 - [x] `npm run release:beta:verify`: valida o pacote de beta interno mais recente, conferindo estrutura, manifesto, ZIP, SHA256, QA portatil e instaladores.
+- [x] Pacote beta interno inclui `GUIA-TESTADOR-BETA.md`, com roteiro simples para VM/maquina limpa e devolucao da pasta `HermesQA`.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
 - [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
 
@@ -142,6 +143,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
 - [x] Pacote de beta interno geravel por `npm run release:beta:handoff`, mantendo aviso de `NO-GO` publico quando assinatura/QA manual ainda nao fecharam.
 - [x] Pacote de beta interno verificavel por `npm run release:beta:verify`, gerando `beta-handoff-verification.json/md`.
+- [x] Guia de testador do beta interno validado junto do handoff, incluindo comandos de verificacao, smoke, coleta manual e retorno por `qa:manual:receive`.
 - [x] Ponteiros do beta mais recente gerados em `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.

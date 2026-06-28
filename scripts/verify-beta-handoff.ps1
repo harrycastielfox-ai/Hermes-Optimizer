@@ -78,6 +78,7 @@ if (-not (Test-Path -LiteralPath $handoffZipPath -PathType Leaf)) {
 
 $manifestPath = Join-Path $handoffRoot "beta-handoff-manifest.json"
 $readmePath = Join-Path $handoffRoot "LEIA-ME-BETA-INTERNO.md"
+$testerGuidePath = Join-Path $handoffRoot "GUIA-TESTADOR-BETA.md"
 $manifest = $null
 
 if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
@@ -98,6 +99,25 @@ if (Test-Path -LiteralPath $readmePath -PathType Leaf) {
   $checks.Add("README beta encontrado e identificado.")
 } else {
   Add-Finding -List $failures -Message "README beta ausente: $readmePath"
+}
+
+if (Test-Path -LiteralPath $testerGuidePath -PathType Leaf) {
+  $testerGuide = Get-Content -LiteralPath $testerGuidePath -Raw
+  if ($testerGuide -notmatch "Guia do Testador") {
+    Add-Finding -List $failures -Message "GUIA-TESTADOR-BETA.md nao identifica o arquivo como guia do testador."
+  }
+  if ($testerGuide -notmatch "RUN-INSTALL-SMOKE.ps1") {
+    Add-Finding -List $failures -Message "GUIA-TESTADOR-BETA.md nao instrui o smoke de instalacao."
+  }
+  if ($testerGuide -notmatch "RUN-MANUAL-QA-EVIDENCE.ps1") {
+    Add-Finding -List $failures -Message "GUIA-TESTADOR-BETA.md nao instrui a coleta de evidencia manual."
+  }
+  if ($testerGuide -notmatch "modo teste") {
+    Add-Finding -List $failures -Message "GUIA-TESTADOR-BETA.md nao deixa claro o comportamento esperado em modo teste."
+  }
+  $checks.Add("Guia do testador encontrado e validado.")
+} else {
+  Add-Finding -List $failures -Message "Guia do testador ausente: $testerGuidePath"
 }
 
 foreach ($requiredDirectory in @("release-candidate", "qa-portatil", "evidencias", "assinatura")) {

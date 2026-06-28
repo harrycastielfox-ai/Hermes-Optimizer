@@ -181,6 +181,8 @@ $betaDecision = if ([bool]$releaseStatus.qaTechnicalPass -and -not [string]::IsN
   "BETA-INTERNAL-BLOCKED"
 }
 
+$testerGuidePath = Join-Path $handoffRoot "GUIA-TESTADOR-BETA.md"
+
 $manifest = [pscustomobject]@{
   generatedAt              = (Get-Date).ToString("o")
   handoffName              = $handoffName
@@ -198,6 +200,7 @@ $manifest = [pscustomobject]@{
   copied                   = @($copied)
   missing                  = @($missing | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
   publicReleaseBlockers    = @($releaseStatus.blockers)
+  testerGuide              = $testerGuidePath
   nextCommandAfterVm       = 'npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"'
 }
 
@@ -258,6 +261,66 @@ $($manifest.nextCommandAfterVm)
 $readmePath = Join-Path $handoffRoot "LEIA-ME-BETA-INTERNO.md"
 $readme | Set-Content -LiteralPath $readmePath -Encoding UTF8
 
+$testerGuide = @"
+# Guia do Testador - Hermes Beta
+
+Este beta e controlado. Ele serve para validar instalacao, abertura, navegacao e modo teste em uma maquina Windows limpa. Ainda nao e release publico.
+
+## Objetivo
+
+Confirmar que o Hermes instala, abre, navega e executa os fluxos principais sem erro visual e sem alterar o Windows quando o modo teste estiver ativo.
+
+## Preparacao
+
+1. Abra a pasta qa-portatil deste pacote.
+2. Copie o ZIP hermes-manual-qa-portable-*.zip para uma VM ou maquina Windows limpa.
+3. Extraia o ZIP.
+4. Abra PowerShell dentro da pasta extraida.
+
+## Comandos na VM ou maquina limpa
+
+Rode nesta ordem:
+
+~~~powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\VERIFY-QA-PACKAGE.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
+~~~
+
+Se algum comando falhar, tire print da tela, copie a mensagem de erro e pare o teste naquele ponto.
+
+## Checklist rapido dentro do Hermes
+
+- O app abre como janela normal, permite arrastar, redimensionar, maximizar e restaurar.
+- O Dashboard carrega sem tela branca e mostra dados do PC quando disponiveis.
+- A navegacao lateral abre Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes.
+- O scroll do mouse funciona nas telas longas.
+- Em Otimizar, o Botao 2 fica bloqueado antes da Fase 1.
+- O Botao 1 executa em modo teste, mostra progresso bonito e termina com sucesso/reinicio recomendado.
+- O fluxo Gamer/Fate Trigger aparece quando disponivel e nao quebra a navegacao.
+- Em modo teste, o Hermes nao deve aplicar mudancas reais no Windows.
+
+## Como devolver o teste
+
+1. Copie a pasta HermesQA gerada na VM para o computador principal, por exemplo C:\Temp\HermesQA.
+2. No projeto Hermes, rode:
+
+~~~powershell
+$($manifest.nextCommandAfterVm)
+~~~
+
+## O que reportar
+
+- Print do app aberto.
+- Qual passo falhou, se falhou.
+- Mensagem exata de erro.
+- Se o app abriu, se navegou, se o scroll funcionou e se os Botoes 1/2 respeitaram o modo teste.
+
+Sucesso neste beta significa: instalou, abriu, navegou, respeitou modo teste e devolveu a pasta HermesQA.
+"@
+
+$testerGuide | Set-Content -LiteralPath $testerGuidePath -Encoding UTF8
+
 $zipPath = Join-Path $OutputRoot "$handoffName.zip"
 Compress-Archive -Path (Join-Path $handoffRoot "*") -DestinationPath $zipPath -Force
 $zipItem = Get-Item -LiteralPath $zipPath
@@ -274,6 +337,7 @@ $latest = [pscustomobject]@{
   handoffZipSha256     = $zipHash
   manifestPath         = $manifestPath
   readmePath           = $readmePath
+  testerGuidePath      = $testerGuidePath
   betaDecision         = $betaDecision
   publicReleaseStatus  = [string]$releaseStatus.overallStatus
   candidateName        = $candidateName
@@ -295,6 +359,7 @@ $latestMarkdown = @"
 - ZIP SHA256: $zipHash
 - Manifesto: $manifestPath
 - README: $readmePath
+- Guia do testador: $testerGuidePath
 
 ## Depois do teste na VM
 
@@ -311,6 +376,7 @@ Write-Host "- $zipPath"
 Write-Host "- $zipShaPath"
 Write-Host "- $manifestPath"
 Write-Host "- $readmePath"
+Write-Host "- $testerGuidePath"
 Write-Host "- $latestPath"
 Write-Host "- $latestMarkdownPath"
 Write-Host "Decisao beta interna: $betaDecision"
