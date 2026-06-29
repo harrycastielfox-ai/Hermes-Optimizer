@@ -25,6 +25,7 @@
     "qa:release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-release.ps1",
     "qa:manual:new": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/new-manual-qa-session.ps1",
     "qa:manual:item": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-manual-qa-item.ps1",
+    "qa:manual:bulk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/update-manual-qa-bulk.ps1",
     "qa:manual:next": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/next-manual-qa-item.ps1",
     "qa:manual:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-manual-qa-item.ps1",
     "qa:manual:sandbox": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-manual-qa-sandbox.ps1",

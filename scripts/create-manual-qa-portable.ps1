@@ -122,9 +122,91 @@ Write-Host "Hermes Manual QA Evidence"
 Write-Host "Sessao: $($session.candidateName)"
 Write-Host ""
 Write-Host "Use: p=passou, f=falhou, b=bloqueado, s=ignorar, Enter=pendente."
+Write-Host "Modo rapido por grupos evita responder item por item quando o mesmo teste cobre varias telas."
 Write-Host ""
 
-$results = foreach ($itemId in $manualItemIds) {
+function Convert-ChoiceToStatus {
+  param([string]$Choice)
+
+  switch ($Choice.Trim().ToLowerInvariant()) {
+    "p" { return "passed" }
+    "pass" { return "passed" }
+    "passou" { return "passed" }
+    "f" { return "failed" }
+    "falhou" { return "failed" }
+    "b" { return "blocked" }
+    "bloqueado" { return "blocked" }
+    "s" { return "skipped" }
+    "skip" { return "skipped" }
+    default { return "pending" }
+  }
+}
+
+function New-ManualEvidenceEntry {
+  param(
+    [object]$Item,
+    [string]$Status,
+    [string]$Evidence,
+    [string]$Notes
+  )
+
+  return [pscustomobject]@{
+    id       = $Item.id
+    status   = $Status
+    evidence = $Evidence
+    notes    = $Notes
+  }
+}
+
+$results = New-Object System.Collections.Generic.List[object]
+$quickGroups = @(
+  [pscustomobject]@{
+    name = "Janela e navegacao"
+    ids = @("normal-window", "sidebar-routes", "scroll")
+  },
+  [pscustomobject]@{
+    name = "Fluxo seguro de otimizacao"
+    ids = @("dashboard-read-only", "phase2-locked", "prepare-test", "restart-gate", "optimize-test-fate", "safe-mode-no-real-change")
+  },
+  [pscustomobject]@{
+    name = "Telas complementares"
+    ids = @("defender-page", "scheduled-maintenance", "settings-language")
+  }
+)
+
+$quickModeChoice = (Read-Host "Usar modo rapido por grupos? (s/N)").Trim().ToLowerInvariant()
+if ($quickModeChoice -in @("s", "sim", "y", "yes")) {
+  foreach ($group in $quickGroups) {
+    $groupItems = @($group.ids | ForEach-Object {
+      $id = $_
+      @($session.items) | Where-Object { $_.id -eq $id } | Select-Object -First 1
+    } | Where-Object { $_ })
+
+    if ($groupItems.Count -eq 0) {
+      continue
+    }
+
+    Write-Host "Grupo: $($group.name)"
+    foreach ($item in $groupItems) {
+      Write-Host "- [$($item.priority)] $($item.id) - $($item.title)"
+    }
+
+    $status = Convert-ChoiceToStatus (Read-Host "Resultado do grupo")
+    $evidence = ""
+    $notes = ""
+    if ($status -ne "pending") {
+      $evidence = Read-Host "Evidencia curta do grupo"
+      $notes = Read-Host "Notas opcionais do grupo"
+    }
+
+    foreach ($item in $groupItems) {
+      $results.Add((New-ManualEvidenceEntry -Item $item -Status $status -Evidence $evidence -Notes $notes))
+    }
+
+    Write-Host ""
+  }
+} else {
+foreach ($itemId in $manualItemIds) {
   $item = @($session.items) | Where-Object { $_.id -eq $itemId } | Select-Object -First 1
   if (-not $item) {
     continue
@@ -132,19 +214,7 @@ $results = foreach ($itemId in $manualItemIds) {
 
   Write-Host "[$($item.priority)] $($item.id) - $($item.title)"
   Write-Host "Esperado: $($item.expected)"
-  $choice = (Read-Host "Resultado").Trim().ToLowerInvariant()
-  $status = switch ($choice) {
-    "p" { "passed" }
-    "pass" { "passed" }
-    "passou" { "passed" }
-    "f" { "failed" }
-    "falhou" { "failed" }
-    "b" { "blocked" }
-    "bloqueado" { "blocked" }
-    "s" { "skipped" }
-    "skip" { "skipped" }
-    default { "pending" }
-  }
+  $status = Convert-ChoiceToStatus (Read-Host "Resultado")
 
   $evidence = ""
   $notes = ""
@@ -153,14 +223,10 @@ $results = foreach ($itemId in $manualItemIds) {
     $notes = Read-Host "Notas opcionais"
   }
 
-  [pscustomobject]@{
-    id       = $item.id
-    status   = $status
-    evidence = $evidence
-    notes    = $notes
-  }
+  $results.Add((New-ManualEvidenceEntry -Item $item -Status $status -Evidence $evidence -Notes $notes))
 
   Write-Host ""
+}
 }
 
 $report = [pscustomobject]@{
@@ -169,7 +235,7 @@ $report = [pscustomobject]@{
   userName      = $env:USERNAME
   candidateName = $session.candidateName
   version       = $session.version
-  items         = @($results)
+  items         = @($results.ToArray())
 }
 
 $evidencePath = Join-Path $qaPath "manual-qa-evidence.json"
@@ -313,7 +379,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\VERIFY-QA-PACKAGE.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
 ~~~
 
-6. Depois dos testes visuais/fluxos, rode:
+6. Depois dos testes visuais/fluxos, rode. Use o modo rapido por grupos quando uma mesma evidencia cobrir navegacao, fluxo seguro e telas complementares:
 
 ~~~powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
@@ -407,7 +473,7 @@ Depois rode:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
 ~~~
 
-Depois confira as telas/fluxos do app instalado e gere a evidencia manual:
+Depois confira as telas/fluxos do app instalado e gere a evidencia manual. O coletor pode registrar por grupos para nao aprovar item por item quando uma mesma evidencia cobrir varias telas:
 
 ~~~powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1

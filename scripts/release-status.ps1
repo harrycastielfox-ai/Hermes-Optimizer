@@ -228,7 +228,7 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
 } elseif (-not $manualQaVerification) {
   "Rode ``npm run qa:manual:status``. Se ainda nao existir sessao manual, rode ``npm run qa:manual:new``."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0Pending -gt 0) {
-  "Rode ``npm run qa:manual:next`` para ver o proximo item pendente e atualize com ``npm run qa:manual:item``."
+  "Rode ``npm run qa:manual:bulk -- -Group all-non-protected -Status passed -Evidence `"EVIDENCIA REAL`" -ConfirmBulkPass`` quando ja validou o conjunto, ou ``npm run qa:manual:next`` para tratar item isolado."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0FailedOrBlocked -gt 0) {
   "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:portable`` e execute o ZIP em VM/maquina limpa; depois copie ``HermesQA`` de volta e consolide com ``npm run qa:manual:receive -- -EvidenceDropPath <pasta-HermesQA>``."
 } elseif ([string]$status.manualDecision -ne "GO") {

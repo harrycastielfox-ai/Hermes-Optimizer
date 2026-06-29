@@ -47,6 +47,7 @@ Data base: 2026-06-26
 - [x] `npm run release:candidate:verify`: valida integridade do pacote RC, hashes, manifesto e Authenticode antes de teste manual.
 - [x] `npm run qa:manual:new`: gera sessao preenchivel de QA manual para maquina limpa/VM.
 - [x] `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza item individual da sessao manual com evidencia/notas.
+- [x] `npm run qa:manual:bulk`: atualiza grupos de QA manual com uma evidencia real, mantendo instaladores e Authenticode protegidos por padrao.
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
@@ -137,6 +138,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
 - [x] Pacote portatil auditavel por `npm run qa:manual:doctor`, validando manifesto, ZIP, SHA256, comandos obrigatorios e status de release.
 - [x] Evidencia manual de VM importavel em lote por `npm run qa:manual:import`, usando `manual-qa-evidence.json` gerado pelo pacote portatil.
+- [x] Evidencia manual de VM coletavel por grupos no pacote portatil, reduzindo repeticao sem aprovar itens criticos automaticamente.
 - [x] Retorno completo da VM consolidado por `npm run qa:manual:receive`, rodando sync/import/status/release-status em uma unica rotina.
 - [x] `qa:manual:receive` aceita `-EvidenceDropPath` apontando para a pasta `HermesQA` copiada da VM, para a pasta extraida do pacote ou para uma pasta com `manual-qa-evidence.json`/`install-smoke-*`.
 - [x] Evidencias manuais automatizaveis sincronizadas por `npm run qa:manual:sync`, incluindo Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*` quando existirem.

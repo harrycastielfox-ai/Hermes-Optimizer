@@ -27,6 +27,7 @@ $capabilityPath = Join-Path $root "src-tauri\capabilities\default.json"
 $safeModeTsPath = Join-Path $root "src\lib\safe-mode.ts"
 $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
 $buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
+$manualQaBulkPath = Join-Path $root "scripts\update-manual-qa-bulk.ps1"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -38,6 +39,7 @@ $buildRs = Read-Text $buildRsPath
 $capability = Read-Text $capabilityPath | ConvertFrom-Json
 $safeModeTs = Read-Text $safeModeTsPath
 $safeModeRs = Read-Text $safeModeRsPath
+$manualQaBulk = Read-Text $manualQaBulkPath
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
 Assert-True ($LASTEXITCODE -eq 0) `
@@ -78,6 +80,13 @@ Assert-True ([bool]$scripts.'build:windows:test') "package.json precisa ter buil
 Assert-True ([bool]$scripts.'build:windows:real') "package.json precisa ter build:windows:real."
 Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa ter build:windows:real:signed."
 Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
+Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
+Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
+  "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
+Assert-True ($manualQaBulk -match 'install-nsis' -and $manualQaBulk -match 'install-msi' -and $manualQaBulk -match 'authenticode') `
+  "QA manual em lote precisa proteger instaladores e Authenticode por padrao."
+Assert-True ($manualQaBulk -match 'AllowProtected') `
+  "QA manual em lote precisa exigir AllowProtected para itens criticos."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(
@@ -123,3 +132,4 @@ Write-Host "- Build real/teste sincroniza frontend e backend."
 Write-Host "- Permissoes Tauri continuam minimas."
 Write-Host "- CSP contem as travas obrigatorias."
 Write-Host "- Scripts de build test/real/signed existem."
+Write-Host "- QA manual em lote existe com travas de evidencia e itens protegidos."
