@@ -143,7 +143,9 @@ export async function applyOptimizeNowCleanEngine(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<CleanApplyResult>("clean_engine_apply_optimize_now", { request });
+  return await invoke<CleanApplyResult>("clean_engine_apply_optimize_now", {
+    request: forceSafeDryRun(request),
+  });
 }
 
 export async function purgeExpiredCleanQuarantine(

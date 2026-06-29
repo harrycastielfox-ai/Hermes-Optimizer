@@ -63,6 +63,7 @@ try {
   Invoke-QaStep "UI shell" "npm.cmd" @("run", "verify:ui-shell")
   Invoke-QaStep "Optimization flow" "npm.cmd" @("run", "verify:optimization-flow")
   Invoke-QaStep "Safe mode flow" "npm.cmd" @("run", "verify:safe-mode-flow")
+  Invoke-QaStep "Build mode sync" "npm.cmd" @("run", "verify:build-mode")
   Invoke-QaStep "TypeScript" "npx.cmd" @("tsc", "--noEmit")
   Invoke-QaStep "Lint" "npm.cmd" @("run", "lint")
   Invoke-QaStep "Build web" "npm.cmd" @("run", "build")

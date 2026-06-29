@@ -9,7 +9,9 @@ const files = {
     join(root, "src", "components", "optimization", "SmartOptimizeModal.tsx"),
     "utf8",
   ),
+  advancedLib: readFileSync(join(root, "src", "lib", "advanced.ts"), "utf8"),
   optimizeAll: readFileSync(join(root, "src", "lib", "optimize-all.ts"), "utf8"),
+  quickPrepare: readFileSync(join(root, "src", "lib", "quick-prepare.ts"), "utf8"),
   executionReport: readFileSync(join(root, "src", "lib", "execution-report.ts"), "utf8"),
 };
 
@@ -66,11 +68,36 @@ const checks = [
       files.otimizarRoute.includes("Rede, serviços sob demanda, Gamer e Fate Trigger"),
   },
   {
+    name: "Botao 2 usa wrappers Optimize Now para Clean e Advanced",
+    ok:
+      files.optimizeAll.includes("applyOptimizeNowCleanEngine") &&
+      files.optimizeAll.includes("applyOptimizeNowAdvancedActions") &&
+      !files.optimizeAll.includes("applyCleanEngine") &&
+      !files.optimizeAll.includes("applyAdvancedActions({"),
+  },
+  {
     name: "Meta visual usa alvo central de 160 acoes",
     ok:
       files.executionReport.includes("HERMES_ACTION_TARGET = 160") &&
       files.otimizarRoute.includes("value: `${HERMES_ACTION_TARGET} ações`") &&
       files.smartModal.includes("${OPTIMIZE_AUDIT_ACTION_TARGET} ações auditáveis"),
+  },
+  {
+    name: "Relatorio interno respeita retorno skipped da Advanced Engine",
+    ok:
+      files.smartModal.includes("mergeAdvancedExecutionDetails") &&
+      files.smartModal.includes('if (status === "skipped") return "unavailable"') &&
+      files.smartModal.includes("advancedActionIdFromReportAction"),
+  },
+  {
+    name: "Resumo do motor avancado separa aplicado, validado, indisponivel e falha",
+    ok:
+      files.advancedLib.includes("formatAdvancedActionSummary") &&
+      files.advancedLib.includes("summarizeAdvancedActionResults") &&
+      files.optimizeAll.includes("formatAdvancedActionSummary") &&
+      files.quickPrepare.includes("formatAdvancedActionSummary") &&
+      files.smartModal.includes("formatAdvancedActionSummary") &&
+      files.advancedLib.includes("summary[action.status] += 1"),
   },
 ];
 

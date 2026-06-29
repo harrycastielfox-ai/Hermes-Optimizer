@@ -28,16 +28,17 @@ Data base: 2026-06-26
 
 - [x] `npm run qa:release` executado em 2026-06-26.
 - [x] Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test passaram.
-- [x] Testes Rust: 25 aprovados, 0 falhas.
+- [x] Testes Rust: 26 aprovados, 0 falhas.
 - [x] Catalogo de otimizacao: 160 acoes auditaveis, 160 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - [x] Instalador NSIS release encontrado.
 - [x] Instalador MSI release encontrado.
-- [x] Build Windows modo teste: `npm run build:windows:test` passou em 2026-06-26.
+- [x] Build Windows modo teste: `npm run build:windows:test` passou em 2026-06-29 e gerou MSI/NSIS com safe mode ativo.
 - [x] Smoke local via Vite em 2026-06-26: Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes carregaram sem erro de console.
 - [x] Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
 - [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
 - [x] `npm run verify:safe-mode-flow`: valida Dashboard/Analise Agora como somente leitura e Botao 1/2 sem alteracao real em modo teste.
+- [x] `npm run verify:build-mode`: valida que `build:windows:test`, `build:windows:real` e `build:windows:real:signed` sincronizam `VITE_HERMES_SAFE_TEST_MODE` e `HERMES_SAFE_TEST_MODE`.
 - [x] Botao 2 recebeu lote de boot/servicos opcionais: `bcdedit /timeout 5` e servicos allowlistados sob demanda, sem limitar CPU/RAM e sem desativar servicos Microsoft em massa.
 - [x] `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
 - [x] `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.

@@ -1,5 +1,6 @@
 import {
   applyAdvancedActions,
+  formatAdvancedActionSummary,
   refreshAdvancedCatalog,
   type AdvancedApplyResult,
   type AdvancedCatalog,
@@ -910,7 +911,9 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
   ]);
 
   const appliedPerformance = performanceResult.value?.appliedActions.length ?? 0;
-  const appliedAdvanced = advancedResult.value?.appliedActions.length ?? 0;
+  const advancedSummary = advancedResult.value
+    ? formatAdvancedActionSummary(advancedResult.value)
+    : "Advanced Engine aguardando validação";
 
   return {
     reports: {
@@ -921,7 +924,7 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
     },
     outputs: [
       `Economia OFF, Alto desempenho, Game Mode ON, Game DVR OFF, DNS ${dnsProvider.label}, visual gamer, privacidade e CMD/DISM`,
-      `${appliedPerformance + appliedAdvanced} ajuste(s) Windows validados`,
+      `${appliedPerformance} ajuste(s) de performance; ${advancedSummary} no motor avançado`,
       HERMES_SAFE_TEST_MODE
         ? "Modo teste: nada foi aplicado de verdade"
         : "Ajustes reais executados",

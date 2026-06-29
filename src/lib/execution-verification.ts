@@ -57,6 +57,12 @@ const PERFORMANCE_RULES: Array<{ matches: string[]; verify: VerificationRule; ex
       expected: "Atraso de inicialização desativado",
     },
     {
+      matches: ["Boot.Timeout", "advanced-set-boot-timeout-fast"],
+      verify: ({ advanced }) => verifyBootTimeout(advanced),
+      expected: "Menu de boot ajustado para 5 segundos",
+    },
+    ...serviceDemandVerificationRules(),
+    {
       matches: [
         "MMCSS.SystemResponsiveness",
         "MMCSS.GpuPriority",
@@ -166,6 +172,31 @@ function advancedValueEquals(catalog: AdvancedCatalog | null, actionId: string, 
   return value === undefined ? undefined : value.trim() === expected;
 }
 
+function verifyBootTimeout(catalog: AdvancedCatalog | null) {
+  const value = advancedCurrentValue(catalog, "set-boot-timeout-fast");
+  if (value === undefined) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (isUnavailableAdvancedValue(normalized)) return undefined;
+  return normalized.startsWith("5 ");
+}
+
+function verifyServiceDemandStart(catalog: AdvancedCatalog | null, actionId: string) {
+  const value = advancedCurrentValue(catalog, actionId);
+  if (value === undefined) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (isUnavailableAdvancedValue(normalized)) return undefined;
+  return (
+    normalized === "manual" ||
+    normalized === "demand" ||
+    normalized === "demand_start" ||
+    normalized.includes("sob demanda")
+  );
+}
+
+function isUnavailableAdvancedValue(normalizedValue: string) {
+  return normalizedValue.includes("nao detectado") || normalizedValue.includes("não detectado");
+}
+
 function verifyMmcssPack(catalog: AdvancedCatalog | null) {
   const value = advancedCurrentValue(catalog, "set-mmcss-gamer-pack");
   if (value === undefined) return undefined;
@@ -211,5 +242,27 @@ function dnsVerificationRules() {
       if (value === undefined) return undefined;
       return servers.every((server) => value.includes(server));
     },
+  }));
+}
+
+function serviceDemandVerificationRules() {
+  const services = [
+    ["DiagTrack", "set-diagtrack-service-manual", "Telemetria sob demanda"],
+    ["MapsBroker", "set-mapsbroker-service-manual", "Mapas sob demanda"],
+    ["WerSvc", "set-wersvc-service-manual", "Relatorio de erros sob demanda"],
+    ["WMPNetworkSvc", "set-wmpnetworksvc-service-manual", "Compartilhamento de midia sob demanda"],
+    ["Fax", "set-fax-service-manual", "Fax sob demanda"],
+    ["RetailDemo", "set-retaildemo-service-manual", "Demo de varejo sob demanda"],
+    ["PhoneSvc", "set-phonesvc-service-manual", "Vincular telefone sob demanda"],
+    ["WalletService", "set-walletservice-manual", "Carteira do Windows sob demanda"],
+    ["XblAuthManager", "set-xbl-auth-manager-manual", "Xbox Live Auth sob demanda"],
+    ["XblGameSave", "set-xbl-game-save-manual", "Xbox Game Save sob demanda"],
+    ["XboxNetApiSvc", "set-xbox-net-api-svc-manual", "Xbox Live Networking sob demanda"],
+  ] as const;
+
+  return services.map(([serviceName, actionId, expected]) => ({
+    matches: [`Service.${serviceName}.Start`, `advanced-${actionId}`],
+    expected,
+    verify: ({ advanced }: VerificationContext) => verifyServiceDemandStart(advanced, actionId),
   }));
 }

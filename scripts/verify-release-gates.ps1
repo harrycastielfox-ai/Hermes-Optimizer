@@ -26,6 +26,7 @@ $buildRsPath = Join-Path $root "src-tauri\build.rs"
 $capabilityPath = Join-Path $root "src-tauri\capabilities\default.json"
 $safeModeTsPath = Join-Path $root "src\lib\safe-mode.ts"
 $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
+$buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -37,6 +38,10 @@ $buildRs = Read-Text $buildRsPath
 $capability = Read-Text $capabilityPath | ConvertFrom-Json
 $safeModeTs = Read-Text $safeModeTsPath
 $safeModeRs = Read-Text $safeModeRsPath
+
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
+Assert-True ($LASTEXITCODE -eq 0) `
+  "Build mode sync precisa garantir frontend/backend juntos em test/real."
 
 Assert-True ($manifest -match 'requestedExecutionLevel\s+level="requireAdministrator"') `
   "Manifest Windows precisa exigir requireAdministrator."
@@ -72,6 +77,7 @@ $scripts = $package.scripts
 Assert-True ([bool]$scripts.'build:windows:test') "package.json precisa ter build:windows:test."
 Assert-True ([bool]$scripts.'build:windows:real') "package.json precisa ter build:windows:real."
 Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa ter build:windows:real:signed."
+Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(
@@ -113,6 +119,7 @@ if ($failures.Count -gt 0) {
 Write-Host "Hermes release gates: OK" -ForegroundColor Green
 Write-Host "- Manifest Windows exige administrador."
 Write-Host "- Safe mode e controlado por variaveis de build e padrao teste."
+Write-Host "- Build real/teste sincroniza frontend e backend."
 Write-Host "- Permissoes Tauri continuam minimas."
 Write-Host "- CSP contem as travas obrigatorias."
 Write-Host "- Scripts de build test/real/signed existem."

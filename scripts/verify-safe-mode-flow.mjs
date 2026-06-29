@@ -16,6 +16,8 @@ const files = {
   globalAnalysis: read("src", "components", "analysis", "GlobalAnalysisModal.tsx"),
   diagnostic: read("src", "lib", "diagnostic.ts"),
   verification: read("src", "lib", "execution-verification.ts"),
+  advanced: read("src", "lib", "advanced.ts"),
+  clean: read("src", "lib", "clean.ts"),
 };
 
 const checks = [
@@ -72,6 +74,14 @@ const checks = [
       files.optimizeAll.includes("return !HERMES_SAFE_TEST_MODE;") &&
       files.smartModal.includes('value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}') &&
       files.smartModal.includes("safeMode: HERMES_SAFE_TEST_MODE"),
+  },
+  {
+    name: "Wrappers Optimize Now ainda respeitam modo seguro no frontend",
+    ok:
+      files.advanced.includes('"advanced_engine_apply_optimize_now"') &&
+      files.advanced.includes("request: forceSafeDryRun(request)") &&
+      files.clean.includes('"clean_engine_apply_optimize_now"') &&
+      files.clean.includes("request: forceSafeDryRun(request)"),
   },
   {
     name: "Relatorio pos-execucao nao tenta confirmar mudanca real em modo seguro",

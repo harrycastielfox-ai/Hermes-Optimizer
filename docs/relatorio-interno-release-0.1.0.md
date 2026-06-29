@@ -32,20 +32,21 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - UI principal foi simplificada para jogador: status, sucesso e proximo passo, sem relatorio tecnico na primeira camada.
 - Manifesto do executavel final foi extraido e confirmou `requireAdministrator`.
 - Release gates automaticos validam manifesto, safe mode, permissoes Tauri, CSP e scripts de build.
+- Build real/teste agora possui gate dedicado para garantir frontend e backend no mesmo modo antes de gerar instalador.
 
 ## Evidencias Automatizadas
 
 - `npm run lint`: passou.
 - `npm run build`: passou.
 - `npm run build:tauri`: passou.
-- `cargo test --lib`: passou com 24 testes.
+- `cargo test --lib`: passou com 26 testes.
 - `cargo test restores_clean_quarantine_file_backup_in_real_mode`: passou e moveu um arquivo real da quarentena temporaria para destino permitido.
 - `npx tauri build --debug`: passou e gerou MSI/NSIS debug.
 - Script `npm run build:tauri:signed`: possui guarda obrigatoria para `HERMES_CERT_THUMBPRINT`; sem certificado, falha antes de gerar build.
 - `Get-AuthenticodeSignature` nos instaladores debug: `NotSigned`, esperado enquanto nao houver certificado real.
 - `npm run qa:release`: passou em 2026-06-26.
 - Release gates, TypeScript, lint, build web, build Tauri frontend, Cargo check e Cargo test: passaram.
-- `cargo test --lib`: 25 testes aprovados, 0 falhas.
+- `cargo test --lib`: 26 testes aprovados, 0 falhas.
 - Catalogo de otimizacao em 2026-06-28: 160 acoes auditaveis, 160 implementadas/motoradas e 0 planejadas ou indisponiveis.
 - Botao 2 recebeu lote real adicional no Advanced Engine: reducao de apps em segundo plano e notificacoes gamer, ambos com rollback/allowlist.
 - Clean Engine recebeu lote real adicional: Store cache, NVIDIA shader cache, AMD shader cache, Epic launcher cache, Battle.net cache, Discord cache e OBS cache com quarentena reversivel.
@@ -54,11 +55,11 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - Advanced Engine recebeu lote real adicional de boot/servicos: `bcdedit /timeout 5` e servicos opcionais allowlistados sob demanda (`WerSvc`, `WMPNetworkSvc`, `Fax`, `RetailDemo`, `PhoneSvc`, `WalletService`, `XblAuthManager`, `XblGameSave`, `XboxNetApiSvc`), sem limitar CPU/RAM e sem desativar servicos Microsoft em massa.
 - Gamer Engine recebeu lote real adicional: revisao de overlays Steam/Xbox/GPU, excecoes OBS/BlueStacks/WSL e prioridade transiente do jogo ativo.
 - Profiles Engine recebeu lote real adicional: validacao de conflitos, persistencia local do perfil recomendado e resumo interno do perfil aplicado.
-- Build Windows em modo teste (`npm run build:windows:test`) passou em 2026-06-26 e gerou MSI/NSIS release com safe mode ativo.
+- Build Windows em modo teste (`npm run build:windows:test`) passou em 2026-06-29 e gerou MSI/NSIS release com safe mode ativo.
 - Instalador MSI release encontrado em `src-tauri/target/release/bundle/msi/Hermes Optimizer_0.1.0_x64_en-US.msi`.
-- SHA256 MSI: `E7F45E6EAA6D3841310411DC245DED9EFE7027C2469CE1AA48A1ABC25956739D`.
+- SHA256 MSI: `2D52FB4FFC50C3B6746B5F4BB76AA1099AB45A711600377BAF202AB90AFCCD4D`.
 - Instalador NSIS release encontrado em `src-tauri/target/release/bundle/nsis/Hermes Optimizer_0.1.0_x64-setup.exe`.
-- SHA256 NSIS: `2FD08D358EC43783612D67A7664BCCD376072889F7B5826E797CF5A4A36CED77`.
+- SHA256 NSIS: `9038B82FC2FA2E59EBD0ACB3C15336F29939016A4D159F67C128738F748DE988`.
 - Assinatura Authenticode dos instaladores release MSI/NSIS: `NotSigned`.
 - Evidencia estruturada salva em `.release/qa-latest.json`, agora com MSI/NSIS, tamanho, SHA256 e status Authenticode por instalador.
 - Smoke local via Vite em 2026-06-26: Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes carregaram sem erro de console.
@@ -66,6 +67,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
 - `npm run verify:optimization-flow`: passou e valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
 - `npm run verify:safe-mode-flow`: passou e valida Dashboard/Analise Agora como somente leitura, Botao 1/2 em dry-run e verificacao pos-execucao sem exigir mudanca real em modo teste.
+- `npm run verify:build-mode`: passou e valida `build:windows:test`, `build:windows:real`, `build:windows:real:signed`, `VITE_HERMES_SAFE_TEST_MODE`, `HERMES_SAFE_TEST_MODE`, `build.rs` e `tauri.conf.json`.
 - `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
 - `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - Pipeline assinado endurecido em 2026-06-26: `build:tauri:signed` delega para o build controlado, valida certificado/chave privada antes do build e valida Authenticode/mesmo thumbprint em MSI/NSIS apos o build.

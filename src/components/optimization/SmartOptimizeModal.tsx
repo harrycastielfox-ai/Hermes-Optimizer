@@ -35,6 +35,7 @@ import {
   type ExecutionReportAction,
 } from "@/lib/execution-report";
 import { verifyExecutionActions } from "@/lib/execution-verification";
+import { formatAdvancedActionSummary, type AdvancedActionStatus } from "@/lib/advanced";
 import {
   type GamerDependencyDownloadResult,
   type GamerDependencyInstallActionResult,
@@ -245,8 +246,13 @@ export function SmartOptimizeModal({
     }
 
     setCurrentStatus("Confirmando ajustes no Windows.");
-    const verifiedActions = await verifyExecutionActions(
+    const advancedDetailedActions = mergeAdvancedExecutionDetails(
       reportActions.current,
+      nextReports,
+      HERMES_SAFE_TEST_MODE,
+    );
+    const verifiedActions = await verifyExecutionActions(
+      advancedDetailedActions,
       HERMES_SAFE_TEST_MODE,
     );
     const detailedActions = mergeGamerDependencyExecutionDetails(
@@ -719,7 +725,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "gamer-focus",
       title: "Fate Trigger / UE5",
       detail: reports.gamerFocusAdvancedResult
-        ? `${reports.gamerFocusAdvancedResult.appliedActions.length} ajuste(s) MMCSS/CPU ${appliedVerb(reports.gamerFocusAdvancedResult.dryRun)}.`
+        ? `${formatAdvancedActionSummary(reports.gamerFocusAdvancedResult)} no pacote MMCSS/CPU.`
         : "Pacote MMCSS Gamer + prioridade Fate Trigger mapeado.",
       status: reports.gamerFocusAdvancedResult ? "ready" : "pending",
     });
@@ -739,7 +745,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
       id: "advanced",
       title: "Avançado guiado",
       detail: reports.advancedResult
-        ? `${reports.advancedResult.appliedActions.length} comando(s) ${appliedVerb(reports.advancedResult.dryRun)}.`
+        ? `${formatAdvancedActionSummary(reports.advancedResult)} pela Advanced Engine.`
         : `${reports.advanced.actions.length} comando(s) mapeados.`,
       status: reports.advancedResult ? "ready" : "pending",
     });
@@ -1218,6 +1224,92 @@ function planStatusLabel(status: PlanActionStatus) {
   if (status === "ok") return "Ok";
   if (status === "pending") return "Pendente";
   return "Modulo";
+}
+
+function mergeAdvancedExecutionDetails(
+  actions: ExecutionReportAction[],
+  reports: OptimizeAllReports,
+  safeMode: boolean,
+) {
+  const advancedResult = reports.advancedResult;
+  if (!advancedResult) {
+    return actions;
+  }
+
+  const advancedActions = new Map(
+    advancedResult.appliedActions.map((action) => [action.id, action] as const),
+  );
+
+  return actions.map((action) => {
+    const advancedActionId = advancedActionIdFromReportAction(action);
+    const advancedAction = advancedActionId ? advancedActions.get(advancedActionId) : undefined;
+    if (!advancedAction) {
+      return action;
+    }
+
+    return {
+      ...action,
+      status: advancedReportStatus(advancedAction.status),
+      outputs: advancedReportOutputs(advancedAction, safeMode),
+      implemented: true,
+    };
+  });
+}
+
+function advancedActionIdFromReportAction(action: ExecutionReportAction) {
+  const command = action.commandPreview ?? "";
+  const commandMatch = command.match(/^advanced\.([a-z0-9-]+)$/i);
+  if (commandMatch) {
+    return commandMatch[1];
+  }
+
+  const technicalNameMap: Record<string, string> = {
+    "Power.Hibernate": "disable-hibernation",
+    "Explorer.StartupDelay": "disable-startup-delay",
+    "Boot.Timeout": "set-boot-timeout-fast",
+    "Service.DiagTrack.Start": "set-diagtrack-service-manual",
+    "Service.MapsBroker.Start": "set-mapsbroker-service-manual",
+    "Service.WerSvc.Start": "set-wersvc-service-manual",
+    "Service.WMPNetworkSvc.Start": "set-wmpnetworksvc-service-manual",
+    "Service.Fax.Start": "set-fax-service-manual",
+    "Service.RetailDemo.Start": "set-retaildemo-service-manual",
+    "Service.PhoneSvc.Start": "set-phonesvc-service-manual",
+    "Service.WalletService.Start": "set-walletservice-manual",
+    "Service.XblAuthManager.Start": "set-xbl-auth-manager-manual",
+    "Service.XblGameSave.Start": "set-xbl-game-save-manual",
+    "Service.XboxNetApiSvc.Start": "set-xbox-net-api-svc-manual",
+  };
+
+  return action.technicalName ? technicalNameMap[action.technicalName] : undefined;
+}
+
+function advancedReportStatus(status: AdvancedActionStatus): ExecutionReportAction["status"] {
+  if (status === "dryRun") return "simulated";
+  if (status === "applied") return "applied";
+  if (status === "skipped") return "unavailable";
+  return "failed";
+}
+
+function advancedReportOutputs(
+  action: { title: string; status: AdvancedActionStatus; message: string },
+  safeMode: boolean,
+) {
+  const statusLabel =
+    action.status === "dryRun"
+      ? "Simulado"
+      : action.status === "applied"
+        ? "Aplicado"
+        : action.status === "skipped"
+          ? "Indisponível neste Windows"
+          : "Falha";
+
+  return [
+    `${statusLabel}: ${action.title}`,
+    action.message,
+    safeMode
+      ? "Modo teste: nenhuma alteração real foi aplicada."
+      : "Modo real: retorno confirmado pela Advanced Engine.",
+  ];
 }
 
 function mergeGamerDependencyExecutionDetails(

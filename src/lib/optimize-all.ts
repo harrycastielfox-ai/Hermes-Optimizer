@@ -1,6 +1,6 @@
 import { refreshAdvisorAiReport, type AdvisorAiReport } from "@/lib/advisor-ai";
 import {
-  applyCleanEngine,
+  applyOptimizeNowCleanEngine,
   refreshCleanScanReport,
   type CleanApplyResult,
   type CleanScanReport,
@@ -30,8 +30,9 @@ import {
   type StartupReport,
 } from "@/lib/startup";
 import {
-  applyAdvancedActions,
+  applyOptimizeNowAdvancedActions,
   applyOptimizeNowGraphicsPreference,
+  formatAdvancedActionSummary,
   refreshAdvancedCatalog,
   type AdvancedApplyResult,
   type AdvancedCatalog,
@@ -249,7 +250,7 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
 
   const result = await tryRun(() =>
     selectedIds.length
-      ? applyCleanEngine({
+      ? applyOptimizeNowCleanEngine({
           confirmed: shouldConfirmReal(),
           dryRun: shouldDryRun(),
           itemIds: selectedIds,
@@ -344,7 +345,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
   const actionIds = HERMES_COMPONENT_CMD_ACTION_IDS.filter((id) => availableIds.has(id));
   const result = await tryRun(() =>
     actionIds.length
-      ? applyAdvancedActions({
+      ? applyOptimizeNowAdvancedActions({
           confirmed: shouldConfirmReal(),
           dryRun: shouldDryRun(),
           actionIds,
@@ -375,7 +376,7 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
       `${gamerDependencies.installPlan.approvedPackages}/${gamerDependencies.installPlan.totalPackages} dependência(s) com manifesto oficial aprovado`,
       `${gamerDependencies.excludedToolchain.length} item(ns) de toolchain pesada ficam fora do pacote gamer`,
       result.value
-        ? `${result.value.appliedActions.length} comando(s) ${appliedVerb(result.value.dryRun)}`
+        ? `${formatAdvancedActionSummary(result.value)} nos comandos CMD/DISM`
         : (result.message ?? "Componentes ainda não disponíveis neste PC"),
     ],
   };
@@ -493,7 +494,7 @@ async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
   const actionIds = HERMES_GAMER_FOCUS_ACTION_IDS.filter((id) => availableIds.has(id));
   const advancedResult = await tryRun(() =>
     actionIds.length
-      ? applyAdvancedActions({
+      ? applyOptimizeNowAdvancedActions({
           confirmed: shouldConfirmReal(),
           dryRun: shouldDryRun(),
           actionIds,
@@ -515,7 +516,7 @@ async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
       ? `Pacote Fate/UE5: ${actionIds.length} ajuste(s) MMCSS/CPU mapeados`
       : "Pacote Fate/UE5 indisponível neste catálogo",
     advancedResult.value
-      ? `${advancedResult.value.appliedActions.length} ajuste(s) de foco gamer ${appliedVerb(advancedResult.value.dryRun)}`
+      ? `${formatAdvancedActionSummary(advancedResult.value)} no foco gamer`
       : (advancedResult.message ?? "Pacote de foco aguardando motor avançado"),
   ];
 
@@ -583,7 +584,7 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
   const actionIds = HERMES_OPTIMIZE_ADVANCED_ACTION_IDS.filter((id) => availableIds.has(id));
   const result = await tryRun(() =>
     actionIds.length
-      ? applyAdvancedActions({
+      ? applyOptimizeNowAdvancedActions({
           confirmed: shouldConfirmReal(),
           dryRun: shouldDryRun(),
           actionIds,
@@ -601,7 +602,7 @@ async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
       `${advanced.actions.length} ação(ões) avançadas mapeadas`,
       `${advanced.blockedActions.length} ação(ões) bloqueadas por critério`,
       result.value
-        ? `${result.value.appliedActions.length} comando(s) ${appliedVerb(result.value.dryRun)} pela Advanced Engine`
+        ? `${formatAdvancedActionSummary(result.value)} pela Advanced Engine`
         : (result.message ?? "Sem comando avançado liberado para validação"),
     ],
   };

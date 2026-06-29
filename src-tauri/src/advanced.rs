@@ -1553,6 +1553,32 @@ fn set_service_manual_plan(
     service_name: &str,
     current_mode: Option<&str>,
 ) -> AdvancedPlan {
+    let service_detected = current_mode.is_some();
+    let planned_change = if service_detected {
+        "Definir inicializacao como Sob demanda"
+    } else {
+        "Servico nao detectado neste Windows; sem comando"
+    };
+    let command_preview = if service_detected {
+        format!("cmd: sc.exe config {service_name} start= demand")
+    } else {
+        format!("indisponivel: {service_name} nao detectado")
+    };
+    let operations = if service_detected {
+        vec![AdvancedOperation::Cmd {
+            program: "sc.exe".to_string(),
+            args: vec![
+                "config".to_string(),
+                service_name.to_string(),
+                "start=".to_string(),
+                "demand".to_string(),
+            ],
+            transient: false,
+        }]
+    } else {
+        Vec::new()
+    };
+
     AdvancedPlan {
         action: action(
             id,
@@ -1566,19 +1592,10 @@ fn set_service_manual_plan(
             true,
             false,
             current_mode.unwrap_or("Nao detectado"),
-            "Definir inicializacao como Sob demanda",
-            &format!("cmd: sc.exe config {service_name} start= demand"),
+            planned_change,
+            &command_preview,
         ),
-        operations: vec![AdvancedOperation::Cmd {
-            program: "sc.exe".to_string(),
-            args: vec![
-                "config".to_string(),
-                service_name.to_string(),
-                "start=".to_string(),
-                "demand".to_string(),
-            ],
-            transient: false,
-        }],
+        operations,
     }
 }
 
@@ -3365,6 +3382,15 @@ fn apply_plans(
 }
 
 fn apply_plan(plan: &AdvancedPlan) -> AdvancedActionResult {
+    if plan.operations.is_empty() {
+        return AdvancedActionResult {
+            id: plan.action.id.clone(),
+            title: plan.action.title.clone(),
+            status: AdvancedActionStatus::Skipped,
+            message: "Alvo nao detectado neste Windows; nenhuma alteracao necessaria.".to_string(),
+        };
+    }
+
     for operation in &plan.operations {
         if let Err(error) = apply_operation(operation) {
             return AdvancedActionResult {
@@ -4447,7 +4473,7 @@ mod tests {
     }
 
     #[test]
-    fn advanced_allowlist_accepts_only_optional_services_as_manual() {
+    fn advanced_allowlist_accepts_only_optional_services_as_demand_start() {
         let wersvc_manual = vec![
             "config".to_string(),
             "WerSvc".to_string(),
@@ -4484,5 +4510,20 @@ mod tests {
         assert!(!is_allowed_native_command("sc.exe", &defender_disabled));
         assert!(!is_allowed_native_command("sc.exe", &spooler_disabled));
         assert!(!is_allowed_native_command("sc.exe", &random_service_manual));
+    }
+
+    #[test]
+    fn advanced_optional_service_plan_skips_when_service_is_absent() {
+        let plan = set_service_manual_plan(
+            "set-fax-service-manual",
+            "Fax sob demanda",
+            "Coloca o servico Fax sob demanda quando existir.",
+            "Fax",
+            None,
+        );
+
+        assert!(plan.operations.is_empty());
+        let result = apply_plan(&plan);
+        assert!(matches!(result.status, AdvancedActionStatus::Skipped));
     }
 }

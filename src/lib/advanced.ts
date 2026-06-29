@@ -65,6 +65,60 @@ export type AdvancedApplyResult = {
   message: string;
 };
 
+export type AdvancedActionSummary = Record<AdvancedActionStatus, number> & {
+  total: number;
+};
+
+export function summarizeAdvancedActionResults(
+  result?: AdvancedApplyResult | null,
+): AdvancedActionSummary {
+  const summary: AdvancedActionSummary = {
+    total: 0,
+    dryRun: 0,
+    applied: 0,
+    skipped: 0,
+    failed: 0,
+  };
+
+  for (const action of result?.appliedActions ?? []) {
+    summary.total += 1;
+    summary[action.status] += 1;
+  }
+
+  return summary;
+}
+
+export function formatAdvancedActionSummary(result?: AdvancedApplyResult | null): string {
+  if (!result) {
+    return "Advanced Engine indisponível";
+  }
+
+  const summary = summarizeAdvancedActionResults(result);
+  if (summary.total === 0) {
+    return result.dryRun ? "Nenhum comando validado" : "Nenhum comando aplicado";
+  }
+
+  const parts: string[] = [];
+  if (summary.dryRun > 0) {
+    parts.push(countLabel(summary.dryRun, "validado", "validados"));
+  }
+  if (summary.applied > 0) {
+    parts.push(countLabel(summary.applied, "aplicado", "aplicados"));
+  }
+  if (summary.skipped > 0) {
+    parts.push(countLabel(summary.skipped, "indisponível", "indisponíveis"));
+  }
+  if (summary.failed > 0) {
+    parts.push(countLabel(summary.failed, "falha", "falhas"));
+  }
+
+  return parts.join(", ");
+}
+
+function countLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export const fallbackAdvancedCatalog: AdvancedCatalog = {
   generatedAt: "0",
   engineVersion: "advanced-engine-fallback-v1",
@@ -122,7 +176,9 @@ export async function applyOptimizeNowAdvancedActions(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  return await invoke<AdvancedApplyResult>("advanced_engine_apply_optimize_now", { request });
+  return await invoke<AdvancedApplyResult>("advanced_engine_apply_optimize_now", {
+    request: forceSafeDryRun(request),
+  });
 }
 
 export async function applyOptimizeNowGraphicsPreference(
