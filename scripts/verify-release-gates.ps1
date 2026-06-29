@@ -28,6 +28,9 @@ $safeModeTsPath = Join-Path $root "src\lib\safe-mode.ts"
 $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
 $buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
 $manualQaBulkPath = Join-Path $root "scripts\update-manual-qa-bulk.ps1"
+$manualQaPlanPath = Join-Path $root "scripts\create-manual-qa-action-plan.ps1"
+$manualQaDropPath = Join-Path $root "scripts\create-manual-qa-test-drop.ps1"
+$signingHandoffPath = Join-Path $root "scripts\create-signing-handoff.ps1"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -40,6 +43,9 @@ $capability = Read-Text $capabilityPath | ConvertFrom-Json
 $safeModeTs = Read-Text $safeModeTsPath
 $safeModeRs = Read-Text $safeModeRsPath
 $manualQaBulk = Read-Text $manualQaBulkPath
+$manualQaPlan = Read-Text $manualQaPlanPath
+$manualQaDrop = Read-Text $manualQaDropPath
+$signingHandoff = Read-Text $signingHandoffPath
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
 Assert-True ($LASTEXITCODE -eq 0) `
@@ -86,12 +92,21 @@ Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa t
 Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
 Assert-True ([bool]$scripts.'verify:feature-preservation') "package.json precisa ter verify:feature-preservation."
 Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
+Assert-True ([bool]$scripts.'qa:manual:plan') "package.json precisa ter qa:manual:plan."
+Assert-True ([bool]$scripts.'qa:manual:drop') "package.json precisa ter qa:manual:drop."
+Assert-True ([bool]$scripts.'release:signing:handoff') "package.json precisa ter release:signing:handoff."
 Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
   "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
 Assert-True ($manualQaBulk -match 'install-nsis' -and $manualQaBulk -match 'install-msi' -and $manualQaBulk -match 'authenticode') `
   "QA manual em lote precisa proteger instaladores e Authenticode por padrao."
 Assert-True ($manualQaBulk -match 'AllowProtected') `
   "QA manual em lote precisa exigir AllowProtected para itens criticos."
+Assert-True ($manualQaPlan -match 'qa:manual:receive' -and $manualQaPlan -match 'all-non-protected') `
+  "Plano de QA manual precisa orientar receive da VM e aprovacao em lote nao protegida."
+Assert-True ($manualQaDrop -match 'RODAR-QA-HERMES-NA-VM.ps1' -and $manualQaDrop -match 'HERMES-MANUAL-QA.wsb') `
+  "Drop de QA manual precisa gerar runner de VM e arquivo Windows Sandbox."
+Assert-True ($signingHandoff -match 'Code Signing' -and $signingHandoff -match 'HERMES_CERT_THUMBPRINT') `
+  "Handoff de assinatura precisa explicar certificado Code Signing e HERMES_CERT_THUMBPRINT."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(
@@ -138,4 +153,7 @@ Write-Host "- Permissoes Tauri continuam minimas."
 Write-Host "- CSP contem as travas obrigatorias."
 Write-Host "- Scripts de build test/real/signed existem."
 Write-Host "- QA manual em lote existe com travas de evidencia e itens protegidos."
+Write-Host "- Plano de acao do QA manual existe para VM, lote e assinatura."
+Write-Host "- Drop de QA manual existe para VM/maquina limpa."
 Write-Host "- Preservacao de rotas, motores e documentos importantes esta protegida."
+Write-Host "- Handoff de assinatura existe para destravar Authenticode."

@@ -228,7 +228,7 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
 } elseif (-not $manualQaVerification) {
   "Rode ``npm run qa:manual:status``. Se ainda nao existir sessao manual, rode ``npm run qa:manual:new``."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0Pending -gt 0) {
-  "Rode ``npm run qa:manual:bulk -- -Group all-non-protected -Status passed -Evidence `"EVIDENCIA REAL`" -ConfirmBulkPass`` quando ja validou o conjunto, ou ``npm run qa:manual:next`` para tratar item isolado."
+  "Rode ``npm run qa:manual:plan`` para seguir o roteiro compacto de VM/lote, ou ``npm run qa:manual:next`` para tratar item isolado."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0FailedOrBlocked -gt 0) {
   "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:portable`` e execute o ZIP em VM/maquina limpa; depois copie ``HermesQA`` de volta e consolide com ``npm run qa:manual:receive -- -EvidenceDropPath <pasta-HermesQA>``."
 } elseif ([string]$status.manualDecision -ne "GO") {
@@ -238,7 +238,7 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
 } elseif ($status.unsignedInstallerCount -gt 0 -and -not $signingCertificateCandidates) {
   "Rode ``npm run release:signing:certs`` para verificar certificados locais."
 } elseif ($status.unsignedInstallerCount -gt 0 -and -not $status.signingCertificateReadyToConfigure) {
-  "Instale/importe um certificado Code Signing com chave privada, rode ``npm run release:signing:certs`` e depois ``npm run release:signing:preflight``."
+  "Rode ``npm run release:signing:handoff`` e instale/importe um certificado Code Signing com chave privada antes de ``npm run build:windows:real:signed``."
 } elseif ($status.unsignedInstallerCount -gt 0 -and -not $status.signingReadyToSign) {
   "Resolva os bloqueios em ``.release/signing-preflight.md`` e rode ``npm run build:windows:real:signed``."
 } elseif ($status.unsignedInstallerCount -gt 0) {

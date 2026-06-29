@@ -48,9 +48,11 @@ Data base: 2026-06-26
 - [x] `npm run qa:manual:new`: gera sessao preenchivel de QA manual para maquina limpa/VM.
 - [x] `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza item individual da sessao manual com evidencia/notas.
 - [x] `npm run qa:manual:bulk`: atualiza grupos de QA manual com uma evidencia real, mantendo instaladores e Authenticode protegidos por padrao.
+- [x] `npm run qa:manual:plan`: gera roteiro compacto de VM, consolidacao, lote e assinatura para a sessao manual atual.
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
 - [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
 - [x] `npm run verify:feature-preservation`: impede que rotas, motores, componentes e documentos importantes sejam removidos em refactors grandes.
+- [x] `npm run release:signing:handoff`: gera o guia unico para destravar certificado Code Signing/AuthentiCode.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
 - [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, pacote QA portatil, preflight de assinatura e bloqueios atuais.
 - [x] `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, criando ponteiros `latest-beta-*`.
@@ -135,6 +137,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
 - [x] Smoke de instalacao NSIS/MSI para Sandbox geravel por `npm run qa:manual:install-smoke`.
 - [x] Pacote portatil de QA para VM/maquina limpa geravel por `npm run qa:manual:portable`.
+- [x] Drop completo de QA manual para VM/maquina limpa geravel por `npm run qa:manual:drop`, com runner, `.wsb`, pacote extraido, guia e comando de retorno.
 - [x] Pacote portatil gera manifesto e `.sha256` do ZIP para conferir integridade antes de copiar/extrair.
 - [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
 - [x] Pacote portatil auditavel por `npm run qa:manual:doctor`, validando manifesto, ZIP, SHA256, comandos obrigatorios e status de release.

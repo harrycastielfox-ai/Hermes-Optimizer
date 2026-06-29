@@ -80,17 +80,20 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:sandbox`: gera `.wsb` e guia de Windows Sandbox para testar o release candidate em ambiente descartavel.
 - `npm run qa:manual:install-smoke`: gera `run-install-smoke.ps1` para rodar dentro do Windows Sandbox, validar hash/tamanho/AuthentiCode, testar instalacao silenciosa NSIS/MSI e confirmar que o Hermes instalado abre processo/janela detectavel, com evidencias em JSON/Markdown.
 - `npm run qa:manual:portable`: gera ZIP autocontido para VM/maquina limpa com RC, instaladores, manifesto/hash do ZIP, verificador de integridade, smoke script, checklist e guia de retorno das evidencias.
+- `npm run qa:manual:drop`: gera uma pasta pronta para VM/maquina limpa com pacote QA extraido, runner unico, `.wsb`, README e comando de retorno para `qa:manual:receive`.
 - `npm run qa:manual:doctor`: valida o pacote portatil mais recente antes de enviar para VM, conferindo manifesto, ZIP, `.sha256`, comandos obrigatorios, `VERIFY-QA-PACKAGE.ps1` e status consolidado de release.
 - `npm run qa:manual:sync`: sincroniza itens de QA verificaveis por maquina, como Authenticode, prechecks de UI, modo seguro e resultados `install-smoke-*`, marcando `authenticode` como `passed` quando MSI/NSIS estiverem `Valid` ou `blocked` quando ainda estiverem `NotSigned`.
 - Quando um `install-smoke-*` valido volta de VM/maquina limpa, `qa:manual:sync` atualiza `install-nsis`/`install-msi` mesmo se estavam bloqueados e reabre os P0 dependentes de instalacao limpa para revisao manual.
 - `npm run qa:manual:import`: importa em lote `manual-qa-evidence.json` gerado na VM/maquina limpa e atualiza os P0 visuais/fluxos sem passar item por item.
 - `npm run qa:manual:bulk`: permite atualizar grupos manuais com evidencia real quando o mesmo teste cobre varias telas, exigindo `-ConfirmBulkPass` para aprovacao e mantendo instaladores/AuthentiCode protegidos por padrao.
+- `npm run qa:manual:plan`: gera um plano compacto da sessao manual atual, separando VM/install-smoke, lote visual/fluxos, itens protegidos e assinatura.
 - `npm run qa:manual:receive`: rotina unica para receber retorno da VM, sincronizando smoke/prechecks, importando evidencia manual quando existir e atualizando status manual/release.
 - `npm run verify:feature-preservation`: trava a preservacao das rotas, motores, componentes e documentos de decisao que continuam valiosos mesmo quando nao aparecem na sidebar principal.
 - `npm run qa:manual:receive -- -EvidenceDropPath <pasta>`: aceita a pasta `HermesQA` copiada da VM, a pasta extraida do pacote ou uma pasta contendo `manual-qa-evidence.json`/`install-smoke-*`, copiando tudo para `incoming-qa` da sessao antes de sincronizar.
 - `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.
+- `npm run release:signing:handoff`: consolida certificados locais, preflight de assinatura, instaladores atuais e comandos finais para configurar o certificado Code Signing correto.
 - `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
 - `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado.
 - `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
