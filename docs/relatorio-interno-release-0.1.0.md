@@ -86,6 +86,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:import`: importa em lote `manual-qa-evidence.json` gerado na VM/maquina limpa e atualiza os P0 visuais/fluxos sem passar item por item.
 - `npm run qa:manual:bulk`: permite atualizar grupos manuais com evidencia real quando o mesmo teste cobre varias telas, exigindo `-ConfirmBulkPass` para aprovacao e mantendo instaladores/AuthentiCode protegidos por padrao.
 - `npm run qa:manual:receive`: rotina unica para receber retorno da VM, sincronizando smoke/prechecks, importando evidencia manual quando existir e atualizando status manual/release.
+- `npm run verify:feature-preservation`: trava a preservacao das rotas, motores, componentes e documentos de decisao que continuam valiosos mesmo quando nao aparecem na sidebar principal.
 - `npm run qa:manual:receive -- -EvidenceDropPath <pasta>`: aceita a pasta `HermesQA` copiada da VM, a pasta extraida do pacote ou uma pasta contendo `manual-qa-evidence.json`/`install-smoke-*`, copiando tudo para `incoming-qa` da sessao antes de sincronizar.
 - `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza um item da sessao manual com evidencia/notas e recalcula o status.
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.

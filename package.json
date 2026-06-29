@@ -19,6 +19,7 @@
     "verify:optimization-flow": "node scripts/verify-optimization-flow.mjs",
     "verify:safe-mode-flow": "node scripts/verify-safe-mode-flow.mjs",
     "verify:build-mode": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-build-mode-sync.ps1",
+    "verify:feature-preservation": "node scripts/verify-feature-preservation.mjs",
     "verify:optimization-catalog": "node scripts/verify-optimization-catalog.mjs",
     "verify:gamer-dependencies": "node scripts/verify-gamer-dependency-manifest.mjs",
     "audit:gamer-dependencies": "node scripts/audit-gamer-dependency-manifest.mjs",

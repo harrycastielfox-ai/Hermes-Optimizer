@@ -66,6 +66,10 @@ Assert-True ($LASTEXITCODE -eq 0) `
 Assert-True ($LASTEXITCODE -eq 0) `
   "Manifesto de dependencias gamer precisa manter instalacao bloqueada ate URL, SHA256 e assinatura."
 
+& node (Join-Path $root "scripts\verify-feature-preservation.mjs")
+Assert-True ($LASTEXITCODE -eq 0) `
+  "Funcionalidades existentes precisam continuar preservadas mesmo fora da sidebar principal."
+
 Assert-True ($safeModeTs -match 'VITE_HERMES_SAFE_TEST_MODE') `
   "Frontend precisa ler VITE_HERMES_SAFE_TEST_MODE."
 Assert-True ($safeModeTs -match 'parseSafeModeFlag\(SAFE_TEST_MODE_ENV\)\s*\?\?\s*true') `
@@ -80,6 +84,7 @@ Assert-True ([bool]$scripts.'build:windows:test') "package.json precisa ter buil
 Assert-True ([bool]$scripts.'build:windows:real') "package.json precisa ter build:windows:real."
 Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa ter build:windows:real:signed."
 Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
+Assert-True ([bool]$scripts.'verify:feature-preservation') "package.json precisa ter verify:feature-preservation."
 Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
 Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
   "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
@@ -133,3 +138,4 @@ Write-Host "- Permissoes Tauri continuam minimas."
 Write-Host "- CSP contem as travas obrigatorias."
 Write-Host "- Scripts de build test/real/signed existem."
 Write-Host "- QA manual em lote existe com travas de evidencia e itens protegidos."
+Write-Host "- Preservacao de rotas, motores e documentos importantes esta protegida."
