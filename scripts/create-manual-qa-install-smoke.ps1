@@ -66,29 +66,38 @@ function Write-Step {
 }
 
 function Get-HermesExecutableCandidates {
-  $paths = @(
-    (Join-Path $env:LOCALAPPDATA "Programs\Hermes Optimizer\Hermes Optimizer.exe"),
-    (Join-Path $env:ProgramFiles "Hermes Optimizer\Hermes Optimizer.exe")
+  $exeNames = @(
+    "hermes-optimizer.exe",
+    "Hermes Optimizer.exe"
   )
 
+  $paths = foreach ($exeName in $exeNames) {
+    Join-Path $env:LOCALAPPDATA "Programs\Hermes Optimizer\$exeName"
+    Join-Path $env:LOCALAPPDATA "Hermes Optimizer\$exeName"
+    Join-Path $env:ProgramFiles "Hermes Optimizer\$exeName"
+  }
+
   if (${env:ProgramFiles(x86)}) {
-    $paths += (Join-Path ${env:ProgramFiles(x86)} "Hermes Optimizer\Hermes Optimizer.exe")
+    foreach ($exeName in $exeNames) {
+      $paths += (Join-Path ${env:ProgramFiles(x86)} "Hermes Optimizer\$exeName")
+    }
   }
 
   $scanRoots = @($env:LOCALAPPDATA, $env:ProgramFiles, ${env:ProgramFiles(x86)}) |
     Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_ -PathType Container) }
 
   foreach ($root in $scanRoots) {
-    $matches = Get-ChildItem -LiteralPath $root -Filter "Hermes Optimizer.exe" -File -Recurse -ErrorAction SilentlyContinue |
-      Select-Object -ExpandProperty FullName
-    $paths += $matches
+    foreach ($exeName in $exeNames) {
+      $matches = Get-ChildItem -LiteralPath $root -Filter $exeName -File -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty FullName
+      $paths += $matches
+    }
   }
 
   $paths | Select-Object -Unique
 }
 
 function Get-HermesInstallEvidence {
-  $executables = @(Get-HermesExecutableCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })
   $uninstallKeys = @(
     "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
     "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
@@ -100,6 +109,20 @@ function Get-HermesInstallEvidence {
       Where-Object { [string]$_.DisplayName -like "*Hermes Optimizer*" } |
       Select-Object DisplayName, DisplayVersion, Publisher, InstallLocation, UninstallString, QuietUninstallString
   }
+
+  $installLocationExecutables = foreach ($entry in @($registryEntries)) {
+    $installLocation = ([string]$entry.InstallLocation).Trim('"')
+    if (-not [string]::IsNullOrWhiteSpace($installLocation) -and (Test-Path -LiteralPath $installLocation -PathType Container)) {
+      Get-ChildItem -LiteralPath $installLocation -Filter "*.exe" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -in @("hermes-optimizer.exe", "Hermes Optimizer.exe") } |
+        Select-Object -ExpandProperty FullName
+    }
+  }
+
+  $executables = @(
+    Get-HermesExecutableCandidates
+    $installLocationExecutables
+  ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -Unique
 
   [pscustomobject]@{
     executables     = @($executables)
@@ -137,7 +160,7 @@ function Test-HermesLaunch {
     [array]$Executables
   )
 
-  $exe = @($Executables | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1)
+  $exe = [string](@($Executables | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1)[0])
   if (-not $exe) {
     return [pscustomobject]@{
       attempted       = $false

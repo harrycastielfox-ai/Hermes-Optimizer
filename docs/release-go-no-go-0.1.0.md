@@ -6,7 +6,7 @@ Data base: 2026-07-02
 
 **NO-GO para release publico 0.1.0.**
 
-O Hermes esta tecnicamente avançado e com QA automatizado em modo seguro, mas ainda nao deve ser publicado como release publico final enquanto os instaladores NSIS/MSI nao forem validados em instalacao real e enquanto Authenticode nao estiver `Valid` nos dois instaladores publicos.
+O Hermes esta tecnicamente avançado e com QA automatizado em modo seguro. O smoke real elevado de instalacao ja validou NSIS/MSI, mas o release publico final continua bloqueado enquanto Authenticode nao estiver `Valid` nos dois instaladores publicos.
 
 Release interno/beta controlado continua permitido apenas com aviso claro de `NO-GO publico`, modo seguro ativo e sem promessa comercial de release final.
 
@@ -14,9 +14,9 @@ Release interno/beta controlado continua permitido apenas com aviso claro de `NO
 
 ### P0: install-nsis
 
-- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260629-002418/manual-qa-session.json`
+- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260702-142413-aligned/manual-qa-session.json`
 - Item: `install-nsis`
-- Status atual: `pending`
+- Status atual: `passed`
 - Risco para o usuario: o instalador `.exe` pode falhar, nao abrir o app instalado, quebrar UAC, criar atalho incorreto ou instalar em caminho inesperado.
 - Criterio exato de aceite: NSIS instala em Windows limpo/descartavel, Hermes abre pelo atalho normal, processo/janela sao detectaveis, e o smoke registra `passed=true`.
 - Comando de validacao:
@@ -30,14 +30,14 @@ npm run qa:manual:status
 ```
 
 - Observacao: o `qa:manual:drop:auto` local roda em `HERMES_QA_AUTO_SAFE=1`, portanto bloqueia instalacao/GUI no host. Para fechar este P0 de forma publica, use `npm run qa:manual:drop:auto:install` somente em GitHub Actions/VM/maquina descartavel elevada.
-- Bloqueia release publico: **sim**.
+- Bloqueia release publico: **nao, ja fechado no QA atual**.
 - Bloqueia release interno: **nao**, desde que marcado como beta/QA interno.
 
 ### P0: install-msi
 
-- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260629-002418/manual-qa-session.json`
+- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260702-142413-aligned/manual-qa-session.json`
 - Item: `install-msi`
-- Status atual: `pending`
+- Status atual: `passed`
 - Risco para o usuario: o instalador `.msi` pode falhar silenciosamente, nao registrar o produto corretamente no Windows Installer, deixar upgrade/uninstall quebrado ou nao abrir o app apos instalacao.
 - Criterio exato de aceite: MSI instala em Windows limpo/descartavel, registra entrada de instalacao/desinstalacao, Hermes abre pelo atalho normal, processo/janela sao detectaveis, e o smoke registra `passed=true`.
 - Comando de validacao:
@@ -51,12 +51,12 @@ npm run qa:manual:status
 ```
 
 - Observacao: assim como o NSIS, o auto local nao deve instalar no notebook do desenvolvedor. A evidencia final precisa vir de ambiente descartavel/limpo usando `qa:manual:drop:auto:install`.
-- Bloqueia release publico: **sim**.
+- Bloqueia release publico: **nao, ja fechado no QA atual**.
 - Bloqueia release interno: **nao**, desde que marcado como beta/QA interno.
 
 ### P0: authenticode
 
-- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260629-002418/manual-qa-session.json`
+- Arquivo relacionado: `.release/manual-qa/manual-qa-0.1.0-20260702-142413-aligned/manual-qa-session.json`
 - Item: `authenticode`
 - Status atual: `blocked`
 - Evidencia atual: `NSIS Authenticode=NotSigned; MSI Authenticode=NotSigned`
@@ -66,6 +66,7 @@ npm run qa:manual:status
 
 ```powershell
 npm run release:signing:certs
+npm run release:signing:import-pfx
 npm run release:signing:preflight
 npm run build:windows:real:signed
 npm run release:status
@@ -140,7 +141,7 @@ npm run release:status
 
 - QA safe mode valida empacotamento, SHA256, runner, coleta de evidencia rapida e consolidacao sem abrir GUI nem instalar no host.
 - Instalacao real valida NSIS/MSI, UAC, registro no Windows, atalhos, abertura do app instalado e desinstalacao.
-- Para release publico, safe mode sozinho nao fecha `install-nsis` e `install-msi`; ele apenas prova que o pipeline e o pacote estao corretos.
+- No estado atual, `install-nsis` e `install-msi` ja foram fechados por smoke real elevado e alinhados ao RC atual por SHA256 identico.
 
 ## Tabela Final
 
@@ -150,8 +151,8 @@ npm run release:status
 | QA drop auto local | PASSOU | `.release/manual-qa-test-drop/results/auto-*/manual-qa-drop-auto-result.md` | Nao sozinho |
 | QA Windows GitHub Actions | PREPARADO | `.github/workflows/qa-windows-drop.yml` | Nao sozinho |
 | Install smoke real opt-in | PREPARADO | `npm run qa:manual:drop:auto:install` | Sim |
-| install-nsis | PENDENTE | `manual-qa-session.json`, item `install-nsis` | Sim |
-| install-msi | PENDENTE | `manual-qa-session.json`, item `install-msi` | Sim |
+| install-nsis | PASSOU | `manual-qa-session.json`, item `install-nsis` | Nao |
+| install-msi | PASSOU | `manual-qa-session.json`, item `install-msi` | Nao |
 | Authenticode NSIS/MSI | BLOQUEADO | `NSIS Authenticode=NotSigned; MSI Authenticode=NotSigned` | Sim |
 | Certificado Code Signing | BLOQUEADO | `HERMES_CERT_THUMBPRINT nao definido` | Sim |
 | Gate de publicacao publica | PREPARADO | `npm run release:public:verify` | Sim |

@@ -74,33 +74,14 @@ jobs:
             throw "Secret HERMES_SIGNING_PFX_PASSWORD nao configurado."
           }
 
-          $pfxPath = Join-Path $env:RUNNER_TEMP "hermes-signing.pfx"
-          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:HERMES_SIGNING_PFX_BASE64))
-          $securePassword = ConvertTo-SecureString $env:HERMES_SIGNING_PFX_PASSWORD -AsPlainText -Force
-          $imported = @(Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword -Exportable:$false)
-          Remove-Item -LiteralPath $pfxPath -Force
-
-          if ($imported.Count -eq 0) {
-            throw "Nenhum certificado foi importado do PFX."
+          npm run release:signing:import-pfx
+          $import = Get-Content .release/signing-pfx-import.json -Raw | ConvertFrom-Json
+          if (-not $import.imported -or [string]::IsNullOrWhiteSpace([string]$import.thumbprint)) {
+            throw "Importacao de PFX nao gerou thumbprint valido."
           }
 
-          $codeSigning = $imported | Where-Object {
-            $usages = @($_.EnhancedKeyUsageList | ForEach-Object { $_.FriendlyName })
-            $usages -contains "Code Signing"
-          } | Select-Object -First 1
-
-          if (-not $codeSigning) {
-            throw "O PFX importado nao contem certificado com Enhanced Key Usage de Code Signing."
-          }
-          if (-not $codeSigning.HasPrivateKey) {
-            throw "O certificado importado nao possui chave privada."
-          }
-          if ($codeSigning.NotAfter -lt (Get-Date)) {
-            throw "O certificado importado esta expirado."
-          }
-
-          "HERMES_CERT_THUMBPRINT=$($codeSigning.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "Certificado Code Signing importado: $($codeSigning.Subject)"
+          "HERMES_CERT_THUMBPRINT=$($import.thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "Certificado Code Signing importado: $($import.subject)"
           "Thumbprint configurado para o build assinado."
 
       - name: Signing preflight
@@ -129,6 +110,8 @@ jobs:
             src-tauri/target/release/bundle/nsis/*.exe
             .release/signing-preflight.json
             .release/signing-preflight.md
+            .release/signing-pfx-import.json
+            .release/hermes-signing-env.ps1
             .release/release-public-verification.json
             .release/release-public-verification.md
             .release/release-status.json

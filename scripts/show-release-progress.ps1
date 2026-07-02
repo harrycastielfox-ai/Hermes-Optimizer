@@ -37,10 +37,32 @@ $p0Percent = if ([int]$status.p0Total -gt 0) {
 
 $next = if ([int]$status.p0Pending -gt 0) {
   "npm run qa:manual:drop:auto:install"
+} elseif ([int]$status.unsignedInstallerCount -gt 0 -and -not [bool]$status.signingCertificateReadyToConfigure) {
+  "npm run release:signing:import-pfx"
 } elseif ([int]$status.unsignedInstallerCount -gt 0) {
   "npm run release:signing:handoff"
 } else {
   "npm run release:public:verify"
+}
+
+$remaining = New-Object System.Collections.Generic.List[string]
+if (@($status.blockers | Where-Object { [string]$_ -match "outro RC|RC atual" }).Count -gt 0) {
+  $remaining.Add("Alinhar QA aprovado ao RC atual antes do release publico")
+}
+if ([int]$status.p0Pending -gt 0) {
+  $remaining.Add("Fechar P0 pendentes do QA manual/automatizado")
+}
+if ([int]$status.p0FailedOrBlocked -gt 0 -and [int]$status.unsignedInstallerCount -eq 0) {
+  $remaining.Add("Corrigir P0 falho/bloqueado restante do QA")
+}
+if ([int]$status.unsignedInstallerCount -gt 0) {
+  $remaining.Add("Assinar MSI/NSIS com Authenticode")
+}
+if (-not [bool]$status.signingCertificateReadyToConfigure) {
+  $remaining.Add("Configurar certificado de assinatura no ambiente de release")
+}
+if ($remaining.Count -eq 0) {
+  $remaining.Add("Rodar gate final de publicacao")
 }
 
 $summary = [pscustomobject]@{
@@ -54,11 +76,7 @@ $summary = [pscustomobject]@{
   unsignedInstallers = [int]$status.unsignedInstallerCount
   certificateReady = [bool]$status.signingCertificateReadyToConfigure
   nextCommand = $next
-  remaining = @(
-    "Validar instalador NSIS em VM/runner"
-    "Validar instalador MSI em VM/runner"
-    "Assinar MSI/NSIS com Authenticode"
-  )
+  remaining = @($remaining)
 }
 
 $jsonPath = Join-Path $releaseDir "release-progress.json"

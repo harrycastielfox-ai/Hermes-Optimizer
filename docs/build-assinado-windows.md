@@ -22,16 +22,34 @@ Para listar certificados candidatos instalados no Windows Store:
 npm run release:signing:certs
 ```
 
+Para importar um PFX local e gerar automaticamente o thumbprint em `.release/hermes-signing-env.ps1`:
+
+```powershell
+npm run release:signing:import-pfx -- -PfxPath "C:\caminho\certificado-code-signing.pfx" -PfxPassword "SENHA_DO_PFX"
+. .release/hermes-signing-env.ps1
+npm run release:signing:preflight
+```
+
+Tambem funciona via variaveis, util para CI:
+
+```powershell
+$env:HERMES_SIGNING_PFX_BASE64 = "PFX_EM_BASE64"
+$env:HERMES_SIGNING_PFX_PASSWORD = "SENHA_DO_PFX"
+npm run release:signing:import-pfx
+```
+
 Para escolher um thumbprint especifico e gerar um template local em `.release/.env.signing.local.example`:
 
 ```powershell
 npm run release:signing:certs -- -Thumbprint "SHA1_THUMBPRINT_DO_CERTIFICADO" -WriteEnvTemplate
 ```
 
-O assistente nao instala certificados e nao assina builds. Ele apenas valida candidatos e gera evidencia em:
+O assistente valida candidatos, pode importar PFX quando informado explicitamente e gera evidencia em:
 
 - `.release/signing-certificate-candidates.json`
 - `.release/signing-certificate-candidates.md`
+- `.release/signing-pfx-import.json`
+- `.release/hermes-signing-env.ps1`
 
 Se o provedor exigir RFC 3161/TSP:
 

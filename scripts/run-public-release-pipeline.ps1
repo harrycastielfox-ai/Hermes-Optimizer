@@ -1,5 +1,6 @@
 param(
   [switch]$AllowInstallSmoke,
+  [switch]$ImportPfx,
   [switch]$BuildSigned,
   [switch]$RegenerateReleaseCandidate,
   [switch]$AllowNoGo
@@ -96,25 +97,33 @@ try {
     $warnings.Add("Install smoke real nao foi executado. Use -AllowInstallSmoke em GitHub Actions/VM/maquina descartavel elevada.")
   }
 
-  Invoke-PipelineStep -Name "06-signing-candidates" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:certs")
-  Invoke-PipelineStep -Name "07-signing-preflight" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
-  Invoke-PipelineStep -Name "08-signing-handoff" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:handoff")
+  if ($ImportPfx) {
+    Invoke-PipelineStep -Name "06-signing-import-pfx" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
+  } elseif ($BuildSigned -and -not [string]::IsNullOrWhiteSpace($env:HERMES_SIGNING_PFX_BASE64)) {
+    Invoke-PipelineStep -Name "06-signing-import-pfx-auto" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
+  } else {
+    $warnings.Add("Importacao de PFX nao foi executada. Use -ImportPfx ou configure HERMES_CERT_THUMBPRINT antes do build assinado.")
+  }
+
+  Invoke-PipelineStep -Name "07-signing-candidates" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:certs")
+  Invoke-PipelineStep -Name "08-signing-preflight" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
+  Invoke-PipelineStep -Name "09-signing-handoff" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:handoff")
 
   if ($BuildSigned) {
-    Invoke-PipelineStep -Name "09-build-real-signed" -FilePath "npm.cmd" -ArgumentList @("run", "build:windows:real:signed")
+    Invoke-PipelineStep -Name "10-build-real-signed" -FilePath "npm.cmd" -ArgumentList @("run", "build:windows:real:signed")
   } else {
     $warnings.Add("Build real assinado nao foi executado. Use -BuildSigned somente quando o certificado Code Signing estiver configurado.")
   }
 
   if ($RegenerateReleaseCandidate) {
-    Invoke-PipelineStep -Name "10-release-internal" -FilePath "npm.cmd" -ArgumentList @("run", "release:internal")
+    Invoke-PipelineStep -Name "11-release-internal" -FilePath "npm.cmd" -ArgumentList @("run", "release:internal")
   } else {
     $warnings.Add("Release candidate/sessao QA nao foram regenerados. Use -RegenerateReleaseCandidate quando quiser iniciar um RC novo.")
   }
 
-  Invoke-PipelineStep -Name "11-release-launch-plan" -FilePath "npm.cmd" -ArgumentList @("run", "release:launch-plan")
-  Invoke-PipelineStep -Name "12-release-status" -FilePath "npm.cmd" -ArgumentList @("run", "release:status")
-  Invoke-PipelineStep -Name "13-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
+  Invoke-PipelineStep -Name "12-release-launch-plan" -FilePath "npm.cmd" -ArgumentList @("run", "release:launch-plan")
+  Invoke-PipelineStep -Name "13-release-status" -FilePath "npm.cmd" -ArgumentList @("run", "release:status")
+  Invoke-PipelineStep -Name "14-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
 } catch {
   if ($failures.Count -eq 0) {
     $failures.Add($_.Exception.Message)
@@ -137,6 +146,7 @@ $report = [pscustomobject]@{
   generatedAt = (Get-Date).ToString("o")
   status = $status
   allowInstallSmoke = [bool]$AllowInstallSmoke
+  importPfx = [bool]$ImportPfx
   buildSigned = [bool]$BuildSigned
   regenerateReleaseCandidate = [bool]$RegenerateReleaseCandidate
   allowNoGo = [bool]$AllowNoGo
@@ -167,6 +177,7 @@ $markdown.Add("- Status: **$($report.status)**")
 $markdown.Add("- Release status: $($report.releaseStatus)")
 $markdown.Add("- Public ready: $($report.publicReady)")
 $markdown.Add("- Install smoke real: $($report.allowInstallSmoke)")
+$markdown.Add("- Importar PFX: $($report.importPfx)")
 $markdown.Add("- Build assinado: $($report.buildSigned)")
 $markdown.Add("- Regenerar RC/sessao QA: $($report.regenerateReleaseCandidate)")
 $markdown.Add("- Proximo comando: ``$($report.nextOperationalCommand)``")

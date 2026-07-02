@@ -338,8 +338,7 @@ if ($installSmoke) {
       -ItemId $itemId `
       -Status $resultStatus `
       -Evidence $resultEvidence `
-      -Notes $resultNotes `
-      -OnlyPendingOrBlocked
+      -Notes $resultNotes
   }
 
   $installSmokeUnblocked = Reset-CleanInstallBlockedItems `
