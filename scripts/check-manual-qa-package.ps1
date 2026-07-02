@@ -186,6 +186,7 @@ $report = [pscustomobject]@{
   releaseBlockers                = if ($releaseStatus) { @($releaseStatus.blockers) } else { @() }
   failures                       = @($failures)
   warnings                       = @($warnings)
+  quickPassCommand               = 'powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-QUICK-PASS.ps1'
   nextCommandAfterVm             = 'npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"'
 }
 
@@ -226,11 +227,16 @@ if ($warnings.Count -gt 0) {
 $markdown.Add("")
 $markdown.Add("## Proximo passo")
 $markdown.Add("")
-$markdown.Add("1. Copie o ZIP para VM/maquina limpa e rode `VERIFY-QA-PACKAGE.ps1`, `RUN-INSTALL-SMOKE.ps1` e `RUN-MANUAL-QA-EVIDENCE.ps1`.")
-$markdown.Add("2. Copie a pasta `HermesQA` de volta para o host, por exemplo `C:\Temp\HermesQA`.")
-$markdown.Add("3. Rode:")
+$markdown.Add("1. Copie o ZIP para VM/maquina limpa e rode `VERIFY-QA-PACKAGE.ps1` e `RUN-INSTALL-SMOKE.ps1`.")
+$markdown.Add("2. Para evidencia visual/fluxos, rode `RUN-MANUAL-QA-EVIDENCE.ps1`; se tudo passou, pode usar o atalho `RUN-MANUAL-QA-QUICK-PASS.ps1`.")
+$markdown.Add("3. Copie a pasta `HermesQA` de volta para o host, por exemplo `C:\Temp\HermesQA`.")
+$markdown.Add("4. Rode:")
 $markdown.Add("")
 $markdown.Add("~~~powershell")
+$markdown.Add("# Dentro da VM, se todo o conjunto visual/fluxos passou:")
+$markdown.Add($report.quickPassCommand)
+$markdown.Add("")
+$markdown.Add("# No host:")
 $markdown.Add($report.nextCommandAfterVm)
 $markdown.Add("~~~")
 $markdown | Set-Content -LiteralPath $mdPath -Encoding UTF8

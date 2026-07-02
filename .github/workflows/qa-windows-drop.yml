@@ -1,0 +1,78 @@
+name: QA Windows Drop
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  qa-windows-drop:
+    name: QA drop on Windows
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    env:
+      HERMES_QA_AUTO_SAFE: "1"
+      HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Release gates
+        run: npm run verify:release-gates
+
+      - name: Automatic QA drop
+        run: npm run qa:manual:drop:auto
+
+      - name: Release status
+        run: npm run release:status
+
+      - name: Diff check
+        run: git diff --check
+
+      - name: Upload QA logs and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-qa-windows-drop-results
+          if-no-files-found: warn
+          path: |
+            .release/manual-qa-test-drop/results/**
+            .release/manual-qa-test-drop/latest-manual-qa-test-drop*.json
+            .release/manual-qa-test-drop/latest-manual-qa-test-drop*.md
+            .release/manual-qa/**/manual-qa-*.json
+            .release/manual-qa/**/manual-qa-*.md
+            .release/release-status.json
+            .release/release-status.md
+
+      - name: Upload QA drop ZIP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-qa-windows-drop-zip
+          if-no-files-found: warn
+          path: |
+            .release/manual-qa-test-drop/packages/*.zip
+            .release/manual-qa-test-drop/packages/*.sha256
+            .release/manual-qa-test-drop/packages/*-package.json

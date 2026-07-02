@@ -133,10 +133,15 @@ if (-not (Test-Path -LiteralPath (Join-Path $dropExtractRoot "VERIFY-QA-PACKAGE.
 
 $vmRunnerPath = Join-Path $dropRoot "RODAR-QA-HERMES-NA-VM.ps1"
 $vmRunner = @"
+param(
+  [switch]`$QuickPassAll
+)
+
 `$ErrorActionPreference = "Stop"
 
 `$dropRoot = Split-Path -Parent `$MyInvocation.MyCommand.Path
 `$packageRoot = Join-Path `$dropRoot "qa-extraido"
+`$autoSafeMode = [string]`$env:HERMES_QA_AUTO_SAFE -eq "1"
 
 if (-not (Test-Path -LiteralPath `$packageRoot -PathType Container)) {
   throw "Pacote extraido nao encontrado: `$packageRoot"
@@ -145,8 +150,32 @@ if (-not (Test-Path -LiteralPath `$packageRoot -PathType Container)) {
 Push-Location `$packageRoot
 try {
   powershell -NoProfile -ExecutionPolicy Bypass -File .\VERIFY-QA-PACKAGE.ps1
-  powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
-  powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
+  if (`$autoSafeMode) {
+    Write-Host "HERMES_QA_AUTO_SAFE=1 detectado. Smoke de instalacao/GUI bloqueado para nao alterar o Windows do host."
+    `$qaRoot = Join-Path `$packageRoot "HermesQA"
+    if (-not (Test-Path -LiteralPath `$qaRoot -PathType Container)) {
+      New-Item -ItemType Directory -Force -Path `$qaRoot | Out-Null
+    }
+    `$blockedReport = [pscustomobject]@{
+      generatedAt = (Get-Date).ToString("o")
+      status = "BLOCKED_BY_AUTO_SAFE"
+      reason = "RUN-INSTALL-SMOKE.ps1 instala e abre o Hermes; o fluxo automatico local bloqueia esta etapa para nao fazer alteracao permanente nem abrir GUI."
+      requiresAdmin = `$true
+      destructiveOrPersistent = `$true
+      recommendedEnvironment = "GitHub Actions windows-latest, Windows Sandbox, VM limpa ou maquina descartavel."
+      commandToRunWhenAllowed = "powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1"
+    }
+    `$blockedPath = Join-Path `$qaRoot "install-smoke-auto-safe-blocked.json"
+    `$blockedReport | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath `$blockedPath -Encoding UTF8
+    Write-Host "Relatorio de bloqueio seguro: `$blockedPath"
+  } else {
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
+  }
+  if (`$QuickPassAll) {
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-QUICK-PASS.ps1
+  } else {
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
+  }
 } finally {
   Pop-Location
 }
@@ -156,7 +185,7 @@ Write-Host "QA concluido. Copie a pasta qa-extraido\HermesQA de volta para o hos
 "@
 $vmRunner | Set-Content -LiteralPath $vmRunnerPath -Encoding UTF8
 
-$receiveCommand = 'npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"'
+$receiveCommand = "npm run qa:manual:drop:receive"
 $sandboxPath = Join-Path $dropRoot "HERMES-MANUAL-QA.wsb"
 $sandboxHostPath = Get-SafePathForSandboxXml -Path $dropRoot
 $sandboxCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Start-Process explorer.exe ''C:\Users\WDAGUtilityAccount\Desktop\HermesManualQA''; Start-Process notepad.exe ''C:\Users\WDAGUtilityAccount\Desktop\HermesManualQA\LEIA-ME-QA-MANUAL.md''"'
@@ -202,14 +231,25 @@ $readme.Add("powershell -NoProfile -ExecutionPolicy Bypass -File .\RODAR-QA-HERM
 $readme.Add("~~~")
 $readme.Add("")
 $readme.Add("3. No coletor manual, use o modo rapido por grupos quando a mesma evidencia cobrir varias telas.")
-$readme.Add("4. Ao finalizar, copie a pasta `qa-extraido\HermesQA` de volta para o computador principal.")
+$readme.Add("4. Se voce ja validou que janela, navegacao, scroll, Dashboard, Otimizar, Defender, Manutencao e Configuracoes passaram, rode o runner direto com quick pass:")
+$readme.Add("   Internamente, esse modo chama `qa-extraido\RUN-MANUAL-QA-QUICK-PASS.ps1` para gerar a evidencia rapida.")
+$readme.Add("")
+$readme.Add("~~~powershell")
+$readme.Add("powershell -NoProfile -ExecutionPolicy Bypass -File .\RODAR-QA-HERMES-NA-VM.ps1 -QuickPassAll")
+$readme.Add("~~~")
+$readme.Add("")
+$readme.Add("5. Ao finalizar, feche a VM/Sandbox. A pasta `qa-extraido\HermesQA` fica dentro deste drop quando a pasta estiver mapeada.")
 $readme.Add("")
 $readme.Add("## No host do projeto")
 $readme.Add("")
-$readme.Add("Copie `HermesQA` para `C:\Temp\HermesQA` ou ajuste o caminho no comando:")
+$readme.Add("Se voce usou este drop mapeado na VM/Sandbox, rode:")
 $readme.Add("")
 $readme.Add("~~~powershell")
+$readme.Add("npm run qa:manual:drop:check")
 $readme.Add($receiveCommand)
+$readme.Add("")
+$readme.Add("# Alternativa, se voce copiou HermesQA para outro lugar:")
+$readme.Add('npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"')
 $readme.Add("npm run qa:manual:plan")
 $readme.Add("npm run release:status")
 $readme.Add("~~~")

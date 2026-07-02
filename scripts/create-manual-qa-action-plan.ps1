@@ -45,6 +45,7 @@ $verificationPath = Join-Path $SessionPath "manual-qa-verification.json"
 $doctorPath = Join-Path $SessionPath "manual-qa-package-doctor.json"
 $releaseStatusPath = Join-Path $root ".release\release-status.json"
 $signingHandoffPath = Join-Path $root ".release\signing-handoff.json"
+$latestManualQaDropPath = Join-Path $root ".release\manual-qa-test-drop\latest-manual-qa-test-drop.json"
 
 $session = Read-JsonOrNull -Path $sessionJsonPath
 if (-not $session) {
@@ -55,6 +56,7 @@ $verification = Read-JsonOrNull -Path $verificationPath
 $doctor = Read-JsonOrNull -Path $doctorPath
 $releaseStatus = Read-JsonOrNull -Path $releaseStatusPath
 $signingHandoff = Read-JsonOrNull -Path $signingHandoffPath
+$latestManualQaDrop = Read-JsonOrNull -Path $latestManualQaDropPath
 
 $items = @($session.items)
 $p0Pending = @($items | Where-Object { $_.priority -eq "P0" -and $_.status -eq "pending" })
@@ -80,7 +82,11 @@ $latestPortableZip = Get-ChildItem -LiteralPath $SessionPath -File -Filter "herm
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
 
-$receiveCommand = 'npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"'
+$receiveCommand = if ($latestManualQaDrop -and -not [string]::IsNullOrWhiteSpace([string]$latestManualQaDrop.receiveCommand)) {
+  [string]$latestManualQaDrop.receiveCommand
+} else {
+  'npm run qa:manual:receive -- -EvidenceDropPath "C:\Temp\HermesQA"'
+}
 $bulkCommand = 'npm run qa:manual:bulk -- -Group all-non-protected -Status passed -Evidence "Validado em maquina limpa/VM: janela, rotas, scroll, Dashboard leitura, Botoes 1/2 em modo teste, Fate Trigger, Defender, Manutencao e Configuracoes" -ConfirmBulkPass'
 
 $plan = [pscustomobject]@{
@@ -102,11 +108,18 @@ $plan = [pscustomobject]@{
   needsHumanEvidence = $needsHumanEvidence.Count
   protectedInstallItems = @($protectedInstallItems | ForEach-Object { $_.id })
   latestPortableZip = if ($latestPortableZip) { $latestPortableZip.FullName } else { $null }
+  latestManualQaDrop = if ($latestManualQaDrop) { [string]$latestManualQaDrop.dropRoot } else { $null }
+  latestManualQaDropRunner = if ($latestManualQaDrop) { [string]$latestManualQaDrop.vmRunnerPath } else { $null }
+  latestManualQaDropSandbox = if ($latestManualQaDrop) { [string]$latestManualQaDrop.sandboxPath } else { $null }
   packageDoctorStatus = if ($doctor) { [string]$doctor.status } else { $null }
   signingReadyToSign = if ($signingHandoff) { [bool]$signingHandoff.readyToSign } else { $false }
   commands = [pscustomobject]@{
     makePortable = "npm run qa:manual:portable"
+    makeDrop = "npm run qa:manual:drop"
+    verifyDrop = "npm run qa:manual:drop:verify"
+    runQuickPassInsideVm = 'powershell -NoProfile -ExecutionPolicy Bypass -File .\RODAR-QA-HERMES-NA-VM.ps1 -QuickPassAll'
     packageDoctor = "npm run qa:manual:doctor"
+    checkVmReturn = "npm run qa:manual:drop:check"
     receiveVm = $receiveCommand
     bulkPassAfterVm = $bulkCommand
     signingHandoff = "npm run release:signing:handoff"
@@ -133,8 +146,8 @@ $markdown.Add("- Itens que ainda precisam evidencia humana direta: $($plan.needs
 $markdown.Add("")
 $markdown.Add("## Ordem recomendada")
 $markdown.Add("")
-$markdown.Add("1. Rodar ou enviar o pacote QA para VM/maquina limpa.")
-$markdown.Add("2. Executar smoke de instalacao e o coletor manual em modo rapido por grupos.")
+$markdown.Add("1. Rodar ou enviar o drop QA para VM/maquina limpa.")
+$markdown.Add("2. Executar smoke de instalacao e o coletor manual. Se tudo visual/fluxos passou, usar o quick pass.")
 $markdown.Add("3. Trazer a pasta `HermesQA` de volta e consolidar.")
 $markdown.Add("4. Se o conjunto visual/fluxo estiver aprovado, fechar os itens nao protegidos em lote.")
 $markdown.Add("5. Resolver Authenticode com certificado Code Signing real.")
@@ -142,8 +155,13 @@ $markdown.Add("")
 $markdown.Add("## Comandos")
 $markdown.Add("")
 $markdown.Add("~~~powershell")
+$markdown.Add($plan.commands.makeDrop)
+$markdown.Add($plan.commands.verifyDrop)
+$markdown.Add("# Dentro da VM/Sandbox, apos instalar e validar visual/fluxos:")
+$markdown.Add($plan.commands.runQuickPassInsideVm)
 $markdown.Add($plan.commands.makePortable)
 $markdown.Add($plan.commands.packageDoctor)
+$markdown.Add($plan.commands.checkVmReturn)
 $markdown.Add($plan.commands.receiveVm)
 $markdown.Add($plan.commands.bulkPassAfterVm)
 $markdown.Add($plan.commands.signingHandoff)
@@ -152,6 +170,13 @@ $markdown.Add("~~~")
 $markdown.Add("")
 $markdown.Add("## Pacote QA atual")
 $markdown.Add("")
+if ($plan.latestManualQaDrop) {
+  $markdown.Add("- Drop: $($plan.latestManualQaDrop)")
+  $markdown.Add("- Runner VM: $($plan.latestManualQaDropRunner)")
+  $markdown.Add("- Windows Sandbox: $($plan.latestManualQaDropSandbox)")
+  $markdown.Add("- Receber evidencias: $($plan.commands.receiveVm)")
+  $markdown.Add("")
+}
 if ($latestPortableZip) {
   $markdown.Add("- ZIP: $($latestPortableZip.FullName)")
   $markdown.Add("- SHA256: $((Get-FileHash -LiteralPath $latestPortableZip.FullName -Algorithm SHA256).Hash)")

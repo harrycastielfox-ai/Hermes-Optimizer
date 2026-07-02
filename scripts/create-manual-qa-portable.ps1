@@ -91,6 +91,12 @@ $launcher | Set-Content -LiteralPath $launcherPath -Encoding UTF8
 
 $manualEvidenceLauncherPath = Join-Path $portableRoot "RUN-MANUAL-QA-EVIDENCE.ps1"
 $manualEvidenceLauncher = @'
+param(
+  [switch]$QuickPassAll,
+  [string]$QuickEvidence = "Validado em maquina limpa/VM: janela, rotas, scroll, Dashboard leitura, Botoes 1/2 em modo teste, Fate Trigger, Defender, Manutencao e Configuracoes.",
+  [string]$QuickNotes = "Evidencia gerada pelo modo rapido do pacote QA Hermes. Itens protegidos de instalacao e Authenticode ficam fora deste arquivo."
+)
+
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -159,6 +165,37 @@ function New-ManualEvidenceEntry {
 }
 
 $results = New-Object System.Collections.Generic.List[object]
+
+if ($QuickPassAll) {
+  foreach ($itemId in $manualItemIds) {
+    $item = @($session.items) | Where-Object { $_.id -eq $itemId } | Select-Object -First 1
+    if (-not $item) {
+      continue
+    }
+
+    $results.Add((New-ManualEvidenceEntry -Item $item -Status "passed" -Evidence $QuickEvidence -Notes $QuickNotes))
+  }
+
+  $report = [pscustomobject]@{
+    generatedAt   = (Get-Date).ToString("o")
+    computerName  = $env:COMPUTERNAME
+    userName      = $env:USERNAME
+    candidateName = $session.candidateName
+    version       = $session.version
+    mode          = "quick-pass-all-non-protected"
+    items         = @($results.ToArray())
+  }
+
+  $evidencePath = Join-Path $qaPath "manual-qa-evidence.json"
+  $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $evidencePath -Encoding UTF8
+
+  Write-Host "Evidencia rapida salva em:"
+  Write-Host $evidencePath
+  Write-Host ""
+  Write-Host "Itens de instalacao e Authenticode continuam protegidos e dependem do smoke/assinatura."
+  return
+}
+
 $quickGroups = @(
   [pscustomobject]@{
     name = "Janela e navegacao"
@@ -248,6 +285,22 @@ Write-Host "Copie este arquivo junto com qualquer HermesQA\\install-smoke-* de v
 '@
 $manualEvidenceLauncher | Set-Content -LiteralPath $manualEvidenceLauncherPath -Encoding UTF8
 
+$quickPassLauncherPath = Join-Path $portableRoot "RUN-MANUAL-QA-QUICK-PASS.ps1"
+$quickPassLauncher = @'
+$ErrorActionPreference = "Stop"
+
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$manualEvidencePath = Join-Path $root "RUN-MANUAL-QA-EVIDENCE.ps1"
+
+if (-not (Test-Path -LiteralPath $manualEvidencePath -PathType Leaf)) {
+  throw "RUN-MANUAL-QA-EVIDENCE.ps1 nao encontrado em $manualEvidencePath"
+}
+
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $manualEvidencePath -QuickPassAll
+exit $LASTEXITCODE
+'@
+$quickPassLauncher | Set-Content -LiteralPath $quickPassLauncherPath -Encoding UTF8
+
 $verifyPackagePath = Join-Path $portableRoot "VERIFY-QA-PACKAGE.ps1"
 $verifyPackage = @'
 $ErrorActionPreference = "Stop"
@@ -301,7 +354,8 @@ $requiredFiles = @(
   @{ path = (Join-Path $qaPath "manual-qa-session.json"); label = "Sessao de QA" },
   @{ path = (Join-Path $qaPath "manual-qa-checklist.md"); label = "Checklist manual" },
   @{ path = (Join-Path $root "RUN-INSTALL-SMOKE.ps1"); label = "Launcher de smoke" },
-  @{ path = (Join-Path $root "RUN-MANUAL-QA-EVIDENCE.ps1"); label = "Launcher de evidencia manual" }
+  @{ path = (Join-Path $root "RUN-MANUAL-QA-EVIDENCE.ps1"); label = "Launcher de evidencia manual" },
+  @{ path = (Join-Path $root "RUN-MANUAL-QA-QUICK-PASS.ps1"); label = "Launcher de evidencia rapida" }
 )
 
 foreach ($required in $requiredFiles) {
@@ -385,6 +439,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-INSTALL-SMOKE.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
 ~~~
 
+Se tudo visual/fluxo passou na VM e voce quer gerar uma evidencia unica para todos os itens nao protegidos, rode:
+
+~~~powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-QUICK-PASS.ps1
+~~~
+
 ## O que conferir manualmente
 
 - Instalacao NSIS e MSI.
@@ -437,7 +497,8 @@ $portableManifest = [pscustomobject]@{
   requiredCommands = @(
     ".\VERIFY-QA-PACKAGE.ps1",
     ".\RUN-INSTALL-SMOKE.ps1",
-    ".\RUN-MANUAL-QA-EVIDENCE.ps1"
+    ".\RUN-MANUAL-QA-EVIDENCE.ps1",
+    ".\RUN-MANUAL-QA-QUICK-PASS.ps1"
   )
 }
 $portableManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $portableManifestPath -Encoding UTF8
@@ -477,6 +538,12 @@ Depois confira as telas/fluxos do app instalado e gere a evidencia manual. O col
 
 ~~~powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-EVIDENCE.ps1
+~~~
+
+Se a validacao visual/fluxos passou inteira em VM, gere a evidencia rapida de todos os itens nao protegidos:
+
+~~~powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\RUN-MANUAL-QA-QUICK-PASS.ps1
 ~~~
 
 Depois copie a pasta `HermesQA` inteira de volta para qualquer pasta local no host, por exemplo `C:\Temp\HermesQA`. O recebimento copia a evidencia para a sessao correta.

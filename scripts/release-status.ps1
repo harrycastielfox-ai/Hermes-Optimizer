@@ -2,6 +2,7 @@ param(
   [string]$QaReportPath,
   [string]$CandidatesRoot,
   [string]$ManualQaRoot,
+  [string]$ManualQaDropRoot,
   [string]$SigningPreflightPath,
   [string]$SigningCertificateCandidatesPath
 )
@@ -17,6 +18,9 @@ if ([string]::IsNullOrWhiteSpace($CandidatesRoot)) {
 }
 if ([string]::IsNullOrWhiteSpace($ManualQaRoot)) {
   $ManualQaRoot = Join-Path $root ".release\manual-qa"
+}
+if ([string]::IsNullOrWhiteSpace($ManualQaDropRoot)) {
+  $ManualQaDropRoot = Join-Path $root ".release\manual-qa-test-drop"
 }
 if ([string]::IsNullOrWhiteSpace($SigningPreflightPath)) {
   $SigningPreflightPath = Join-Path $root ".release\signing-preflight.json"
@@ -88,6 +92,8 @@ if ($latestManualQa) {
   $manualQaVerification = Read-JsonFileOrNull -Path (Join-Path $latestManualQa.FullName "manual-qa-verification.json")
 }
 $latestPortableQaPackage = Get-LatestPortableQaPackageOrNull -Path $ManualQaRoot
+$latestManualQaDrop = Read-JsonFileOrNull -Path (Join-Path $ManualQaDropRoot "latest-manual-qa-test-drop.json")
+$latestManualQaDropPackage = Read-JsonFileOrNull -Path (Join-Path $ManualQaDropRoot "latest-manual-qa-test-drop-package.json")
 
 $signingPreflight = Read-JsonFileOrNull -Path $SigningPreflightPath
 $signingCertificateCandidates = Read-JsonFileOrNull -Path $SigningCertificateCandidatesPath
@@ -180,6 +186,16 @@ $status = [pscustomobject]@{
   latestManualQaPortableZip = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.zipPath } else { $null }
   latestManualQaPortableZipSha256 = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.zipSha256 } else { $null }
   latestManualQaPortableGeneratedAt = if ($latestPortableQaPackage) { [string]$latestPortableQaPackage.manifest.generatedAt } else { $null }
+  latestManualQaTestDrop    = if ($latestManualQaDrop) { [string]$latestManualQaDrop.dropRoot } else { $null }
+  latestManualQaTestDropRunner = if ($latestManualQaDrop) { [string]$latestManualQaDrop.vmRunnerPath } else { $null }
+  latestManualQaTestDropSandbox = if ($latestManualQaDrop) { [string]$latestManualQaDrop.sandboxPath } else { $null }
+  latestManualQaDropOpenCommand = if ($latestManualQaDrop) { "npm run qa:manual:drop:open" } else { $null }
+  latestManualQaDropSandboxCommand = if ($latestManualQaDrop) { "npm run qa:manual:drop:sandbox" } else { $null }
+  latestManualQaDropZipCommand = if ($latestManualQaDrop) { "npm run qa:manual:drop:zip" } else { $null }
+  latestManualQaDropZip = if ($latestManualQaDropPackage) { [string]$latestManualQaDropPackage.zipPath } else { $null }
+  latestManualQaDropZipSha256 = if ($latestManualQaDropPackage) { [string]$latestManualQaDropPackage.zipSha256 } else { $null }
+  latestManualQaDropCheckCommand = if ($latestManualQaDrop) { "npm run qa:manual:drop:check" } else { $null }
+  latestManualQaDropReceiveCommand = if ($latestManualQaDrop) { [string]$latestManualQaDrop.receiveCommand } else { $null }
   manualDecision           = if ($manualQaVerification) { $manualQaVerification.manualDecision } else { $null }
   manualPublicDecision     = if ($manualQaVerification) { $manualQaVerification.publicDecision } else { $null }
   p0Passed                 = if ($manualQaVerification) { [int]$manualQaVerification.p0Passed } else { 0 }
@@ -228,9 +244,13 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
 } elseif (-not $manualQaVerification) {
   "Rode ``npm run qa:manual:status``. Se ainda nao existir sessao manual, rode ``npm run qa:manual:new``."
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0Pending -gt 0) {
-  "Rode ``npm run qa:manual:plan`` para seguir o roteiro compacto de VM/lote, ou ``npm run qa:manual:next`` para tratar item isolado."
+  if ($status.latestManualQaTestDrop -and $status.latestManualQaDropReceiveCommand) {
+    "Abra o drop com ``$($status.latestManualQaDropOpenCommand)``. Rode o QA em VM/maquina limpa usando ``$($status.latestManualQaTestDropRunner)`` ou tente ``$($status.latestManualQaDropSandboxCommand)``. Depois confira com ``$($status.latestManualQaDropCheckCommand)`` e consolide com ``$($status.latestManualQaDropReceiveCommand)``."
+  } else {
+    "Rode ``npm run qa:manual:drop`` para gerar o pacote de VM/maquina limpa, depois ``npm run qa:manual:drop:receive`` ao voltar as evidencias. Para roteiro compacto, rode ``npm run qa:manual:plan``."
+  }
 } elseif ([string]$status.manualDecision -ne "GO" -and $status.p0FailedOrBlocked -gt 0) {
-  "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:portable`` e execute o ZIP em VM/maquina limpa; depois copie ``HermesQA`` de volta e consolide com ``npm run qa:manual:receive -- -EvidenceDropPath <pasta-HermesQA>``."
+  "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:drop`` e execute o drop em VM/maquina limpa; depois consolide com ``npm run qa:manual:drop:receive``."
 } elseif ([string]$status.manualDecision -ne "GO") {
   "Revise ``.release/manual-qa`` e rode ``npm run qa:manual:status`` para atualizar a decisao manual."
 } elseif ($status.unsignedInstallerCount -gt 0 -and -not $signingPreflight) {
@@ -255,6 +275,7 @@ $markdown.Add("- QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 
 $markdown.Add("- QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' }) ($manualSummary)")
 $markdown.Add("- Release candidate: $candidateSummary")
 $markdown.Add("- Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })")
+$markdown.Add("- Drop QA manual: $(if ($status.latestManualQaTestDrop) { $status.latestManualQaTestDrop } else { 'ausente' })")
 $markdown.Add("- Instaladores sem Authenticode Valid: $($status.unsignedInstallerCount)")
 $markdown.Add("- Assinatura: $signingSummary")
 $markdown.Add("- Certificados candidatos: $($status.signingCertificateCandidateCount)")
@@ -282,6 +303,23 @@ $markdown.Add("")
 $markdown.Add("## Proximo passo")
 $markdown.Add("")
 $markdown.Add($nextStep)
+if ($status.latestManualQaTestDrop) {
+  $markdown.Add("")
+  $markdown.Add("## Drop de QA Manual")
+  $markdown.Add("")
+  $markdown.Add("- Drop: ``$($status.latestManualQaTestDrop)``")
+  $markdown.Add("- ZIP para VM: ``$(if ($status.latestManualQaDropZip) { $status.latestManualQaDropZip } else { 'gere com npm run qa:manual:drop:zip' })``")
+  if ($status.latestManualQaDropZipSha256) {
+    $markdown.Add("- ZIP SHA256: ``$($status.latestManualQaDropZipSha256)``")
+  }
+  $markdown.Add("- Runner VM: ``$($status.latestManualQaTestDropRunner)``")
+  $markdown.Add("- Windows Sandbox: ``$($status.latestManualQaTestDropSandbox)``")
+  $markdown.Add("- Abrir drop: ``$($status.latestManualQaDropOpenCommand)``")
+  $markdown.Add("- Tentar Sandbox: ``$($status.latestManualQaDropSandboxCommand)``")
+  $markdown.Add("- Gerar ZIP VM: ``$($status.latestManualQaDropZipCommand)``")
+  $markdown.Add("- Checar retorno: ``$($status.latestManualQaDropCheckCommand)``")
+  $markdown.Add("- Receber evidencias: ``$($status.latestManualQaDropReceiveCommand)``")
+}
 
 $markdown | Set-Content -LiteralPath $statusMarkdownPath -Encoding UTF8
 
@@ -290,6 +328,20 @@ Write-Host "QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 'PEND
 Write-Host "QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' })"
 Write-Host "P0 manual: $($status.p0Passed)/$($status.p0Total) aprovados"
 Write-Host "Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })"
+Write-Host "Drop QA manual: $(if ($status.latestManualQaTestDrop) { $status.latestManualQaTestDrop } else { 'ausente' })"
+if ($status.latestManualQaDropZip) {
+  Write-Host "ZIP VM: $($status.latestManualQaDropZip)"
+  Write-Host "ZIP SHA256: $($status.latestManualQaDropZipSha256)"
+}
+if ($status.latestManualQaDropOpenCommand) {
+  Write-Host "Abrir drop: $($status.latestManualQaDropOpenCommand)"
+}
+if ($status.latestManualQaDropCheckCommand) {
+  Write-Host "Checar retorno: $($status.latestManualQaDropCheckCommand)"
+}
+if ($status.latestManualQaDropReceiveCommand) {
+  Write-Host "Receber evidencias: $($status.latestManualQaDropReceiveCommand)"
+}
 Write-Host "Instaladores sem Authenticode Valid: $($status.unsignedInstallerCount)"
 
 if ($blockers.Count -gt 0) {

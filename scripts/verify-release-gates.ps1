@@ -30,7 +30,14 @@ $buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
 $manualQaBulkPath = Join-Path $root "scripts\update-manual-qa-bulk.ps1"
 $manualQaPlanPath = Join-Path $root "scripts\create-manual-qa-action-plan.ps1"
 $manualQaDropPath = Join-Path $root "scripts\create-manual-qa-test-drop.ps1"
+$manualQaDropVerifyPath = Join-Path $root "scripts\check-manual-qa-test-drop.ps1"
+$manualQaDropReceivePath = Join-Path $root "scripts\receive-manual-qa-test-drop.ps1"
+$manualQaDropOpenPath = Join-Path $root "scripts\open-manual-qa-test-drop.ps1"
+$manualQaDropZipPath = Join-Path $root "scripts\package-manual-qa-test-drop.ps1"
+$manualQaDropAutoPath = Join-Path $root "scripts\run-manual-qa-test-drop-auto.ps1"
 $signingHandoffPath = Join-Path $root "scripts\create-signing-handoff.ps1"
+$launchPlanPath = Join-Path $root "scripts\create-release-launch-plan.ps1"
+$qaWindowsDropWorkflowPath = Join-Path $root ".github\workflows\qa-windows-drop.yml"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -45,7 +52,14 @@ $safeModeRs = Read-Text $safeModeRsPath
 $manualQaBulk = Read-Text $manualQaBulkPath
 $manualQaPlan = Read-Text $manualQaPlanPath
 $manualQaDrop = Read-Text $manualQaDropPath
+$manualQaDropVerify = Read-Text $manualQaDropVerifyPath
+$manualQaDropReceive = Read-Text $manualQaDropReceivePath
+$manualQaDropOpen = Read-Text $manualQaDropOpenPath
+$manualQaDropZip = Read-Text $manualQaDropZipPath
+$manualQaDropAuto = Read-Text $manualQaDropAutoPath
 $signingHandoff = Read-Text $signingHandoffPath
+$launchPlan = Read-Text $launchPlanPath
+$qaWindowsDropWorkflow = Read-Text $qaWindowsDropWorkflowPath
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
 Assert-True ($LASTEXITCODE -eq 0) `
@@ -94,7 +108,15 @@ Assert-True ([bool]$scripts.'verify:feature-preservation') "package.json precisa
 Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
 Assert-True ([bool]$scripts.'qa:manual:plan') "package.json precisa ter qa:manual:plan."
 Assert-True ([bool]$scripts.'qa:manual:drop') "package.json precisa ter qa:manual:drop."
+Assert-True ([bool]$scripts.'qa:manual:drop:verify') "package.json precisa ter qa:manual:drop:verify."
+Assert-True ([bool]$scripts.'qa:manual:drop:open') "package.json precisa ter qa:manual:drop:open."
+Assert-True ([bool]$scripts.'qa:manual:drop:sandbox') "package.json precisa ter qa:manual:drop:sandbox."
+Assert-True ([bool]$scripts.'qa:manual:drop:zip') "package.json precisa ter qa:manual:drop:zip."
+Assert-True ([bool]$scripts.'qa:manual:drop:auto') "package.json precisa ter qa:manual:drop:auto."
+Assert-True ([bool]$scripts.'qa:manual:drop:check') "package.json precisa ter qa:manual:drop:check."
+Assert-True ([bool]$scripts.'qa:manual:drop:receive') "package.json precisa ter qa:manual:drop:receive."
 Assert-True ([bool]$scripts.'release:signing:handoff') "package.json precisa ter release:signing:handoff."
+Assert-True ([bool]$scripts.'release:launch-plan') "package.json precisa ter release:launch-plan."
 Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
   "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
 Assert-True ($manualQaBulk -match 'install-nsis' -and $manualQaBulk -match 'install-msi' -and $manualQaBulk -match 'authenticode') `
@@ -105,8 +127,30 @@ Assert-True ($manualQaPlan -match 'qa:manual:receive' -and $manualQaPlan -match 
   "Plano de QA manual precisa orientar receive da VM e aprovacao em lote nao protegida."
 Assert-True ($manualQaDrop -match 'RODAR-QA-HERMES-NA-VM.ps1' -and $manualQaDrop -match 'HERMES-MANUAL-QA.wsb') `
   "Drop de QA manual precisa gerar runner de VM e arquivo Windows Sandbox."
+Assert-True ($manualQaDropVerify -match 'manual-qa-test-drop-verification' -and $manualQaDropVerify -match 'RUN-INSTALL-SMOKE.ps1') `
+  "Verificador do drop de QA manual precisa validar pacote, runner e smoke."
+Assert-True ($manualQaDropReceive -match 'receive-manual-qa-evidence.ps1' -and $manualQaDropReceive -match 'HermesQA') `
+  "Recebimento do drop de QA manual precisa chamar receive-manual-qa-evidence com HermesQA do drop."
+Assert-True ($manualQaDropReceive -match 'CheckOnly' -and $manualQaDropReceive -match 'manual-qa-test-drop-receive-check') `
+  "Recebimento do drop de QA manual precisa ter modo CheckOnly antes de importar evidencias."
+Assert-True ($manualQaDropOpen -match 'WindowsSandbox.exe' -and $manualQaDropOpen -match 'explorer.exe' -and $manualQaDropOpen -match 'qa:manual:drop:check') `
+  "Abridor do drop de QA manual precisa abrir pasta, suportar Sandbox e mostrar comandos de retorno."
+Assert-True ($manualQaDropZip -match 'Compress-Archive' -and $manualQaDropZip -match 'SHA256' -and $manualQaDropZip -match 'RODAR-QA-HERMES-NA-VM.ps1') `
+  "Empacotador do drop de QA manual precisa gerar ZIP com SHA256 e instrucoes de VM."
+Assert-True ($manualQaDrop -match 'HERMES_QA_AUTO_SAFE' -and $manualQaDrop -match 'BLOCKED_BY_AUTO_SAFE') `
+  "Runner do drop de QA manual precisa bloquear install smoke/GUI no modo automatico seguro."
+Assert-True ($manualQaDropReceive -match 'HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE') `
+  "Recebimento do drop precisa permitir importacao controlada sem install smoke no modo automatico seguro."
+Assert-True ($manualQaDropAuto -match 'qa:manual:drop:zip' -and $manualQaDropAuto -match 'RODAR-QA-HERMES-NA-VM.ps1' -and $manualQaDropAuto -match 'HERMES_QA_AUTO_SAFE' -and $manualQaDropAuto -match 'manual-qa-drop-auto-result') `
+  "Fluxo automatico do drop precisa zipar, validar SHA256, extrair, rodar QuickPassAll em modo seguro e gerar relatorio."
+Assert-True ($manualQaDropAuto -match 'build:windows:test' -and $manualQaDropAuto -match 'release:internal') `
+  "Fluxo automatico do drop precisa inicializar build/sessao quando rodar em checkout limpo."
 Assert-True ($signingHandoff -match 'Code Signing' -and $signingHandoff -match 'HERMES_CERT_THUMBPRINT') `
   "Handoff de assinatura precisa explicar certificado Code Signing e HERMES_CERT_THUMBPRINT."
+Assert-True ($launchPlan -match 'qa:manual:drop:open' -and $launchPlan -match 'release:signing:handoff' -and $launchPlan -match 'build:windows:real:signed') `
+  "Plano de lancamento precisa orientar QA manual, handoff de assinatura e build real assinado."
+Assert-True ($qaWindowsDropWorkflow -match 'windows-latest' -and $qaWindowsDropWorkflow -match 'npm ci' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto' -and $qaWindowsDropWorkflow -match 'actions/upload-artifact') `
+  "Workflow QA Windows Drop precisa rodar em windows-latest, instalar dependencias, executar auto drop e publicar artifacts."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(
@@ -155,5 +199,13 @@ Write-Host "- Scripts de build test/real/signed existem."
 Write-Host "- QA manual em lote existe com travas de evidencia e itens protegidos."
 Write-Host "- Plano de acao do QA manual existe para VM, lote e assinatura."
 Write-Host "- Drop de QA manual existe para VM/maquina limpa."
+Write-Host "- Verificador do drop de QA manual existe."
+Write-Host "- Abridor do drop de QA manual existe."
+Write-Host "- ZIP exportavel do drop de QA manual existe."
+Write-Host "- Fluxo automatico local do drop existe com logs, SHA256 e bloqueio seguro de install/GUI."
+Write-Host "- Workflow GitHub Actions valida o drop em Windows efemero e publica logs/ZIP como artifacts."
+Write-Host "- Check de retorno do drop de QA manual existe."
+Write-Host "- Recebimento automatico do drop de QA manual existe."
 Write-Host "- Preservacao de rotas, motores e documentos importantes esta protegida."
 Write-Host "- Handoff de assinatura existe para destravar Authenticode."
+Write-Host "- Plano de lancamento final existe para orientar QA manual, assinatura e build publicavel."

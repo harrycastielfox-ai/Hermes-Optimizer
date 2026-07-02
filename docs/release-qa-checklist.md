@@ -43,6 +43,7 @@ Data base: 2026-06-26
 - [x] `npm run verify:branding-copy`: valida metadata Hermes, telas de erro em portugues e bloqueia residuos visiveis de starter.
 - [x] `npm run verify:ui-shell`: valida sidebar principal, rotas aprovadas, areas rolaveis e chrome customizado da janela.
 - [x] Pipeline assinado endurecido: valida certificado, chave privada, MSI/NSIS e Authenticode; sem certificado o build assinado bloqueia.
+- [x] GitHub Actions `QA Windows Drop` valida lint, TypeScript, release gates, `qa:manual:drop:auto`, `release:status` e `git diff --check` em `windows-latest`.
 - [x] `npm run release:candidate`: gera pacote interno com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO.
 - [x] `npm run release:candidate:verify`: valida integridade do pacote RC, hashes, manifesto e Authenticode antes de teste manual.
 - [x] `npm run qa:manual:new`: gera sessao preenchivel de QA manual para maquina limpa/VM.
@@ -138,6 +139,16 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Smoke de instalacao NSIS/MSI para Sandbox geravel por `npm run qa:manual:install-smoke`.
 - [x] Pacote portatil de QA para VM/maquina limpa geravel por `npm run qa:manual:portable`.
 - [x] Drop completo de QA manual para VM/maquina limpa geravel por `npm run qa:manual:drop`, com runner, `.wsb`, pacote extraido, guia e comando de retorno.
+- [x] Drop completo de QA manual verificavel por `npm run qa:manual:drop:verify`, conferindo ZIP, SHA256, runner, `.wsb`, README e scripts extraidos.
+- [x] Ultimo drop de QA manual abrivel por `npm run qa:manual:drop:open`, com pasta/guia no Explorer e fallback claro quando Windows Sandbox nao existir.
+- [x] Windows Sandbox do drop acionavel por `npm run qa:manual:drop:sandbox` quando o recurso estiver disponivel no Windows.
+- [x] Drop de QA manual exportavel por `npm run qa:manual:drop:zip`, gerando ZIP e SHA256 para copiar para VM/maquina limpa.
+- [x] Drop de QA manual automatizavel localmente por `npm run qa:manual:drop:auto`, gerando drop, ZIP, SHA256, pasta temporaria limpa, execucao `RODAR-QA-HERMES-NA-VM.ps1 -QuickPassAll`, logs e relatorio em `.release/manual-qa-test-drop/results`.
+- [x] `qa:manual:drop:auto` nao depende de Windows Sandbox, nao abre GUI e bloqueia install smoke/instalacao local com `HERMES_QA_AUTO_SAFE=1`, registrando o bloqueio em evidencia ao inves de alterar o Windows do host.
+- [x] O workflow `.github/workflows/qa-windows-drop.yml` salva `.release/manual-qa-test-drop/results` e o ZIP do drop como artifacts do GitHub Actions.
+- [x] Retorno do drop verificavel por `npm run qa:manual:drop:check`, conferindo se `qa-extraido\HermesQA` ja possui evidencia antes de importar para a sessao.
+- [x] Evidencias do ultimo drop de QA manual recebiveis por `npm run qa:manual:drop:receive`, sem copiar manualmente para `C:\Temp` quando a pasta da VM/Sandbox estiver mapeada.
+- [x] Pacote de QA manual inclui `RUN-MANUAL-QA-QUICK-PASS.ps1` para gerar evidencia unica dos itens visuais/fluxos nao protegidos quando a VM passou inteira, sem aprovar instalacao ou Authenticode.
 - [x] Pacote portatil gera manifesto e `.sha256` do ZIP para conferir integridade antes de copiar/extrair.
 - [x] Pacote portatil inclui `VERIFY-QA-PACKAGE.ps1` para conferir manifesto, instaladores, SHA256 e scripts antes do smoke.
 - [x] Pacote portatil auditavel por `npm run qa:manual:doctor`, validando manifesto, ZIP, SHA256, comandos obrigatorios e status de release.
@@ -163,3 +174,34 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Caminhos do MSI e NSIS gerados.
 - [ ] Snapshot de restore validado.
 - [ ] Decisao final de release: pode lancar / nao pode lancar.
+
+## GitHub Actions - QA Windows Drop
+
+O workflow `QA Windows Drop` roda em `windows-latest` e pode ser iniciado manualmente no GitHub:
+
+1. Abra o repositorio no GitHub.
+2. Entre em **Actions**.
+3. Selecione **QA Windows Drop**.
+4. Clique em **Run workflow**.
+5. Escolha a branch e confirme.
+
+Ele tambem roda em pull requests e em push na branch `main`.
+
+O workflow executa:
+
+```powershell
+npm ci
+npm run lint
+npx tsc --noEmit
+npm run verify:release-gates
+npm run qa:manual:drop:auto
+npm run release:status
+git diff --check
+```
+
+Artifacts gerados:
+
+- `hermes-qa-windows-drop-results`: logs, relatorios do auto drop, status de release e resumos da sessao QA.
+- `hermes-qa-windows-drop-zip`: ZIP do drop, `.sha256` e manifesto do pacote.
+
+Por padrao, o workflow mantem `HERMES_QA_AUTO_SAFE=1`, entao o runner nao abre GUI nem faz instalacao permanente silenciosa. As etapas que exigem instalacao/GUI ficam registradas como bloqueadas por seguranca ate serem validadas em ambiente apropriado.
