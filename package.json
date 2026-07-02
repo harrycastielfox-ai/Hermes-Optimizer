@@ -22,6 +22,7 @@
     "verify:feature-preservation": "node scripts/verify-feature-preservation.mjs",
     "verify:optimization-catalog": "node scripts/verify-optimization-catalog.mjs",
     "verify:gamer-dependencies": "node scripts/verify-gamer-dependency-manifest.mjs",
+    "verify:no-signing-secrets": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-no-signing-secrets.ps1",
     "audit:gamer-dependencies": "node scripts/audit-gamer-dependency-manifest.mjs",
     "qa:release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-release.ps1",
     "qa:manual:new": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/new-manual-qa-session.ps1",

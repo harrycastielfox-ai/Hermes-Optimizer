@@ -27,6 +27,7 @@ $capabilityPath = Join-Path $root "src-tauri\capabilities\default.json"
 $safeModeTsPath = Join-Path $root "src\lib\safe-mode.ts"
 $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
 $buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
+$noSigningSecretsScript = Join-Path $root "scripts\verify-no-signing-secrets.ps1"
 $manualQaBulkPath = Join-Path $root "scripts\update-manual-qa-bulk.ps1"
 $manualQaSelectPath = Join-Path $root "scripts\select-manual-qa-session.ps1"
 $manualQaAlignCurrentRcPath = Join-Path $root "scripts\align-manual-qa-to-current-rc.ps1"
@@ -81,6 +82,10 @@ $publicReleaseReady = Read-Text $publicReleaseReadyPath
 Assert-True ($LASTEXITCODE -eq 0) `
   "Build mode sync precisa garantir frontend/backend juntos em test/real."
 
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $noSigningSecretsScript
+Assert-True ($LASTEXITCODE -eq 0) `
+  "Repositorio nao pode rastrear PFX, chaves privadas ou senha real de assinatura."
+
 Assert-True ($manifest -match 'requestedExecutionLevel\s+level="requireAdministrator"') `
   "Manifest Windows precisa exigir requireAdministrator."
 Assert-True ($buildRs -match 'windows-app-manifest\.xml') `
@@ -121,6 +126,7 @@ Assert-True ([bool]$scripts.'build:windows:real') "package.json precisa ter buil
 Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa ter build:windows:real:signed."
 Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
 Assert-True ([bool]$scripts.'verify:feature-preservation') "package.json precisa ter verify:feature-preservation."
+Assert-True ([bool]$scripts.'verify:no-signing-secrets') "package.json precisa ter verify:no-signing-secrets."
 Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
 Assert-True ([bool]$scripts.'qa:manual:select') "package.json precisa ter qa:manual:select."
 Assert-True ([bool]$scripts.'qa:manual:select:best') "package.json precisa ter qa:manual:select:best."

@@ -20,6 +20,16 @@ dist-ssr
 src-tauri/tauri.windows.signing.local.json
 diagnostics/
 
+# Signing secrets / certificates
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+hermes-signing-env.ps1
+signing-pfx-import.json
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
