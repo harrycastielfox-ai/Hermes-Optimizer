@@ -75,6 +75,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run release:candidate`: gera pacote interno em `.release/candidates/` com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO para teste manual em maquina limpa.
 - `npm run release:candidate:verify`: valida o pacote RC antes da instalacao manual, conferindo manifesto, hashes, tamanhos, Authenticode e decisao GO/NO-GO.
 - `npm run qa:manual:new`: gera sessao preenchivel de QA manual em `.release/manual-qa/`, vinculada ao release candidate mais recente.
+- `npm run qa:manual:select` / `npm run qa:manual:select:best`: fixa uma sessao QA ativa em `.release/manual-qa/active-manual-qa-session.json`, preservando progresso de QA mesmo quando novos RCs/sessoes forem gerados.
 - `npm run qa:manual:next`: mostra o proximo item pendente do QA manual e grava `.release/manual-qa/<sessao>/manual-qa-next.md` com comandos de aprovacao/falha/bloqueio.
 - `npm run qa:manual:start`: prepara o alvo do item manual atual, mostrando o instalador/checklist correto e abrindo apenas quando usado com `-Launch`.
 - `npm run qa:manual:sandbox`: gera `.wsb` e guia de Windows Sandbox para testar o release candidate em ambiente descartavel.
@@ -86,8 +87,9 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:drop:sandbox`: tenta abrir o `.wsb` do ultimo drop quando Windows Sandbox estiver disponivel; caso contrario, orienta uso de VM/maquina limpa.
 - `npm run qa:manual:drop:zip`: compacta o ultimo drop em ZIP com SHA256 para copiar para VM/maquina limpa quando Sandbox local nao estiver disponivel.
 - `npm run qa:manual:drop:auto`: executa o drop ponta a ponta no host em modo automatico seguro, regenerando o drop, zipando, validando SHA256, extraindo em pasta temporaria limpa, rodando `RODAR-QA-HERMES-NA-VM.ps1 -QuickPassAll`, copiando `HermesQA` de volta para o drop, rodando `qa:manual:drop:check` e `qa:manual:drop:receive`, com logs/relatorio em `.release/manual-qa-test-drop/results`.
+- `npm run qa:manual:drop:auto:install`: modo opt-in para GitHub Actions/VM/maquina descartavel elevada; remove o bloqueio de install smoke e permite validar instalacao NSIS/MSI real.
 - Em checkout limpo, `npm run qa:manual:drop:auto` inicializa a esteira necessaria antes do drop, gerando build Windows em modo teste e release interno quando ainda nao existe sessao de QA manual.
-- `.github/workflows/qa-windows-drop.yml` roda o QA drop automatico em `windows-latest`, com triggers `workflow_dispatch`, `pull_request` e push em `main`, salvando resultados e ZIP como artifacts.
+- `.github/workflows/qa-windows-drop.yml` roda o QA drop automatico em `windows-latest`, com triggers `workflow_dispatch`, `pull_request` e push em `main`, salvando resultados e ZIP como artifacts. Em execucao manual, o input `run_install_smoke=true` chama o modo opt-in de instalacao real.
 - No modo `qa:manual:drop:auto`, o runner usa `HERMES_QA_AUTO_SAFE=1` para bloquear smoke de instalacao/GUI no host e registrar a exigencia de VM/maquina descartavel para essa etapa, sem fazer alteracoes permanentes silenciosas no Windows.
 - `npm run qa:manual:drop:check`: confere se o ultimo drop ja voltou da VM com `HermesQA` e evidencias antes de importar para a sessao.
 - `npm run qa:manual:drop:receive`: recebe automaticamente `qa-extraido\HermesQA` do ultimo drop de QA manual e consolida a sessao com `qa:manual:receive`.
@@ -108,6 +110,9 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
 - `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado.
 - `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
+- `npm run release:public:pipeline`: esteira publica estrita; orquestra lint, TypeScript, gates, QA drop, assinatura/preflight, plano, status e `release:public:verify`, falhando enquanto o resultado nao for GO. A geracao de novo RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
+- `npm run release:public:pipeline:preview`: mesma esteira em modo de acompanhamento, aceitando NO-GO esperado e salvando `.release/public-release-pipeline-latest.*` para acompanhar o que ainda falta.
+- `npm run release:public:verify`: gate estrito de publicacao publica; falha se `release-status` nao estiver GO, se P0 nao estiver completo, se MSI/NSIS nao estiverem Authenticode `Valid`, se o certificado Code Signing nao estiver pronto ou se o release candidate ainda estiver `NO-GO`.
 - `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, atualizando `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - `npm run release:beta:handoff`: gera `.release/beta-handoff/hermes-beta-interno-*` com RC, instaladores, pacote QA portatil, doctor, status de release, evidencias de assinatura e instrucoes para beta controlado.
 - `npm run release:beta:verify`: valida o beta handoff mais recente, conferindo manifesto, ZIP, `.sha256`, estrutura interna, QA portatil e instaladores contra seus manifestos.

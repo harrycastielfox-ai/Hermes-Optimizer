@@ -1,7 +1,8 @@
 param(
   [string]$OutputRoot,
   [string]$ResultsRoot,
-  [switch]$PreserveTemp
+  [switch]$PreserveTemp,
+  [switch]$AllowInstallSmoke
 )
 
 $ErrorActionPreference = "Stop"
@@ -146,13 +147,22 @@ $report = [ordered]@{
   runRoot = $runRoot
   logsRoot = $logsRoot
   tempRoot = $tempRoot
-  autoSafeMode = $true
+  autoSafeMode = (-not [bool]$AllowInstallSmoke)
+  allowInstallSmoke = [bool]$AllowInstallSmoke
   admin = [bool]([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-  notes = @(
-    "Fluxo local executado em HERMES_QA_AUTO_SAFE=1.",
-    "Etapas de instalacao/GUI sao bloqueadas pelo runner para evitar alteracao permanente no Windows do host.",
-    "Itens de instalacao e Authenticode continuam bloqueios reais para release publico."
-  )
+  notes = if ($AllowInstallSmoke) {
+    @(
+      "Fluxo executado com -AllowInstallSmoke.",
+      "Esta modalidade permite instalacao/GUI do install smoke e deve rodar somente em GitHub Actions, VM limpa ou maquina descartavel.",
+      "Este modo e necessario para fechar os P0 install-nsis e install-msi."
+    )
+  } else {
+    @(
+      "Fluxo local executado em HERMES_QA_AUTO_SAFE=1.",
+      "Etapas de instalacao/GUI sao bloqueadas pelo runner para evitar alteracao permanente no Windows do host.",
+      "Itens de instalacao e Authenticode continuam bloqueios reais para release publico."
+    )
+  }
   zip = $null
   sha256 = $null
   runner = $null
@@ -164,6 +174,10 @@ $report = [ordered]@{
 }
 
 try {
+  if ($AllowInstallSmoke -and -not [bool]$report.admin) {
+    throw "Install smoke real exige PowerShell/runner em modo administrador. Rode em GitHub Actions windows-latest, VM limpa elevada ou maquina descartavel elevada."
+  }
+
   if (-not (Test-ManualQaSessionReady)) {
     Invoke-LoggedProcess `
       -Name "00-build-windows-test-for-clean-runner" `
@@ -222,11 +236,17 @@ try {
   }
   $report.runner = $runner.FullName
 
+  $runnerEnvironment = if ($AllowInstallSmoke) {
+    @{ HERMES_QA_AUTO_SAFE = "0" }
+  } else {
+    @{ HERMES_QA_AUTO_SAFE = "1" }
+  }
+
   Invoke-LoggedProcess `
     -Name "03-run-extracted-runner-quick-pass" `
     -FilePath "powershell.exe" `
     -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $runner.FullName, "-QuickPassAll") `
-    -Environment @{ HERMES_QA_AUTO_SAFE = "1" } | Out-Null
+    -Environment $runnerEnvironment | Out-Null
 
   $generatedEvidence = Get-ChildItem -LiteralPath $extractRoot -Recurse -Directory -Filter "HermesQA" |
     Sort-Object LastWriteTime -Descending |
@@ -254,11 +274,17 @@ try {
     -FilePath "npm.cmd" `
     -ArgumentList @("run", "qa:manual:drop:check") | Out-Null
 
+  $receiveEnvironment = if ($AllowInstallSmoke) {
+    @{ HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE = "0" }
+  } else {
+    @{ HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE = "1" }
+  }
+
   Invoke-LoggedProcess `
     -Name "05-drop-receive" `
     -FilePath "npm.cmd" `
     -ArgumentList @("run", "qa:manual:drop:receive") `
-    -Environment @{ HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE = "1" } | Out-Null
+    -Environment $receiveEnvironment | Out-Null
 
   $report.status = "OK"
 } catch {
@@ -275,6 +301,7 @@ try {
   $markdown.Add("")
   $markdown.Add("- Status: **$($report.status)**")
   $markdown.Add("- Auto safe mode: $($report.autoSafeMode)")
+  $markdown.Add("- Allow install smoke: $($report.allowInstallSmoke)")
   $markdown.Add("- Admin: $($report.admin)")
   $markdown.Add("- ZIP: $($report.zip)")
   $markdown.Add("- SHA256: $($report.sha256)")

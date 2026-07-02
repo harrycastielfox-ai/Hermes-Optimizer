@@ -28,6 +28,7 @@ $safeModeTsPath = Join-Path $root "src\lib\safe-mode.ts"
 $safeModeRsPath = Join-Path $root "src-tauri\src\safe_mode.rs"
 $buildModeSyncScript = Join-Path $root "scripts\verify-build-mode-sync.ps1"
 $manualQaBulkPath = Join-Path $root "scripts\update-manual-qa-bulk.ps1"
+$manualQaSelectPath = Join-Path $root "scripts\select-manual-qa-session.ps1"
 $manualQaPlanPath = Join-Path $root "scripts\create-manual-qa-action-plan.ps1"
 $manualQaDropPath = Join-Path $root "scripts\create-manual-qa-test-drop.ps1"
 $manualQaDropVerifyPath = Join-Path $root "scripts\check-manual-qa-test-drop.ps1"
@@ -37,7 +38,10 @@ $manualQaDropZipPath = Join-Path $root "scripts\package-manual-qa-test-drop.ps1"
 $manualQaDropAutoPath = Join-Path $root "scripts\run-manual-qa-test-drop-auto.ps1"
 $signingHandoffPath = Join-Path $root "scripts\create-signing-handoff.ps1"
 $launchPlanPath = Join-Path $root "scripts\create-release-launch-plan.ps1"
+$publicReleasePipelinePath = Join-Path $root "scripts\run-public-release-pipeline.ps1"
 $qaWindowsDropWorkflowPath = Join-Path $root ".github\workflows\qa-windows-drop.yml"
+$signedWindowsWorkflowPath = Join-Path $root ".github\workflows\release-windows-signed.yml"
+$publicReleaseReadyPath = Join-Path $root "scripts\verify-public-release-ready.ps1"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -50,6 +54,7 @@ $capability = Read-Text $capabilityPath | ConvertFrom-Json
 $safeModeTs = Read-Text $safeModeTsPath
 $safeModeRs = Read-Text $safeModeRsPath
 $manualQaBulk = Read-Text $manualQaBulkPath
+$manualQaSelect = Read-Text $manualQaSelectPath
 $manualQaPlan = Read-Text $manualQaPlanPath
 $manualQaDrop = Read-Text $manualQaDropPath
 $manualQaDropVerify = Read-Text $manualQaDropVerifyPath
@@ -59,7 +64,10 @@ $manualQaDropZip = Read-Text $manualQaDropZipPath
 $manualQaDropAuto = Read-Text $manualQaDropAutoPath
 $signingHandoff = Read-Text $signingHandoffPath
 $launchPlan = Read-Text $launchPlanPath
+$publicReleasePipeline = Read-Text $publicReleasePipelinePath
 $qaWindowsDropWorkflow = Read-Text $qaWindowsDropWorkflowPath
+$signedWindowsWorkflow = Read-Text $signedWindowsWorkflowPath
+$publicReleaseReady = Read-Text $publicReleaseReadyPath
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
 Assert-True ($LASTEXITCODE -eq 0) `
@@ -106,6 +114,8 @@ Assert-True ([bool]$scripts.'build:windows:real:signed') "package.json precisa t
 Assert-True ([bool]$scripts.'verify:build-mode') "package.json precisa ter verify:build-mode."
 Assert-True ([bool]$scripts.'verify:feature-preservation') "package.json precisa ter verify:feature-preservation."
 Assert-True ([bool]$scripts.'qa:manual:bulk') "package.json precisa ter qa:manual:bulk para QA em lote com evidencia."
+Assert-True ([bool]$scripts.'qa:manual:select') "package.json precisa ter qa:manual:select."
+Assert-True ([bool]$scripts.'qa:manual:select:best') "package.json precisa ter qa:manual:select:best."
 Assert-True ([bool]$scripts.'qa:manual:plan') "package.json precisa ter qa:manual:plan."
 Assert-True ([bool]$scripts.'qa:manual:drop') "package.json precisa ter qa:manual:drop."
 Assert-True ([bool]$scripts.'qa:manual:drop:verify') "package.json precisa ter qa:manual:drop:verify."
@@ -113,16 +123,22 @@ Assert-True ([bool]$scripts.'qa:manual:drop:open') "package.json precisa ter qa:
 Assert-True ([bool]$scripts.'qa:manual:drop:sandbox') "package.json precisa ter qa:manual:drop:sandbox."
 Assert-True ([bool]$scripts.'qa:manual:drop:zip') "package.json precisa ter qa:manual:drop:zip."
 Assert-True ([bool]$scripts.'qa:manual:drop:auto') "package.json precisa ter qa:manual:drop:auto."
+Assert-True ([bool]$scripts.'qa:manual:drop:auto:install') "package.json precisa ter qa:manual:drop:auto:install."
 Assert-True ([bool]$scripts.'qa:manual:drop:check') "package.json precisa ter qa:manual:drop:check."
 Assert-True ([bool]$scripts.'qa:manual:drop:receive') "package.json precisa ter qa:manual:drop:receive."
 Assert-True ([bool]$scripts.'release:signing:handoff') "package.json precisa ter release:signing:handoff."
 Assert-True ([bool]$scripts.'release:launch-plan') "package.json precisa ter release:launch-plan."
+Assert-True ([bool]$scripts.'release:public:pipeline') "package.json precisa ter release:public:pipeline."
+Assert-True ([bool]$scripts.'release:public:pipeline:preview') "package.json precisa ter release:public:pipeline:preview."
+Assert-True ([bool]$scripts.'release:public:verify') "package.json precisa ter release:public:verify."
 Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
   "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
 Assert-True ($manualQaBulk -match 'install-nsis' -and $manualQaBulk -match 'install-msi' -and $manualQaBulk -match 'authenticode') `
   "QA manual em lote precisa proteger instaladores e Authenticode por padrao."
 Assert-True ($manualQaBulk -match 'AllowProtected') `
   "QA manual em lote precisa exigir AllowProtected para itens criticos."
+Assert-True ($manualQaSelect -match 'active-manual-qa-session' -and $manualQaSelect -match 'p0Passed' -and $manualQaSelect -match 'Best') `
+  "QA manual precisa permitir selecionar sessao ativa e recuperar a sessao com melhor progresso."
 Assert-True ($manualQaPlan -match 'qa:manual:receive' -and $manualQaPlan -match 'all-non-protected') `
   "Plano de QA manual precisa orientar receive da VM e aprovacao em lote nao protegida."
 Assert-True ($manualQaDrop -match 'RODAR-QA-HERMES-NA-VM.ps1' -and $manualQaDrop -match 'HERMES-MANUAL-QA.wsb') `
@@ -145,12 +161,20 @@ Assert-True ($manualQaDropAuto -match 'qa:manual:drop:zip' -and $manualQaDropAut
   "Fluxo automatico do drop precisa zipar, validar SHA256, extrair, rodar QuickPassAll em modo seguro e gerar relatorio."
 Assert-True ($manualQaDropAuto -match 'build:windows:test' -and $manualQaDropAuto -match 'release:internal') `
   "Fluxo automatico do drop precisa inicializar build/sessao quando rodar em checkout limpo."
+Assert-True ($manualQaDropAuto -match 'AllowInstallSmoke' -and $manualQaDropAuto -match 'Install smoke real exige') `
+  "Fluxo automatico precisa ter modo explicito para install smoke real em runner/VM elevado."
 Assert-True ($signingHandoff -match 'Code Signing' -and $signingHandoff -match 'HERMES_CERT_THUMBPRINT') `
   "Handoff de assinatura precisa explicar certificado Code Signing e HERMES_CERT_THUMBPRINT."
 Assert-True ($launchPlan -match 'qa:manual:drop:open' -and $launchPlan -match 'release:signing:handoff' -and $launchPlan -match 'build:windows:real:signed') `
   "Plano de lancamento precisa orientar QA manual, handoff de assinatura e build real assinado."
-Assert-True ($qaWindowsDropWorkflow -match 'windows-latest' -and $qaWindowsDropWorkflow -match 'npm ci' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto' -and $qaWindowsDropWorkflow -match 'actions/upload-artifact') `
-  "Workflow QA Windows Drop precisa rodar em windows-latest, instalar dependencias, executar auto drop e publicar artifacts."
+Assert-True ($publicReleasePipeline -match 'AllowInstallSmoke' -and $publicReleasePipeline -match 'BuildSigned' -and $publicReleasePipeline -match 'RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'release:public:verify' -and $publicReleasePipeline -match 'public-release-pipeline-latest') `
+  "Pipeline publico precisa orquestrar QA, install smoke opt-in, assinatura opt-in, RC opt-in, gate publico e relatorio latest."
+Assert-True ($qaWindowsDropWorkflow -match 'windows-latest' -and $qaWindowsDropWorkflow -match 'npm ci' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto:install' -and $qaWindowsDropWorkflow -match 'actions/upload-artifact') `
+  "Workflow QA Windows Drop precisa rodar em windows-latest, instalar dependencias, executar auto drop seguro/install opt-in e publicar artifacts."
+Assert-True ($signedWindowsWorkflow -match 'windows-latest' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_BASE64' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_PASSWORD' -and $signedWindowsWorkflow -match 'build:windows:real:signed' -and $signedWindowsWorkflow -match 'release:public:verify' -and $signedWindowsWorkflow -match 'actions/upload-artifact') `
+  "Workflow Release Windows Signed precisa importar PFX via secrets, gerar build real assinado, rodar gate publico e publicar instaladores/evidencias."
+Assert-True ($publicReleaseReady -match 'unsignedInstallerCount' -and $publicReleaseReady -match 'signingAllInstallersSigned' -and $publicReleaseReady -match 'publicDecision' -and $publicReleaseReady -match 'Authenticode Valid') `
+  "Gate de publicacao publica precisa bloquear P0 incompleto, instalador sem assinatura e RC NO-GO."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(
@@ -203,9 +227,13 @@ Write-Host "- Verificador do drop de QA manual existe."
 Write-Host "- Abridor do drop de QA manual existe."
 Write-Host "- ZIP exportavel do drop de QA manual existe."
 Write-Host "- Fluxo automatico local do drop existe com logs, SHA256 e bloqueio seguro de install/GUI."
-Write-Host "- Workflow GitHub Actions valida o drop em Windows efemero e publica logs/ZIP como artifacts."
+Write-Host "- Fluxo automatico possui modo opt-in de install smoke real para VM/runner elevado."
+Write-Host "- Workflow GitHub Actions valida o drop em Windows efemero, com install smoke real opcional, e publica logs/ZIP como artifacts."
+Write-Host "- Workflow manual de release assinado importa PFX via secrets, gera MSI/NSIS assinados e bloqueia publicacao se o gate publico falhar."
+Write-Host "- Gate de publicacao publica bloqueia RC NO-GO e instaladores sem Authenticode Valid."
 Write-Host "- Check de retorno do drop de QA manual existe."
 Write-Host "- Recebimento automatico do drop de QA manual existe."
 Write-Host "- Preservacao de rotas, motores e documentos importantes esta protegida."
 Write-Host "- Handoff de assinatura existe para destravar Authenticode."
 Write-Host "- Plano de lancamento final existe para orientar QA manual, assinatura e build publicavel."
+Write-Host "- Pipeline publico unico existe para orquestrar checks, QA drop, assinatura opt-in, status e gate final."

@@ -47,6 +47,7 @@ Data base: 2026-06-26
 - [x] `npm run release:candidate`: gera pacote interno com MSI/NSIS, SHA256, QA, docs e decisao GO/NO-GO.
 - [x] `npm run release:candidate:verify`: valida integridade do pacote RC, hashes, manifesto e Authenticode antes de teste manual.
 - [x] `npm run qa:manual:new`: gera sessao preenchivel de QA manual para maquina limpa/VM.
+- [x] `npm run qa:manual:select` e `npm run qa:manual:select:best`: fixam uma sessao QA ativa para preservar progresso mesmo quando novos RCs/sessoes forem gerados.
 - [x] `npm run qa:manual:item -- -ItemId <id> -Status <status>`: atualiza item individual da sessao manual com evidencia/notas.
 - [x] `npm run qa:manual:bulk`: atualiza grupos de QA manual com uma evidencia real, mantendo instaladores e Authenticode protegidos por padrao.
 - [x] `npm run qa:manual:plan`: gera roteiro compacto de VM, consolidacao, lote e assinatura para a sessao manual atual.
@@ -133,6 +134,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Pacote interno de release candidate gerado em `.release/candidates/` por `npm run release:candidate`.
 - [x] Integridade do pacote interno validada por `npm run release:candidate:verify`.
 - [x] Sessao de QA manual gerada em `.release/manual-qa/` por `npm run qa:manual:new`.
+- [x] Sessao de QA manual ativa selecionavel por `npm run qa:manual:select` ou `npm run qa:manual:select:best`, evitando que uma sessao nova esconda progresso anterior de QA.
 - [x] Proximo item de QA manual consultavel por `npm run qa:manual:next`.
 - [x] Alvo do item de QA manual preparavel por `npm run qa:manual:start`.
 - [x] Ambiente Windows Sandbox para QA manual geravel por `npm run qa:manual:sandbox`.
@@ -145,7 +147,9 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Drop de QA manual exportavel por `npm run qa:manual:drop:zip`, gerando ZIP e SHA256 para copiar para VM/maquina limpa.
 - [x] Drop de QA manual automatizavel localmente por `npm run qa:manual:drop:auto`, gerando drop, ZIP, SHA256, pasta temporaria limpa, execucao `RODAR-QA-HERMES-NA-VM.ps1 -QuickPassAll`, logs e relatorio em `.release/manual-qa-test-drop/results`.
 - [x] `qa:manual:drop:auto` nao depende de Windows Sandbox, nao abre GUI e bloqueia install smoke/instalacao local com `HERMES_QA_AUTO_SAFE=1`, registrando o bloqueio em evidencia ao inves de alterar o Windows do host.
+- [x] `qa:manual:drop:auto:install` existe como modo opt-in para VM/runner elevado, permitindo install smoke real de NSIS/MSI sem usar esse caminho como padrao local.
 - [x] O workflow `.github/workflows/qa-windows-drop.yml` salva `.release/manual-qa-test-drop/results` e o ZIP do drop como artifacts do GitHub Actions.
+- [x] O workflow `.github/workflows/release-windows-signed.yml` prepara release assinado manual em `windows-latest`, importando PFX via secrets e bloqueando publicacao se `release:public:verify` falhar.
 - [x] Retorno do drop verificavel por `npm run qa:manual:drop:check`, conferindo se `qa-extraido\HermesQA` ja possui evidencia antes de importar para a sessao.
 - [x] Evidencias do ultimo drop de QA manual recebiveis por `npm run qa:manual:drop:receive`, sem copiar manualmente para `C:\Temp` quando a pasta da VM/Sandbox estiver mapeada.
 - [x] Pacote de QA manual inclui `RUN-MANUAL-QA-QUICK-PASS.ps1` para gerar evidencia unica dos itens visuais/fluxos nao protegidos quando a VM passou inteira, sem aprovar instalacao ou Authenticode.
@@ -161,6 +165,7 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado quando existirem.
+- [x] Pipeline publico unico geravel por `npm run release:public:pipeline:preview`, orquestrando lint, TypeScript, release gates, QA drop, assinatura/preflight, plano, status e gate publico sem liberar release quando o resultado segue NO-GO. A regeneracao de RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
 - [x] Pacote de beta interno geravel por `npm run release:beta:handoff`, mantendo aviso de `NO-GO` publico quando assinatura/QA manual ainda nao fecharam.
 - [x] Pacote de beta interno verificavel por `npm run release:beta:verify`, gerando `beta-handoff-verification.json/md`.
@@ -183,7 +188,9 @@ O workflow `QA Windows Drop` roda em `windows-latest` e pode ser iniciado manual
 2. Entre em **Actions**.
 3. Selecione **QA Windows Drop**.
 4. Clique em **Run workflow**.
-5. Escolha a branch e confirme.
+5. Para validar apenas o pipeline seguro, deixe `run_install_smoke=false`.
+6. Para tentar fechar `install-nsis`/`install-msi` no runner descartavel, use `run_install_smoke=true`.
+7. Escolha a branch e confirme.
 
 Ele tambem roda em pull requests e em push na branch `main`.
 
@@ -205,3 +212,5 @@ Artifacts gerados:
 - `hermes-qa-windows-drop-zip`: ZIP do drop, `.sha256` e manifesto do pacote.
 
 Por padrao, o workflow mantem `HERMES_QA_AUTO_SAFE=1`, entao o runner nao abre GUI nem faz instalacao permanente silenciosa. As etapas que exigem instalacao/GUI ficam registradas como bloqueadas por seguranca ate serem validadas em ambiente apropriado.
+
+Quando iniciado manualmente com `run_install_smoke=true`, o workflow roda `npm run qa:manual:drop:auto:install`, permitindo o install smoke real no runner Windows descartavel para coletar evidencia dos P0 `install-nsis` e `install-msi`.

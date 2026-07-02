@@ -108,3 +108,34 @@ O script assinado tambem executa essa verificacao automaticamente ao final.
 ## Bloqueio
 
 Sem certificado real, qualquer build produzido continua sendo build interno/nao assinado e nao deve virar release publica oficial.
+
+## GitHub Actions
+
+O workflow manual `.github/workflows/release-windows-signed.yml` prepara o caminho de release assinado em uma maquina Windows descartavel.
+
+Secrets necessarios no GitHub:
+
+- `HERMES_SIGNING_PFX_BASE64`: PFX do certificado Code Signing convertido para Base64.
+- `HERMES_SIGNING_PFX_PASSWORD`: senha do PFX.
+
+Execucao:
+
+1. Abra **Actions** no GitHub.
+2. Selecione **Release Windows Signed**.
+3. Clique em **Run workflow**.
+4. Escolha `bundles`: `all`, `nsis` ou `msi`.
+5. Confirme o timestamp URL.
+6. Rode o workflow.
+
+O workflow:
+
+- instala dependencias;
+- roda lint, TypeScript e release gates;
+- importa o PFX no `Cert:\CurrentUser\My`;
+- define `HERMES_CERT_THUMBPRINT` automaticamente;
+- roda `npm run release:signing:preflight`;
+- roda `npm run build:windows:real:signed`;
+- roda `npm run release:public:verify`;
+- publica instaladores e evidencias como artifact `hermes-windows-signed-release`.
+
+Se o certificado, QA P0 ou Authenticode ainda nao estiverem prontos, o workflow deve falhar. Isso e intencional para evitar publicar build nao assinado por acidente.

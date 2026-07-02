@@ -51,6 +51,24 @@ function Get-LatestDirectoryOrNull {
     Select-Object -First 1
 }
 
+function Get-ActiveManualQaSessionOrLatest {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+    return $null
+  }
+
+  $activePath = Join-Path $Path "active-manual-qa-session.json"
+  if (Test-Path -LiteralPath $activePath -PathType Leaf) {
+    $active = Read-JsonFileOrNull -Path $activePath
+    if ($active -and -not [string]::IsNullOrWhiteSpace([string]$active.sessionPath) -and (Test-Path -LiteralPath ([string]$active.sessionPath) -PathType Container)) {
+      return Get-Item -LiteralPath ([string]$active.sessionPath)
+    }
+  }
+
+  return Get-LatestDirectoryOrNull -Path $Path
+}
+
 function Get-LatestPortableQaPackageOrNull {
   param([string]$Path)
 
@@ -86,12 +104,16 @@ if ($latestCandidate) {
   $candidateVerification = Read-JsonFileOrNull -Path (Join-Path $latestCandidate.FullName "release-candidate-verification.json")
 }
 
-$latestManualQa = Get-LatestDirectoryOrNull -Path $ManualQaRoot
+$latestManualQa = Get-ActiveManualQaSessionOrLatest -Path $ManualQaRoot
 $manualQaVerification = $null
 if ($latestManualQa) {
   $manualQaVerification = Read-JsonFileOrNull -Path (Join-Path $latestManualQa.FullName "manual-qa-verification.json")
 }
-$latestPortableQaPackage = Get-LatestPortableQaPackageOrNull -Path $ManualQaRoot
+$latestPortableQaPackage = if ($latestManualQa) {
+  Get-LatestPortableQaPackageOrNull -Path $latestManualQa.FullName
+} else {
+  Get-LatestPortableQaPackageOrNull -Path $ManualQaRoot
+}
 $latestManualQaDrop = Read-JsonFileOrNull -Path (Join-Path $ManualQaDropRoot "latest-manual-qa-test-drop.json")
 $latestManualQaDropPackage = Read-JsonFileOrNull -Path (Join-Path $ManualQaDropRoot "latest-manual-qa-test-drop-package.json")
 
@@ -121,7 +143,7 @@ if (-not $manualQaVerification) {
   $blockers.Add("QA manual sem resumo. Rode npm run qa:manual:status.")
 } else {
   if ($latestCandidate -and [string]$manualQaVerification.candidateName -ne $latestCandidate.Name) {
-    $blockers.Add("QA manual pertence a outro RC: $($manualQaVerification.candidateName). Gere uma sessao nova com npm run qa:manual:new.")
+    $blockers.Add("QA manual ativo pertence a outro RC: $($manualQaVerification.candidateName). O progresso foi preservado, mas o release publico final precisa QA alinhado ao RC atual.")
   }
   if ([string]$manualQaVerification.manualDecision -ne "GO") {
     $blockers.Add("QA manual ainda esta $($manualQaVerification.manualDecision).")

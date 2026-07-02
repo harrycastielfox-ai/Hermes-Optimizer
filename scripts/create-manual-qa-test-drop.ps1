@@ -51,9 +51,20 @@ if ([string]::IsNullOrWhiteSpace($SessionPath)) {
     throw "Pasta de sessoes de QA manual nao encontrada: $SessionsRoot"
   }
 
-  $latestSession = Get-ChildItem -LiteralPath $SessionsRoot -Directory |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+  $activePath = Join-Path $SessionsRoot "active-manual-qa-session.json"
+  $latestSession = $null
+  if (Test-Path -LiteralPath $activePath -PathType Leaf) {
+    $active = Get-Content -LiteralPath $activePath -Raw | ConvertFrom-Json
+    if ($active -and -not [string]::IsNullOrWhiteSpace([string]$active.sessionPath) -and (Test-Path -LiteralPath ([string]$active.sessionPath) -PathType Container)) {
+      $latestSession = Get-Item -LiteralPath ([string]$active.sessionPath)
+    }
+  }
+
+  if (-not $latestSession) {
+    $latestSession = Get-ChildItem -LiteralPath $SessionsRoot -Directory |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+  }
 
   if (-not $latestSession) {
     throw "Nenhuma sessao de QA manual encontrada. Execute npm run qa:manual:new primeiro."

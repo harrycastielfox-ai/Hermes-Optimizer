@@ -2,6 +2,15 @@ name: QA Windows Drop
 
 on:
   workflow_dispatch:
+    inputs:
+      run_install_smoke:
+        description: "Run real NSIS/MSI install smoke on the disposable Windows runner"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
   pull_request:
   push:
     branches:
@@ -42,8 +51,16 @@ jobs:
       - name: Release gates
         run: npm run verify:release-gates
 
-      - name: Automatic QA drop
+      - name: Automatic QA drop safe mode
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_install_smoke != 'true' }}
         run: npm run qa:manual:drop:auto
+
+      - name: Automatic QA drop with real install smoke
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_install_smoke == 'true' }}
+        env:
+          HERMES_QA_AUTO_SAFE: "0"
+          HERMES_QA_ALLOW_WITHOUT_INSTALL_SMOKE: "0"
+        run: npm run qa:manual:drop:auto:install
 
       - name: Release status
         run: npm run release:status
