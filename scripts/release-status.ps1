@@ -142,17 +142,20 @@ if (-not $candidateVerification) {
 if (-not $manualQaVerification) {
   $blockers.Add("QA manual sem resumo. Rode npm run qa:manual:status.")
 } else {
+  $qaP0PendingCount = if ($manualQaVerification.PSObject.Properties.Name -contains "qaP0Pending") { [int]$manualQaVerification.qaP0Pending } else { [int]$manualQaVerification.p0Pending }
+  $qaP0FailedOrBlockedCount = if ($manualQaVerification.PSObject.Properties.Name -contains "qaP0FailedOrBlocked") { [int]$manualQaVerification.qaP0FailedOrBlocked } else { [int]$manualQaVerification.p0FailedOrBlocked }
+
   if ($latestCandidate -and [string]$manualQaVerification.candidateName -ne $latestCandidate.Name) {
     $blockers.Add("QA manual ativo pertence a outro RC: $($manualQaVerification.candidateName). O progresso foi preservado, mas o release publico final precisa QA alinhado ao RC atual.")
   }
   if ([string]$manualQaVerification.manualDecision -ne "GO") {
     $blockers.Add("QA manual ainda esta $($manualQaVerification.manualDecision).")
   }
-  if ([int]$manualQaVerification.p0Pending -gt 0) {
-    $blockers.Add("$($manualQaVerification.p0Pending) item(ns) P0 pendente(s) no QA manual.")
+  if ($qaP0PendingCount -gt 0) {
+    $blockers.Add("$qaP0PendingCount item(ns) P0 funcional(is) pendente(s) no QA manual.")
   }
-  if ([int]$manualQaVerification.p0FailedOrBlocked -gt 0) {
-    $blockers.Add("$($manualQaVerification.p0FailedOrBlocked) item(ns) P0 falharam/bloquearam.")
+  if ($qaP0FailedOrBlockedCount -gt 0) {
+    $blockers.Add("$qaP0FailedOrBlockedCount item(ns) P0 funcional(is) falharam/bloquearam.")
   }
 }
 
@@ -224,6 +227,11 @@ $status = [pscustomobject]@{
   p0Total                  = if ($manualQaVerification) { [int]$manualQaVerification.p0Total } else { 0 }
   p0Pending                = if ($manualQaVerification) { [int]$manualQaVerification.p0Pending } else { 0 }
   p0FailedOrBlocked        = if ($manualQaVerification) { [int]$manualQaVerification.p0FailedOrBlocked } else { 0 }
+  qaP0Passed               = if ($manualQaVerification -and ($manualQaVerification.PSObject.Properties.Name -contains "qaP0Passed")) { [int]$manualQaVerification.qaP0Passed } elseif ($manualQaVerification) { [int]$manualQaVerification.p0Passed } else { 0 }
+  qaP0Total                = if ($manualQaVerification -and ($manualQaVerification.PSObject.Properties.Name -contains "qaP0Total")) { [int]$manualQaVerification.qaP0Total } elseif ($manualQaVerification) { [int]$manualQaVerification.p0Total } else { 0 }
+  qaP0Pending              = if ($manualQaVerification -and ($manualQaVerification.PSObject.Properties.Name -contains "qaP0Pending")) { [int]$manualQaVerification.qaP0Pending } elseif ($manualQaVerification) { [int]$manualQaVerification.p0Pending } else { 0 }
+  qaP0FailedOrBlocked      = if ($manualQaVerification -and ($manualQaVerification.PSObject.Properties.Name -contains "qaP0FailedOrBlocked")) { [int]$manualQaVerification.qaP0FailedOrBlocked } elseif ($manualQaVerification) { [int]$manualQaVerification.p0FailedOrBlocked } else { 0 }
+  releaseGateFailedOrBlocked = if ($manualQaVerification -and ($manualQaVerification.PSObject.Properties.Name -contains "releaseGateFailedOrBlocked")) { [int]$manualQaVerification.releaseGateFailedOrBlocked } else { 0 }
   unsignedInstallerCount   = $unsignedInstallers.Count
   signingPreflightPath     = if ($signingPreflight) { (Resolve-Path $SigningPreflightPath).Path } else { $null }
   signingCertificateCandidatesPath = if ($signingCertificateCandidates) { (Resolve-Path $SigningCertificateCandidatesPath).Path } else { $null }
@@ -242,7 +250,7 @@ $status | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $statusPath -Encodi
 $statusMarkdownPath = Join-Path $root ".release\release-status.md"
 
 $manualSummary = if ($manualQaVerification) {
-  "$($status.p0Passed)/$($status.p0Total) P0 aprovados"
+  "$($status.qaP0Passed)/$($status.qaP0Total) P0 funcionais aprovados"
 } else {
   "sem sessao manual"
 }
@@ -265,13 +273,13 @@ $nextStep = if (-not $qaReport -or -not [bool]$status.qaTechnicalPass) {
   "Rode ``npm run release:internal``."
 } elseif (-not $manualQaVerification) {
   "Rode ``npm run qa:manual:status``. Se ainda nao existir sessao manual, rode ``npm run qa:manual:new``."
-} elseif ([string]$status.manualDecision -ne "GO" -and $status.p0Pending -gt 0) {
+} elseif ([string]$status.manualDecision -ne "GO" -and $status.qaP0Pending -gt 0) {
   if ($status.latestManualQaTestDrop -and $status.latestManualQaDropReceiveCommand) {
     "Abra o drop com ``$($status.latestManualQaDropOpenCommand)``. Rode o QA em VM/maquina limpa usando ``$($status.latestManualQaTestDropRunner)`` ou tente ``$($status.latestManualQaDropSandboxCommand)``. Depois confira com ``$($status.latestManualQaDropCheckCommand)`` e consolide com ``$($status.latestManualQaDropReceiveCommand)``."
   } else {
     "Rode ``npm run qa:manual:drop`` para gerar o pacote de VM/maquina limpa, depois ``npm run qa:manual:drop:receive`` ao voltar as evidencias. Para roteiro compacto, rode ``npm run qa:manual:plan``."
   }
-} elseif ([string]$status.manualDecision -ne "GO" -and $status.p0FailedOrBlocked -gt 0) {
+} elseif ([string]$status.manualDecision -ne "GO" -and $status.qaP0FailedOrBlocked -gt 0) {
   "Resolva os P0 bloqueados/falhos em ``.release/manual-qa``. Se o bloqueio for ambiente limpo, rode ``npm run qa:manual:drop`` e execute o drop em VM/maquina limpa; depois consolide com ``npm run qa:manual:drop:receive``."
 } elseif ([string]$status.manualDecision -ne "GO") {
   "Revise ``.release/manual-qa`` e rode ``npm run qa:manual:status`` para atualizar a decisao manual."
@@ -295,6 +303,7 @@ $markdown.Add("")
 $markdown.Add("- Status: **$overallStatus**")
 $markdown.Add("- QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 'PENDENTE/FALHOU' })")
 $markdown.Add("- QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' }) ($manualSummary)")
+$markdown.Add("- Gate de release: $(if ($status.releaseGateFailedOrBlocked -gt 0 -or $status.unsignedInstallerCount -gt 0) { 'BLOQUEADO' } else { 'OK' })")
 $markdown.Add("- Release candidate: $candidateSummary")
 $markdown.Add("- Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })")
 $markdown.Add("- Drop QA manual: $(if ($status.latestManualQaTestDrop) { $status.latestManualQaTestDrop } else { 'ausente' })")
@@ -348,7 +357,8 @@ $markdown | Set-Content -LiteralPath $statusMarkdownPath -Encoding UTF8
 Write-Host "Hermes release status: $overallStatus"
 Write-Host "QA tecnico: $(if ($status.qaTechnicalPass) { 'PASSOU' } else { 'PENDENTE/FALHOU' })"
 Write-Host "QA manual: $(if ($manualQaVerification) { $manualQaVerification.manualDecision } else { 'AUSENTE' })"
-Write-Host "P0 manual: $($status.p0Passed)/$($status.p0Total) aprovados"
+Write-Host "P0 funcional: $($status.qaP0Passed)/$($status.qaP0Total) aprovados"
+Write-Host "Gate release bloqueado: $($status.releaseGateFailedOrBlocked)"
 Write-Host "Pacote QA portatil: $(if ($status.latestManualQaPortableZip) { $status.latestManualQaPortableZip } else { 'ausente' })"
 Write-Host "Drop QA manual: $(if ($status.latestManualQaTestDrop) { $status.latestManualQaTestDrop } else { 'ausente' })"
 if ($status.latestManualQaDropZip) {

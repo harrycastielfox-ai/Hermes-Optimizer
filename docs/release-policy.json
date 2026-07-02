@@ -1,0 +1,16 @@
+{
+  "decisionDate": "2026-07-02",
+  "currentChannel": "internal-beta",
+  "publicSignedRelease": "blocked",
+  "codeSigning": {
+    "status": "deferred",
+    "reason": "Code Signing certificate purchase is postponed. Public signed release remains blocked.",
+    "allowUnsignedPublicRelease": false
+  },
+  "nextWhenPublicSigningDeferred": "npm run release:beta",
+  "notes": [
+    "Do not publish unsigned MSI/NSIS as a public release.",
+    "Use internal beta packages only while Authenticode remains NotSigned.",
+    "Keep release:public:verify and release:public:package blocked until Authenticode is Valid."
+  ]
+}

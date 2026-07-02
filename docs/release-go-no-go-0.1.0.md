@@ -10,6 +10,8 @@ O Hermes esta tecnicamente avançado e com QA automatizado em modo seguro. O smo
 
 Release interno/beta controlado continua permitido apenas com aviso claro de `NO-GO publico`, modo seguro ativo e sem promessa comercial de release final.
 
+Decisao atual de produto/release: a compra/configuracao de certificado Code Signing esta adiada. A politica registrada em `docs/release-policy.json` mantem `publicSignedRelease=blocked`, `codeSigning.status=deferred` e `allowUnsignedPublicRelease=false`. Portanto, o proximo caminho pratico e beta interno controlado, nao release publico.
+
 ## P0 Finais Ainda Abertos
 
 ### P0: install-nsis
@@ -68,7 +70,10 @@ npm run qa:manual:status
 npm run release:signing:certs
 npm run release:signing:import-pfx
 npm run release:signing:preflight
-npm run build:windows:real:signed
+npm run release:signing:doctor
+npm run release:public:pipeline:signed
+npm run release:public:pipeline:signed:install
+npm run release:public:package
 npm run release:status
 ```
 
@@ -96,7 +101,9 @@ npm run release:status
 
 - Certificado Code Signing instalado no Windows Certificate Store.
 - Certificado com chave privada, EKU de Code Signing e dentro da validade.
-- `npm run build:windows:real:signed` concluindo sem erro.
+- `npm run release:public:pipeline:signed` concluindo sem erro.
+- `npm run release:public:pipeline:signed:install` concluindo sem erro em VM/runner elevado.
+- `npm run release:public:package` gerando `.release/public/<pacote>` com MSI/NSIS assinados.
 - `Get-AuthenticodeSignature` dos instaladores NSIS e MSI retornando `Valid`.
 - Thumbprint do assinante igual ao `HERMES_CERT_THUMBPRINT` configurado.
 
@@ -104,7 +111,9 @@ npm run release:status
 
 - Usar `npm run release:public:pipeline` como esteira final estrita antes de publicar.
 - Usar `npm run release:public:pipeline:preview` apenas para acompanhar o estado enquanto o projeto ainda esta `NO-GO`.
-- Publicar somente artefatos gerados por `npm run build:windows:real:signed`.
+- Enquanto `docs/release-policy.json` mantiver Code Signing como `deferred`, usar `npm run release:beta` como proximo passo operacional.
+- Publicar somente artefatos gerados por `npm run release:public:pipeline:signed` ou `npm run release:public:pipeline:signed:install`.
+- Gerar a pasta final com `npm run release:public:package` e publicar somente os instaladores dentro dela.
 - Manter `release:status` como gate antes de qualquer upload publico.
 - Rodar `npm run release:public:verify` antes de qualquer publicacao publica.
 - Bloquear release publico quando `unsignedInstallerCount > 0`.
@@ -150,10 +159,12 @@ npm run release:status
 | QA tecnico automatizado | PASSOU | `npm run verify:release-gates`, `npm run lint`, `npx tsc --noEmit` | Nao |
 | QA drop auto local | PASSOU | `.release/manual-qa-test-drop/results/auto-*/manual-qa-drop-auto-result.md` | Nao sozinho |
 | QA Windows GitHub Actions | PREPARADO | `.github/workflows/qa-windows-drop.yml` | Nao sozinho |
-| Install smoke real opt-in | PREPARADO | `npm run qa:manual:drop:auto:install` | Sim |
+| Install smoke real opt-in | PASSOU no QA atual; repetir no RC assinado final | `npm run qa:manual:drop:auto:install` / `npm run release:public:pipeline:signed:install` | Sim para o RC final |
 | install-nsis | PASSOU | `manual-qa-session.json`, item `install-nsis` | Nao |
 | install-msi | PASSOU | `manual-qa-session.json`, item `install-msi` | Nao |
 | Authenticode NSIS/MSI | BLOQUEADO | `NSIS Authenticode=NotSigned; MSI Authenticode=NotSigned` | Sim |
 | Certificado Code Signing | BLOQUEADO | `HERMES_CERT_THUMBPRINT nao definido` | Sim |
+| Politica Code Signing | ADIADO | `docs/release-policy.json` | Sim para publico, nao para beta interno |
 | Gate de publicacao publica | PREPARADO | `npm run release:public:verify` | Sim |
+| Pacote publico final | PREPARADO/BLOQUEADO ate GO | `npm run release:public:package` | Sim |
 | Release status final | NO-GO | `.release/release-status.json` | Sim |

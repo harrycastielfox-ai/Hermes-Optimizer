@@ -62,25 +62,34 @@ foreach ($item in $items) {
 }
 
 $p0Items = @($items | Where-Object { $_.priority -eq "P0" })
+$releaseGateItemIds = @("authenticode")
+$qaItems = @($items | Where-Object { $releaseGateItemIds -notcontains [string]$_.id })
+$qaP0Items = @($qaItems | Where-Object { $_.priority -eq "P0" })
 $p1Items = @($items | Where-Object { $_.priority -ne "P0" })
 $p0Passed = @($p0Items | Where-Object { $_.status -eq "passed" })
 $p0Pending = @($p0Items | Where-Object { $_.status -eq "pending" })
 $p0Failed = @($p0Items | Where-Object { $_.status -eq "failed" -or $_.status -eq "blocked" })
 $p0Skipped = @($p0Items | Where-Object { $_.status -eq "skipped" })
+$qaP0Passed = @($qaP0Items | Where-Object { $_.status -eq "passed" })
+$qaP0Pending = @($qaP0Items | Where-Object { $_.status -eq "pending" })
+$qaP0Failed = @($qaP0Items | Where-Object { $_.status -eq "failed" -or $_.status -eq "blocked" })
+$qaP0Skipped = @($qaP0Items | Where-Object { $_.status -eq "skipped" })
+$releaseGateItems = @($items | Where-Object { $releaseGateItemIds -contains [string]$_.id })
+$releaseGateFailedOrBlocked = @($releaseGateItems | Where-Object { $_.status -eq "failed" -or $_.status -eq "blocked" })
 $p1PendingOrFailed = @($p1Items | Where-Object { $_.status -ne "passed" -and $_.status -ne "skipped" })
 
 $installers = @($session.installers)
 $unsignedInstallers = @($installers | Where-Object { $_.signatureStatus -ne "Valid" })
 
 $manualDecision = "GO"
-if ($failures.Count -gt 0 -or $p0Failed.Count -gt 0 -or $p0Skipped.Count -gt 0) {
+if ($failures.Count -gt 0 -or $qaP0Failed.Count -gt 0 -or $qaP0Skipped.Count -gt 0) {
   $manualDecision = "NO-GO"
-} elseif ($p0Pending.Count -gt 0) {
+} elseif ($qaP0Pending.Count -gt 0) {
   $manualDecision = "PENDING"
 }
 
 $publicDecision = $manualDecision
-if ($unsignedInstallers.Count -gt 0) {
+if ($unsignedInstallers.Count -gt 0 -or $releaseGateFailedOrBlocked.Count -gt 0) {
   $publicDecision = "NO-GO"
 }
 
@@ -99,12 +108,23 @@ $summary = [pscustomobject]@{
   p0Pending               = $p0Pending.Count
   p0FailedOrBlocked       = $p0Failed.Count
   p0Skipped               = $p0Skipped.Count
+  qaP0Total               = $qaP0Items.Count
+  qaP0Passed              = $qaP0Passed.Count
+  qaP0Pending             = $qaP0Pending.Count
+  qaP0FailedOrBlocked     = $qaP0Failed.Count
+  qaP0Skipped             = $qaP0Skipped.Count
+  releaseGateTotal        = $releaseGateItems.Count
+  releaseGateFailedOrBlocked = $releaseGateFailedOrBlocked.Count
   p1PendingOrFailed       = $p1PendingOrFailed.Count
   unsignedInstallerCount  = $unsignedInstallers.Count
   failures                = @($failures)
   pendingP0Items          = @($p0Pending | ForEach-Object { $_.id })
   failedOrBlockedP0Items  = @($p0Failed | ForEach-Object { $_.id })
   skippedP0Items          = @($p0Skipped | ForEach-Object { $_.id })
+  pendingQaP0Items        = @($qaP0Pending | ForEach-Object { $_.id })
+  failedOrBlockedQaP0Items = @($qaP0Failed | ForEach-Object { $_.id })
+  skippedQaP0Items        = @($qaP0Skipped | ForEach-Object { $_.id })
+  failedOrBlockedReleaseGateItems = @($releaseGateFailedOrBlocked | ForEach-Object { $_.id })
   unsignedInstallers      = @($unsignedInstallers | ForEach-Object { $_.kind })
 }
 
@@ -147,6 +167,8 @@ Publico: $publicDecision
 - P0 pendentes: $($p0Pending.Count)
 - P0 falhou/bloqueou: $($p0Failed.Count)
 - P0 ignorados: $($p0Skipped.Count)
+- QA funcional P0: $($qaP0Passed.Count)/$($qaP0Items.Count)
+- Gate de release bloqueado: $($releaseGateFailedOrBlocked.Count)/$($releaseGateItems.Count)
 - P1 pendentes/falhas: $($p1PendingOrFailed.Count)
 
 ## P0 pendentes
@@ -168,6 +190,8 @@ $summaryMarkdown | Set-Content -LiteralPath $summaryMarkdownPath -Encoding UTF8
 Write-Host "QA manual: $manualDecision"
 Write-Host "Release publico: $publicDecision"
 Write-Host "P0 aprovados: $($p0Passed.Count)/$($p0Items.Count)"
+Write-Host "QA funcional P0: $($qaP0Passed.Count)/$($qaP0Items.Count)"
+Write-Host "Gate release bloqueado: $($releaseGateFailedOrBlocked.Count)/$($releaseGateItems.Count)"
 Write-Host "P0 pendentes: $($p0Pending.Count)"
 Write-Host "P0 falhou/bloqueou: $($p0Failed.Count)"
 Write-Host "Instaladores sem assinatura valida: $($unsignedInstallers.Count)"

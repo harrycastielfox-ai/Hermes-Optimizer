@@ -23,6 +23,10 @@ try {
 }
 
 $failures = New-Object System.Collections.Generic.List[string]
+$contentScanExclusions = @(
+  "scripts/verify-no-signing-secrets.ps1",
+  "scripts\verify-no-signing-secrets.ps1"
+)
 
 foreach ($file in $trackedFiles) {
   $extension = [System.IO.Path]::GetExtension($file).ToLowerInvariant()
@@ -33,6 +37,10 @@ foreach ($file in $trackedFiles) {
 
   $absolutePath = Join-Path $root $file
   if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) {
+    continue
+  }
+
+  if ($contentScanExclusions -contains $file) {
     continue
   }
 

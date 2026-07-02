@@ -44,6 +44,72 @@ if ([string]::IsNullOrWhiteSpace($candidatePath) -or -not (Test-Path -LiteralPat
 $installSmokeScript = Join-Path $PSScriptRoot "create-manual-qa-install-smoke.ps1"
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installSmokeScript -SessionPath $SessionPath
 
+function New-ManualQaChecklist {
+  param(
+    [object]$Session,
+    [string]$Path
+  )
+
+  $installerLines = (@($Session.installers) | ForEach-Object {
+    "- $($_.kind.ToUpperInvariant()): $($_.relativePath) | SHA256 $($_.sha256) | Authenticode $($_.signatureStatus)"
+  }) -join "`r`n"
+
+  if ([string]::IsNullOrWhiteSpace($installerLines)) {
+    $installerLines = "- Nenhum instalador registrado na sessao."
+  }
+
+  $itemLines = (@($Session.items) | ForEach-Object {
+    $status = if ([string]::IsNullOrWhiteSpace([string]$_.status)) { "pending" } else { [string]$_.status }
+    "- [ ] [$($_.priority)] $($_.area) - $($_.title)`r`n  - Status atual: $status`r`n  - Esperado: $($_.expected)`r`n  - Evidencia: $($_.evidence)`r`n  - Notas: $($_.notes)"
+  }) -join "`r`n`r`n"
+
+  if ([string]::IsNullOrWhiteSpace($itemLines)) {
+    $itemLines = "- Nenhum item registrado na sessao."
+  }
+
+  $markdown = @"
+# Hermes Optimizer - Sessao de QA Manual
+
+Status: $($Session.status)
+Tester: $($Session.tester)
+Gerado em: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Release candidate: $($Session.candidateName)
+Decisao publica atual: $($Session.publicDecision)
+
+## Instaladores
+
+$installerLines
+
+## Como preencher
+
+- Marque cada item como aprovado ou falhou.
+- Anexe print, video curto, hash, mensagem de erro ou observacao objetiva.
+- Qualquer falha P0 mantem o release como NO-GO.
+- NotSigned e aceitavel para teste interno, mas bloqueia release publica.
+
+## Checklist
+
+$itemLines
+
+## Decisao final do QA manual
+
+- [ ] APROVADO para proxima etapa interna
+- [ ] REPROVADO / manter NO-GO
+
+Resumo:
+
+"@
+
+  $markdown | Set-Content -LiteralPath $Path -Encoding UTF8
+}
+
+$checklistPath = Join-Path $SessionPath "manual-qa-checklist.md"
+if (-not (Test-Path -LiteralPath $checklistPath -PathType Leaf)) {
+  New-ManualQaChecklist -Session $session -Path $checklistPath
+  Write-Host "Checklist manual ausente reconstruido:"
+  Write-Host "- $checklistPath"
+}
+
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $packageName = "hermes-manual-qa-portable-$($session.version)-$timestamp"
 $portableRoot = Join-Path $SessionPath $packageName

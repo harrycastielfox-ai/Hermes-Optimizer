@@ -138,7 +138,9 @@ try {
   Invoke-PipelineStep -Name "13-signing-preflight-after-build" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
   Invoke-PipelineStep -Name "14-release-launch-plan" -FilePath "npm.cmd" -ArgumentList @("run", "release:launch-plan")
   Invoke-PipelineStep -Name "15-release-status" -FilePath "npm.cmd" -ArgumentList @("run", "release:status")
-  Invoke-PipelineStep -Name "16-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
+  Invoke-PipelineStep -Name "16-signing-doctor" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:doctor", "--", "-SkipRefresh")
+  Invoke-PipelineStep -Name "17-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
+  Invoke-PipelineStep -Name "18-public-release-package" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:package") -AllowFailure:$AllowNoGo
 } catch {
   if ($failures.Count -eq 0) {
     $failures.Add($_.Exception.Message)
@@ -148,6 +150,7 @@ try {
 $releaseStatus = Read-JsonOrNull -Path (Join-Path $releaseDir "release-status.json")
 $publicReady = Read-JsonOrNull -Path (Join-Path $releaseDir "public-release-ready.json")
 $launchPlan = Read-JsonOrNull -Path (Join-Path $releaseDir "release-launch-plan.json")
+$signingDoctor = Read-JsonOrNull -Path (Join-Path $releaseDir "signing-doctor.json")
 
 $status = if ($failures.Count -eq 0 -and $publicReady -and [string]$publicReady.status -eq "GO") {
   "GO"
@@ -169,6 +172,8 @@ $report = [pscustomobject]@{
   logsRoot = $logsRoot
   releaseStatus = if ($releaseStatus) { [string]$releaseStatus.overallStatus } else { $null }
   publicReady = if ($publicReady) { [string]$publicReady.status } else { $null }
+  signingDoctor = if ($signingDoctor) { [string]$signingDoctor.status } else { $null }
+  signingDoctorNextCommand = if ($signingDoctor -and @($signingDoctor.nextCommands).Count -gt 0) { [string]$signingDoctor.nextCommands[0] } else { $null }
   nextOperationalCommand = if ($launchPlan) { [string]$launchPlan.nextOperationalCommand } else { $null }
   blockers = if ($releaseStatus) { @($releaseStatus.blockers) } else { @() }
   publicFailures = if ($publicReady) { @($publicReady.failures) } else { @() }
@@ -191,11 +196,13 @@ $markdown.Add("")
 $markdown.Add("- Status: **$($report.status)**")
 $markdown.Add("- Release status: $($report.releaseStatus)")
 $markdown.Add("- Public ready: $($report.publicReady)")
+$markdown.Add("- Signing doctor: $($report.signingDoctor)")
 $markdown.Add("- Install smoke real: $($report.allowInstallSmoke)")
 $markdown.Add("- Importar PFX: $($report.importPfx)")
 $markdown.Add("- Build assinado: $($report.buildSigned)")
 $markdown.Add("- Regenerar RC/sessao QA: $($report.regenerateReleaseCandidate)")
 $markdown.Add("- Proximo comando: ``$($report.nextOperationalCommand)``")
+$markdown.Add("- Proximo comando de assinatura: ``$($report.signingDoctorNextCommand)``")
 $markdown.Add("- Logs: ``$logsRoot``")
 $markdown.Add("")
 $markdown.Add("## Etapas")

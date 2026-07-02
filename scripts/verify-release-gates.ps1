@@ -41,12 +41,15 @@ $manualQaDropAutoPath = Join-Path $root "scripts\run-manual-qa-test-drop-auto.ps
 $manualQaDropInstallElevatedPath = Join-Path $root "scripts\run-install-smoke-elevated.ps1"
 $signingHandoffPath = Join-Path $root "scripts\create-signing-handoff.ps1"
 $signingImportPfxPath = Join-Path $root "scripts\import-signing-pfx.ps1"
+$signingDoctorPath = Join-Path $root "scripts\check-signing-doctor.ps1"
 $launchPlanPath = Join-Path $root "scripts\create-release-launch-plan.ps1"
 $publicReleasePipelinePath = Join-Path $root "scripts\run-public-release-pipeline.ps1"
+$publicReleasePackagePath = Join-Path $root "scripts\create-public-release-package.ps1"
 $releaseProgressPath = Join-Path $root "scripts\show-release-progress.ps1"
 $qaWindowsDropWorkflowPath = Join-Path $root ".github\workflows\qa-windows-drop.yml"
 $signedWindowsWorkflowPath = Join-Path $root ".github\workflows\release-windows-signed.yml"
 $publicReleaseReadyPath = Join-Path $root "scripts\verify-public-release-ready.ps1"
+$releasePolicyPath = Join-Path $root "docs\release-policy.json"
 
 $package = Read-Text $packagePath | ConvertFrom-Json
 $tauriConfig = Read-Text $tauriConfigPath | ConvertFrom-Json
@@ -71,12 +74,15 @@ $manualQaDropAuto = Read-Text $manualQaDropAutoPath
 $manualQaDropInstallElevated = Read-Text $manualQaDropInstallElevatedPath
 $signingHandoff = Read-Text $signingHandoffPath
 $signingImportPfx = Read-Text $signingImportPfxPath
+$signingDoctor = Read-Text $signingDoctorPath
 $launchPlan = Read-Text $launchPlanPath
 $publicReleasePipeline = Read-Text $publicReleasePipelinePath
+$publicReleasePackage = Read-Text $publicReleasePackagePath
 $releaseProgress = Read-Text $releaseProgressPath
 $qaWindowsDropWorkflow = Read-Text $qaWindowsDropWorkflowPath
 $signedWindowsWorkflow = Read-Text $signedWindowsWorkflowPath
 $publicReleaseReady = Read-Text $publicReleaseReadyPath
+$releasePolicy = Read-Text $releasePolicyPath | ConvertFrom-Json
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $buildModeSyncScript
 Assert-True ($LASTEXITCODE -eq 0) `
@@ -144,11 +150,15 @@ Assert-True ([bool]$scripts.'qa:manual:drop:check') "package.json precisa ter qa
 Assert-True ([bool]$scripts.'qa:manual:drop:receive') "package.json precisa ter qa:manual:drop:receive."
 Assert-True ([bool]$scripts.'release:signing:handoff') "package.json precisa ter release:signing:handoff."
 Assert-True ([bool]$scripts.'release:signing:import-pfx') "package.json precisa ter release:signing:import-pfx."
+Assert-True ([bool]$scripts.'release:signing:doctor') "package.json precisa ter release:signing:doctor."
 Assert-True ([bool]$scripts.'release:progress') "package.json precisa ter release:progress."
 Assert-True ([bool]$scripts.'release:launch-plan') "package.json precisa ter release:launch-plan."
 Assert-True ([bool]$scripts.'release:public:pipeline') "package.json precisa ter release:public:pipeline."
 Assert-True ([bool]$scripts.'release:public:pipeline:preview') "package.json precisa ter release:public:pipeline:preview."
+Assert-True ([bool]$scripts.'release:public:pipeline:signed') "package.json precisa ter release:public:pipeline:signed."
+Assert-True ([bool]$scripts.'release:public:pipeline:signed:install') "package.json precisa ter release:public:pipeline:signed:install."
 Assert-True ([bool]$scripts.'release:public:verify') "package.json precisa ter release:public:verify."
+Assert-True ([bool]$scripts.'release:public:package') "package.json precisa ter release:public:package."
 Assert-True ($manualQaBulk -match 'ConfirmBulkPass') `
   "QA manual em lote precisa exigir ConfirmBulkPass para aprovacao em massa."
 Assert-True ($manualQaBulk -match 'install-nsis' -and $manualQaBulk -match 'install-msi' -and $manualQaBulk -match 'authenticode') `
@@ -189,18 +199,28 @@ Assert-True ($signingHandoff -match 'Code Signing' -and $signingHandoff -match '
   "Handoff de assinatura precisa explicar certificado Code Signing e HERMES_CERT_THUMBPRINT."
 Assert-True ($signingImportPfx -match 'HERMES_SIGNING_PFX_BASE64' -and $signingImportPfx -match 'CodeSigning' -and $signingImportPfx -match 'hermes-signing-env.ps1') `
   "Importacao de PFX precisa aceitar base64/arquivo, validar Code Signing e gerar env com thumbprint."
+Assert-True ($signingDoctor -match 'verify-no-signing-secrets.ps1' -and $signingDoctor -match 'signing-doctor.json' -and $signingDoctor -match 'NEEDS_CERTIFICATE' -and $signingDoctor -match 'release:public:pipeline:signed') `
+  "Doctor de assinatura precisa consolidar segredos, certificado, preflight, status e proximo comando."
 Assert-True ($launchPlan -match 'qa:manual:drop:open' -and $launchPlan -match 'release:signing:handoff' -and $launchPlan -match 'build:windows:real:signed') `
   "Plano de lancamento precisa orientar QA manual, handoff de assinatura e build real assinado."
-Assert-True ($publicReleasePipeline -match 'BuildSigned -and -not \$RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'AllowInstallSmoke -and -not \$RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'AllowInstallSmoke' -and $publicReleasePipeline -match 'ImportPfx' -and $publicReleasePipeline -match 'release:signing:import-pfx' -and $publicReleasePipeline -match 'BuildSigned' -and $publicReleasePipeline -match 'RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'build-real-signed' -and $publicReleasePipeline -match 'qa-drop-auto-install-smoke-current-rc' -and $publicReleasePipeline -match 'release:public:verify' -and $publicReleasePipeline -match 'public-release-pipeline-latest') `
+Assert-True ($publicReleasePipeline -match 'BuildSigned -and -not \$RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'AllowInstallSmoke -and -not \$RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'AllowInstallSmoke' -and $publicReleasePipeline -match 'ImportPfx' -and $publicReleasePipeline -match 'release:signing:import-pfx' -and $publicReleasePipeline -match 'release:signing:doctor' -and $publicReleasePipeline -match 'signingDoctorNextCommand' -and $publicReleasePipeline -match 'BuildSigned' -and $publicReleasePipeline -match 'RegenerateReleaseCandidate' -and $publicReleasePipeline -match 'build-real-signed' -and $publicReleasePipeline -match 'qa-drop-auto-install-smoke-current-rc' -and $publicReleasePipeline -match 'release:public:verify' -and $publicReleasePipeline -match 'release:public:package' -and $publicReleasePipeline -match 'public-release-pipeline-latest') `
   "Pipeline publico precisa exigir RC atual para build assinado/install smoke, assinar, testar o RC atual e entao executar gate publico."
-Assert-True ($releaseProgress -match 'Hermes - progresso curto' -and $releaseProgress -match 'QA manual P0' -and $releaseProgress -match 'release:signing:import-pfx' -and $releaseProgress -match 'Proximo comando') `
-  "Resumo curto de release precisa mostrar status, QA manual P0 e proximo comando direto para PFX quando faltar certificado."
+Assert-True ([string]$scripts.'release:public:pipeline:signed' -match 'ImportPfx' -and [string]$scripts.'release:public:pipeline:signed' -match 'BuildSigned' -and [string]$scripts.'release:public:pipeline:signed' -match 'RegenerateReleaseCandidate') `
+  "Atalho signed precisa importar PFX, gerar build assinado e regenerar RC."
+Assert-True ([string]$scripts.'release:public:pipeline:signed:install' -match 'AllowInstallSmoke') `
+  "Atalho signed:install precisa executar install smoke real em VM/runner."
+Assert-True ($publicReleasePackage -match 'verify-public-release-ready.ps1' -and $publicReleasePackage -match 'Authenticode' -and $publicReleasePackage -match 'public-release-manifest.json' -and $publicReleasePackage -match 'latest-public-release-package') `
+  "Pacote publico precisa rodar gate publico, exigir Authenticode Valid e gerar manifesto/ponteiro final."
+Assert-True ($releaseProgress -match 'Hermes - progresso curto' -and $releaseProgress -match 'QA funcional P0' -and $releaseProgress -match 'Gate release bloqueado' -and $releaseProgress -match 'release-policy\.json' -and $releaseProgress -match 'codeSigningDeferred' -and $releaseProgress -match 'release:beta:drop' -and $releaseProgress -match 'betaDropReady' -and $releaseProgress -match 'Assinatura publica' -and $releaseProgress -match 'Proximo comando') `
+  "Resumo curto de release precisa mostrar status, QA funcional, gate de release, beta/drop e respeitar release-policy.json quando Code Signing estiver adiado."
+Assert-True ([string]$releasePolicy.publicSignedRelease -eq "blocked" -and [string]$releasePolicy.codeSigning.status -eq "deferred" -and -not [bool]$releasePolicy.codeSigning.allowUnsignedPublicRelease -and [string]$releasePolicy.nextWhenPublicSigningDeferred -eq "npm run release:beta") `
+  "Politica de release precisa congelar Code Signing por agora, bloquear release publico sem assinatura e apontar beta interno como proximo passo."
 Assert-True ($qaWindowsDropWorkflow -match 'windows-latest' -and $qaWindowsDropWorkflow -match 'npm ci' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto' -and $qaWindowsDropWorkflow -match 'qa:manual:drop:auto:install' -and $qaWindowsDropWorkflow -match 'actions/upload-artifact') `
   "Workflow QA Windows Drop precisa rodar em windows-latest, instalar dependencias, executar auto drop seguro/install opt-in e publicar artifacts."
-Assert-True ($signedWindowsWorkflow -match 'windows-latest' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_BASE64' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_PASSWORD' -and $signedWindowsWorkflow -match 'release:signing:import-pfx' -and $signedWindowsWorkflow -match 'build:windows:real:signed' -and $signedWindowsWorkflow -match 'release:internal' -and $signedWindowsWorkflow -match 'qa:manual:drop:auto:install' -and $signedWindowsWorkflow -match 'release:public:verify' -and $signedWindowsWorkflow -match 'actions/upload-artifact') `
-  "Workflow Release Windows Signed precisa importar PFX, assinar, gerar RC atual, testar instalador assinado, rodar gate publico e publicar evidencias."
-Assert-True ($publicReleaseReady -match 'unsignedInstallerCount' -and $publicReleaseReady -match 'signingAllInstallersSigned' -and $publicReleaseReady -match 'publicDecision' -and $publicReleaseReady -match 'Authenticode Valid') `
-  "Gate de publicacao publica precisa bloquear P0 incompleto, instalador sem assinatura e RC NO-GO."
+Assert-True ($signedWindowsWorkflow -match 'windows-latest' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_BASE64' -and $signedWindowsWorkflow -match 'HERMES_SIGNING_PFX_PASSWORD' -and $signedWindowsWorkflow -match 'release:signing:import-pfx' -and $signedWindowsWorkflow -match 'release:signing:doctor' -and $signedWindowsWorkflow -match 'signing-doctor.json' -and $signedWindowsWorkflow -match 'build:windows:real:signed' -and $signedWindowsWorkflow -match 'release:internal' -and $signedWindowsWorkflow -match 'qa:manual:drop:auto:install' -and $signedWindowsWorkflow -match 'release:public:verify' -and $signedWindowsWorkflow -match 'release:public:package' -and $signedWindowsWorkflow -match 'hermes-windows-public-release-package' -and $signedWindowsWorkflow -match '\.release/public/\*\*' -and $signedWindowsWorkflow -match 'actions/upload-artifact') `
+  "Workflow Release Windows Signed precisa importar PFX, assinar, gerar RC atual, testar instalador assinado, rodar gate publico, gerar pacote publico final e publicar evidencias."
+Assert-True ($publicReleaseReady -match 'unsignedInstallerCount' -and $publicReleaseReady -match 'signingAllInstallersSigned' -and $publicReleaseReady -match 'publicDecision' -and $publicReleaseReady -match 'P0 funcionais incompletos' -and $publicReleaseReady -match 'Authenticode Valid') `
+  "Gate de publicacao publica precisa bloquear P0 funcional incompleto, instalador sem assinatura e RC NO-GO."
 
 $permissions = @($capability.permissions)
 $forbiddenPermissions = @(

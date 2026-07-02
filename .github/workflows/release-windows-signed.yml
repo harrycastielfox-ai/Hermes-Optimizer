@@ -110,6 +110,22 @@ jobs:
       - name: Public release gate
         run: npm run release:public:verify
 
+      - name: Create public release package
+        run: npm run release:public:package
+
+      - name: Signing doctor evidence
+        if: always()
+        run: npm run release:signing:doctor -- -SkipRefresh
+
+      - name: Upload public release package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-windows-public-release-package
+          if-no-files-found: ignore
+          path: |
+            .release/public/**
+
       - name: Upload signed installers and evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -121,10 +137,14 @@ jobs:
             src-tauri/target/release/bundle/nsis/*.exe
             .release/signing-preflight.json
             .release/signing-preflight.md
+            .release/signing-doctor.json
+            .release/signing-doctor.md
+            .release/signing-handoff.json
+            .release/signing-handoff.md
             .release/signing-pfx-import.json
             .release/hermes-signing-env.ps1
-            .release/release-public-verification.json
-            .release/release-public-verification.md
+            .release/public-release-ready.json
+            .release/public-release-ready.md
             .release/release-status.json
             .release/release-status.md
             .release/manual-qa/**/manual-qa-summary.md

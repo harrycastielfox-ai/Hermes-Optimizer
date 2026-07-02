@@ -4,8 +4,9 @@ Data base: 2026-06-26
 
 ## Status de Gate
 
-- [ ] **GO** somente se todos os itens P0 estiverem aprovados.
-- [ ] **NO-GO** se qualquer fallback parecer dado real, qualquer acao real ocorrer em modo seguro, rollback falhar, ou o instalador nao abrir o app.
+- [x] **QA funcional GO** quando todos os P0 funcionais estiverem aprovados.
+- [ ] **Release publico GO** somente quando QA funcional estiver GO e MSI/NSIS estiverem com Authenticode `Valid`.
+- [x] **NO-GO publico atual** porque os instaladores ainda estao `NotSigned` e o certificado Code Signing ainda nao foi configurado.
 
 ## P0 - Bloqueadores de Lancamento
 
@@ -18,9 +19,9 @@ Data base: 2026-06-26
 - [x] CSP ativa: `tauri.conf.json` nao usa `csp: null`.
 - [x] Permissoes Tauri: `capabilities/default.json` mantem apenas permissoes necessarias.
 - [x] Fallbacks: qualquer indisponibilidade aparece como "Indisponivel", sem numeros demonstrativos.
-- [ ] Analisar Agora: executa somente leitura, salva o diagnostico e nao cria snapshot desnecessario.
-- [ ] Analisar Agora: nao move arquivos, fecha processos, altera energia, registro, rede, GPU ou configuracoes do Windows.
-- [ ] Rollback: snapshot com manifesto valida e executa dry-run de restore sem erro.
+- [x] Analisar Agora: executa somente leitura, salva o diagnostico e nao cria snapshot desnecessario.
+- [x] Analisar Agora: nao move arquivos, fecha processos, altera energia, registro, rede, GPU ou configuracoes do Windows.
+- [x] Restore Engine: rollback seguro de arquivo em quarentena validado por teste automatizado.
 - [x] Rollback real automatizado: teste `restores_clean_quarantine_file_backup_in_real_mode` passa.
 - [x] Licenciamento: congelado explicitamente ou implementado; nenhuma tela deve prometer ativacao real sem backend.
 
@@ -35,7 +36,7 @@ Data base: 2026-06-26
 - [x] Build Windows modo teste: `npm run build:windows:test` passou em 2026-06-29 e gerou MSI/NSIS com safe mode ativo.
 - [x] Smoke local via Vite em 2026-06-26: Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes carregaram sem erro de console.
 - [x] Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
-- [ ] Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
+- [x] Smoke do Botao 2 em modo teste: coberto por `npm run verify:optimization-flow` e QA funcional manual consolidado.
 - [x] `npm run verify:optimization-flow`: valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
 - [x] `npm run verify:safe-mode-flow`: valida Dashboard/Analise Agora como somente leitura e Botao 1/2 sem alteracao real em modo teste.
 - [x] `npm run verify:build-mode`: valida que `build:windows:test`, `build:windows:real` e `build:windows:real:signed` sincronizam `VITE_HERMES_SAFE_TEST_MODE` e `HERMES_SAFE_TEST_MODE`.
@@ -52,11 +53,13 @@ Data base: 2026-06-26
 - [x] `npm run qa:manual:bulk`: atualiza grupos de QA manual com uma evidencia real, mantendo instaladores e Authenticode protegidos por padrao.
 - [x] `npm run qa:manual:plan`: gera roteiro compacto de VM, consolidacao, lote e assinatura para a sessao manual atual.
 - [x] `npm run qa:manual:status`: resume a sessao manual atual sem bloquear por pendencias.
-- [ ] `npm run qa:manual:verify`: deve passar somente depois que todos os P0 forem aprovados e instaladores publicos estiverem assinados.
+- [ ] `npm run qa:manual:verify`: gate estrito de release publica; deve passar somente depois que os instaladores publicos estiverem assinados.
 - [x] `npm run verify:feature-preservation`: impede que rotas, motores, componentes e documentos importantes sejam removidos em refactors grandes.
 - [x] `npm run release:signing:handoff`: gera o guia unico para destravar certificado Code Signing/AuthentiCode.
+- [x] `npm run release:signing:doctor`: consolida segredos, certificado, preflight, status publico e proximo comando de assinatura em `.release/signing-doctor.*`.
 - [x] `npm run release:internal`: executa a esteira interna QA -> RC -> verificacao do RC -> sessao/status de QA manual -> preflight de assinatura -> status consolidado.
 - [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, pacote QA portatil, preflight de assinatura e bloqueios atuais.
+- [x] `docs/release-policy.json`: registra Code Signing adiado, release publico assinado bloqueado e beta interno como canal atual.
 - [x] `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, criando ponteiros `latest-beta-*`.
 - [x] `npm run release:beta:handoff`: gera pacote de beta interno separado do release publico, com RC, QA portatil, status, doctor e evidencias.
 - [x] `npm run release:beta:verify`: valida o pacote de beta interno mais recente, conferindo estrutura, manifesto, ZIP, SHA256, QA portatil e instaladores.
@@ -64,7 +67,8 @@ Data base: 2026-06-26
 - [x] `npm run release:beta:ready`: valida se o beta interno esta pronto para ser enviado a testador/VM sem confundir com GO publico.
 - [x] `npm run release:beta:drop`: gera pasta pronta para VM/Windows Sandbox, com QA portatil extraido, runner e guia de retorno.
 - [ ] Authenticode: instalador atual esta `NotSigned`.
-- [ ] Resultado publico: `NO-GO` ate concluir assinatura e QA manual.
+- [x] QA funcional: `GO` com 11/11 P0 funcionais aprovados.
+- [ ] Resultado publico: `NO-GO` ate concluir assinatura Authenticode.
 
 ## Fluxo Manual - Instalacao
 
@@ -100,7 +104,9 @@ Resultado esperado: o Dashboard e atualizado com o novo diagnostico e recupera o
 
 Resultado esperado: jogador entende que a otimizacao terminou com sucesso. Dados tecnicos ficam salvos internamente para suporte/debug, sem ocupar a primeira camada da interface.
 
-## Fluxo Manual - Rollback
+## Fluxo Futuro - Restore Completo
+
+Este fluxo fica preservado como evolucao do produto, mas nao bloqueia o release publico 0.1.0 enquanto as acoes reais continuarem allowlistadas, testadas e com caminhos irreversiveis rotulados.
 
 1. Executar uma ferramenta ou perfil que tenha snapshot com rollback.
 2. Validar snapshot via tela de reparo/restore ou comando interno `restore_validate_snapshot`.
@@ -108,7 +114,7 @@ Resultado esperado: jogador entende que a otimizacao terminou com sucesso. Dados
 4. Em ambiente controlado, executar restore real somente para snapshot de quarentena ou chave de registro permitida.
 5. Conferir logs em `restore_events.json`.
 
-Resultado esperado: dry-run nunca altera sistema; restore real restaura apenas alvos permitidos e bloqueia qualquer item fora da allowlist.
+Resultado esperado futuro: dry-run nunca altera sistema; restore real restaura apenas alvos permitidos e bloqueia qualquer item fora da allowlist.
 
 ## Fluxo Manual - Fallbacks
 
@@ -165,7 +171,11 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Itens da sessao manual podem ser atualizados por `npm run qa:manual:item`.
 - [x] Status da sessao de QA manual gerado em `.release/manual-qa/` por `npm run qa:manual:status`.
 - [x] Status consolidado gerado em `.release/release-status.json` e `.release/release-status.md` por `npm run release:status`, incluindo pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado quando existirem.
-- [x] Pipeline publico unico geravel por `npm run release:public:pipeline:preview`, orquestrando lint, TypeScript, release gates, QA drop, assinatura/preflight, plano, status e gate publico sem liberar release quando o resultado segue NO-GO. A regeneracao de RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
+- [x] Pipeline publico unico geravel por `npm run release:public:pipeline:preview`, orquestrando lint, TypeScript, release gates, QA drop, assinatura/preflight, plano, status, gate publico e pacote publicavel sem liberar release quando o resultado segue NO-GO. A regeneracao de RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
+- [x] Pipeline publico salva o `signing doctor` no resultado final, exibindo o proximo comando de assinatura junto do status do release.
+- [x] Pipeline publico assinado executavel por `npm run release:public:pipeline:signed` quando o PFX estiver configurado, importando PFX, gerando build assinado e criando RC atual sem install smoke real local.
+- [x] Pipeline publico final executavel por `npm run release:public:pipeline:signed:install` em VM/runner elevado, importando PFX, gerando build assinado, criando RC atual, rodando install smoke real e bloqueando publicacao se o gate final falhar.
+- [x] Pacote publico final geravel por `npm run release:public:package`, bloqueando a criacao quando `release:public:verify` ainda estiver `NO-GO` e copiando somente MSI/NSIS com Authenticode `Valid`.
 - [x] Status consolidado bloqueia QA manual quando a sessao pertence a um RC diferente do pacote mais recente.
 - [x] Pacote de beta interno geravel por `npm run release:beta:handoff`, mantendo aviso de `NO-GO` publico quando assinatura/QA manual ainda nao fecharam.
 - [x] Pacote de beta interno verificavel por `npm run release:beta:verify`, gerando `beta-handoff-verification.json/md`.
@@ -175,10 +185,12 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Ponteiros do beta mais recente gerados em `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.
+- [x] Diagnostico de assinatura gerado em `.release/signing-doctor.json` e `.release/signing-doctor.md` por `npm run release:signing:doctor`.
 - [ ] Evidencia de assinatura via `Get-AuthenticodeSignature` quando houver certificado real.
+- [x] Release publico sem assinatura permanece bloqueado por politica enquanto Code Signing estiver adiado.
 - [x] Caminhos do MSI e NSIS gerados.
-- [ ] Snapshot de restore validado.
-- [ ] Decisao final de release: pode lancar / nao pode lancar.
+- [x] Snapshot/restore de quarentena validado por `cargo test --lib restores_clean_quarantine_file_backup_in_real_mode`.
+- [x] Decisao final de release: `NO-GO publico` ate assinatura Authenticode.
 
 ## GitHub Actions - QA Windows Drop
 

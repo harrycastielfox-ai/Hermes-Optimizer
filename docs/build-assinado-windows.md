@@ -30,6 +30,14 @@ npm run release:signing:import-pfx -- -PfxPath "C:\caminho\certificado-code-sign
 npm run release:signing:preflight
 ```
 
+Para diagnosticar tudo em um comando, sem alterar instaladores nem publicar nada:
+
+```powershell
+npm run release:signing:doctor
+```
+
+Esse comando atualiza `.release/signing-doctor.json` e `.release/signing-doctor.md`, conferindo segredos vazados, certificados locais, preflight Authenticode, status de release e o proximo comando recomendado.
+
 Tambem funciona via variaveis, util para CI:
 
 ```powershell
@@ -153,7 +161,13 @@ O workflow:
 - define `HERMES_CERT_THUMBPRINT` automaticamente;
 - roda `npm run release:signing:preflight`;
 - roda `npm run build:windows:real:signed`;
+- gera o RC atual com `npm run release:internal`;
+- testa o instalador assinado com `npm run qa:manual:drop:auto:install`;
 - roda `npm run release:public:verify`;
-- publica instaladores e evidencias como artifact `hermes-windows-signed-release`.
+- gera o pacote publico final com `npm run release:public:package`;
+- publica instaladores e evidencias como artifact `hermes-windows-signed-release`;
+- publica o pacote publico final de `.release/public/**` como artifact `hermes-windows-public-release-package`.
+
+Quando o gate estiver `GO`, publique somente os instaladores dentro do pacote final em `.release/public/<pacote>/installers`. Esse pacote tambem inclui `public-release-manifest.json`, hashes SHA256 e evidencias do gate.
 
 Se o certificado, QA P0 ou Authenticode ainda nao estiverem prontos, o workflow deve falhar. Isso e intencional para evitar publicar build nao assinado por acidente.

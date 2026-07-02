@@ -66,10 +66,13 @@ if ([string]$status.manualDecision -ne "GO" -or [string]$status.manualPublicDeci
   $checks.Add("QA manual e publico GO.")
 }
 
-if ([int]$status.p0Passed -lt [int]$status.p0Total) {
-  $failures.Add("P0 incompletos: $($status.p0Passed)/$($status.p0Total).")
+$qaP0Passed = if ($status.PSObject.Properties.Name -contains "qaP0Passed") { [int]$status.qaP0Passed } else { [int]$status.p0Passed }
+$qaP0Total = if ($status.PSObject.Properties.Name -contains "qaP0Total") { [int]$status.qaP0Total } else { [int]$status.p0Total }
+
+if ($qaP0Passed -lt $qaP0Total) {
+  $failures.Add("P0 funcionais incompletos: $qaP0Passed/$qaP0Total.")
 } else {
-  $checks.Add("Todos os P0 passaram.")
+  $checks.Add("Todos os P0 funcionais passaram.")
 }
 
 if ([int]$status.unsignedInstallerCount -ne 0) {

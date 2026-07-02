@@ -6,7 +6,9 @@ Data: 2026-06-26
 
 **NAO PODE LANCAR como release publica final.**
 
-O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser publicado como lancamento oficial porque o instalador de producao continua sem assinatura Authenticode, o QA manual completo em maquina limpa ainda nao foi fechado e a validacao real controlada dos Botoes 1 e 2 ainda precisa de evidencia.
+O app atingiu um release candidate tecnico automatizado e o QA funcional esta fechado, mas ainda nao deve ser publicado como lancamento oficial porque MSI/NSIS continuam sem assinatura Authenticode e o certificado Code Signing real ainda nao foi configurado no ambiente de release.
+
+Decisao atual: nao comprar/configurar Code Signing agora. O release publico assinado permanece bloqueado por politica em `docs/release-policy.json`; o canal ativo passa a ser beta interno/controlado.
 
 ## O Que Ja Esta Aprovado Tecnicamente
 
@@ -64,7 +66,7 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - Evidencia estruturada salva em `.release/qa-latest.json`, agora com MSI/NSIS, tamanho, SHA256 e status Authenticode por instalador.
 - Smoke local via Vite em 2026-06-26: Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao Programada e Configuracoes carregaram sem erro de console.
 - Smoke local do Botao 1 em modo teste: Preparar PC concluiu a Fase 1, exibiu recomendacao de reinicio e liberou a Fase 2 sem aplicar mudancas reais.
-- Smoke local do Botao 2 em modo teste: interacao visual ficou inconclusiva por falha do controle do navegador embutido; validar no app instalado/manual.
+- Smoke do Botao 2 em modo teste: coberto por `npm run verify:optimization-flow` e QA funcional consolidado.
 - `npm run verify:optimization-flow`: passou e valida Botao 1, bloqueio da Fase 2, selecao Fate Trigger, modal do Botao 2 e painel de sucesso.
 - `npm run verify:safe-mode-flow`: passou e valida Dashboard/Analise Agora como somente leitura, Botao 1/2 em dry-run e verificacao pos-execucao sem exigir mudanca real em modo teste.
 - `npm run verify:build-mode`: passou e valida `build:windows:test`, `build:windows:real`, `build:windows:real:signed`, `VITE_HERMES_SAFE_TEST_MODE`, `HERMES_SAFE_TEST_MODE`, `build.rs` e `tauri.conf.json`.
@@ -107,12 +109,17 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 - `npm run qa:manual:status`: gera resumo da sessao manual sem bloquear por pendencias, util durante execucao do teste.
 - `npm run qa:manual:verify`: gate estrito para release; falha enquanto houver P0 pendente/falhando ou instalador publico sem Authenticode `Valid`.
 - `npm run release:signing:handoff`: consolida certificados locais, preflight de assinatura, instaladores atuais e comandos finais para configurar o certificado Code Signing correto.
+- `npm run release:signing:doctor`: consolida verificacao de segredos, certificados, preflight Authenticode, status publico e proximo comando recomendado de assinatura.
 - `npm run release:internal`: executa a esteira interna completa, gerando QA automatizado, pacote RC, verificacao do RC, sessao/status de QA manual, preflight de assinatura e status consolidado.
 - `npm run release:status`: gera painel terminal, `.release/release-status.json` e `.release/release-status.md` com GO/NO-GO, bloqueios, QA tecnico, QA manual, pacote QA portatil mais recente, preflight de assinatura e candidatos de certificado.
 - `npm run release:status`: tambem bloqueia quando a sessao de QA manual pertence a um release candidate diferente do pacote mais recente.
-- `npm run release:public:pipeline`: esteira publica estrita; orquestra lint, TypeScript, gates, QA drop, assinatura/preflight, plano, status e `release:public:verify`, falhando enquanto o resultado nao for GO. A geracao de novo RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
+- `npm run release:public:pipeline`: esteira publica estrita; orquestra lint, TypeScript, gates, QA drop, assinatura/preflight, plano, status, `release:signing:doctor`, `release:public:verify` e `release:public:package`, falhando enquanto o resultado nao for GO. A geracao de novo RC/sessao QA e opt-in via `-RegenerateReleaseCandidate`.
 - `npm run release:public:pipeline:preview`: mesma esteira em modo de acompanhamento, aceitando NO-GO esperado e salvando `.release/public-release-pipeline-latest.*` para acompanhar o que ainda falta.
+- `npm run release:public:pipeline:signed`: atalho para quando o PFX estiver configurado; importa PFX, gera build assinado e cria RC atual.
+- `npm run release:public:pipeline:signed:install`: atalho final para VM/runner elevado; importa PFX, gera build assinado, cria RC atual, roda install smoke real e executa o gate publico.
 - `npm run release:public:verify`: gate estrito de publicacao publica; falha se `release-status` nao estiver GO, se P0 nao estiver completo, se MSI/NSIS nao estiverem Authenticode `Valid`, se o certificado Code Signing nao estiver pronto ou se o release candidate ainda estiver `NO-GO`.
+- `npm run release:public:package`: gera a pasta final publicavel em `.release/public/` somente depois de `release:public:verify` passar, copiando MSI/NSIS assinados, hashes e evidencias.
+- `docs/release-policy.json`: registra que Code Signing esta adiado, release publico sem assinatura e proibido e o proximo caminho operacional e `npm run release:beta`.
 - `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, atualizando `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - `npm run release:beta:handoff`: gera `.release/beta-handoff/hermes-beta-interno-*` com RC, instaladores, pacote QA portatil, doctor, status de release, evidencias de assinatura e instrucoes para beta controlado.
 - `npm run release:beta:verify`: valida o beta handoff mais recente, conferindo manifesto, ZIP, `.sha256`, estrutura interna, QA portatil e instaladores contra seus manifestos.
@@ -131,22 +138,20 @@ O app atingiu um release candidate tecnico automatizado, mas ainda nao deve ser 
 
 ## Bloqueios Para GO Publico
 
-- Build de producao assinado ainda depende de certificado real configurado em `HERMES_CERT_THUMBPRINT`.
-- Instaladores MSI/NSIS release foram gerados em modo teste, mas continuam sem assinatura Authenticode.
-- QA manual de instalacao e navegacao ainda precisa ser executado em maquina limpa.
-- Rollback real automatizado foi validado para arquivo de quarentena; ainda falta validacao manual por fluxo completo em ambiente controlado.
+- Build de producao assinado ainda depende de certificado real configurado por PFX/`HERMES_CERT_THUMBPRINT`.
+- Instaladores MSI/NSIS release continuam sem assinatura Authenticode.
 - Licenciamento esta congelado, nao implementado para cobranca real nesta release.
-- O build padrao continua com `HERMES_SAFE_TEST_MODE` ativo; o build real existe, mas depende de QA controlado antes da distribuicao.
+- O build padrao continua com `HERMES_SAFE_TEST_MODE` ativo; o build real existe, mas a distribuicao publica depende de assinatura e do pipeline assinado final.
 - Chunk principal do build Tauri excede 500 kB; nao bloqueia sozinho, mas deve entrar em backlog de performance.
 
 ## Condicao Para Virar GO
 
-1. Executar checklist em `docs/release-qa-checklist.md`.
-2. Validar rollback real em VM ou maquina de teste descartavel.
-3. Definir se o lancamento sera gratuito/sem licenca ou implementar licenciamento Hermes Account real.
-4. Desativar modo seguro somente depois de QA real das allowlists.
-5. Gerar build release assinado com certificado oficial.
-6. Reexecutar lint, build web, build Tauri, testes Rust e instalacao limpa.
+1. Importar/configurar o certificado Code Signing real.
+2. Rodar `npm run release:public:pipeline:signed` para gerar RC assinado atual.
+3. Rodar `npm run release:public:pipeline:signed:install` em VM/runner elevado para smoke real dos instaladores assinados.
+4. Confirmar `npm run release:public:verify` como GO.
+5. Rodar `npm run release:public:package`.
+6. Publicar somente os instaladores dentro de `.release/public/<pacote>/installers`.
 
 ## Veredito
 
