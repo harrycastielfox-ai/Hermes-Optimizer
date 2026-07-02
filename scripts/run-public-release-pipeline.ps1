@@ -21,6 +21,14 @@ $steps = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 
+if ($BuildSigned -and -not $RegenerateReleaseCandidate) {
+  throw "Pipeline publico bloqueado: use -RegenerateReleaseCandidate junto com -BuildSigned para empacotar e validar os instaladores assinados."
+}
+
+if ($AllowInstallSmoke -and -not $RegenerateReleaseCandidate) {
+  throw "Pipeline publico bloqueado: use -RegenerateReleaseCandidate junto com -AllowInstallSmoke para testar o RC atual."
+}
+
 function Invoke-PipelineStep {
   param(
     [string]$Name,
@@ -89,41 +97,48 @@ try {
   Invoke-PipelineStep -Name "01-lint" -FilePath "npm.cmd" -ArgumentList @("run", "lint")
   Invoke-PipelineStep -Name "02-typescript" -FilePath "npx.cmd" -ArgumentList @("tsc", "--noEmit")
   Invoke-PipelineStep -Name "03-release-gates" -FilePath "npm.cmd" -ArgumentList @("run", "verify:release-gates")
-  Invoke-PipelineStep -Name "04-qa-drop-auto-safe" -FilePath "npm.cmd" -ArgumentList @("run", "qa:manual:drop:auto")
 
   if ($AllowInstallSmoke) {
-    Invoke-PipelineStep -Name "05-qa-drop-auto-install-smoke" -FilePath "npm.cmd" -ArgumentList @("run", "qa:manual:drop:auto:install")
+    $warnings.Add("Install smoke real sera executado depois do build/RC atual para validar o pacote certo.")
   } else {
-    $warnings.Add("Install smoke real nao foi executado. Use -AllowInstallSmoke em GitHub Actions/VM/maquina descartavel elevada.")
+    $warnings.Add("Install smoke real nao sera executado. Use -AllowInstallSmoke em GitHub Actions/VM/maquina descartavel elevada.")
   }
 
   if ($ImportPfx) {
-    Invoke-PipelineStep -Name "06-signing-import-pfx" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
+    Invoke-PipelineStep -Name "04-signing-import-pfx" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
   } elseif ($BuildSigned -and -not [string]::IsNullOrWhiteSpace($env:HERMES_SIGNING_PFX_BASE64)) {
-    Invoke-PipelineStep -Name "06-signing-import-pfx-auto" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
+    Invoke-PipelineStep -Name "04-signing-import-pfx-auto" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:import-pfx")
   } else {
     $warnings.Add("Importacao de PFX nao foi executada. Use -ImportPfx ou configure HERMES_CERT_THUMBPRINT antes do build assinado.")
   }
 
-  Invoke-PipelineStep -Name "07-signing-candidates" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:certs")
-  Invoke-PipelineStep -Name "08-signing-preflight" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
-  Invoke-PipelineStep -Name "09-signing-handoff" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:handoff")
+  Invoke-PipelineStep -Name "05-signing-candidates" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:certs")
+  Invoke-PipelineStep -Name "06-signing-preflight-before-build" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
+  Invoke-PipelineStep -Name "07-signing-handoff" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:handoff")
 
   if ($BuildSigned) {
-    Invoke-PipelineStep -Name "10-build-real-signed" -FilePath "npm.cmd" -ArgumentList @("run", "build:windows:real:signed")
+    Invoke-PipelineStep -Name "08-build-real-signed" -FilePath "npm.cmd" -ArgumentList @("run", "build:windows:real:signed")
   } else {
     $warnings.Add("Build real assinado nao foi executado. Use -BuildSigned somente quando o certificado Code Signing estiver configurado.")
   }
 
   if ($RegenerateReleaseCandidate) {
-    Invoke-PipelineStep -Name "11-release-internal" -FilePath "npm.cmd" -ArgumentList @("run", "release:internal")
+    Invoke-PipelineStep -Name "09-release-internal-current-build" -FilePath "npm.cmd" -ArgumentList @("run", "release:internal")
   } else {
     $warnings.Add("Release candidate/sessao QA nao foram regenerados. Use -RegenerateReleaseCandidate quando quiser iniciar um RC novo.")
   }
 
-  Invoke-PipelineStep -Name "12-release-launch-plan" -FilePath "npm.cmd" -ArgumentList @("run", "release:launch-plan")
-  Invoke-PipelineStep -Name "13-release-status" -FilePath "npm.cmd" -ArgumentList @("run", "release:status")
-  Invoke-PipelineStep -Name "14-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
+  Invoke-PipelineStep -Name "10-qa-drop-auto-safe-current-rc" -FilePath "npm.cmd" -ArgumentList @("run", "qa:manual:drop:auto")
+
+  if ($AllowInstallSmoke) {
+    Invoke-PipelineStep -Name "11-qa-drop-auto-install-smoke-current-rc" -FilePath "npm.cmd" -ArgumentList @("run", "qa:manual:drop:auto:install")
+  }
+
+  Invoke-PipelineStep -Name "12-qa-manual-sync-current-rc" -FilePath "npm.cmd" -ArgumentList @("run", "qa:manual:sync")
+  Invoke-PipelineStep -Name "13-signing-preflight-after-build" -FilePath "npm.cmd" -ArgumentList @("run", "release:signing:preflight")
+  Invoke-PipelineStep -Name "14-release-launch-plan" -FilePath "npm.cmd" -ArgumentList @("run", "release:launch-plan")
+  Invoke-PipelineStep -Name "15-release-status" -FilePath "npm.cmd" -ArgumentList @("run", "release:status")
+  Invoke-PipelineStep -Name "16-public-release-verify" -FilePath "npm.cmd" -ArgumentList @("run", "release:public:verify") -AllowFailure:$AllowNoGo
 } catch {
   if ($failures.Count -eq 0) {
     $failures.Add($_.Exception.Message)

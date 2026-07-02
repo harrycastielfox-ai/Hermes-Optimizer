@@ -96,6 +96,17 @@ jobs:
           }
           & npm.cmd @args
 
+      - name: Create signed release candidate and QA session
+        run: npm run release:internal
+
+      - name: Run signed installer smoke on Windows runner
+        run: npm run qa:manual:drop:auto:install
+
+      - name: Sync QA and release status
+        run: |
+          npm run qa:manual:sync
+          npm run release:status
+
       - name: Public release gate
         run: npm run release:public:verify
 
@@ -116,3 +127,6 @@ jobs:
             .release/release-public-verification.md
             .release/release-status.json
             .release/release-status.md
+            .release/manual-qa/**/manual-qa-summary.md
+            .release/manual-qa/**/manual-qa-verification.json
+            .release/manual-qa/**/incoming-qa/**/install-smoke-result.json
