@@ -47,6 +47,25 @@ $betaDropReady = $latestBetaDrop -and
   $betaDropMatchesCurrentBeta -and
   -not [string]::IsNullOrWhiteSpace([string]$latestBetaDrop.dropRoot) -and
   (Test-Path -LiteralPath ([string]$latestBetaDrop.dropRoot) -PathType Container)
+$betaDropEvidenceReady = $false
+if ($betaDropReady) {
+  $betaDropEvidenceCandidates = @(
+    (Join-Path ([string]$latestBetaDrop.extractedPackage) "HermesQA"),
+    "C:\Temp\HermesQA"
+  )
+  foreach ($candidate in $betaDropEvidenceCandidates) {
+    if ([string]::IsNullOrWhiteSpace($candidate) -or -not (Test-Path -LiteralPath $candidate -PathType Container)) {
+      continue
+    }
+    $manualEvidence = Get-ChildItem -LiteralPath $candidate -Filter "manual-qa-evidence.json" -File -ErrorAction SilentlyContinue |
+      Select-Object -First 1
+    $smokeDirs = @(Get-ChildItem -LiteralPath $candidate -Directory -Filter "install-smoke-*" -ErrorAction SilentlyContinue)
+    if ($manualEvidence -or $smokeDirs.Count -gt 0) {
+      $betaDropEvidenceReady = $true
+      break
+    }
+  }
+}
 $policyNextCommand = if ($releasePolicy -and -not [string]::IsNullOrWhiteSpace([string]$releasePolicy.nextWhenPublicSigningDeferred)) {
   [string]$releasePolicy.nextWhenPublicSigningDeferred
 } else {
@@ -70,10 +89,10 @@ $next = if ($qaP0Pending -gt 0) {
     $policyNextCommand
   } elseif (-not $betaDropReady) {
     "npm run release:beta:drop"
-  } elseif (-not [string]::IsNullOrWhiteSpace([string]$latestBetaDrop.receiveCommand)) {
-    [string]$latestBetaDrop.receiveCommand
+  } elseif ($betaDropEvidenceReady) {
+    "npm run release:beta:drop:receive"
   } else {
-    "npm run qa:manual:drop:check"
+    "npm run release:beta:drop:open"
   }
 } elseif ([int]$status.unsignedInstallerCount -gt 0 -and -not [bool]$status.signingCertificateReadyToConfigure) {
   "npm run release:signing:import-pfx"
@@ -134,6 +153,7 @@ $summary = [pscustomobject]@{
   betaReady = [bool]$betaReady
   betaPackage = if ($latestBetaReady) { [string]$latestBetaReady.handoffName } else { $null }
   betaDropReady = [bool]$betaDropReady
+  betaDropEvidenceReady = [bool]$betaDropEvidenceReady
   betaDropMatchesCurrentBeta = [bool]$betaDropMatchesCurrentBeta
   betaDrop = if ($latestBetaDrop) { [string]$latestBetaDrop.dropName } else { $null }
   betaDropReadme = if ($latestBetaDrop) { [string]$latestBetaDrop.readmePath } else { $null }
@@ -157,6 +177,7 @@ Write-Host "Assinatura publica: $(if ($summary.codeSigningPolicy -eq 'deferred')
 Write-Host "Canal atual: $($summary.currentChannel)"
 Write-Host "Beta interno: $(if ($summary.betaReady) { $summary.betaPackage } else { 'nao gerado' })"
 Write-Host "Beta drop: $(if ($summary.betaDropReady) { $summary.betaDrop } else { 'nao gerado' })"
+Write-Host "Evidencia beta: $(if ($summary.betaDropEvidenceReady) { 'pronta para receber' } else { 'pendente' })"
 Write-Host ""
 Write-Host "Falta:"
 foreach ($item in @($summary.remaining)) {

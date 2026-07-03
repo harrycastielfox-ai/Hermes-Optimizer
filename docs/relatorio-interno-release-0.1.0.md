@@ -121,11 +121,16 @@ Decisao atual: nao comprar/configurar Code Signing agora. O release publico assi
 - `npm run release:public:package`: gera a pasta final publicavel em `.release/public/` somente depois de `release:public:verify` passar, copiando MSI/NSIS assinados, hashes e evidencias.
 - `docs/release-policy.json`: registra que Code Signing esta adiado, release publico sem assinatura e proibido e o proximo caminho operacional e `npm run release:beta`.
 - `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, atualizando `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
+- `npm run release:beta:ship`: prepara o beta para envio em um unico comando, reaproveitando o beta atual quando possivel, validando drop, gerando ZIP exportavel e resumo `latest-beta-ship.*`.
 - `npm run release:beta:handoff`: gera `.release/beta-handoff/hermes-beta-interno-*` com RC, instaladores, pacote QA portatil, doctor, status de release, evidencias de assinatura e instrucoes para beta controlado.
 - `npm run release:beta:verify`: valida o beta handoff mais recente, conferindo manifesto, ZIP, `.sha256`, estrutura interna, QA portatil e instaladores contra seus manifestos.
 - O beta interno agora inclui `GUIA-TESTADOR-BETA.md`, um roteiro direto para testador validar VM/maquina limpa, comandos obrigatorios, checklist visual e retorno da pasta `HermesQA`.
 - `npm run release:beta:ready`: valida se o beta interno esta pronto para envio controlado, mantendo a distincao entre `BETA-INTERNAL-OK` e `NO-GO` publico.
 - `npm run release:beta:drop`: prepara uma pasta pronta para VM/Windows Sandbox com QA portatil extraido, runner `RODAR-DENTRO-DA-VM.ps1`, arquivo `.wsb` e instrucoes de retorno.
+- `npm run release:beta:drop:verify`: valida o drop beta mais recente, conferindo beta atual, ZIPs, SHA256, runner, Windows Sandbox e pacote QA portatil extraido.
+- `npm run release:beta:drop:open`: valida e abre o drop beta atual no Explorer/Bloco de Notas; `npm run release:beta:drop:sandbox` tenta abrir direto no Windows Sandbox.
+- `npm run release:beta:drop:zip`: gera um ZIP exportavel do drop beta com arquivo `.sha256` e manifesto para envio a VM/testador.
+- `npm run release:beta:drop:check` e `npm run release:beta:drop:receive`: detectam `HermesQA` no drop beta ou em `C:\Temp\HermesQA` e consolidam as evidencias no QA manual ativo.
 - `npm run release:signing:certs`: lista certificados de assinatura candidatos no Windows Store, valida Code Signing/chave privada/expiracao e pode gerar template local de variaveis.
 - `npm run release:signing:preflight`: verifica certificado, chave privada, timestamp, SignTool e assinatura atual dos instaladores antes do build assinado.
 

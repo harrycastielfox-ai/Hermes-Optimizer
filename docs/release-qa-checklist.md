@@ -61,6 +61,7 @@ Data base: 2026-06-26
 - [x] `npm run release:status`: resume GO/NO-GO, QA tecnico, QA manual, pacote QA portatil, preflight de assinatura e bloqueios atuais.
 - [x] `docs/release-policy.json`: registra Code Signing adiado, release publico assinado bloqueado e beta interno como canal atual.
 - [x] `npm run release:beta`: gera e verifica o beta interno em uma unica rotina, criando ponteiros `latest-beta-*`.
+- [x] `npm run release:beta:ship`: prepara o beta interno para envio/teste em um unico comando, com drop validado, ZIP exportavel e SHA256.
 - [x] `npm run release:beta:handoff`: gera pacote de beta interno separado do release publico, com RC, QA portatil, status, doctor e evidencias.
 - [x] `npm run release:beta:verify`: valida o pacote de beta interno mais recente, conferindo estrutura, manifesto, ZIP, SHA256, QA portatil e instaladores.
 - [x] Pacote beta interno inclui `GUIA-TESTADOR-BETA.md`, com roteiro simples para VM/maquina limpa e devolucao da pasta `HermesQA`.
@@ -182,6 +183,10 @@ Resultado esperado: sem tela branca, sem navegacao para arquivo inexistente e se
 - [x] Guia de testador do beta interno validado junto do handoff, incluindo comandos de verificacao, smoke, coleta manual e retorno por `qa:manual:receive`.
 - [x] Prontidao de envio do beta interno verificavel por `npm run release:beta:ready`, gerando `beta-ready-to-send.json/md`.
 - [x] Drop de execucao do beta geravel por `npm run release:beta:drop`, com `RODAR-DENTRO-DA-VM.ps1`, `HERMES-BETA-QA.wsb` e ponteiro `latest-beta-test-drop.*`.
+- [x] Drop de execucao do beta verificavel por `npm run release:beta:drop:verify`, gerando `latest-beta-test-drop-verification.json/md`.
+- [x] Drop de execucao do beta abrivel por `npm run release:beta:drop:open` ou `npm run release:beta:drop:sandbox`, sempre validando antes de abrir.
+- [x] Drop de execucao do beta exportavel por `npm run release:beta:drop:zip`, com ZIP, SHA256 e manifesto.
+- [x] Evidencias do drop beta checaveis/recebiveis por `npm run release:beta:drop:check` e `npm run release:beta:drop:receive`.
 - [x] Ponteiros do beta mais recente gerados em `.release/beta-handoff/latest-beta-handoff.*` e `.release/beta-handoff/latest-beta-ready.*`.
 - [x] Certificados candidatos para assinatura listaveis por `npm run release:signing:certs`.
 - [x] Preflight de assinatura gerado em `.release/signing-preflight.json` e `.release/signing-preflight.md` por `npm run release:signing:preflight`.

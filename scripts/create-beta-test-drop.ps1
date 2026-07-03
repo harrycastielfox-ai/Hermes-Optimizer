@@ -237,6 +237,12 @@ Write-Host "- $vmRunnerPath"
 Write-Host "- $sandboxPath"
 Write-Host "- $manifestPath"
 
+$verifyDropScript = Join-Path $PSScriptRoot "verify-beta-test-drop.ps1"
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $verifyDropScript -DropRoot $dropRoot -OutputRoot $OutputRoot | Out-Host
+if ($LASTEXITCODE -ne 0) {
+  throw "Verificacao do beta drop falhou. Veja latest-beta-test-drop-verification.md."
+}
+
 if ($LaunchSandbox) {
   Write-Host "Abrindo Windows Sandbox..."
   Start-Process -FilePath $sandboxPath
