@@ -202,18 +202,18 @@ export function HermesAdminSettings() {
             value={preferences.appearance.accent}
             options={[
               {
-                value: "blue",
+                value: "purple",
                 label: t("settings.option.blue"),
                 description:
-                  preferences.appearance.accent === "blue"
+                  preferences.appearance.accent === "purple"
                     ? t("settings.option.active")
                     : t("settings.option.current"),
               },
               {
-                value: "gold",
+                value: "white",
                 label: t("settings.option.gold"),
                 description:
-                  preferences.appearance.accent === "gold"
+                  preferences.appearance.accent === "white"
                     ? t("settings.option.active")
                     : t("settings.option.current"),
               },

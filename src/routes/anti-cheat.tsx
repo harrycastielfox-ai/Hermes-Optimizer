@@ -13,7 +13,7 @@ import {
 export const Route = createFileRoute("/anti-cheat")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Anti-Cheat" },
+      { title: "NEX Optimizer - Anti-Cheat" },
       { name: "description", content: "Compatibilidade local com anti-cheats modernos." },
     ],
   }),
@@ -135,7 +135,7 @@ function AntiCheatCard({
       </div>
 
       <div className="mt-5 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
-        <p className="text-[10px] font-bold tracking-[0.18em] text-primary">HERMES AI</p>
+        <p className="text-[10px] font-bold tracking-[0.18em] text-primary">NEX AI</p>
         <p className="mt-1 text-[13px] text-muted-foreground">{report.summary}</p>
       </div>
 
@@ -151,8 +151,8 @@ function AntiCheatCard({
             Guia seguro
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            O Hermes mostra o caminho recomendado sem alterar BIOS, drivers, jogos ou configurações
-            do Windows.
+            O NEX mostra o caminho recomendado sem alterar BIOS, drivers, jogos ou configurações do
+            Windows.
           </p>
           <div className="mt-3 space-y-2">
             {activationItems.length > 0 ? (

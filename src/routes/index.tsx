@@ -53,7 +53,7 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer — Dashboard" },
+      { title: "NEX Optimizer — Dashboard" },
       { name: "description", content: "Painel central do PC com coleta local somente leitura." },
     ],
   }),
@@ -134,7 +134,7 @@ function Dashboard() {
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
                 <h1 className="text-[clamp(27px,2vw,34px)] font-bold leading-tight tracking-normal text-foreground">
-                  Dashboard Hermes
+                  Dashboard NEX
                 </h1>
                 <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
                   Status central do PC com coleta local. O Dashboard acompanha a máquina; a área
@@ -225,7 +225,7 @@ function Dashboard() {
 
             {/* Three panels */}
             <div className="mb-4 grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
-              <InfoPanel title="SISTEMA" watermarkSrc="/hermes-watermark.png">
+              <InfoPanel title="SISTEMA" watermarkSrc="/nex-watermark.png">
                 <InfoRow
                   icon={HermesComputerIcon}
                   label="Computador:"
@@ -291,7 +291,7 @@ function Dashboard() {
                 />
               </InfoPanel>
 
-              <InfoPanel title="RECOMENDAÇÕES HERMES">
+              <InfoPanel title="RECOMENDAÇÕES NEX">
                 {recommendations.map((recommendation) => {
                   const visual = getRecommendationVisual(recommendation);
                   return (
@@ -376,7 +376,7 @@ function Dashboard() {
             </div>
 
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              Hermes Optimizer 0.1.0 • Local first • Ações reais somente com confirmação
+              NEX Optimizer 0.1.0 • Local first • Ações reais somente com confirmação
             </p>
           </div>
         </main>
@@ -420,7 +420,7 @@ function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }
     ? cycle.summary.simulatedActions
     : cycle.summary.appliedActions;
   const phaseLabel = cycle.reports.optimize
-    ? "Hermes preparado para jogar"
+    ? "NEX preparado para jogar"
     : cycle.reports.prepare
       ? "Preparo concluído"
       : "Ciclo iniciado";
@@ -440,7 +440,7 @@ function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }
             <p className="mt-1 text-[12px] text-muted-foreground">
               Atualizado em {formatDateTime(cycle.updatedAt)}.{" "}
               {hasFullCycle
-                ? "Reinicie quando o Hermes pedir para consolidar o ganho."
+                ? "Reinicie quando o NEX pedir para consolidar o ganho."
                 : "Continue pela área Otimizar para finalizar as duas fases."}
             </p>
           </div>
@@ -462,7 +462,7 @@ function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }
       </div>
 
       <div className="mt-3 flex flex-col gap-2 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>{progress}% do plano Hermes mapeado para este ciclo.</span>
+        <span>{progress}% do plano NEX mapeado para este ciclo.</span>
         <Link to="/otimizar" className="font-bold text-primary hover:underline">
           Ver status da otimização →
         </Link>

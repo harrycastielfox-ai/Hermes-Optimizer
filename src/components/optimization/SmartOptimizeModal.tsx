@@ -73,7 +73,7 @@ type PlanAction = {
 };
 
 const phaseTemplates: OptimizePhase[] = [
-  phase("plan", "Plano inteligente", "Orquestrador + Hermes IA", BrainCircuit, 14),
+  phase("plan", "Plano inteligente", "Orquestrador + NEX IA", BrainCircuit, 14),
   phase("safety", "Permissões e confirmação", "Modo teste, logs e controle", ShieldCheck, 10),
   phase("components", "Componentes essenciais", "VC++, DirectX e dependências", Wrench, 18),
   phase("cleanup", "Limpeza segura", "Temporários, cache e logs", BrushCleaning, 26),
@@ -86,7 +86,7 @@ const phaseTemplates: OptimizePhase[] = [
     Gamepad2,
     18,
   ),
-  phase("profile", "Plano global Hermes", "Perfil interno aplicado sem escolha manual", Cpu, 16),
+  phase("profile", "Plano global NEX", "Perfil interno aplicado sem escolha manual", Cpu, 16),
   phase(
     "manual",
     "Avançado guiado",
@@ -134,7 +134,7 @@ export function SmartOptimizeModal({
     setFinalExecutionReport(null);
     reportActions.current = [];
     setRunStatus("running");
-    setCurrentStatus("Preparando plano único do Hermes.");
+    setCurrentStatus("Preparando plano único do NEX.");
     void runSmartOptimization(runId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, runKey]);
@@ -253,7 +253,7 @@ export function SmartOptimizeModal({
       actions: detailedActions,
       notes: [
         "Botão 2 concluído em fluxo guiado.",
-        `O catálogo atual possui ${OPTIMIZE_AUDIT_ACTION_TARGET} ações auditáveis por fases do plano Hermes.`,
+        `O catálogo atual possui ${OPTIMIZE_AUDIT_ACTION_TARGET} ações auditáveis por fases do plano NEX.`,
         ...gamerDependencyReportNotes(nextReports),
         HERMES_SAFE_TEST_MODE
           ? "Modo teste: nenhuma alteração real foi aplicada."
@@ -324,7 +324,7 @@ export function SmartOptimizeModal({
   function requestCancel() {
     cancelRequested.current = true;
     setRunStatus("cancelled");
-    setCurrentStatus("Cancelamento solicitado. O Hermes não iniciara novas fases.");
+    setCurrentStatus("Cancelamento solicitado. O NEX não iniciara novas fases.");
     setPhases((current) =>
       current.map((item) =>
         item.status === "pending"
@@ -430,12 +430,12 @@ export function SmartOptimizeModal({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <p className="text-sm font-bold">
-                  Plano Hermes validado antes de qualquer mudança real.
+                  Plano NEX validado antes de qualquer mudança real.
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
                   {HERMES_SAFE_TEST_MODE
-                    ? "Modo teste ativo: o Hermes confere o caminho completo sem alterar o Windows."
-                    : "Modo real ligado: o Hermes executa somente ajustes liberados e confirmados pelo motor."}
+                    ? "Modo teste ativo: o NEX confere o caminho completo sem alterar o Windows."
+                    : "Modo real ligado: o NEX executa somente ajustes liberados e confirmados pelo motor."}
                 </p>
               </div>
             </div>
@@ -643,7 +643,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, _profileId: string):
 
   actions.push({
     id: "profile",
-    title: "Plano global Hermes",
+    title: "Plano global NEX",
     detail: reports.profileResult
       ? `${reports.profileResult.engineResults.length} engine(s) internas ${appliedVerb(reports.profileResult.dryRun)}.`
       : "Plano seguro usado internamente, sem escolha manual de perfil.",
@@ -721,7 +721,7 @@ function OptimizationSuccessPanel({ report }: { report: ExecutionReport }) {
             <h3 className="mt-1 text-xl font-black text-foreground">Otimização concluída</h3>
             <p className="mt-1 text-sm font-medium text-muted-foreground">
               {report.safeMode
-                ? "Modo teste validado. O Hermes está pronto para executar esse plano no modo real."
+                ? "Modo teste validado. O NEX está pronto para executar esse plano no modo real."
                 : "Seu PC foi otimizado com sucesso. Reinicie para sentir o melhor resultado."}
             </p>
           </div>
@@ -1195,7 +1195,7 @@ function dependencyInstallVerification(
   if (action.status === "skipped") {
     return {
       status: "confirmed",
-      detail: "Dependência já detectada no Windows; o Hermes não reinstalou.",
+      detail: "Dependência já detectada no Windows; o NEX não reinstalou.",
       checkedAt,
     };
   }

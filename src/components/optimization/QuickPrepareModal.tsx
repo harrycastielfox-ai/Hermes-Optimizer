@@ -330,8 +330,8 @@ export function QuickPrepareModal({
               <div>
                 <p className="text-sm font-bold">
                   {HERMES_SAFE_TEST_MODE
-                    ? "Modo teste ativo: o Hermes valida o que faria sem alterar o Windows."
-                    : "Modo real: o Hermes executa os ajustes implementados."}
+                    ? "Modo teste ativo: o NEX valida o que faria sem alterar o Windows."
+                    : "Modo real: o NEX executa os ajustes implementados."}
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed">
                   Este fluxo usa CMD/PowerShell/Registro allowlistados por baixo: Game Mode,
@@ -588,7 +588,7 @@ function GamerDependenciesPanel({ report }: { report: GamerDependencyVerificatio
               Dependências gamer verificadas
             </h3>
             <p className="mt-1 text-[12px] text-muted-foreground">
-              O Hermes cuida dos runtimes dentro dos botões principais, sem etapa manual.
+              O NEX cuida dos runtimes dentro dos botões principais, sem etapa manual.
             </p>
           </div>
         </div>

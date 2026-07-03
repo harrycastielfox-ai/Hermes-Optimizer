@@ -26,10 +26,10 @@ type ActionStatus = "idle" | "running" | "done" | "failed";
 export const Route = createFileRoute("/defender")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Windows Defender" },
+      { title: "NEX Optimizer - Windows Defender" },
       {
         name: "description",
-        content: "Liberação especifica do Hermes no Windows Defender sem desativar a proteção.",
+        content: "Liberação especifica do NEX no Windows Defender sem desativar a proteção.",
       },
     ],
   }),
@@ -69,7 +69,7 @@ function DefenderPage() {
 
     if (!HERMES_SAFE_TEST_MODE) {
       const confirmed = window.confirm(
-        "O Hermes vai adicionar somente o executavel hermes-optimizer.exe as exclusoes do Windows Defender. Continuar?",
+        "O NEX vai adicionar somente o executavel nex-optimizer.exe as exclusoes do Windows Defender. Continuar?",
       );
       if (!confirmed) {
         return;
@@ -144,8 +144,8 @@ function DefenderPage() {
                   Liberar no Windows Defender
                 </h1>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                  Quando o Windows bloquear o Hermes por reputação de app novo, esta página prepara
-                  uma exclusao especifica do executavel sem desligar o Defender.
+                  Quando o Windows bloquear o NEX por reputação de app novo, esta página prepara uma
+                  exclusao especifica do executavel sem desligar o Defender.
                 </p>
               </div>
 
@@ -165,7 +165,7 @@ function DefenderPage() {
                   <div className="min-w-0">
                     <h2 className="text-xl font-bold text-foreground">Proteção continua ativa</h2>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      O Hermes não desativa o Windows Defender. Ele adiciona somente o caminho do
+                      O NEX não desativa o Windows Defender. Ele adiciona somente o caminho do
                       proprio executavel a lista de exclusoes quando houver falso positivo.
                     </p>
                   </div>
@@ -194,7 +194,7 @@ function DefenderPage() {
                 <TrustCard
                   icon={FileCheck2}
                   title="Executavel Hermes"
-                  text="A permissão mira hermes-optimizer.exe, não pastas inteiras do sistema."
+                  text="A permissão mira nex-optimizer.exe, não pastas inteiras do sistema."
                 />
                 <TrustCard
                   icon={LockKeyhole}
@@ -229,7 +229,7 @@ function DefenderPage() {
                 <ManualStep text="Entre em Configurações de proteção contra vírus e ameaças -> Gerenciar configurações." />
                 <ManualStep text="Role até Exclusões -> Adicionar ou remover exclusões." />
                 <ManualStep text="Escolha Adicionar uma exclusao -> Arquivo." />
-                <ManualStep text="Selecione hermes-optimizer.exe e confirme." />
+                <ManualStep text="Selecione nex-optimizer.exe e confirme." />
               </ol>
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">

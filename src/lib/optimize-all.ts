@@ -236,7 +236,7 @@ async function runPlanPhase(): Promise<OptimizeAllPhaseResult> {
     reports: { plan, advisor, diagnostic },
     outputs: [
       `${plan.summary.totalStages} etapa(s) do orquestrador local`,
-      `${advisor.recommendations.length} recomendação(ões) da Hermes IA`,
+      `${advisor.recommendations.length} recomendação(ões) da NEX IA`,
       `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
     ],
   };

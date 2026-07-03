@@ -42,8 +42,8 @@ import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 export const Route = createFileRoute("/otimizacoes")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Otimizações" },
-      { name: "description", content: "Performance Engine somente leitura do Hermes Optimizer." },
+      { title: "NEX Optimizer - Otimizações" },
+      { name: "description", content: "Performance Engine somente leitura do NEX Optimizer." },
     ],
   }),
   component: OtimizacoesPage,
@@ -105,7 +105,7 @@ function OtimizacoesPage() {
               Otimizações
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Com base no diagnóstico do seu PC, o Hermes organizou ajustes que podem melhorar
+              Com base no diagnóstico do seu PC, o NEX organizou ajustes que podem melhorar
               desempenho, inicialização e experiência geral, mantendo reversão e modo seguro.
             </p>
           </div>
@@ -290,7 +290,7 @@ function buildOptimizationRecommendations(
       level: "medium",
       rollback: "Disponível",
       mode: safeModeLabel(),
-      detail: `Plano atual: ${report.powerPlan.activeSchemeName}. O Hermes recomenda validar energia antes de qualquer perfil.`,
+      detail: `Plano atual: ${report.powerPlan.activeSchemeName}. O NEX recomenda validar energia antes de qualquer perfil.`,
     },
     {
       id: "startup",
@@ -304,7 +304,7 @@ function buildOptimizationRecommendations(
       rollback: "Disponível",
       mode: safeModeLabel(),
       detail:
-        "A recomendação principal é validar primeiro. O Hermes não remove programas e não apaga executáveis.",
+        "A recomendação principal é validar primeiro. O NEX não remove programas e não apaga executáveis.",
     },
     {
       id: "gamer",
@@ -320,7 +320,7 @@ function buildOptimizationRecommendations(
       rollback: "Disponível",
       mode: safeModeLabel(),
       detail:
-        "O Hermes deve sugerir ajustes e fechamento de apps apenas com confirmação, preservando processos protegidos.",
+        "O NEX deve sugerir ajustes e fechamento de apps apenas com confirmação, preservando processos protegidos.",
     },
     {
       id: "visual",
@@ -785,11 +785,11 @@ function blockedPresentation(item: AdvancedBlockedAction) {
     },
     "delete-user-files": {
       title: "Apagar arquivos pessoais",
-      reason: "Bloqueado: arquivos pessoais ficam fora do Hermes.",
+      reason: "Bloqueado: arquivos pessoais ficam fora do NEX.",
     },
     "remove-programs": {
       title: "Remover programas",
-      reason: "Bloqueado: o Hermes nunca remove softwares.",
+      reason: "Bloqueado: o NEX nunca remove softwares.",
     },
     "free-registry-delete": {
       title: "Alterações livres no sistema",
@@ -848,7 +848,7 @@ function performancePresentation(item: PerformanceSetting) {
 
   const presentation = map[item.id] ?? {
     title: item.label,
-    description: "Configuração de desempenho monitorada pelo Hermes.",
+    description: "Configuração de desempenho monitorada pelo NEX.",
     impact: "Impacto: depende do estado atual do Windows.",
   };
 

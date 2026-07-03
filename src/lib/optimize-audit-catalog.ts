@@ -30,7 +30,7 @@ export type OptimizeAuditAction = AuditSeed & {
 };
 
 export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
-  auditPhase("plan", "Plano inteligente", "Orquestrador + Hermes IA", [
+  auditPhase("plan", "Plano inteligente", "Orquestrador + NEX IA", [
     a(
       "diagnostic-health-score",
       "Ler saúde geral",

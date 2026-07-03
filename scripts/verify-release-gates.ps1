@@ -114,8 +114,8 @@ Assert-True ($manifest -match 'requestedExecutionLevel\s+level="requireAdministr
   "Manifest Windows precisa exigir requireAdministrator."
 Assert-True ($buildRs -match 'windows-app-manifest\.xml') `
   "build.rs precisa embutir windows-app-manifest.xml."
-Assert-True ([string]$tauriConfig.identifier -eq "com.hermesoptimizer.desktop") `
-  "Identifier Tauri precisa usar o namespace Hermes: com.hermesoptimizer.desktop."
+Assert-True ([string]$tauriConfig.identifier -eq "com.nexoptimizer.desktop") `
+  "Identifier Tauri precisa usar o namespace NEX: com.nexoptimizer.desktop."
 Assert-True ([string]$tauriConfig.identifier -notmatch $oldBrand) `
   "Identifier Tauri nao pode conter branding tecnico antigo."
 Assert-True ((Read-Text $tauriConfigPath) -notmatch $oldBrandPattern) `

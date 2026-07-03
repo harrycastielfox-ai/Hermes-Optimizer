@@ -66,10 +66,10 @@ type PrepareRebootStatus = "missing" | "unknown" | "pending" | "confirmed";
 export const Route = createFileRoute("/otimizar")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Otimizar" },
+      { title: "NEX Optimizer - Otimizar" },
       {
         name: "description",
-        content: "Área de otimização guiada do Hermes Optimizer.",
+        content: "Área de otimização guiada do NEX Optimizer.",
       },
     ],
   }),
@@ -266,7 +266,7 @@ function OtimizarPage() {
                   PROJETO DE OTIMIZAÇÃO
                 </p>
                 <h1 className="text-[clamp(30px,3vw,48px)] font-black leading-tight tracking-normal text-foreground">
-                  Hermes em dois passos
+                  NEX em dois passos
                 </h1>
                 <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
                   O Dashboard acompanha o PC. Esta área concentra a parte que resolve: analisar,
@@ -439,11 +439,11 @@ function ExecutionCycleReportPanel({ cycle }: { cycle: ExecutionCycleReport }) {
           <div className="min-w-0">
             <p className="text-xs font-bold tracking-[0.2em] text-success">STATUS DA OTIMIZAÇÃO</p>
             <h2 className="mt-1 text-xl font-black text-foreground">
-              {hasFullCycle ? "Hermes preparado para jogar" : "Fluxo iniciado"}
+              {hasFullCycle ? "NEX preparado para jogar" : "Fluxo iniciado"}
             </h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {hasFullCycle
-                ? "As duas fases já foram concluídas. Reinicie quando o Hermes pedir para consolidar o resultado."
+                ? "As duas fases já foram concluídas. Reinicie quando o NEX pedir para consolidar o resultado."
                 : "Conclua o Botão 1 primeiro e depois execute o Botão 2 para finalizar a otimização."}
             </p>
           </div>
@@ -537,7 +537,7 @@ function ExecutionReportPanel({ report }: { report: ExecutionReport }) {
             <h2 className="mt-1 text-lg font-black text-foreground">{successTitle}</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
               {report.safeMode
-                ? "Modo teste validado. O Hermes confirmou o caminho antes do modo real."
+                ? "Modo teste validado. O NEX confirmou o caminho antes do modo real."
                 : "Execução finalizada. Reinicie o PC quando solicitado para consolidar o ganho."}
             </p>
           </div>
@@ -617,7 +617,7 @@ function OptimizationPhaseBoard({
         <div>
           <p className="text-xs font-bold tracking-[0.22em] text-primary">FASES DE OTIMIZAÇÃO</p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Faça na ordem. Conclua a preparação, reinicie quando o Hermes pedir e depois rode a fase
+            Faça na ordem. Conclua a preparação, reinicie quando o NEX pedir e depois rode a fase
             avançada.
           </p>
         </div>
@@ -722,7 +722,7 @@ function OptimizationPhaseBoard({
             >
               <p className="text-sm font-black text-foreground">Conclua a Fase 1 primeiro</p>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
-                Faça a Preparação da Máquina antes. O Hermes libera este botão depois.
+                Faça a Preparação da Máquina antes. O NEX libera este botão depois.
               </p>
             </div>
           ) : optimizeWaitingForRestart ? (
@@ -734,7 +734,7 @@ function OptimizationPhaseBoard({
               >
                 <p className="text-sm font-black text-foreground">Reinicie para liberar a Fase 2</p>
                 <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
-                  O Hermes só libera o Botão 2 depois de detectar um novo boot do Windows.
+                  O NEX só libera o Botão 2 depois de detectar um novo boot do Windows.
                 </p>
               </div>
             </>
@@ -782,7 +782,7 @@ function Phase2RebootReadiness({
     ? "O Windows iniciou de novo depois da Fase 1. A Fase 2 está no ponto ideal."
     : isPending
       ? "A Fase 1 foi concluída nesta mesma sessão do Windows. Reiniciar antes da Fase 2 tende a render melhor."
-      : "No app instalado o Hermes detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indisponível.";
+      : "No app instalado o NEX detecta o boot real do Windows. Se estiver no navegador, essa leitura pode ficar indisponível.";
   const colorClass = isConfirmed
     ? "border-success/25 bg-success/10 text-success"
     : isPending

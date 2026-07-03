@@ -33,7 +33,7 @@ export function Sidebar() {
         const { getCurrentWindow } = await import("@tauri-apps/api/window");
         await getCurrentWindow().minimize();
       } catch (error) {
-        console.warn("Não foi possível minimizar a janela do Hermes.", error);
+        console.warn("Não foi possível minimizar a janela do NEX.", error);
       }
     }
   }, []);
@@ -42,20 +42,20 @@ export function Sidebar() {
     <aside className="sidebar-texture sticky top-0 h-screen w-[230px] 2xl:w-[260px] shrink-0 overflow-hidden flex flex-col px-4 py-5 2xl:px-5 2xl:py-6 border-r border-slate-200/80 dark:border-white/10">
       <button
         type="button"
-        aria-label="Minimizar Hermes Optimizer"
+        aria-label="Minimizar NEX Optimizer"
         title="Minimizar"
         onClick={handleMinimize}
         className="relative z-10 flex shrink-0 items-center justify-center mb-6 2xl:mb-8 pt-1 rounded-3xl outline-none transition-transform duration-200 hover:scale-[1.015] focus-visible:ring-2 focus-visible:ring-blue-500/70"
       >
         {logoMissing ? (
           <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-            Hermes Optimizer
+            NEX Optimizer
           </span>
         ) : (
           <img
-            src="/hermes-logo.png"
-            alt="Hermes Optimizer"
-            className="w-[178px] 2xl:w-[205px] max-h-[134px] 2xl:max-h-[154px] h-auto object-contain drop-shadow-md"
+            src="/nex-logo.png"
+            alt="NEX Optimizer"
+            className="w-[186px] 2xl:w-[214px] max-h-[146px] 2xl:max-h-[164px] h-auto object-contain drop-shadow-[0_16px_34px_rgba(168,85,247,0.24)]"
             onError={() => setLogoMissing(true)}
           />
         )}
@@ -71,7 +71,7 @@ export function Sidebar() {
               to={to}
               className={`group flex items-center gap-3 px-3.5 py-2.5 2xl:px-4 2xl:py-3 rounded-2xl text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-lg ring-1 ring-white/25"
+                  ? "bg-primary text-primary-foreground shadow-[0_16px_36px_-22px_rgba(168,85,247,0.95)] ring-1 ring-white/25"
                   : "text-slate-700 hover:bg-white/[0.72] hover:text-slate-950 hover:shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45)] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
               }`}
             >
@@ -79,7 +79,7 @@ export function Sidebar() {
                 className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl transition-all duration-200 ${
                   isActive
                     ? "bg-white/[0.16] text-white"
-                    : "bg-slate-900/[0.04] text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-white/[0.07] dark:text-slate-300 dark:group-hover:bg-primary/15 dark:group-hover:text-primary"
+                    : "bg-slate-900/[0.04] text-slate-500 group-hover:bg-primary/10 group-hover:text-primary dark:bg-white/[0.08] dark:text-slate-300 dark:group-hover:bg-primary/18 dark:group-hover:text-primary"
                 }`}
               >
                 <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.4 : 2} />

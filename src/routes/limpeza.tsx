@@ -28,8 +28,8 @@ import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 export const Route = createFileRoute("/limpeza")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Limpeza" },
-      { name: "description", content: "Scan de limpeza segura local do Hermes Optimizer." },
+      { title: "NEX Optimizer - Limpeza" },
+      { name: "description", content: "Scan de limpeza segura local do NEX Optimizer." },
     ],
   }),
   component: LimpezaPage,
@@ -135,7 +135,7 @@ function LimpezaPage() {
           selectedItems
             .map((item) => `- ${item.label}: ${formatGb(item.estimatedGb)} GB`)
             .join("\n") +
-          `\n\nTotal estimado: ${formatGb(selectedGb)} GB.\n\nO Hermes moverá arquivos allowlistados para quarentena, criará snapshot/log/rollback e nunca tocará Downloads, Documentos, Desktop, Imagens ou Vídeos.`,
+          `\n\nTotal estimado: ${formatGb(selectedGb)} GB.\n\nO NEX moverá arquivos allowlistados para quarentena, criará snapshot/log/rollback e nunca tocará Downloads, Documentos, Desktop, Imagens ou Vídeos.`,
       );
 
       if (!confirmed) {

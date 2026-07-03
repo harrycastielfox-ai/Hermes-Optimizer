@@ -60,10 +60,10 @@ function hasNoMojibake(content) {
 
 const checks = [
   {
-    name: "Root usa metadata Hermes sem starter remoto",
+    name: "Root usa metadata NEX sem starter remoto",
     ok:
-      files.rootRoute.includes('@HermesOptimizer"') &&
-      files.rootRoute.includes('content: "/hermes-logo.png"') &&
+      files.rootRoute.includes('@NEXOptimizer"') &&
+      files.rootRoute.includes('content: "/nex-logo.png"') &&
       forbiddenRootCopy.every((fragment) => !files.rootRoute.includes(fragment)),
   },
   {
@@ -83,7 +83,7 @@ const checks = [
       forbiddenRootCopy.every((fragment) => !files.errorPage.includes(fragment)),
   },
   {
-    name: "Wrapper de erro usa nome generico Hermes",
+    name: "Wrapper de erro usa nome generico NEX",
     ok:
       files.errorReporting.includes("reportClientError") &&
       !files.errorReporting.includes("reportLovableError") &&

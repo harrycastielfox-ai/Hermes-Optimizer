@@ -34,8 +34,8 @@ import {
 export const Route = createFileRoute("/seguranca")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Segurança e Recuperacao" },
-      { name: "description", content: "Snapshots, logs e rollback local do Hermes Optimizer." },
+      { title: "NEX Optimizer - Segurança e Recuperacao" },
+      { name: "description", content: "Snapshots, logs e rollback local do NEX Optimizer." },
     ],
   }),
   component: SecurityRecoveryPage,
@@ -139,7 +139,7 @@ function SecurityRecoveryPage() {
       setValidation(validationResult);
 
       const restoreConfirmed = window.confirm(
-        `Restaurar este snapshot agora?\n\n${snapshot.name}\nAções reversíveis: ${snapshot.rollbackManifest.length}\n\nO Hermes executará apenas rollback suportado pelo manifesto seguro.`,
+        `Restaurar este snapshot agora?\n\n${snapshot.name}\nAções reversíveis: ${snapshot.rollbackManifest.length}\n\nO NEX executará apenas rollback suportado pelo manifesto seguro.`,
       );
       if (!restoreConfirmed) {
         setNotice("Restauração cancelada após validação segura.");
@@ -164,7 +164,7 @@ function SecurityRecoveryPage() {
     try {
       const payload = {
         generatedAt: new Date().toISOString(),
-        source: "Hermes Optimizer - Segurança e Recuperacao",
+        source: "NEX Optimizer - Segurança e Recuperacao",
         localOnly: true,
         status,
         snapshots,
@@ -209,7 +209,7 @@ function SecurityRecoveryPage() {
                 SEGURANCA E RECUPERACAO
               </p>
               <h1 className="text-[clamp(26px,2vw,34px)] font-bold leading-tight tracking-tight text-foreground">
-                Restore Center Hermes
+                Restore Center NEX
               </h1>
               <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
                 Snapshots, rollback, logs locais, histórico de alterações e exportação de relatório

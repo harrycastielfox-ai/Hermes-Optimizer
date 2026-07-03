@@ -71,7 +71,7 @@ const stageTemplates: AnalysisStage[] = [
   stage(
     "advisor",
     "Gerando recomendações",
-    "Hermes IA Local",
+    "NEX IA Local",
     "Cruza as fontes locais e produz recomendações explicaveis.",
   ),
 ];
@@ -228,10 +228,10 @@ export function GlobalAnalysisModal({
 
       await executeStage(runId, "advisor", async () => {
         const advisor = await refreshAdvisorAiReport();
-        assertReadOnly("Hermes IA", advisor.readOnly && !advisor.willModifySystem);
+        assertReadOnly("NEX IA", advisor.readOnly && !advisor.willModifySystem);
 
         if (advisor.hermesScore.value !== null) {
-          nextHighlights.push(`Score Hermes: ${advisor.hermesScore.value}/100`);
+          nextHighlights.push(`Score NEX: ${advisor.hermesScore.value}/100`);
         }
         if (advisor.summary.recommendedProfile) {
           nextHighlights.push(`Perfil sugerido: ${advisor.summary.recommendedProfile}`);
@@ -353,8 +353,8 @@ export function GlobalAnalysisModal({
           <div className="flex min-w-0 items-center gap-4">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_14px_34px_-22px_rgba(15,23,42,0.65)]">
               <img
-                src="/hermes-logo.png"
-                alt="Hermes Optimizer"
+                src="/nex-logo.png"
+                alt="NEX Optimizer"
                 className="h-full w-full object-contain p-1.5"
               />
             </div>
@@ -389,7 +389,7 @@ export function GlobalAnalysisModal({
               <div>
                 <p className="text-sm font-bold">Análise 100% somente leitura</p>
                 <p className="mt-1 text-[12px] leading-relaxed">
-                  O Hermes coleta e salva informações locais. Nenhum arquivo, processo ou ajuste do
+                  O NEX coleta e salva informações locais. Nenhum arquivo, processo ou ajuste do
                   Windows será alterado.
                 </p>
               </div>
@@ -456,7 +456,7 @@ export function GlobalAnalysisModal({
                 </h3>
                 <div className="mt-3 space-y-2 text-[12px] text-muted-foreground">
                   <SafetyRow text="Coleta executada localmente." />
-                  <SafetyRow text="Resultado salvo no histórico do Hermes." />
+                  <SafetyRow text="Resultado salvo no histórico do NEX." />
                   <SafetyRow text="Sem telemetria ou envio para nuvem." />
                   <SafetyRow text="Nenhuma configuração será alterada." />
                 </div>
@@ -540,7 +540,7 @@ function advisorResult(advisor: AdvisorAiReport): StageExecutionResult {
     advisor.hermesScore.value === null ? "Indisponível" : `${advisor.hermesScore.value}/100`;
 
   return resultFromAvailability(available, "Recomendações locais geradas e salvas.", [
-    `Score Hermes: ${score}`,
+    `Score NEX: ${score}`,
     `${advisor.recommendations.length} recomendação(ões)`,
     `Confianca: ${advisor.summary.confidence}`,
     advisor.summary.recommendedProfile

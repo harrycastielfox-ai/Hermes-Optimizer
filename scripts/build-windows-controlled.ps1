@@ -52,11 +52,11 @@ function Get-HermesInstallerTargets {
   $allTargets = @(
     [pscustomobject]@{
       kind = "nsis"
-      path = Join-Path $RootPath "src-tauri\target\release\bundle\nsis\Hermes Optimizer_0.1.0_x64-setup.exe"
+      path = Join-Path $RootPath "src-tauri\target\release\bundle\nsis\NEX Optimizer_0.1.0_x64-setup.exe"
     },
     [pscustomobject]@{
       kind = "msi"
-      path = Join-Path $RootPath "src-tauri\target\release\bundle\msi\Hermes Optimizer_0.1.0_x64_en-US.msi"
+      path = Join-Path $RootPath "src-tauri\target\release\bundle\msi\NEX Optimizer_0.1.0_x64_en-US.msi"
     }
   )
 

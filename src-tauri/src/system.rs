@@ -156,7 +156,7 @@ pub fn system_restart_computer(
         "/t",
         &delay_seconds.to_string(),
         "/c",
-        "Hermes Optimizer solicitou reinicio para concluir a otimizacao.",
+        "NEX Optimizer solicitou reinicio para concluir a otimizacao.",
     ])?;
 
     Ok(SystemRestartResult {
@@ -164,7 +164,7 @@ pub fn system_restart_computer(
         scheduled: true,
         cancelled: false,
         delay_seconds,
-        message: format!("Reinicio agendado em {delay_seconds} segundos pelo Hermes Optimizer."),
+        message: format!("Reinicio agendado em {delay_seconds} segundos pelo NEX Optimizer."),
     })
 }
 

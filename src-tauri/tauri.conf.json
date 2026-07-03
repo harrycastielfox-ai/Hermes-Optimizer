@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Hermes Optimizer",
+  "productName": "NEX Optimizer",
   "version": "0.1.0",
-  "identifier": "com.hermesoptimizer.desktop",
+  "identifier": "com.nexoptimizer.desktop",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:8080",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Hermes Optimizer",
+        "title": "NEX Optimizer",
         "width": 1366,
         "height": 768,
         "resizable": true,
@@ -25,7 +25,7 @@
         "backgroundColor": "#00000000",
         "windowEffects": {
           "effects": ["mica", "tabbed", "acrylic"],
-          "color": "#0B1628CC"
+          "color": "#09050FCC"
         }
       }
     ],
@@ -36,7 +36,7 @@
   "bundle": {
     "active": true,
     "targets": ["msi", "nsis"],
-    "publisher": "Hermes Optimizer Team",
+    "publisher": "NEX Optimizer Team",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

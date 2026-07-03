@@ -222,7 +222,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "check-admin",
       "scan",
       "Verificar administrador",
-      "Confere se o Hermes está elevado.",
+      "Confere se o NEX está elevado.",
       "scanOnly",
     ),
     task(
@@ -347,7 +347,7 @@ export async function runQuickPrepareExecutor(
       taskIndex: index,
       totalTasks: steps.length,
       status: "running",
-      outputs: ["Executando via fila Hermes."],
+      outputs: ["Executando via fila NEX."],
     });
 
     const result = await runQuickPrepareTask(step, context, state);
@@ -390,7 +390,7 @@ async function runQuickPrepareTask(
           reports: { system },
           outputs: [
             "Modo real exige administrador antes de iniciar o Preparar PC.",
-            "Abra o Hermes pelo atalho com UAC confirmado e rode a Fase 1 novamente.",
+            "Abra o NEX pelo atalho com UAC confirmado e rode a Fase 1 novamente.",
           ],
         };
       }

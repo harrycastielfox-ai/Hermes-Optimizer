@@ -219,7 +219,14 @@ export async function loadDiagnosticReport(): Promise<DiagnosticReport> {
   }
 
   diagnosticLoadPromise ??= import("@tauri-apps/api/core")
-    .then(({ invoke }) => invoke<DiagnosticReport>("diagnostic_engine_read_cached"))
+    .then(async ({ invoke }) => {
+      const cached = await invoke<DiagnosticReport>("diagnostic_engine_read_cached");
+      if (isUsableDiagnosticReport(cached)) {
+        return cached;
+      }
+
+      return await invoke<DiagnosticReport>("diagnostic_engine_read");
+    })
     .then((report) => {
       diagnosticMemoryCache = report;
       return report;
@@ -258,6 +265,10 @@ export async function refreshLiveDiagnosticReport(force = false): Promise<Diagno
   }
 
   const now = Date.now();
+  if (!diagnosticMemoryCache || !isUsableDiagnosticReport(diagnosticMemoryCache)) {
+    return refreshDiagnosticReport();
+  }
+
   if (!force && diagnosticMemoryCache && now - diagnosticLiveRefreshedAt < LIVE_REFRESH_TTL_MS) {
     return diagnosticMemoryCache;
   }
@@ -282,6 +293,14 @@ export async function refreshLiveDiagnosticReport(force = false): Promise<Diagno
     });
 
   return diagnosticLivePromise;
+}
+
+function isUsableDiagnosticReport(report: DiagnosticReport) {
+  if (report.engineVersion.toLowerCase().includes("fallback")) {
+    return false;
+  }
+
+  return report.ram.totalGb > 0 && report.disk.totalGb > 0 && report.cpu.logicalProcessors > 0;
 }
 
 export function advisorInputFromDiagnostic(report: DiagnosticReport): AdvisorInput {

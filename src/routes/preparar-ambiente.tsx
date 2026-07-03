@@ -57,10 +57,10 @@ type PrepStep = {
 export const Route = createFileRoute("/preparar-ambiente")({
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Preparar Ambiente" },
+      { title: "NEX Optimizer - Preparar Ambiente" },
       {
         name: "description",
-        content: "Fluxo guiado do Hermes para preparar o ambiente com poucos cliques.",
+        content: "Fluxo guiado do NEX para preparar o ambiente com poucos cliques.",
       },
     ],
   }),
@@ -125,7 +125,7 @@ function PrepararAmbientePage() {
                 Menos de 4 cliques para resolver
               </h1>
               <p className="mt-2 max-w-4xl text-sm leading-relaxed text-muted-foreground">
-                O Hermes mistura diagnóstico, preparação, sessão Gamer e ferramentas sem esconder
+                O NEX mistura diagnóstico, preparação, sessão Gamer e ferramentas sem esconder
                 risco. Esta tela monta o caminho certo e leva cada ação para o modulo seguro.
               </p>
             </div>

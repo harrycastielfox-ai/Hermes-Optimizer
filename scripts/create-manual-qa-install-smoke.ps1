@@ -67,11 +67,16 @@ function Write-Step {
 
 function Get-HermesExecutableCandidates {
   $exeNames = @(
+    "nex-optimizer.exe",
+    "NEX Optimizer.exe",
     "hermes-optimizer.exe",
     "Hermes Optimizer.exe"
   )
 
   $paths = foreach ($exeName in $exeNames) {
+    Join-Path $env:LOCALAPPDATA "Programs\NEX Optimizer\$exeName"
+    Join-Path $env:LOCALAPPDATA "NEX Optimizer\$exeName"
+    Join-Path $env:ProgramFiles "NEX Optimizer\$exeName"
     Join-Path $env:LOCALAPPDATA "Programs\Hermes Optimizer\$exeName"
     Join-Path $env:LOCALAPPDATA "Hermes Optimizer\$exeName"
     Join-Path $env:ProgramFiles "Hermes Optimizer\$exeName"
@@ -106,7 +111,7 @@ function Get-HermesInstallEvidence {
 
   $registryEntries = foreach ($key in $uninstallKeys) {
     Get-ItemProperty -Path $key -ErrorAction SilentlyContinue |
-      Where-Object { [string]$_.DisplayName -like "*Hermes Optimizer*" } |
+      Where-Object { [string]$_.DisplayName -like "*NEX Optimizer*" -or [string]$_.DisplayName -like "*Hermes Optimizer*" } |
       Select-Object DisplayName, DisplayVersion, Publisher, InstallLocation, UninstallString, QuietUninstallString
   }
 
@@ -114,7 +119,7 @@ function Get-HermesInstallEvidence {
     $installLocation = ([string]$entry.InstallLocation).Trim('"')
     if (-not [string]::IsNullOrWhiteSpace($installLocation) -and (Test-Path -LiteralPath $installLocation -PathType Container)) {
       Get-ChildItem -LiteralPath $installLocation -Filter "*.exe" -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -in @("hermes-optimizer.exe", "Hermes Optimizer.exe") } |
+        Where-Object { $_.Name -in @("nex-optimizer.exe", "NEX Optimizer.exe", "hermes-optimizer.exe", "Hermes Optimizer.exe") } |
         Select-Object -ExpandProperty FullName
     }
   }

@@ -1003,6 +1003,11 @@ fn now_timestamp() -> String {
 const POWERSHELL_DIAGNOSTIC_SCRIPT: &str = r#"
 $ErrorActionPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+function Normalize-StringArray($values) {
+  @($values |
+    Where-Object { $null -ne $_ -and [string]$_ -ne '' } |
+    ForEach-Object { [string]$_ })
+}
 $os = Get-CimInstance Win32_OperatingSystem
 $computer = Get-CimInstance Win32_ComputerSystem
 $baseBoard = Get-CimInstance Win32_BaseBoard
@@ -1068,7 +1073,7 @@ function Get-HermesFolderSizeBytes($path) {
     return 0
   }
 }
-$tempPaths = @($env:TEMP, (Join-Path $env:WINDIR 'Temp')) | Where-Object { $_ } | Sort-Object -Unique
+$tempPaths = Normalize-StringArray (@($env:TEMP, (Join-Path $env:WINDIR 'Temp')) | Sort-Object -Unique)
 $temporaryFilesBytes = 0
 foreach ($tempPath in $tempPaths) {
   $temporaryFilesBytes += [double](Get-HermesFolderSizeBytes $tempPath)
@@ -1129,7 +1134,7 @@ if ($os.LastBootUpTime) {
   powerPlanName = $powerPlanName
   powerPlanGuid = $powerPlanGuid
   temporaryFilesBytes = $temporaryFilesBytes
-  temporaryScanLocations = @($tempPaths)
+  temporaryScanLocations = Normalize-StringArray $tempPaths
 } | ConvertTo-Json -Depth 5 -Compress
 "#;
 

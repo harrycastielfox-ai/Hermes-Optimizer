@@ -10,7 +10,7 @@ import {
 
 export type UpdateChannel = "stable" | "beta";
 export type ThemePreference = "light" | "dark" | "system";
-export type AccentPreference = "blue" | "gold" | "auto";
+export type AccentPreference = "purple" | "white" | "auto";
 export type LanguagePreference = "pt-BR" | "en-US" | "es-ES" | "ja-JP";
 
 export type HermesAdminPreferences = {
@@ -158,7 +158,7 @@ export const defaultPreferences: HermesAdminPreferences = {
   },
   appearance: {
     theme: "light",
-    accent: "blue",
+    accent: "purple",
   },
   notifications: {
     system: true,
@@ -228,7 +228,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.appearance.accent": "Cor principal",
     "settings.appearance.note.title": "Tema aplicado localmente",
     "settings.appearance.note.text":
-      "O Hermes muda apenas a aparência do app. Tema do Windows e navegadores nunca são alterados.",
+      "O NEX muda apenas a aparência do app. Tema do Windows e navegadores nunca são alterados.",
     "settings.notifications.title": "Notificações",
     "settings.notifications.description":
       "Preferências locais para avisos futuros. Nenhum serviço residente é criado.",
@@ -260,8 +260,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "Licenciamento real está congelado nesta release: nenhuma chave é validada, nenhum servidor é chamado e nenhum pagamento é integrado.",
     "settings.privacy.title": "Privacidade",
     "settings.privacy.description":
-      "Compromissos locais do Hermes e base visual para preferências futuras.",
-    "settings.privacy.local": "Hermes funciona localmente.",
+      "Compromissos locais do NEX e base visual para preferências futuras.",
+    "settings.privacy.local": "NEX funciona localmente.",
     "settings.privacy.noTelemetry": "Sem telemetria obrigatória.",
     "settings.privacy.noUpload": "Sem envio automático de dados.",
     "settings.privacy.noCloud": "Sem nuvem obrigatória, conta ou login.",
@@ -278,8 +278,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.beta": "Beta",
     "settings.option.future": "Futuro",
     "settings.option.intermediate": "Intermediário",
-    "settings.option.blue": "Azul Hermes",
-    "settings.option.gold": "Dourado",
+    "settings.option.blue": "Roxo NEX",
+    "settings.option.gold": "Branco NEX",
     "settings.option.auto": "Automático",
     "settings.option.portuguese": "Português",
     "settings.option.english": "English",
@@ -338,7 +338,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.appearance.accent": "Main color",
     "settings.appearance.note.title": "Theme applied locally",
     "settings.appearance.note.text":
-      "Hermes changes only the app appearance. Windows and browser themes are never changed.",
+      "NEX changes only the app appearance. Windows and browser themes are never changed.",
     "settings.notifications.title": "Notifications",
     "settings.notifications.description":
       "Local preferences for future alerts. No resident service is created.",
@@ -370,8 +370,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "Real licensing is frozen for this release: no key is validated, no server is called, and no payment is integrated.",
     "settings.privacy.title": "Privacy",
     "settings.privacy.description":
-      "Hermes local commitments and a visual base for future preferences.",
-    "settings.privacy.local": "Hermes runs locally.",
+      "NEX local commitments and a visual base for future preferences.",
+    "settings.privacy.local": "NEX runs locally.",
     "settings.privacy.noTelemetry": "No mandatory telemetry.",
     "settings.privacy.noUpload": "No automatic data upload.",
     "settings.privacy.noCloud": "No mandatory cloud, account, or login.",
@@ -388,8 +388,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.beta": "Beta",
     "settings.option.future": "Future",
     "settings.option.intermediate": "Intermediate",
-    "settings.option.blue": "Hermes Blue",
-    "settings.option.gold": "Gold",
+    "settings.option.blue": "NEX Purple",
+    "settings.option.gold": "NEX White",
     "settings.option.auto": "Automatic",
     "settings.option.portuguese": "Português",
     "settings.option.english": "English",
@@ -450,7 +450,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.appearance.accent": "Color principal",
     "settings.appearance.note.title": "Tema aplicado localmente",
     "settings.appearance.note.text":
-      "Hermes cambia solo la apariencia de la app. El tema de Windows y navegadores nunca se altera.",
+      "NEX cambia solo la apariencia de la app. El tema de Windows y navegadores nunca se altera.",
     "settings.notifications.title": "Notificaciones",
     "settings.notifications.description":
       "Preferencias locales para avisos futuros. No se crea servicio residente.",
@@ -482,8 +482,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "La licencia real está congelada en esta release: no se valida clave, no se llama servidor y no se integra pago.",
     "settings.privacy.title": "Privacidad",
     "settings.privacy.description":
-      "Compromisos locales de Hermes y base visual para preferencias futuras.",
-    "settings.privacy.local": "Hermes funciona localmente.",
+      "Compromisos locales de NEX y base visual para preferencias futuras.",
+    "settings.privacy.local": "NEX funciona localmente.",
     "settings.privacy.noTelemetry": "Sin telemetria obligatoria.",
     "settings.privacy.noUpload": "Sin envio automático de datos.",
     "settings.privacy.noCloud": "Sin nube obligatoria, cuenta o login.",
@@ -500,8 +500,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.beta": "Beta",
     "settings.option.future": "Futuro",
     "settings.option.intermediate": "Intermedio",
-    "settings.option.blue": "Azul Hermes",
-    "settings.option.gold": "Dorado",
+    "settings.option.blue": "Roxo NEX",
+    "settings.option.gold": "Blanco NEX",
     "settings.option.auto": "Automático",
     "settings.option.portuguese": "Português",
     "settings.option.english": "English",
@@ -559,7 +559,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.appearance.accent": "メインカラー",
     "settings.appearance.note.title": "テーマはローカル適用",
     "settings.appearance.note.text":
-      "Hermesはアプリの外観だけを変更します。Windowsやブラウザのテーマは変更しません。",
+      "NEXはアプリの外観だけを変更します。Windowsやブラウザのテーマは変更しません。",
     "settings.notifications.title": "通知",
     "settings.notifications.description":
       "今後の通知用ローカル設定です。常駐サービスは作成されません。",
@@ -590,8 +590,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.license.note.text":
       "このリリースでは実ライセンスを凍結しています。キー検証、サーバー呼び出し、支払い連携はありません。",
     "settings.privacy.title": "プライバシー",
-    "settings.privacy.description": "Hermesのローカル方針と今後のプライバシー設定のベースです。",
-    "settings.privacy.local": "Hermesはローカルで動作します。",
+    "settings.privacy.description": "NEXのローカル方針と今後のプライバシー設定のベースです。",
+    "settings.privacy.local": "NEXはローカルで動作します。",
     "settings.privacy.noTelemetry": "必須テレメトリなし。",
     "settings.privacy.noUpload": "データの自動送信なし。",
     "settings.privacy.noCloud": "必須クラウド、アカウント、ログインなし。",
@@ -608,8 +608,8 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.option.beta": "ベータ",
     "settings.option.future": "今後対応",
     "settings.option.intermediate": "中級",
-    "settings.option.blue": "Hermesブルー",
-    "settings.option.gold": "ゴールド",
+    "settings.option.blue": "NEXパープル",
+    "settings.option.gold": "NEXホワイト",
     "settings.option.auto": "自動",
     "settings.option.portuguese": "ポルトガル語",
     "settings.option.english": "英語",
@@ -759,6 +759,7 @@ export function mergePreferences(value: Partial<HermesAdminPreferences>): Hermes
     appearance: {
       ...defaultPreferences.appearance,
       ...value.appearance,
+      accent: normalizeAccent(value.appearance?.accent),
     },
     notifications: {
       ...defaultPreferences.notifications,
@@ -778,6 +779,22 @@ function normalizeLanguage(value: unknown): LanguagePreference {
   return typeof value === "string" && supportedLanguages.has(value as LanguagePreference)
     ? (value as LanguagePreference)
     : defaultPreferences.language.current;
+}
+
+function normalizeAccent(value: unknown): AccentPreference {
+  if (value === "purple" || value === "blue") {
+    return "purple";
+  }
+
+  if (value === "white" || value === "gold") {
+    return "white";
+  }
+
+  if (value === "auto") {
+    return "auto";
+  }
+
+  return defaultPreferences.appearance.accent;
 }
 
 function applyDocumentPreferences(

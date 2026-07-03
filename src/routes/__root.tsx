@@ -79,29 +79,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hermes Optimizer" },
+      { title: "NEX Optimizer" },
       { name: "description", content: "Painel central do PC com coleta local somente leitura." },
-      { name: "author", content: "Hermes Optimizer" },
-      { property: "og:title", content: "Hermes Optimizer" },
+      { name: "author", content: "NEX Optimizer" },
+      { property: "og:title", content: "NEX Optimizer" },
       {
         property: "og:description",
         content: "Painel central do PC com coleta local somente leitura.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@HermesOptimizer" },
-      { name: "twitter:title", content: "Hermes Optimizer" },
+      { name: "twitter:site", content: "@NEXOptimizer" },
+      { name: "twitter:title", content: "NEX Optimizer" },
       {
         name: "twitter:description",
         content: "Painel central do PC com coleta local somente leitura.",
       },
       {
         property: "og:image",
-        content: "/hermes-logo.png",
+        content: "/nex-logo.png",
       },
       {
         name: "twitter:image",
-        content: "/hermes-logo.png",
+        content: "/nex-logo.png",
       },
     ],
     links: [

@@ -39,8 +39,8 @@ export const Route = createFileRoute("/perfis")({
   }),
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Perfis" },
-      { name: "description", content: "Perfis locais do Hermes Optimizer." },
+      { title: "NEX Optimizer - Perfis" },
+      { name: "description", content: "Perfis locais do NEX Optimizer." },
     ],
   }),
   component: PerfisPage,

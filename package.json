@@ -1,6 +1,6 @@
 {
-  "name": "hermes-optimizer",
-  "description": "Hermes Optimizer desktop app",
+  "name": "nex-optimizer",
+  "description": "NEX Optimizer desktop app",
   "private": true,
   "sideEffects": false,
   "type": "module",

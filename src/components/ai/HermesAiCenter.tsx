@@ -79,12 +79,10 @@ export function HermesAiCenter() {
             <BrainCircuit className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-[0.22em] text-primary">HERMES AI</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">
-              Centro de Inteligencia Hermes
-            </h2>
+            <p className="text-[11px] font-bold tracking-[0.22em] text-primary">NEX AI</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">Centro de Inteligencia NEX</h2>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Análise local, offline e somente leitura. A Hermes AI explica gargalos e recomenda
+              Análise local, offline e somente leitura. A NEX AI explica gargalos e recomenda
               proximos passos, sem aplicar nada automaticamente.
             </p>
           </div>
@@ -169,7 +167,7 @@ export function HermesAiCenter() {
           <InsightPanel
             title="Problemas Detectados"
             emptyTitle="Nenhum problema crítico"
-            emptySub="A Hermes AI não detectou gargalos com as fontes atuais."
+            emptySub="A NEX AI não detectou gargalos com as fontes atuais."
             items={topFindings}
             renderItem={(item) => <FindingRow key={item.id} item={item} sources={report.sources} />}
           />

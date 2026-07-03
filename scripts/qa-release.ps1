@@ -6,11 +6,11 @@ $reportPath = Join-Path $releaseDir "qa-latest.json"
 $installerTargets = @(
   [pscustomobject]@{
     kind = "nsis"
-    path = Join-Path $root "src-tauri\target\release\bundle\nsis\Hermes Optimizer_0.1.0_x64-setup.exe"
+    path = Join-Path $root "src-tauri\target\release\bundle\nsis\NEX Optimizer_0.1.0_x64-setup.exe"
   },
   [pscustomobject]@{
     kind = "msi"
-    path = Join-Path $root "src-tauri\target\release\bundle\msi\Hermes Optimizer_0.1.0_x64_en-US.msi"
+    path = Join-Path $root "src-tauri\target\release\bundle\msi\NEX Optimizer_0.1.0_x64_en-US.msi"
   }
 )
 $results = New-Object System.Collections.Generic.List[object]

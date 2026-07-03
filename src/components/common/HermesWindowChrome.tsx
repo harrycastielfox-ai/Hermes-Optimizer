@@ -82,7 +82,7 @@ export function HermesWindowChrome() {
 
   const handleAction = useCallback((action: WindowAction) => {
     void runWindowAction(action).catch((error) => {
-      console.warn("Não foi possível controlar a janela do Hermes.", error);
+      console.warn("Não foi possível controlar a janela do NEX.", error);
     });
   }, []);
 
@@ -96,7 +96,7 @@ export function HermesWindowChrome() {
     }
 
     void startWindowDrag().catch((error) => {
-      console.warn("Não foi possível arrastar a janela do Hermes.", error);
+      console.warn("Não foi possível arrastar a janela do NEX.", error);
     });
   }, []);
 
@@ -110,7 +110,7 @@ export function HermesWindowChrome() {
       event.stopPropagation();
 
       void startWindowResize(direction).catch((error) => {
-        console.warn("Não foi possível redimensionar a janela do Hermes.", error);
+        console.warn("Não foi possível redimensionar a janela do NEX.", error);
       });
     },
     [],
@@ -132,7 +132,7 @@ export function HermesWindowChrome() {
           type="button"
           className="hermes-window-control"
           data-no-window-drag
-          aria-label="Minimizar Hermes"
+          aria-label="Minimizar NEX"
           title="Minimizar"
           onClick={() => handleAction("minimize")}
           onDoubleClick={(event) => event.stopPropagation()}
@@ -143,7 +143,7 @@ export function HermesWindowChrome() {
           type="button"
           className="hermes-window-control"
           data-no-window-drag
-          aria-label="Maximizar Hermes"
+          aria-label="Maximizar NEX"
           title="Maximizar"
           onClick={() => handleAction("maximize")}
           onDoubleClick={(event) => event.stopPropagation()}
@@ -154,7 +154,7 @@ export function HermesWindowChrome() {
           type="button"
           className="hermes-window-control hermes-window-control--close"
           data-no-window-drag
-          aria-label="Fechar Hermes"
+          aria-label="Fechar NEX"
           title="Fechar"
           onClick={() => handleAction("close")}
           onDoubleClick={(event) => event.stopPropagation()}

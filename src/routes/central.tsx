@@ -110,7 +110,7 @@ const levels: OptimizationLevel[] = [
         badges: ["Leitura"],
       },
       {
-        title: "Hermes AI",
+        title: "NEX AI",
         description: "Score local e plano recomendado.",
         icon: BrainCircuit,
         to: "/configuracoes",
@@ -379,8 +379,8 @@ export const Route = createFileRoute("/central")({
   },
   head: () => ({
     meta: [
-      { title: "Hermes Optimizer - Central de Otimização" },
-      { name: "description", content: "Central de Otimização por níveis do Hermes Optimizer." },
+      { title: "NEX Optimizer - Central de Otimização" },
+      { name: "description", content: "Central de Otimização por níveis do NEX Optimizer." },
     ],
   }),
   component: CentralPage,
@@ -423,10 +423,10 @@ function CentralPage() {
                 CENTRAL DE OTIMIZACAO
               </p>
               <h1 className="text-[clamp(28px,2.4vw,38px)] font-bold leading-tight tracking-tight text-foreground">
-                Ações do Hermes organizadas por nível
+                Ações do NEX organizadas por nível
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-                Cada nível inclui os anteriores. Escolha até onde o Hermes deve preparar o fluxo,
+                Cada nível inclui os anteriores. Escolha até onde o NEX deve preparar o fluxo,
                 sempre em SAFE_TEST_MODE nesta etapa.
               </p>
             </div>
