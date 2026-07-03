@@ -4075,6 +4075,12 @@ function Get-StringValue($path, $name) {
   } catch { return $null }
 }
 
+function Normalize-StringArray($values) {
+  @($values |
+    Where-Object { $null -ne $_ -and [string]$_ -ne '' } |
+    ForEach-Object { [string]$_ })
+}
+
 function Get-ServiceStartMode($name) {
   try {
     $service = Get-CimInstance Win32_Service -Filter "Name='$name'" -ErrorAction SilentlyContinue
@@ -4196,7 +4202,7 @@ try {
     $alias = [string]$_.InterfaceAlias
     $servers = @()
     try {
-      $servers = @((Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses)
+      $servers = Normalize-StringArray ((Get-DnsClientServerAddress -InterfaceAlias $alias -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses)
     } catch {
       $servers = @()
     }
@@ -4211,7 +4217,7 @@ try {
 
 $defenderExclusionPaths = @()
 try {
-  $defenderExclusionPaths = @((Get-MpPreference).ExclusionPath)
+  $defenderExclusionPaths = Normalize-StringArray ((Get-MpPreference).ExclusionPath)
 } catch {
   $defenderExclusionPaths = @()
 }

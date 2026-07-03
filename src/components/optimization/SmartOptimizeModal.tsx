@@ -1,7 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  ArrowRight,
   BrainCircuit,
   BrushCleaning,
   CheckCircle2,
@@ -10,7 +8,6 @@ import {
   Gauge,
   HardDrive,
   Loader2,
-  Play,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -22,8 +19,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   runOptimizeAllPhase,
-  type OptimizeAllGameSelection,
-  type OptimizeAllGameTarget,
   type OptimizeAllPhaseId,
   type OptimizeAllReports,
 } from "@/lib/optimize-all";
@@ -48,7 +43,7 @@ import {
   OPTIMIZE_AUDIT_ACTION_TARGET,
 } from "@/lib/optimize-audit-catalog";
 
-type RunStatus = "idle" | "running" | "awaitingGame" | "completed" | "failed" | "cancelled";
+type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "failed" | "cancelled";
 type PhaseId = OptimizeAllPhaseId;
 
@@ -84,8 +79,14 @@ const phaseTemplates: OptimizePhase[] = [
   phase("cleanup", "Limpeza segura", "Temporários, cache e logs", BrushCleaning, 26),
   phase("startup", "Inicialização", "Apps de alto impacto", Zap, 18),
   phase("performance", "Performance", "Energia, Game Mode e rede", Gauge, 22),
-  phase("gamer", "Sessão Gamer", "Jogo alvo, Discord e overlays", Gamepad2, 18),
-  phase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", Cpu, 16),
+  phase(
+    "gamer",
+    "Pacote gamer global",
+    "Game Mode, Fate Trigger, Discord e overlays",
+    Gamepad2,
+    18,
+  ),
+  phase("profile", "Plano global Hermes", "Perfil interno aplicado sem escolha manual", Cpu, 16),
   phase(
     "manual",
     "Avançado guiado",
@@ -114,18 +115,10 @@ export function SmartOptimizeModal({
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
   const [currentStatus, setCurrentStatus] = useState("Aguardando otimização.");
   const [recommendedProfileId, setRecommendedProfileId] = useState("seguro");
-  const [gameTargets, setGameTargets] = useState<OptimizeAllGameTarget[]>([]);
-  const [selectedGameTarget, setSelectedGameTarget] = useState<OptimizeAllGameTarget | null>(null);
   const [finalExecutionReport, setFinalExecutionReport] = useState<ExecutionReport | null>(null);
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
   const reportActions = useRef<ExecutionReportAction[]>([]);
-  const resumeState = useRef<{
-    runId: number;
-    phaseIndex: number;
-    reports: OptimizeAllReports;
-    recommendedProfileId: string;
-  } | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -138,11 +131,8 @@ export function SmartOptimizeModal({
     setPhases(resetPhases());
     setLogs([]);
     setReports({});
-    setGameTargets([]);
-    setSelectedGameTarget(null);
     setFinalExecutionReport(null);
     reportActions.current = [];
-    resumeState.current = null;
     setRunStatus("running");
     setCurrentStatus("Preparando plano único do Hermes.");
     void runSmartOptimization(runId);
@@ -159,10 +149,8 @@ export function SmartOptimizeModal({
     .filter((item) => item.status === "completed" || item.status === "unavailable")
     .reduce((total, item) => total + item.plannedActions, 0);
   const activePhase = phases.find((item) => item.status === "running");
-  const canCancel =
-    (runStatus === "running" || runStatus === "awaitingGame") && !cancelRequested.current;
-  const canClose =
-    (runStatus !== "running" && runStatus !== "awaitingGame") || cancelRequested.current;
+  const canCancel = runStatus === "running" && !cancelRequested.current;
+  const canClose = runStatus !== "running" || cancelRequested.current;
   const planActions = useMemo(
     () => buildOptimizationPlan(reports, recommendedProfileId),
     [reports, recommendedProfileId],
@@ -191,14 +179,12 @@ export function SmartOptimizeModal({
     startIndex: number,
     initialReports: OptimizeAllReports,
     initialRecommendedProfileId: string,
-    gameSelection?: OptimizeAllGameSelection,
   ) {
     let nextReports: OptimizeAllReports = initialReports;
     let nextRecommendedProfileId = initialRecommendedProfileId;
 
     for (let index = startIndex; index < phaseTemplates.length; index += 1) {
       const template = phaseTemplates[index];
-      let pausedForGame = false;
 
       if (shouldStop(runId)) return;
 
@@ -206,7 +192,6 @@ export function SmartOptimizeModal({
         const result = await runOptimizeAllPhase(template.id, {
           reports: nextReports,
           recommendedProfileId: nextRecommendedProfileId,
-          gameSelection: template.id === "gamer" ? gameSelection : undefined,
         });
 
         nextReports = { ...nextReports, ...result.reports };
@@ -214,29 +199,12 @@ export function SmartOptimizeModal({
           nextRecommendedProfileId = result.recommendedProfileId;
           setRecommendedProfileId(result.recommendedProfileId);
         }
-        if (result.gameTargets) {
-          setGameTargets(result.gameTargets);
-          setSelectedGameTarget((current) => current ?? result.gameTargets?.[0] ?? null);
-        }
         setReports({ ...nextReports });
-
-        if (result.requiresGameSelection && result.gameTargets?.length) {
-          pausedForGame = true;
-          resumeState.current = {
-            runId,
-            phaseIndex: index,
-            reports: nextReports,
-            recommendedProfileId: nextRecommendedProfileId,
-          };
-          setRunStatus("awaitingGame");
-          setCurrentStatus("Escolha o jogo alvo para continuar.");
-          appendLog("info", "Aguardando escolha do jogo alvo.");
-        }
 
         return result.outputs;
       });
 
-      if (pausedForGame || shouldStop(runId)) {
+      if (shouldStop(runId)) {
         return;
       }
     }
@@ -294,38 +262,6 @@ export function SmartOptimizeModal({
     });
     setFinalExecutionReport(executionReport);
     onCompleted?.(executionReport);
-  }
-
-  function chooseGameTarget(target: OptimizeAllGameTarget) {
-    const resume = resumeState.current;
-    if (!resume) {
-      return;
-    }
-
-    resumeState.current = null;
-    setSelectedGameTarget(target);
-    setRunStatus("running");
-    setCurrentStatus(`Montando plano Gamer para ${target.label}.`);
-    appendLog("info", `Jogo alvo escolhido: ${target.label}.`);
-    void runPhases(resume.runId, resume.phaseIndex, resume.reports, resume.recommendedProfileId, {
-      target,
-    });
-  }
-
-  function skipGameSelection() {
-    const resume = resumeState.current;
-    if (!resume) {
-      return;
-    }
-
-    resumeState.current = null;
-    setSelectedGameTarget(null);
-    setRunStatus("running");
-    setCurrentStatus("Continuando sem alvo Gamer especifico.");
-    appendLog("warning", "Seleção de jogo ignorada.");
-    void runPhases(resume.runId, resume.phaseIndex, resume.reports, resume.recommendedProfileId, {
-      skip: true,
-    });
   }
 
   async function executePhase(
@@ -387,7 +323,6 @@ export function SmartOptimizeModal({
 
   function requestCancel() {
     cancelRequested.current = true;
-    resumeState.current = null;
     setRunStatus("cancelled");
     setCurrentStatus("Cancelamento solicitado. O Hermes não iniciara novas fases.");
     setPhases((current) =>
@@ -478,13 +413,9 @@ export function SmartOptimizeModal({
             />
             <SummaryCard
               icon={Cpu}
-              label="Alvo"
-              value={selectedGameTarget?.label ?? profileLabel(recommendedProfileId)}
-              sub={
-                selectedGameTarget?.engineHint ??
-                reports.advisor?.summary.recommendedProfileReason ??
-                "Auto"
-              }
+              label="Plano"
+              value="Global"
+              sub="Sem perfil ou jogo manual nesta fase"
             />
             <SummaryCard
               icon={ShieldCheck}
@@ -512,15 +443,6 @@ export function SmartOptimizeModal({
 
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
             <div className="space-y-3">
-              {runStatus === "awaitingGame" && (
-                <GameTargetPicker
-                  targets={gameTargets}
-                  selectedTarget={selectedGameTarget}
-                  onSelect={chooseGameTarget}
-                  onSkip={skipGameSelection}
-                />
-              )}
-
               <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -610,14 +532,6 @@ export function SmartOptimizeModal({
                 Cancelar
               </button>
             )}
-            <Link
-              to="/perfis"
-              search={{ perfil: recommendedProfileId }}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 text-sm font-bold text-primary transition hover:bg-primary/15"
-            >
-              Abrir perfil sugerido
-              <ArrowRight className="h-4 w-4" />
-            </Link>
             <button
               type="button"
               onClick={onClose}
@@ -629,11 +543,7 @@ export function SmartOptimizeModal({
               ) : (
                 <CheckCircle2 className="h-4 w-4" />
               )}
-              {runStatus === "awaitingGame"
-                ? "Escolha o jogo"
-                : runStatus === "running"
-                  ? "Executando"
-                  : "Concluir"}
+              {runStatus === "running" ? "Executando" : "Concluir"}
             </button>
           </div>
         </footer>
@@ -642,7 +552,7 @@ export function SmartOptimizeModal({
   );
 }
 
-function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): PlanAction[] {
+function buildOptimizationPlan(reports: OptimizeAllReports, _profileId: string): PlanAction[] {
   const actions: PlanAction[] = [];
 
   if (reports.diagnostic) {
@@ -705,7 +615,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
   }
 
   if (reports.gamer) {
-    let detail = "Sem jogo alvo aberto. Seleção manual será necessária.";
+    let detail = "Pacote gamer global mapeado.";
     if (reports.gamerResult) {
       detail = `${reports.gamerResult.closedProcesses.length} processo(s) ${reports.gamerResult.dryRun ? "validados" : "fechados"} pela engine.`;
     } else if (reports.gamer.summary.detectedGames > 0) {
@@ -714,9 +624,9 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
 
     actions.push({
       id: "gamer",
-      title: "Sessão Gamer",
+      title: "Pacote gamer global",
       detail,
-      status: reports.gamerResult || reports.gamer.summary.detectedGames > 0 ? "ready" : "pending",
+      status: reports.gamerResult || reports.gamer.summary.detectedGames > 0 ? "ready" : "ok",
     });
   }
 
@@ -733,10 +643,10 @@ function buildOptimizationPlan(reports: OptimizeAllReports, profileId: string): 
 
   actions.push({
     id: "profile",
-    title: "Perfil recomendado",
+    title: "Plano global Hermes",
     detail: reports.profileResult
-      ? `${reports.profileResult.engineResults.length} engine(s) do perfil ${appliedVerb(reports.profileResult.dryRun)}.`
-      : `${profileLabel(profileId)} será usado como base do plano.`,
+      ? `${reports.profileResult.engineResults.length} engine(s) internas ${appliedVerb(reports.profileResult.dryRun)}.`
+      : "Plano seguro usado internamente, sem escolha manual de perfil.",
     status: "ready",
   });
 
@@ -936,123 +846,6 @@ function SummaryCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function GameTargetPicker({
-  targets,
-  selectedTarget,
-  onSelect,
-  onSkip,
-}: {
-  targets: OptimizeAllGameTarget[];
-  selectedTarget: OptimizeAllGameTarget | null;
-  onSelect: (target: OptimizeAllGameTarget) => void;
-  onSkip: () => void;
-}) {
-  return (
-    <section
-      data-testid="hermes-game-target-picker"
-      className="rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-[0_18px_42px_-34px_rgba(37,99,235,0.7)]"
-    >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">SESSAO GAMER</p>
-          <h3 className="mt-1 text-xl font-black text-foreground">Escolha o jogo alvo</h3>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Fate Trigger via Steam/UE5 é a prioridade Hermes. O alvo escolhido protege o jogo,
-            preserva Steam/Discord, avalia overlays e ajusta o perfil para a engine detectada.
-          </p>
-        </div>
-        <button
-          type="button"
-          data-testid="hermes-game-target-skip"
-          onClick={onSkip}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition hover:bg-muted"
-        >
-          Continuar sem alvo
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {targets.map((target) => {
-          const active = selectedTarget?.id === target.id;
-          return (
-            <button
-              key={target.id}
-              type="button"
-              data-testid={`hermes-game-target-${target.id}`}
-              onClick={() => onSelect(target)}
-              className={`group flex min-h-24 items-center gap-3 rounded-2xl border p-4 text-left transition ${
-                active
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border/70 bg-background/82 hover:border-primary/40 hover:bg-background"
-              }`}
-            >
-              <span
-                className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${
-                  active
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-primary/10 text-primary"
-                }`}
-              >
-                {target.label.toLowerCase().includes("fate") ? (
-                  <Sparkles className="h-5 w-5" />
-                ) : (
-                  <Gamepad2 className="h-5 w-5" />
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-base font-black">{target.label}</span>
-                  <span
-                    className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
-                      active
-                        ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
-                        : "border-primary/20 bg-primary/10 text-primary"
-                    }`}
-                  >
-                    {gameSourceLabel(target)}
-                  </span>
-                  {target.engineHint && (
-                    <span
-                      className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
-                        active
-                          ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
-                          : "border-success/20 bg-success/10 text-success"
-                      }`}
-                    >
-                      {target.engineHint}
-                    </span>
-                  )}
-                  {target.id === "preset-fate-trigger-ue5" && (
-                    <span
-                      className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${
-                        active
-                          ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
-                          : "border-warning/25 bg-warning/10 text-warning"
-                      }`}
-                    >
-                      PRIORIDADE STEAM
-                    </span>
-                  )}
-                </span>
-                <span
-                  className={`mt-1 block text-[12px] leading-relaxed ${
-                    active ? "text-primary-foreground/80" : "text-muted-foreground"
-                  }`}
-                >
-                  {target.detail}
-                </span>
-              </span>
-              <Play
-                className={`h-5 w-5 shrink-0 ${active ? "text-primary-foreground" : "text-primary"}`}
-              />
-            </button>
-          );
-        })}
-      </div>
-    </section>
   );
 }
 
@@ -1461,23 +1254,8 @@ function dependencyInstallStatusLabel(status: GamerDependencyInstallActionStatus
   return "Bloqueado";
 }
 
-function profileLabel(profileId: string) {
-  if (profileId === "gamer") return "Gamer";
-  if (profileId === "trabalho") return "Trabalho";
-  if (profileId === "economia") return "Economia";
-  if (profileId === "extremo") return "Extremo";
-  return "Seguro";
-}
-
 function appliedVerb(dryRun: boolean) {
   return dryRun ? "validados" : "aplicados";
-}
-
-function gameSourceLabel(target: OptimizeAllGameTarget) {
-  if (target.source === "active") return "Ativo";
-  if (target.source === "detected") return "Detectado";
-  if (target.source === "profile") return "Perfil";
-  return target.confidence === "high" ? "Preset" : "Sugerido";
 }
 
 function formatGb(value: number) {

@@ -36,11 +36,12 @@ const checks = [
     ok: files.smartModal.includes('data-testid="hermes-optimize-modal"'),
   },
   {
-    name: "Fluxo do Botao 2 pausa para selecao de jogo",
+    name: "Fluxo do Botao 2 nao pausa para selecao de jogo",
     ok:
-      files.smartModal.includes('setRunStatus("awaitingGame")') &&
-      files.smartModal.includes("Escolha o jogo alvo para continuar.") &&
-      files.smartModal.includes('data-testid="hermes-game-target-picker"'),
+      !files.smartModal.includes('setRunStatus("awaitingGame")') &&
+      !files.smartModal.includes("Escolha o jogo alvo para continuar.") &&
+      !files.smartModal.includes('data-testid="hermes-game-target-picker"') &&
+      files.smartModal.includes('value="Global"'),
   },
   {
     name: "Fate Trigger segue como prioridade Gamer",
@@ -51,8 +52,11 @@ const checks = [
       files.optimizeAll.includes("return 0;"),
   },
   {
-    name: "Selecao Fate Trigger tem alvo testavel",
-    ok: files.smartModal.includes("hermes-game-target-${target.id}"),
+    name: "Fate Trigger tem prioridade interna no pacote global",
+    ok:
+      files.optimizeAll.includes("pickGlobalGamerTarget") &&
+      files.optimizeAll.includes('target.id === "preset-fate-trigger-ue5"') &&
+      files.optimizeAll.includes("Prioridade gamer global"),
   },
   {
     name: "Sucesso do Botao 2 fica visivel sem relatorio tecnico longo",
@@ -62,10 +66,12 @@ const checks = [
       files.smartModal.includes("conclu"),
   },
   {
-    name: "Botao 2 comunica boot rapido e servicos sob demanda",
+    name: "Botao 2 comunica plano global e exige reinicio",
     ok:
-      files.otimizarRoute.includes("Boot rápido, sistema e perfil recomendado") &&
-      files.otimizarRoute.includes("Rede, serviços sob demanda, Gamer e Fate Trigger"),
+      files.otimizarRoute.includes("Boot rápido, sistema e plano global") &&
+      files.otimizarRoute.includes("Rede, serviços sob demanda, Gamer e Fate Trigger") &&
+      files.otimizarRoute.includes('data-testid="hermes-optimize-waiting-restart"') &&
+      !files.otimizarRoute.includes("Iniciar mesmo assim"),
   },
   {
     name: "Botao 2 usa wrappers Optimize Now para Clean e Advanced",
@@ -114,4 +120,4 @@ if (failed.length > 0) {
 }
 
 console.log("");
-console.log("Fluxo Otimizar validado: Botao 1, bloqueio da Fase 2, Fate Trigger e sucesso.");
+console.log("Fluxo Otimizar validado: Botao 1, reinicio obrigatorio, Botao 2 global e sucesso.");

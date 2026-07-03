@@ -11,6 +11,9 @@ $activeQaPath = Join-Path $releaseDir "manual-qa\active-manual-qa-session.json"
 $releasePolicyPath = Join-Path $root "docs\release-policy.json"
 $betaReadyPath = Join-Path $releaseDir "beta-handoff\latest-beta-ready.json"
 $betaDropPath = Join-Path $releaseDir "beta-test-drop\latest-beta-test-drop.json"
+$betaSandboxPath = Join-Path $releaseDir "beta-test-drop\latest-beta-sandbox.json"
+$betaDoctorPath = Join-Path $releaseDir "beta-test-drop\beta-doctor.json"
+$betaVmPackPath = Join-Path $releaseDir "beta-vm-pack\latest-beta-vm-pack.json"
 
 if ($Refresh) {
   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "release-status.ps1") | Out-Null
@@ -35,6 +38,9 @@ $activeQa = Read-JsonOrNull -Path $activeQaPath
 $releasePolicy = Read-JsonOrNull -Path $releasePolicyPath
 $latestBetaReady = Read-JsonOrNull -Path $betaReadyPath
 $latestBetaDrop = Read-JsonOrNull -Path $betaDropPath
+$latestBetaSandbox = Read-JsonOrNull -Path $betaSandboxPath
+$latestBetaDoctor = Read-JsonOrNull -Path $betaDoctorPath
+$latestBetaVmPack = Read-JsonOrNull -Path $betaVmPackPath
 $codeSigningDeferred = $releasePolicy -and
   $releasePolicy.codeSigning -and
   [string]$releasePolicy.codeSigning.status -eq "deferred" -and
@@ -47,6 +53,19 @@ $betaDropReady = $latestBetaDrop -and
   $betaDropMatchesCurrentBeta -and
   -not [string]::IsNullOrWhiteSpace([string]$latestBetaDrop.dropRoot) -and
   (Test-Path -LiteralPath ([string]$latestBetaDrop.dropRoot) -PathType Container)
+$betaSandboxReady = $latestBetaSandbox -and
+  $latestBetaDrop -and
+  [string]$latestBetaSandbox.dropRoot -eq [string]$latestBetaDrop.dropRoot -and
+  -not [string]::IsNullOrWhiteSpace([string]$latestBetaSandbox.wsbPath) -and
+  (Test-Path -LiteralPath ([string]$latestBetaSandbox.wsbPath) -PathType Leaf) -and
+  -not [string]::IsNullOrWhiteSpace([string]$latestBetaSandbox.sandboxStartPath) -and
+  (Test-Path -LiteralPath ([string]$latestBetaSandbox.sandboxStartPath) -PathType Leaf)
+$betaSandboxAvailable = $latestBetaDoctor -and [string]$latestBetaDoctor.status -eq "READY"
+$betaVmPackReady = $latestBetaVmPack -and
+  $latestBetaDrop -and
+  [string]$latestBetaVmPack.betaDropName -eq [string]$latestBetaDrop.dropName -and
+  -not [string]::IsNullOrWhiteSpace([string]$latestBetaVmPack.packRoot) -and
+  (Test-Path -LiteralPath ([string]$latestBetaVmPack.packRoot) -PathType Container)
 $betaDropEvidenceReady = $false
 if ($betaDropReady) {
   $betaDropEvidenceCandidates = @(
@@ -91,8 +110,12 @@ $next = if ($qaP0Pending -gt 0) {
     "npm run release:beta:drop"
   } elseif ($betaDropEvidenceReady) {
     "npm run release:beta:drop:receive"
+  } elseif ($betaSandboxAvailable -or -not $betaSandboxReady) {
+    "npm run release:beta:sandbox"
+  } elseif (-not $betaVmPackReady) {
+    "npm run release:beta:vm:pack"
   } else {
-    "npm run release:beta:drop:open"
+    "Teste em VM/outro PC limpo e depois rode npm run release:beta:drop:receive"
   }
 } elseif ([int]$status.unsignedInstallerCount -gt 0 -and -not [bool]$status.signingCertificateReadyToConfigure) {
   "npm run release:signing:import-pfx"
@@ -153,6 +176,11 @@ $summary = [pscustomobject]@{
   betaReady = [bool]$betaReady
   betaPackage = if ($latestBetaReady) { [string]$latestBetaReady.handoffName } else { $null }
   betaDropReady = [bool]$betaDropReady
+  betaSandboxReady = [bool]$betaSandboxReady
+  betaSandboxAvailable = [bool]$betaSandboxAvailable
+  betaSandboxPath = if ($latestBetaSandbox) { [string]$latestBetaSandbox.wsbPath } else { $null }
+  betaVmPackReady = [bool]$betaVmPackReady
+  betaVmPack = if ($latestBetaVmPack) { [string]$latestBetaVmPack.packName } else { $null }
   betaDropEvidenceReady = [bool]$betaDropEvidenceReady
   betaDropMatchesCurrentBeta = [bool]$betaDropMatchesCurrentBeta
   betaDrop = if ($latestBetaDrop) { [string]$latestBetaDrop.dropName } else { $null }
@@ -177,6 +205,8 @@ Write-Host "Assinatura publica: $(if ($summary.codeSigningPolicy -eq 'deferred')
 Write-Host "Canal atual: $($summary.currentChannel)"
 Write-Host "Beta interno: $(if ($summary.betaReady) { $summary.betaPackage } else { 'nao gerado' })"
 Write-Host "Beta drop: $(if ($summary.betaDropReady) { $summary.betaDrop } else { 'nao gerado' })"
+Write-Host "Beta Sandbox: $(if ($summary.betaSandboxReady) { if ($summary.betaSandboxAvailable) { 'preparado e disponivel' } else { 'preparado, indisponivel nesta maquina' } } else { 'pendente' })"
+Write-Host "Beta VM pack: $(if ($summary.betaVmPackReady) { $summary.betaVmPack } else { 'pendente' })"
 Write-Host "Evidencia beta: $(if ($summary.betaDropEvidenceReady) { 'pronta para receber' } else { 'pendente' })"
 Write-Host ""
 Write-Host "Falta:"

@@ -47,6 +47,9 @@ $publicReleasePipelinePath = Join-Path $root "scripts\run-public-release-pipelin
 $publicReleasePackagePath = Join-Path $root "scripts\create-public-release-package.ps1"
 $releaseProgressPath = Join-Path $root "scripts\show-release-progress.ps1"
 $betaShipPath = Join-Path $root "scripts\run-beta-ship.ps1"
+$betaDoctorPath = Join-Path $root "scripts\check-beta-doctor.ps1"
+$betaSandboxPath = Join-Path $root "scripts\prepare-beta-sandbox.ps1"
+$betaVmPackPath = Join-Path $root "scripts\package-beta-vm-pack.ps1"
 $betaTestDropPath = Join-Path $root "scripts\create-beta-test-drop.ps1"
 $betaTestDropVerifyPath = Join-Path $root "scripts\verify-beta-test-drop.ps1"
 $betaTestDropOpenPath = Join-Path $root "scripts\open-beta-test-drop.ps1"
@@ -86,6 +89,9 @@ $publicReleasePipeline = Read-Text $publicReleasePipelinePath
 $publicReleasePackage = Read-Text $publicReleasePackagePath
 $releaseProgress = Read-Text $releaseProgressPath
 $betaShip = Read-Text $betaShipPath
+$betaDoctor = Read-Text $betaDoctorPath
+$betaSandbox = Read-Text $betaSandboxPath
+$betaVmPack = Read-Text $betaVmPackPath
 $betaTestDrop = Read-Text $betaTestDropPath
 $betaTestDropVerify = Read-Text $betaTestDropVerifyPath
 $betaTestDropOpen = Read-Text $betaTestDropOpenPath
@@ -171,6 +177,9 @@ Assert-True ([bool]$scripts.'release:public:pipeline:signed') "package.json prec
 Assert-True ([bool]$scripts.'release:public:pipeline:signed:install') "package.json precisa ter release:public:pipeline:signed:install."
 Assert-True ([bool]$scripts.'release:public:verify') "package.json precisa ter release:public:verify."
 Assert-True ([bool]$scripts.'release:public:package') "package.json precisa ter release:public:package."
+Assert-True ([bool]$scripts.'release:beta:doctor') "package.json precisa ter release:beta:doctor."
+Assert-True ([bool]$scripts.'release:beta:sandbox') "package.json precisa ter release:beta:sandbox."
+Assert-True ([bool]$scripts.'release:beta:vm:pack') "package.json precisa ter release:beta:vm:pack."
 Assert-True ([bool]$scripts.'release:beta:ship') "package.json precisa ter release:beta:ship."
 Assert-True ([bool]$scripts.'release:beta:drop:verify') "package.json precisa ter release:beta:drop:verify."
 Assert-True ([bool]$scripts.'release:beta:drop:open') "package.json precisa ter release:beta:drop:open."
@@ -230,10 +239,16 @@ Assert-True ([string]$scripts.'release:public:pipeline:signed:install' -match 'A
   "Atalho signed:install precisa executar install smoke real em VM/runner."
 Assert-True ($publicReleasePackage -match 'verify-public-release-ready.ps1' -and $publicReleasePackage -match 'Authenticode' -and $publicReleasePackage -match 'public-release-manifest.json' -and $publicReleasePackage -match 'latest-public-release-package') `
   "Pacote publico precisa rodar gate publico, exigir Authenticode Valid e gerar manifesto/ponteiro final."
-Assert-True ($releaseProgress -match 'Hermes - progresso curto' -and $releaseProgress -match 'QA funcional P0' -and $releaseProgress -match 'Gate release bloqueado' -and $releaseProgress -match 'release-policy\.json' -and $releaseProgress -match 'codeSigningDeferred' -and $releaseProgress -match 'release:beta:drop' -and $releaseProgress -match 'betaDropReady' -and $releaseProgress -match 'betaDropEvidenceReady' -and $releaseProgress -match 'Assinatura publica' -and $releaseProgress -match 'Proximo comando') `
+Assert-True ($releaseProgress -match 'Hermes - progresso curto' -and $releaseProgress -match 'QA funcional P0' -and $releaseProgress -match 'Gate release bloqueado' -and $releaseProgress -match 'release-policy\.json' -and $releaseProgress -match 'codeSigningDeferred' -and $releaseProgress -match 'release:beta:drop' -and $releaseProgress -match 'release:beta:sandbox' -and $releaseProgress -match 'release:beta:vm:pack' -and $releaseProgress -match 'betaDropReady' -and $releaseProgress -match 'betaSandboxReady' -and $releaseProgress -match 'betaVmPackReady' -and $releaseProgress -match 'betaDropEvidenceReady' -and $releaseProgress -match 'Assinatura publica' -and $releaseProgress -match 'Proximo comando') `
   "Resumo curto de release precisa mostrar status, QA funcional, gate de release, beta/drop e respeitar release-policy.json quando Code Signing estiver adiado."
 Assert-True ($betaShip -match 'run-beta-internal.ps1' -and $betaShip -match 'verify-beta-ready-to-send.ps1' -and $betaShip -match 'create-beta-test-drop.ps1' -and $betaShip -match 'package-beta-test-drop.ps1' -and $betaShip -match 'latest-beta-ship') `
   "Fluxo beta ship precisa orquestrar beta, drop, zip, progresso e resumo final em um comando."
+Assert-True ($betaDoctor -match 'verify-beta-test-drop.ps1' -and $betaDoctor -match 'WindowsSandbox.exe' -and $betaDoctor -match 'READY_WITHOUT_SANDBOX' -and $betaDoctor -match 'overallStatus -eq "GO"' -and $betaDoctor -match 'beta-doctor') `
+  "Beta doctor precisa validar drop, manter publico NO-GO, diagnosticar Sandbox e aceitar fallback VM externa sem alterar o host."
+Assert-True ($betaSandbox -match 'check-beta-doctor.ps1' -and $betaSandbox -match 'Run-Hermes-Beta-In-Sandbox.wsb' -and $betaSandbox -match '<Networking>Disable</Networking>|<Networking>\$networking</Networking>' -and $betaSandbox -match '<ReadOnly>true</ReadOnly>' -and $betaSandbox -match '<ReadOnly>false</ReadOnly>' -and $betaSandbox -match 'sandbox-start.ps1' -and $betaSandbox -match 'C:\\Temp\\HermesQA' -and $betaSandbox -notmatch 'Start-Process -FilePath \$wsbPath') `
+  "Beta sandbox precisa apenas preparar WSB/script, mapear beta read-only, evidencias writable, rede desabilitavel e nao abrir/instalar no host."
+Assert-True ($betaVmPack -match 'check-beta-doctor.ps1' -and $betaVmPack -match 'README-VM-TEST.md' -and $betaVmPack -match 'CHECKLIST-VM-TEST.md' -and $betaVmPack -match 'collect-hermes-evidence.ps1' -and $betaVmPack -match 'signatureStatus' -and $betaVmPack -match 'NotSigned|unsignedInstallerWarning' -and $betaVmPack -match 'release:beta:drop:receive|qa:manual:receive' -and $betaVmPack -notmatch 'Start-Process') `
+  "VM pack precisa validar doctor, gerar README/checklist/coletor/manifesto e nao executar instalador no host."
 Assert-True ($betaTestDrop -match 'verify-beta-test-drop.ps1' -and $betaTestDrop -match 'RODAR-DENTRO-DA-VM.ps1' -and $betaTestDrop -match 'HERMES-BETA-QA.wsb' -and $betaTestDrop -match 'latest-beta-test-drop') `
   "Drop beta precisa gerar runner/Windows Sandbox, ponteiros latest e verificar o pacote antes de liberar uso."
 Assert-True ($betaTestDropVerify -match 'latest-beta-test-drop-verification' -and $betaTestDropVerify -match 'VERIFY-QA-PACKAGE.ps1' -and $betaTestDropVerify -match 'Drop pertence ao beta atual' -and $betaTestDropVerify -match 'SHA256 do ZIP beta' -and $betaTestDropVerify -match 'LEIA-ME-QA-PORTATIL.md') `
@@ -316,6 +331,8 @@ Write-Host "- Handoff de assinatura existe para destravar Authenticode."
 Write-Host "- Plano de lancamento final existe para orientar QA manual, assinatura e build publicavel."
 Write-Host "- Pipeline publico unico existe para orquestrar checks, QA drop, assinatura opt-in, status e gate final."
 Write-Host "- Resumo curto de progresso existe para mostrar onde estamos sem relatorio longo."
+Write-Host "- Beta unsigned possui doctor e preparo seguro para Windows Sandbox."
+Write-Host "- Beta unsigned possui pack oficial para VM externa/outro PC limpo."
 Write-Host "- Beta interno pode ser preparado para envio em um comando."
 Write-Host "- Drop beta interno e verificado automaticamente antes de uso."
 Write-Host "- Drop beta interno pode ser aberto em Explorer ou Windows Sandbox por comando."

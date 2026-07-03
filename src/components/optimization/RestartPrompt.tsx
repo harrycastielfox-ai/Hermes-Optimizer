@@ -30,7 +30,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
       const result = await requestSystemRestart({
         confirmed: !HERMES_SAFE_TEST_MODE,
         dryRun: HERMES_SAFE_TEST_MODE,
-        delaySeconds: 60,
+        delaySeconds: 5,
       });
       setRestartResult(result);
       setMessage(result.message);
@@ -79,7 +79,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
               <ShieldCheck className="h-4 w-4 text-success" />
               {HERMES_SAFE_TEST_MODE
                 ? "Modo teste: o Hermes valida o comando, mas não reinicia o computador."
-                : "Modo real: o Windows reinicia em 60 segundos depois da confirmação."}
+                : "Modo real: o Windows reinicia em 5 segundos depois da confirmação."}
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
             ) : (
               <Power className="h-4 w-4" />
             )}
-            {HERMES_SAFE_TEST_MODE ? "Validar reinício" : "Reiniciar em 60s"}
+            {HERMES_SAFE_TEST_MODE ? "Validar reinício" : "Reiniciar em 5s"}
           </button>
         </div>
       </div>

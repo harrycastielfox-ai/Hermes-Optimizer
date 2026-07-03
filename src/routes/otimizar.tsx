@@ -151,6 +151,9 @@ function OtimizarPage() {
     void (async () => {
       const bootContext = await refreshSystemBootContext();
       setSystemBootContext(bootContext);
+      if (getPrepareRebootStatus(quickPrepareGate, bootContext) !== "confirmed") {
+        return;
+      }
       setSmartOptimizeRunKey((current) => current + 1);
       setIsSmartOptimizeOpen(true);
     })();
@@ -247,6 +250,7 @@ function OtimizarPage() {
     quickPrepareGate.safeMode !== HERMES_SAFE_TEST_MODE ||
     quickPrepareGate.dnsProviderId !== selectedDnsProviderId;
   const prepareRebootStatus = getPrepareRebootStatus(quickPrepareGate, systemBootContext);
+  const optimizeWaitingForRestart = !optimizeLocked && prepareRebootStatus !== "confirmed";
   const selectedDnsProvider =
     DNS_PROVIDERS.find((provider) => provider.id === selectedDnsProviderId) ?? DNS_PROVIDERS[0];
 
@@ -289,6 +293,7 @@ function OtimizarPage() {
               isQuickPrepareOpen={isQuickPrepareOpen}
               isSmartOptimizeOpen={isSmartOptimizeOpen}
               optimizeLocked={optimizeLocked}
+              optimizeWaitingForRestart={optimizeWaitingForRestart}
               restartRecommendation={restartRecommendation}
               prepareRebootStatus={prepareRebootStatus}
               onPrepare={handlePrepareNow}
@@ -571,6 +576,7 @@ function OptimizationPhaseBoard({
   isQuickPrepareOpen,
   isSmartOptimizeOpen,
   optimizeLocked,
+  optimizeWaitingForRestart,
   restartRecommendation,
   prepareRebootStatus,
   onPrepare,
@@ -581,6 +587,7 @@ function OptimizationPhaseBoard({
   isQuickPrepareOpen: boolean;
   isSmartOptimizeOpen: boolean;
   optimizeLocked: boolean;
+  optimizeWaitingForRestart: boolean;
   restartRecommendation: RestartRecommendation | null;
   prepareRebootStatus: PrepareRebootStatus;
   onPrepare: () => void;
@@ -592,22 +599,17 @@ function OptimizationPhaseBoard({
         timeStyle: "short",
       }).format(new Date(quickPrepareGate.completedAt))
     : null;
-  const phase2Ideal = !optimizeLocked && prepareRebootStatus === "confirmed";
-  const phase2PendingReboot = !optimizeLocked && prepareRebootStatus === "pending";
+  const phase2Ready = !optimizeLocked && !optimizeWaitingForRestart;
   const phase2StatusLabel = optimizeLocked
     ? "Bloqueado"
-    : phase2Ideal
-      ? "Ideal"
-      : phase2PendingReboot
-        ? "Reinicie antes"
-        : "Liberado";
+    : optimizeWaitingForRestart
+      ? "Reinicie antes"
+      : "Liberado";
   const phase2StatusClass = optimizeLocked
     ? "bg-warning/10 text-warning"
-    : phase2Ideal
+    : phase2Ready
       ? "bg-success/10 text-success"
-      : phase2PendingReboot
-        ? "bg-warning/10 text-warning"
-        : "bg-primary/10 text-primary";
+      : "bg-warning/10 text-warning";
 
   return (
     <section className="mt-5">
@@ -622,7 +624,7 @@ function OptimizationPhaseBoard({
         <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/70 bg-card/85 px-4 py-2">
           <PhaseStepperItem index="1" label="Preparação" active />
           <span className="h-px w-8 bg-border" />
-          <PhaseStepperItem index="2" label="Avançada" active={!optimizeLocked} />
+          <PhaseStepperItem index="2" label="Avançada" active={phase2Ready} />
         </div>
       </div>
 
@@ -700,17 +702,17 @@ function OptimizationPhaseBoard({
             <PhaseActionRow
               index="1"
               label="Aplicar cache e limpeza avançada"
-              ready={!optimizeLocked}
+              ready={phase2Ready}
             />
             <PhaseActionRow
               index="2"
-              label="Boot rápido, sistema e perfil recomendado"
-              ready={!optimizeLocked}
+              label="Boot rápido, sistema e plano global"
+              ready={phase2Ready}
             />
             <PhaseActionRow
               index="3"
               label="Rede, serviços sob demanda, Gamer e Fate Trigger"
-              ready={!optimizeLocked}
+              ready={phase2Ready}
             />
           </div>
           {optimizeLocked ? (
@@ -723,6 +725,19 @@ function OptimizationPhaseBoard({
                 Faça a Preparação da Máquina antes. O Hermes libera este botão depois.
               </p>
             </div>
+          ) : optimizeWaitingForRestart ? (
+            <>
+              <Phase2RebootReadiness completedLabel={completedLabel} status={prepareRebootStatus} />
+              <div
+                data-testid="hermes-optimize-waiting-restart"
+                className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-4 py-3 text-center"
+              >
+                <p className="text-sm font-black text-foreground">Reinicie para liberar a Fase 2</p>
+                <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
+                  O Hermes só libera o Botão 2 depois de detectar um novo boot do Windows.
+                </p>
+              </div>
+            </>
           ) : (
             <>
               <Phase2RebootReadiness completedLabel={completedLabel} status={prepareRebootStatus} />
@@ -733,11 +748,7 @@ function OptimizationPhaseBoard({
                 disabled={isSmartOptimizeOpen}
                 className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-black text-primary-foreground shadow-[0_14px_34px_-24px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isSmartOptimizeOpen
-                  ? "Otimizando..."
-                  : prepareRebootStatus === "confirmed"
-                    ? "Iniciar Otimização Avançada"
-                    : "Iniciar mesmo assim"}
+                {isSmartOptimizeOpen ? "Otimizando..." : "Iniciar Otimização Avançada"}
               </button>
               <p className="mt-2 text-center text-[12px] font-bold text-muted-foreground">
                 {prepareRebootStatus === "confirmed"

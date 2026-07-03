@@ -415,19 +415,6 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
   const gamer = await loadGamerReport();
   const gameTargets = buildGameTargets(gamer);
 
-  if (!context.gameSelection && gameTargets.length > 0) {
-    return {
-      reports: { gamer },
-      gameTargets,
-      requiresGameSelection: true,
-      outputs: [
-        `${gameTargets.length} alvo(s) de jogo encontrados`,
-        "Escolha o jogo para o Hermes montar o plano focado",
-        "Fate Trigger via Steam/UE5 fica como prioridade Hermes",
-      ],
-    };
-  }
-
   if (context.gameSelection?.skip) {
     return {
       reports: { gamer },
@@ -440,7 +427,7 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
     };
   }
 
-  const target = context.gameSelection?.target ?? gameTargets[0];
+  const target = context.gameSelection?.target ?? pickGlobalGamerTarget(gameTargets);
   const processIds = gamer.suggestedProcesses
     .filter((process) => process.canClose && process.recommendation === "suggestedClose")
     .map((process) => process.pid);
@@ -469,7 +456,9 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
     gameTargets,
     outputs: [
       ...focusPackage.outputs,
-      target ? `Jogo alvo: ${target.label}` : "Jogo alvo não selecionado",
+      target
+        ? `Prioridade gamer global: ${target.label}`
+        : "Prioridade gamer global aplicada sem jogo aberto",
       `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
       `${gamer.summary.overlayCount} overlay(s) revisado(s); Steam/Xbox/GPU: ${gamer.summary.steamOverlayCount}/${gamer.summary.xboxOverlayCount}/${gamer.summary.gpuOverlayCount}`,
       `${gamer.summary.streamingExceptionCount + gamer.summary.emulatorExceptionCount} excecao(oes) protegida(s): OBS/BlueStacks/WSL`,
@@ -482,6 +471,14 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
         : (result.message ?? "Seleção manual de jogo será necessária"),
     ],
   };
+}
+
+function pickGlobalGamerTarget(targets: OptimizeAllGameTarget[]) {
+  return (
+    targets.find((target) => target.id === "preset-fate-trigger-ue5") ??
+    targets.find((target) => target.source === "active") ??
+    targets[0]
+  );
 }
 
 async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
@@ -559,10 +556,10 @@ async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<Optimi
       profileResult: result.value ?? undefined,
     },
     outputs: [
-      `Perfil sugerido: ${profileLabel(profileId)}`,
+      `Plano global interno: ${profileLabel(profileId)}`,
       result.value?.recommendedProfilePersisted
-        ? "Perfil recomendado salvo localmente"
-        : "Perfil recomendado aguardando persistencia",
+        ? "Plano global salvo localmente"
+        : "Plano global aguardando persistencia",
       result.value?.conflictWarnings.length
         ? `${result.value.conflictWarnings.length} conflito(s) de perfil detectado(s)`
         : "Perfil sem conflito critico",
