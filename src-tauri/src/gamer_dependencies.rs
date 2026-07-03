@@ -1065,8 +1065,7 @@ fn verify_package(
     }
 
     if expected_sha256.is_none() {
-        blocked_reasons
-            .push("SHA256 esperado ainda nao foi aprovado no manifesto.".to_string());
+        blocked_reasons.push("SHA256 esperado ainda nao foi aprovado no manifesto.".to_string());
     }
 
     let probe = match probe_file_security(&cached_path) {
@@ -1525,10 +1524,8 @@ mod tests {
 
     #[test]
     fn dependency_download_skips_without_expected_sha256_before_network() {
-        let cache_dir = std::env::temp_dir().join(format!(
-            "hermes-dependency-test-{}",
-            now_timestamp()
-        ));
+        let cache_dir =
+            std::env::temp_dir().join(format!("hermes-dependency-test-{}", now_timestamp()));
         fs::create_dir_all(&cache_dir).expect("temp cache dir");
 
         let result = download_package(&cache_dir, &test_package(None));

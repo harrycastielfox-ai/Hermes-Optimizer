@@ -75,11 +75,11 @@ $sandboxXml = @"
 $sandboxXml | Set-Content -LiteralPath $sandboxPath -Encoding UTF8
 
 $guidePath = Join-Path $SessionPath "manual-qa-sandbox.md"
-$nsisPath = Join-Path $candidatePath "installers\Hermes-Optimizer-0.1.0-nsis.exe"
-$msiPath = Join-Path $candidatePath "installers\Hermes-Optimizer-0.1.0-msi.msi"
+$nsisPath = Join-Path $candidatePath "installers\NEX-Optimizer-0.1.0-nsis.exe"
+$msiPath = Join-Path $candidatePath "installers\NEX-Optimizer-0.1.0-msi.msi"
 
 $guide = New-Object System.Collections.Generic.List[string]
-$guide.Add("# Hermes Manual QA - Windows Sandbox")
+$guide.Add("# NEX Manual QA - Windows Sandbox")
 $guide.Add("")
 $guide.Add("- Sessao: $($session.candidateName)")
 $guide.Add("- RC: $candidatePath")
@@ -94,7 +94,7 @@ $guide.Add("## Como usar")
 $guide.Add("")
 $guide.Add("1. Abra `hermes-manual-qa.wsb` em uma maquina com Windows Sandbox habilitado.")
 $guide.Add("2. Dentro do Sandbox, abra `Desktop\HermesRC\installers`.")
-$guide.Add("3. Instale primeiro `Hermes-Optimizer-0.1.0-nsis.exe`.")
+$guide.Add("3. Instale primeiro `NEX-Optimizer-0.1.0-nsis.exe`.")
 $guide.Add("4. Opcional para acelerar instalacao: rode `Desktop\HermesQA\run-install-smoke.ps1` no PowerShell do Sandbox.")
 $guide.Add("5. Teste janela, rotas, scroll, Dashboard, Otimizar, Anti-Cheat, Defender, Manutencao e Configuracoes.")
 $guide.Add("6. Salve prints ou notas em `Desktop\HermesQA`, que esta mapeado de volta para esta sessao.")

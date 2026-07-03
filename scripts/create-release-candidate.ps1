@@ -20,7 +20,7 @@ if (-not (Test-Path -LiteralPath $QaReportPath -PathType Leaf)) {
 
 $qaReport = Get-Content -LiteralPath $QaReportPath -Raw | ConvertFrom-Json
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$candidateName = "hermes-optimizer-$Version-rc-$timestamp"
+$candidateName = "nex-optimizer-$Version-rc-$timestamp"
 $candidateDir = Join-Path $OutputRoot $candidateName
 $installersDir = Join-Path $candidateDir "installers"
 $docsDir = Join-Path $candidateDir "docs"
@@ -38,7 +38,7 @@ foreach ($installer in @($qaReport.installers)) {
   }
 
   $extension = [System.IO.Path]::GetExtension([string]$installer.path)
-  $fileName = "Hermes-Optimizer-$Version-$($installer.kind)$extension"
+  $fileName = "NEX-Optimizer-$Version-$($installer.kind)$extension"
   $destination = Join-Path $installersDir $fileName
   Copy-Item -LiteralPath $installer.path -Destination $destination -Force
 
@@ -91,7 +91,7 @@ $installersMarkdown = ($packagedInstallers | ForEach-Object {
 $manualBlockersMarkdown = (@($qaReport.manualBlockers) | ForEach-Object { "- $_" }) -join "`r`n"
 
 $readme = @"
-# Hermes Optimizer $Version - Release Candidate
+# NEX Optimizer $Version - Release Candidate
 
 Decisao publica atual: **$($manifest.publicDecision)**
 

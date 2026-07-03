@@ -1,5 +1,5 @@
 [package]
-name = "hermes-optimizer"
+name = "nex-optimizer"
 version = "0.1.0"
 description = "NEX Optimizer desktop engine"
 authors = ["NEX Optimizer Team"]

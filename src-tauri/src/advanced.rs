@@ -1715,8 +1715,8 @@ fn allow_hermes_defender_exclusion_plan(state: &RawAdvancedState) -> Option<Adva
             true,
             false,
             current_value,
-            "Adicionar exclusao ExclusionPath apenas para hermes-optimizer.exe",
-            "PowerShell Add-MpPreference -ExclusionPath <Hermes>",
+            "Adicionar exclusao ExclusionPath apenas para NEX Optimizer.exe",
+            "PowerShell Add-MpPreference -ExclusionPath <NEX>",
         ),
         operations: vec![AdvancedOperation::DefenderPathExclusion {
             path: executable_path,
@@ -3781,10 +3781,10 @@ fn current_hermes_executable_path() -> Result<String, String> {
 fn is_allowed_hermes_executable_path(path: &str) -> bool {
     let normalized = path.trim().replace('/', "\\").to_ascii_lowercase();
     let bytes = normalized.as_bytes();
-    normalized.ends_with("\\hermes-optimizer.exe")
-        && bytes.len() > "\\hermes-optimizer.exe".len() + 3
-        && bytes.get(1) == Some(&b':')
-        && bytes.get(2) == Some(&b'\\')
+    let allowed_suffix = normalized.ends_with("\\nex optimizer.exe")
+        || normalized.ends_with("\\nex-optimizer.exe")
+        || normalized.ends_with("\\hermes-optimizer.exe");
+    allowed_suffix && bytes.get(1) == Some(&b':') && bytes.get(2) == Some(&b'\\')
 }
 
 fn paths_equal_ignore_case(left: &str, right: &str) -> bool {

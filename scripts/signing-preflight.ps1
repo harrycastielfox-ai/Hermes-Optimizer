@@ -138,8 +138,8 @@ $certificate = if ($certificateMatch) { $certificateMatch.certificate } else { $
 $signtool = Find-SignToolOrNull
 
 $installerReports = @(
-  Get-InstallerReport -Kind "nsis" -Path (Join-Path $root "src-tauri\target\release\bundle\nsis\Hermes Optimizer_0.1.0_x64-setup.exe")
-  Get-InstallerReport -Kind "msi" -Path (Join-Path $root "src-tauri\target\release\bundle\msi\Hermes Optimizer_0.1.0_x64_en-US.msi")
+  Get-InstallerReport -Kind "nsis" -Path (Join-Path $root "src-tauri\target\release\bundle\nsis\NEX Optimizer_0.1.0_x64-setup.exe")
+  Get-InstallerReport -Kind "msi" -Path (Join-Path $root "src-tauri\target\release\bundle\msi\NEX Optimizer_0.1.0_x64_en-US.msi")
 )
 
 $blockers = New-Object System.Collections.Generic.List[string]
