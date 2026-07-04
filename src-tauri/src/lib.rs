@@ -17,6 +17,55 @@ mod system;
 
 use tauri::Manager;
 
+#[cfg(windows)]
+fn colorref(red: u8, green: u8, blue: u8) -> u32 {
+    (red as u32) | ((green as u32) << 8) | ((blue as u32) << 16)
+}
+
+#[cfg(windows)]
+fn apply_nex_window_frame(window: &tauri::WebviewWindow) {
+    use windows::Win32::Graphics::Dwm::{
+        DwmSetWindowAttribute, DWMWA_BORDER_COLOR, DWMWA_CAPTION_COLOR, DWMWA_TEXT_COLOR,
+        DWMWA_USE_IMMERSIVE_DARK_MODE,
+    };
+
+    let Ok(hwnd) = window.hwnd() else {
+        return;
+    };
+
+    let dark_mode = 1i32;
+    let caption_color = colorref(18, 8, 28);
+    let border_color = colorref(126, 34, 206);
+    let text_color = colorref(248, 244, 255);
+
+    unsafe {
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_USE_IMMERSIVE_DARK_MODE,
+            &dark_mode as *const _ as _,
+            std::mem::size_of_val(&dark_mode) as u32,
+        );
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_CAPTION_COLOR,
+            &caption_color as *const _ as _,
+            std::mem::size_of_val(&caption_color) as u32,
+        );
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_BORDER_COLOR,
+            &border_color as *const _ as _,
+            std::mem::size_of_val(&border_color) as u32,
+        );
+        let _ = DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_TEXT_COLOR,
+            &text_color as *const _ as _,
+            std::mem::size_of_val(&text_color) as u32,
+        );
+    }
+}
+
 #[tauri::command]
 fn hermes_window_minimize(app: tauri::AppHandle) -> Result<(), String> {
     let window = app
@@ -44,6 +93,10 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+            #[cfg(windows)]
+            if let Some(window) = app.get_webview_window("main") {
+                apply_nex_window_frame(&window);
             }
             Ok(())
         })

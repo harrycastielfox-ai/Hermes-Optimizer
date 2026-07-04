@@ -9,7 +9,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import { HermesWindowChrome } from "@/components/common/HermesWindowChrome";
 import appCss from "../styles.css?url";
 import { reportClientError } from "../lib/lovable-error-reporting";
 import { HermesPreferencesProvider } from "../lib/preferences";
@@ -137,7 +136,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <HermesPreferencesProvider>
-        <HermesWindowChrome />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </HermesPreferencesProvider>

@@ -1,18 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Cpu,
-  Gamepad2,
-  Gauge,
-  HardDrive,
-  Lock,
-  Power,
-  Sparkles,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Lock, Power } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { SafeTestModeNotice } from "@/components/common/SafeTestModeNotice";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -231,20 +218,6 @@ function OtimizarPage() {
     { label: "Meta", value: `${HERMES_ACTION_TARGET} ações` },
     { label: "Modo", value: HERMES_SAFE_TEST_MODE ? "Teste" : "Real" },
   ];
-  const machineFacts = [
-    { icon: Cpu, label: "CPU", value: compactValue(diagnostic.cpu.name) },
-    { icon: HardDrive, label: "Disco", value: diagnostic.disk.healthStatus },
-    { icon: Gamepad2, label: "GPU", value: compactValue(diagnostic.gpu.name) },
-  ];
-  const projectPhases = [
-    { icon: Activity, title: "Diagnóstico", text: "Entende o PC antes de qualquer decisão." },
-    {
-      icon: Wrench,
-      title: "Componentes",
-      text: "VC++, DirectX e dependências entram como módulo.",
-    },
-    { icon: Gauge, title: "Performance", text: "Energia, inicialização, limpeza e modo gamer." },
-  ];
   const optimizeLocked =
     !quickPrepareGate ||
     quickPrepareGate.safeMode !== HERMES_SAFE_TEST_MODE ||
@@ -305,18 +278,6 @@ function OtimizarPage() {
             ) : (
               executionReport && <ExecutionReportPanel report={executionReport} />
             )}
-
-            <section className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {machineFacts.map((item) => (
-                <InfoTile key={item.label} icon={item.icon} label={item.label} value={item.value} />
-              ))}
-            </section>
-
-            <section className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {projectPhases.map((item) => (
-                <TrustCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
-              ))}
-            </section>
           </div>
         </main>
       </div>
@@ -984,52 +945,4 @@ function MiniStat({ label, value }: { label: string; value: string }) {
       <p className="mt-0.5 text-sm font-black text-foreground">{value}</p>
     </div>
   );
-}
-
-function InfoTile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <article className="rounded-2xl border border-border/60 bg-card/85 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-24px_rgba(15,23,42,0.22)]">
-      <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold tracking-[0.16em] text-muted-foreground">{label}</p>
-          <p className="mt-0.5 truncate text-sm font-black text-foreground">{value}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function TrustCard({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
-  return (
-    <article className="rounded-2xl border border-border/60 bg-card/85 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-24px_rgba(15,23,42,0.22)]">
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-        <div>
-          <h3 className="text-sm font-bold text-foreground">{title}</h3>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{text}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function compactValue(value: string) {
-  if (!value || /indispon/i.test(value)) {
-    return "Indisponível";
-  }
-
-  return value.length > 34 ? `${value.slice(0, 34).trim()}...` : value;
 }
