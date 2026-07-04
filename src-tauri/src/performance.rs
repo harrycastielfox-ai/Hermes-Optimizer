@@ -1349,7 +1349,7 @@ mod tests {
             action_ids: Some(action_ids.into_iter().map(str::to_string).collect()),
             confirmed: true,
             dry_run: Some(true),
-            reason: Some(format!("Perfil Hermes: {profile_name}")),
+            reason: Some(format!("Perfil NEX: {profile_name}")),
         };
         let selected_ids = selected_action_ids(request.action_ids.as_deref());
         let actions = controlled_actions_from_raw(&raw_report(), &selected_ids);

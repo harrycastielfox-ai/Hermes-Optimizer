@@ -35,7 +35,6 @@ import {
   refreshLiveDiagnosticReport,
   type DiagnosticReport,
 } from "@/lib/diagnostic";
-import { readExecutionCycleReport, type ExecutionCycleReport } from "@/lib/execution-report";
 import {
   HermesArchitectureIcon,
   HermesClockIcon,
@@ -65,9 +64,6 @@ function Dashboard() {
   const [recommendations, setRecommendations] = useState<AdvisorRecommendation[]>(
     fallbackAdvisorRecommendations,
   );
-  const [executionCycle, setExecutionCycle] = useState<ExecutionCycleReport | null>(() =>
-    readExecutionCycleReport(),
-  );
 
   useEffect(() => {
     let mounted = true;
@@ -95,10 +91,6 @@ function Dashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  useEffect(() => {
-    setExecutionCycle(readExecutionCycleReport());
   }, []);
 
   const healthScore = Math.round(diagnostic.healthScore);
@@ -132,23 +124,29 @@ function Dashboard() {
           <div className="mx-auto flex min-h-full w-full max-w-[1540px] flex-col">
             {/* Header */}
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-[clamp(27px,2vw,34px)] font-bold leading-tight tracking-normal text-foreground">
-                  Dashboard NEX
-                </h1>
-                <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-muted-foreground">
-                  Status central do PC com coleta local. O Dashboard acompanha a máquina; a área
-                  Otimizar cuida do plano guiado.
-                </p>
+              <div className="relative min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-card/45 px-4 py-2.5 shadow-[0_14px_42px_-36px_rgba(168,85,247,0.7)] backdrop-blur xl:max-w-[520px]">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(216,180,254,0.14),transparent_30%),linear-gradient(120deg,rgba(255,255,255,0.05),transparent_54%)]" />
+                <div className="relative flex min-h-[72px] flex-col justify-center">
+                  <span className="inline-flex h-4 w-fit items-center rounded-full border border-primary/25 bg-primary/10 px-2 text-[7px] font-black uppercase tracking-[0.18em] text-primary">
+                    Command Center
+                  </span>
+                  <h1 className="mt-1.5 bg-gradient-to-r from-white via-fuchsia-100 to-primary bg-clip-text text-[clamp(23px,1.8vw,29px)] font-black leading-none tracking-normal text-transparent drop-shadow-[0_0_16px_rgba(168,85,247,0.18)]">
+                    Dashboard Engine
+                  </h1>
+                  <p className="mt-1.5 max-w-lg truncate text-[10.5px] leading-relaxed text-muted-foreground">
+                    Status central do PC com coleta local. O Dashboard acompanha a máquina; a área
+                    Otimizar cuida do plano guiado.
+                  </p>
+                </div>
               </div>
-              <div className="relative flex w-full max-w-[340px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-border/60 bg-card/95 px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_34px_-24px_rgba(37,99,235,0.28)] xl:w-[330px]">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/85 via-transparent to-primary/7 dark:from-white/10 dark:via-transparent dark:to-primary/12 dark:opacity-55" />
+              <div className="relative flex w-full max-w-[340px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/10 bg-card/82 px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_16px_34px_-24px_rgba(168,85,247,0.5)] backdrop-blur xl:w-[330px]">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.1] via-transparent to-primary/14 opacity-70" />
                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                   <Shield
-                    className="absolute inset-0 h-full w-full fill-blue-50 text-blue-100 drop-shadow-[0_5px_10px_rgba(37,99,235,0.12)] dark:fill-blue-500/12 dark:text-blue-300/40"
+                    className="absolute inset-0 h-full w-full fill-white/5 text-white/45 drop-shadow-[0_0_16px_rgba(216,180,254,0.34)]"
                     strokeWidth={1.6}
                   />
-                  <Zap className="relative h-5 w-5 fill-primary text-primary drop-shadow-[0_3px_8px_rgba(37,99,235,0.24)]" />
+                  <Zap className="relative h-5 w-5 fill-white text-white drop-shadow-[0_0_14px_rgba(216,180,254,0.75)]" />
                 </div>
                 <div className="relative min-w-0 flex-1 text-left">
                   <p className="text-[9px] font-bold tracking-wider text-muted-foreground">
@@ -225,7 +223,7 @@ function Dashboard() {
 
             {/* Three panels */}
             <div className="mb-4 grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
-              <InfoPanel title="SISTEMA" watermarkSrc="/nex-watermark.png">
+              <InfoPanel title="SISTEMA">
                 <InfoRow
                   icon={HermesComputerIcon}
                   label="Computador:"
@@ -312,8 +310,6 @@ function Dashboard() {
                 </Link>
               </InfoPanel>
             </div>
-
-            {executionCycle && <DashboardExecutionCyclePanel cycle={executionCycle} />}
 
             {/* Status bar */}
             <div className="rounded-2xl border border-border/45 bg-card/75 p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_10px_28px_-24px_rgba(15,23,42,0.18)]">
@@ -406,78 +402,6 @@ function StatusItem({
         <p className="truncate text-sm font-semibold leading-tight text-foreground">{value}</p>
         <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
       </div>
-    </div>
-  );
-}
-
-function DashboardExecutionCyclePanel({ cycle }: { cycle: ExecutionCycleReport }) {
-  const progress = Math.min(
-    100,
-    Math.round((cycle.summary.plannedActions / cycle.targetActions) * 100),
-  );
-  const hasFullCycle = Boolean(cycle.reports.prepare && cycle.reports.optimize);
-  const completedLabel = cycle.safeMode
-    ? cycle.summary.simulatedActions
-    : cycle.summary.appliedActions;
-  const phaseLabel = cycle.reports.optimize
-    ? "NEX preparado para jogar"
-    : cycle.reports.prepare
-      ? "Preparo concluído"
-      : "Ciclo iniciado";
-
-  return (
-    <section className="mb-4 rounded-2xl border border-success/20 bg-card/82 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_30px_-24px_rgba(34,197,94,0.28)]">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-success text-success-foreground">
-            <CheckCircle2 className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-success">
-              STATUS DA OTIMIZAÇÃO
-            </p>
-            <h2 className="mt-1 text-lg font-black text-foreground">{phaseLabel}</h2>
-            <p className="mt-1 text-[12px] text-muted-foreground">
-              Atualizado em {formatDateTime(cycle.updatedAt)}.{" "}
-              {hasFullCycle
-                ? "Reinicie quando o NEX pedir para consolidar o ganho."
-                : "Continue pela área Otimizar para finalizar as duas fases."}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <DashboardCycleStat label="Plano" value={`${cycle.targetActions}+`} />
-          <DashboardCycleStat label="Status" value={hasFullCycle ? "Ok" : "Em curso"} />
-          <DashboardCycleStat
-            label={cycle.safeMode ? "Validadas" : "Aplicadas"}
-            value={`${completedLabel}`}
-          />
-          <DashboardCycleStat label="Modo" value={cycle.safeMode ? "Teste" : "Real"} />
-        </div>
-      </div>
-
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
-      </div>
-
-      <div className="mt-3 flex flex-col gap-2 text-[12px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>{progress}% do plano NEX mapeado para este ciclo.</span>
-        <Link to="/otimizar" className="font-bold text-primary hover:underline">
-          Ver status da otimização →
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function DashboardCycleStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-right">
-      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-black text-foreground">{value}</p>
     </div>
   );
 }

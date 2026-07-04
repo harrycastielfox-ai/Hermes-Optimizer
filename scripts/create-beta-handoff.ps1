@@ -213,7 +213,7 @@ if ([string]::IsNullOrWhiteSpace($blockersMarkdown)) {
 }
 
 $readme = @"
-# Hermes Optimizer - Beta Interno
+# NEX Optimizer - Beta Interno
 
 Decisao beta interna: **$betaDecision**
 

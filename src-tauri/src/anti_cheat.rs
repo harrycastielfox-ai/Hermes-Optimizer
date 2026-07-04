@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+﻿use serde::{Deserialize, Serialize};
 use std::{
     process::{Command, Stdio},
     thread,
@@ -282,7 +282,7 @@ fn core_isolation_check(raw: &RawAntiCheatReport) -> AntiCheatCheck {
         check(
             "Core Isolation",
             "Atencao",
-            "Integridade de Memoria esta desativada ou indisponivel. O Hermes apenas informa.",
+            "Integridade de Memoria esta desativada ou indisponivel. O NEX apenas informa.",
             false,
             5,
             15,
@@ -409,7 +409,7 @@ fn summary_text(
     }
 
     if driver_signature.status != "OK" {
-        return "A leitura encontrou drivers que merecem revisao. O Hermes nao remove nem bloqueia drivers, apenas orienta.".to_string();
+        return "A leitura encontrou drivers que merecem revisao. O NEX não remove nem bloqueia drivers, apenas orienta.".to_string();
     }
 
     if score >= 85 {

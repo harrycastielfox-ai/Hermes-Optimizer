@@ -157,7 +157,7 @@ export const defaultPreferences: HermesAdminPreferences = {
     versionHistory: true,
   },
   appearance: {
-    theme: "light",
+    theme: "dark",
     accent: "purple",
   },
   notifications: {

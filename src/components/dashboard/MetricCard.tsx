@@ -23,11 +23,11 @@ export function MetricCard({
   children,
 }: Props) {
   return (
-    <div className="group relative min-h-[132px] overflow-hidden rounded-2xl border border-border/60 bg-card/95 px-4 py-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-24px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_40px_-28px_rgba(37,99,235,0.45)]">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/80 via-transparent to-primary/5 opacity-80 dark:from-white/8 dark:via-transparent dark:to-primary/10 dark:opacity-45" />
+    <div className="group relative min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-card/82 px-4 py-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_14px_34px_-24px_rgba(168,85,247,0.46)] backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_18px_42px_-28px_rgba(168,85,247,0.68)]">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.09] via-transparent to-primary/12 opacity-70" />
       <div className="relative flex items-start gap-3">
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconBg} shadow-[0_10px_24px_-20px_rgba(37,99,235,0.65)]`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconBg} shadow-[0_0_22px_rgba(168,85,247,0.32)]`}
         >
           <Icon className={`h-[23px] w-[23px] ${iconColor}`} />
         </div>

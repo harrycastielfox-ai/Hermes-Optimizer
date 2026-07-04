@@ -575,9 +575,7 @@ function RepairActionDetail({
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
         <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">
-            COMO O HERMES PROTEGE
-          </p>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-primary">COMO O NEX PROTEGE</p>
           <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
             {action.notes.slice(0, 3).map((note) => (
               <div

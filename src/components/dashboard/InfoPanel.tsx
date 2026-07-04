@@ -24,8 +24,8 @@ export function InfoPanel({
   watermarkSrc?: string;
 }) {
   return (
-    <div className="relative min-h-[348px] overflow-hidden rounded-2xl border border-border/60 bg-card/95 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_16px_38px_-28px_rgba(15,23,42,0.22)]">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/85 via-transparent to-primary/4 dark:from-white/7 dark:via-transparent dark:to-primary/10 dark:opacity-55" />
+    <div className="relative min-h-[348px] overflow-hidden rounded-2xl border border-white/10 bg-card/82 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_18px_42px_-30px_rgba(168,85,247,0.48)] backdrop-blur">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-primary/10 opacity-70" />
       {watermarkSrc && (
         <img
           src={watermarkSrc}
@@ -59,7 +59,7 @@ export function InfoRow({
           className={
             typeof icon === "string"
               ? "h-8 w-8 object-contain"
-              : "h-8 w-8 text-blue-600 drop-shadow-[0_4px_8px_rgba(37,99,235,0.18)]"
+              : "h-8 w-8 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
           }
         />
       </div>
@@ -90,7 +90,7 @@ export function HwRow({
           className={
             typeof icon === "string"
               ? "h-8 w-8 object-contain"
-              : "h-8 w-8 text-blue-600 drop-shadow-[0_4px_8px_rgba(37,99,235,0.18)]"
+              : "h-8 w-8 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
           }
         />
       </div>

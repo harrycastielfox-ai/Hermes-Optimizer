@@ -150,7 +150,7 @@ function OtimizacoesPage() {
             >
               <div>
                 <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
-                  COMO O HERMES FAZ ISSO
+                  COMO O NEX FAZ ISSO
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Performance Engine, Advanced Engine, comandos, valores e ações bloqueadas ficam

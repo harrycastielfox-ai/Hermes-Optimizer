@@ -1,4 +1,4 @@
-use crate::{
+﻿use crate::{
     restore::{
         self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
         RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
@@ -416,7 +416,7 @@ fn execute_advanced_plans(
                 title: plan.action.title.clone(),
                 status: AdvancedActionStatus::DryRun,
                 message: format!(
-                    "{} — nenhum comando CMD/PowerShell/Registro foi executado.",
+                    "{} â€” nenhum comando CMD/PowerShell/Registro foi executado.",
                     safe_mode::mode_prefix(dry_run)
                 ),
             })
@@ -447,7 +447,7 @@ fn execute_advanced_plans(
         }
     } else if dry_run {
         format!(
-            "{} — comandos avancados validados com snapshot e rollback preparados. {}",
+            "{} â€” comandos avancados validados com snapshot e rollback preparados. {}",
             safe_mode::mode_prefix(dry_run),
             if safe_mode::is_enabled() {
                 safe_mode::notice()
@@ -1697,16 +1697,16 @@ fn allow_hermes_defender_exclusion_plan(state: &RawAdvancedState) -> Option<Adva
         .iter()
         .any(|item| paths_equal_ignore_case(item, &executable_path));
     let current_value = if already_excluded {
-        "Hermes ja esta nas exclusoes do Defender"
+        "NEX já está nas exclusões do Defender"
     } else {
-        "Hermes ainda nao esta nas exclusoes do Defender"
+        "NEX ainda não está nas exclusões do Defender"
     };
 
     Some(AdvancedPlan {
         action: action(
             "allow-hermes-defender-exclusion",
-            "Liberar Hermes no Defender",
-            "Adiciona somente o executavel atual do Hermes as exclusoes do Windows Defender para evitar falso positivo.",
+            "Liberar NEX no Defender",
+            "Adiciona somente o executável atual do NEX as exclusoes do Windows Defender para evitar falso positivo.",
             AdvancedMethod::PowerShell,
             AdvancedRisk::Medium,
             true,
@@ -2060,7 +2060,7 @@ fn check_gamer_dependencies_plan(state: &RawAdvancedState) -> AdvancedPlan {
         action: action(
             "check-gamer-dependencies",
             "Verificar dependencias gamer",
-            "Lê VC++ Redistributables e DirectX localmente antes de qualquer instalacao futura com hash/assinatura.",
+            "LÃª VC++ Redistributables e DirectX localmente antes de qualquer instalacao futura com hash/assinatura.",
             AdvancedMethod::PowerShell,
             AdvancedRisk::Low,
             false,
@@ -2454,7 +2454,7 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
         blocked(
             "disable-windows-update",
             "Desabilitar Windows Update permanentemente",
-            "Bloqueado: o Hermes nao desativa atualizacoes de seguranca de forma permanente.",
+            "Bloqueado: o NEX não desativa atualizações de segurança de forma permanente.",
             AdvancedMethod::PowerShell,
             AdvancedRisk::High,
             true,
@@ -2481,7 +2481,7 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
         blocked(
             "remove-programs",
             "Remover programas",
-            "Bloqueado: o Hermes pode desabilitar inicializacao em engine propria, mas nao remove softwares.",
+            "Bloqueado: o NEX pode desabilitar inicialização em engine propria, mas nao remove softwares.",
             AdvancedMethod::PowerShell,
             AdvancedRisk::High,
             true,
@@ -2526,7 +2526,7 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
         blocked(
             "msconfig-max-processors",
             "Limitar numero de processadores no boot",
-            "Bloqueado: esta opcao do msconfig pode limitar a CPU em vez de otimizar. O Hermes mantem processadores e memoria sem teto artificial.",
+            "Bloqueado: esta opcao do msconfig pode limitar a CPU em vez de otimizar. O NEX mantém processadores e memória sem teto artificial.",
             AdvancedMethod::Cmd,
             AdvancedRisk::High,
             true,
@@ -2535,7 +2535,7 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
         blocked(
             "msconfig-max-memory",
             "Limitar memoria maxima no boot",
-            "Bloqueado: esta opcao pode fazer o Windows iniciar com menos RAM disponivel. O Hermes nao aplica teto de memoria.",
+            "Bloqueado: esta opcao pode fazer o Windows iniciar com menos RAM disponivel. O NEX não aplica teto de memória.",
             AdvancedMethod::Cmd,
             AdvancedRisk::High,
             true,
@@ -2544,7 +2544,7 @@ fn blocked_actions() -> Vec<AdvancedBlockedAction> {
         blocked(
             "disable-all-microsoft-services",
             "Desativar todos os servicos Microsoft",
-            "Bloqueado: o Hermes usa uma allowlist de servicos opcionais sob demanda e preserva seguranca, rede, audio, drivers, Windows Update e anticheat.",
+            "Bloqueado: o NEX usa uma allowlist de servicos opcionais sob demanda e preserva seguranca, rede, audio, drivers, Windows Update e anticheat.",
             AdvancedMethod::Cmd,
             AdvancedRisk::High,
             true,
@@ -2768,7 +2768,7 @@ fn validate_plans_for_apply(
     for plan in plans {
         if plan.action.requires_admin && !dry_run && !is_process_elevated() {
             return Err(format!(
-                "{} exige administrador. Abra o Hermes como administrador para aplicar esta acao.",
+                "{} exige administrador. Abra o NEX como administrador para aplicar esta acao.",
                 plan.action.title
             ));
         }
@@ -2819,7 +2819,7 @@ fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
             ..
         } => {
             if !is_allowed_power_plan_guid(guid) {
-                return Err("Plano de energia fora da allowlist Hermes.".to_string());
+                return Err("Plano de energia fora da allowlist NEX.".to_string());
             }
             if previous_guid.is_none() {
                 return Err(
@@ -2841,28 +2841,28 @@ fn validate_operation(operation: &AdvancedOperation) -> Result<(), String> {
             {
                 Ok(())
             } else {
-                Err("Ajuste powercfg fora da allowlist Hermes.".to_string())
+                Err("Ajuste powercfg fora da allowlist NEX.".to_string())
             }
         }
         AdvancedOperation::DnsProvider { servers, .. } => {
             if is_allowed_dns_servers(servers) {
                 Ok(())
             } else {
-                Err("Provedor DNS fora da allowlist Hermes.".to_string())
+                Err("Provedor DNS fora da allowlist NEX.".to_string())
             }
         }
         AdvancedOperation::DefenderPathExclusion { path, .. } => {
             if is_allowed_hermes_executable_path(path) {
                 Ok(())
             } else {
-                Err("Exclusao do Defender fora da allowlist Hermes.".to_string())
+                Err("Exclusao do Defender fora da allowlist NEX.".to_string())
             }
         }
         AdvancedOperation::Cmd { program, args, .. } => {
             if is_allowed_native_command(program, args) {
                 Ok(())
             } else {
-                Err("Comando nativo fora da allowlist Hermes.".to_string())
+                Err("Comando nativo fora da allowlist NEX.".to_string())
             }
         }
     }
@@ -3181,7 +3181,7 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                         action_type: RestoreRollbackActionType::Noop,
                         target: path.clone(),
                         description:
-                            "Exclusao do Defender ja existia antes do Hermes executar a acao."
+                            "Exclusão do Defender já existia antes do NEX executar a ação."
                                 .to_string(),
                         previous_value: Some("already-excluded".to_string()),
                         backup_path: None,
@@ -3194,7 +3194,7 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                         action_type: RestoreRollbackActionType::RemoveDefenderExclusion,
                         target: path.clone(),
                         description:
-                            "Remover a exclusao do executavel Hermes no Windows Defender."
+                            "Remover a exclusao do executável NEX no Windows Defender."
                                 .to_string(),
                         previous_value: Some("not-excluded".to_string()),
                         backup_path: None,
@@ -3499,7 +3499,7 @@ fn set_registry_string(path: &str, name: &str, value: &str) -> Result<(), String
 
 fn set_dns_provider(servers: &[String]) -> Result<(), String> {
     if !is_allowed_dns_servers(servers) {
-        return Err("Provedor DNS fora da allowlist Hermes.".to_string());
+        return Err("Provedor DNS fora da allowlist NEX.".to_string());
     }
 
     let server_args = servers
@@ -3523,7 +3523,7 @@ ipconfig /flushdns | Out-Null
 
 fn set_defender_path_exclusion(path: &str, already_excluded: bool) -> Result<(), String> {
     if !is_allowed_hermes_executable_path(path) {
-        return Err("Exclusao do Defender bloqueada: alvo nao e o executavel Hermes.".to_string());
+        return Err("Exclusao do Defender bloqueada: alvo nao e o executável NEX.".to_string());
     }
 
     if already_excluded {
@@ -3532,7 +3532,7 @@ fn set_defender_path_exclusion(path: &str, already_excluded: bool) -> Result<(),
 
     let path_arg = ps_escape(path);
     let script = format!(
-        "$ErrorActionPreference = 'Stop'; $path = '{path_arg}'; if (!(Test-Path -LiteralPath $path)) {{ throw 'Executavel Hermes nao encontrado' }}; $prefs = Get-MpPreference; if (@($prefs.ExclusionPath) -contains $path) {{ 'already' }} else {{ Add-MpPreference -ExclusionPath $path; 'ok' }}"
+        "$ErrorActionPreference = 'Stop'; $path = '{path_arg}'; if (!(Test-Path -LiteralPath $path)) {{ throw 'Executável NEX não encontrado' }}; $prefs = Get-MpPreference; if (@($prefs.ExclusionPath) -contains $path) {{ 'already' }} else {{ Add-MpPreference -ExclusionPath $path; 'ok' }}"
     );
     run_powershell(&script, ADVANCED_COMMAND_TIMEOUT_SECONDS).map(|_| ())
 }
@@ -3594,7 +3594,7 @@ fn previous_dns_state(interfaces: &[DnsInterfaceState]) -> String {
 
 fn run_native_command(program: &str, args: &[String]) -> Result<String, String> {
     if !is_allowed_native_command(program, args) {
-        return Err("Comando CMD bloqueado pela allowlist Hermes.".to_string());
+        return Err("Comando CMD bloqueado pela allowlist NEX.".to_string());
     }
 
     let mut command = Command::new(program);
@@ -3774,7 +3774,7 @@ fn is_allowed_power_setting(subgroup_guid: &str, setting_guid: &str, value: i64)
 
 fn current_hermes_executable_path() -> Result<String, String> {
     let path = std::env::current_exe()
-        .map_err(|err| format!("Nao foi possivel localizar o executavel Hermes: {err}"))?;
+        .map_err(|err| format!("Nao foi possivel localizar o executável NEX: {err}"))?;
     Ok(path.to_string_lossy().replace('/', "\\"))
 }
 

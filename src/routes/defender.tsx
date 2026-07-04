@@ -193,7 +193,7 @@ function DefenderPage() {
               <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
                 <TrustCard
                   icon={FileCheck2}
-                  title="Executavel Hermes"
+                  title="Executável NEX"
                   text="A permissão mira nex-optimizer.exe, não pastas inteiras do sistema."
                 />
                 <TrustCard

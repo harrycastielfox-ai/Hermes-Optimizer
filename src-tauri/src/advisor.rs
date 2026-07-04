@@ -296,7 +296,7 @@ fn build_smart_report(
         recommendations.push(rec(
             "power-plan-economy",
             "Seu plano de energia esta em Economia.",
-            "Esse modo reduz consumo, mas pode limitar desempenho. O Hermes pode sugerir um perfil adequado.",
+            "Esse modo reduz consumo, mas pode limitar desempenho. O NEX pode sugerir um perfil adequado.",
             RecommendationSeverity::Info,
             RecommendationCategory::Power,
             40,

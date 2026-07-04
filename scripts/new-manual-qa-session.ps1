@@ -95,7 +95,7 @@ $itemLines = ($items | ForEach-Object {
 }) -join "`r`n`r`n"
 
 $markdown = @"
-# Hermes Optimizer - Sessao de QA Manual
+# NEX Optimizer - Sessao de QA Manual
 
 Status: pendente
 Tester: $Tester

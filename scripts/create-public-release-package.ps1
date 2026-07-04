@@ -131,7 +131,7 @@ $installerLines = ($packagedInstallers | ForEach-Object {
 }) -join "`r`n"
 
 $readme = @"
-# Hermes Optimizer $($candidateManifest.version) - Release Publico
+# NEX Optimizer $($candidateManifest.version) - Release Publico
 
 Status: **GO**
 

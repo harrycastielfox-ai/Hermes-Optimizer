@@ -17,7 +17,7 @@ export function HealthRing({
 
   return (
     <div
-      className="relative drop-shadow-[0_14px_24px_rgba(37,99,235,0.18)]"
+      className="relative drop-shadow-[0_0_24px_rgba(168,85,247,0.34)]"
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="-rotate-90">
@@ -50,8 +50,8 @@ export function HealthRing({
         />
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.65 0.2 250)" />
-            <stop offset="100%" stopColor="oklch(0.55 0.22 265)" />
+            <stop offset="0%" stopColor="oklch(0.88 0.02 285)" />
+            <stop offset="100%" stopColor="oklch(0.72 0.25 304)" />
           </linearGradient>
         </defs>
       </svg>

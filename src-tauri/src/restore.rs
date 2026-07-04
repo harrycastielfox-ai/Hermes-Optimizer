@@ -944,14 +944,13 @@ fn validate_defender_exclusion_action(action: &RestoreRollbackAction) -> Restore
         RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::DryRun,
-            message: "Exclusao especifica do Hermes validada para rollback.".to_string(),
+            message: "Exclusão específica do NEX validada para rollback.".to_string(),
         }
     } else {
         RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
-            message: "Rollback bloqueado: exclusao do Defender fora do executavel Hermes."
-                .to_string(),
+            message: "Rollback bloqueado: exclusão do Defender fora do executável NEX.".to_string(),
         }
     }
 }

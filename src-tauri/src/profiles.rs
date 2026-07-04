@@ -164,11 +164,11 @@ fn profiles_apply_blocking(
     let profile = profile_definitions()
         .into_iter()
         .find(|profile| profile.id == request.profile_id)
-        .ok_or_else(|| format!("Perfil Hermes nao encontrado: {}", request.profile_id))?;
+        .ok_or_else(|| format!("Perfil NEX não encontrado: {}", request.profile_id))?;
     let dry_run = safe_mode::force_dry_run(request.dry_run.unwrap_or(!request.confirmed));
 
     if !dry_run && !request.confirmed {
-        return Err("Confirmacao obrigatoria antes de aplicar um perfil Hermes.".to_string());
+        return Err("Confirmação obrigatória antes de aplicar um perfil NEX.".to_string());
     }
 
     if !dry_run && profile.requires_extra_confirmation && request.extreme_confirmed != Some(true) {
@@ -180,9 +180,9 @@ fn profiles_apply_blocking(
         ProfileEventLevel::Info,
         Some(profile.id.clone()),
         if dry_run {
-            "DRY-RUN | Perfil Hermes iniciado em dry-run."
+            "DRY-RUN | Perfil NEX iniciado em dry-run."
         } else {
-            "Aplicacao real de perfil Hermes iniciada apos confirmacao."
+            "Aplicação real de perfil NEX iniciada após confirmação."
         },
     )?;
 
@@ -327,7 +327,7 @@ fn run_profile_performance(
             confirmed: request.confirmed,
             dry_run: Some(dry_run),
             action_ids: Some(profile.performance_action_ids.clone()),
-            reason: Some(format!("Perfil Hermes: {}", profile.name)),
+            reason: Some(format!("Perfil NEX: {}", profile.name)),
         }),
     ) {
         Ok(result) => {

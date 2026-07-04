@@ -1187,7 +1187,7 @@ function dependencyInstallVerification(
   if (action.status === "installed") {
     return {
       status: "confirmed",
-      detail: "Instalador verificado por SHA256/assinatura e executado pelo motor Hermes.",
+      detail: "Instalador verificado por SHA256/assinatura e executado pelo motor NEX.",
       checkedAt,
     };
   }

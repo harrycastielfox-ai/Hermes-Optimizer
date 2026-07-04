@@ -188,7 +188,7 @@ export function HermesAiCenter() {
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-[12px] font-bold tracking-[0.18em] text-primary">
-                PLANO DE ACAO HERMES
+                PLANO DE AÇÃO NEX
               </h3>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 Recomendação textual. Nenhuma etapa e executada automaticamente.

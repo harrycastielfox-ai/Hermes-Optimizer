@@ -153,7 +153,7 @@ $unsignedLines = if ($unsignedInstallers.Count -gt 0) {
 }
 
 $summaryMarkdown = @"
-# Hermes Optimizer - Resultado QA Manual
+# NEX Optimizer - Resultado QA Manual
 
 Sessao: $($session.candidateName)
 Tester: $($session.tester)

@@ -14,7 +14,6 @@ const items = [
 
 export function Sidebar() {
   const { pathname } = useLocation();
-  const [logoMissing, setLogoMissing] = useState(false);
   const { t } = useHermesTranslation();
   const handleMinimize = useCallback(async () => {
     if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
@@ -45,20 +44,15 @@ export function Sidebar() {
         aria-label="Minimizar NEX Optimizer"
         title="Minimizar"
         onClick={handleMinimize}
-        className="relative z-10 flex shrink-0 items-center justify-center mb-6 2xl:mb-8 pt-1 rounded-3xl outline-none transition-transform duration-200 hover:scale-[1.015] focus-visible:ring-2 focus-visible:ring-blue-500/70"
+        className="relative z-10 mb-7 flex shrink-0 flex-col items-center justify-center rounded-3xl px-3 py-5 outline-none transition-transform duration-200 hover:scale-[1.015] focus-visible:ring-2 focus-visible:ring-primary/70"
       >
-        {logoMissing ? (
-          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-            NEX Optimizer
-          </span>
-        ) : (
-          <img
-            src="/nex-logo.png"
-            alt="NEX Optimizer"
-            className="w-[186px] 2xl:w-[214px] max-h-[146px] 2xl:max-h-[164px] h-auto object-contain drop-shadow-[0_16px_34px_rgba(168,85,247,0.24)]"
-            onError={() => setLogoMissing(true)}
-          />
-        )}
+        <span className="text-[44px] font-black leading-none tracking-[0.08em] text-transparent bg-clip-text bg-gradient-to-r from-white via-fuchsia-100 to-primary drop-shadow-[0_0_24px_rgba(168,85,247,0.45)]">
+          NEX
+        </span>
+        <span className="mt-2 text-[10px] font-bold uppercase tracking-[0.28em] text-primary/90">
+          Optimizer
+        </span>
+        <span className="mt-2 h-px w-28 bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
       </button>
 
       <nav className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 flex flex-col gap-1 2xl:gap-1.5 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">

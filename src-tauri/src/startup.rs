@@ -762,7 +762,7 @@ fn apply_startup_item(
                 return startup_result(
                     item,
                     StartupApplyActionStatus::Skipped,
-                    "Apenas itens desabilitados pelo Hermes podem ser reativados.",
+                    "Apenas itens desabilitados pelo NEX podem ser reativados.",
                 );
             }
 

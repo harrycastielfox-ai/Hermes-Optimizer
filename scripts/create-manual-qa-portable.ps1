@@ -68,7 +68,7 @@ function New-ManualQaChecklist {
   }
 
   $markdown = @"
-# Hermes Optimizer - Sessao de QA Manual
+# NEX Optimizer - Sessao de QA Manual
 
 Status: $($Session.status)
 Tester: $($Session.tester)
