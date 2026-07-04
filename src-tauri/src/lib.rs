@@ -34,8 +34,8 @@ fn apply_nex_window_frame(window: &tauri::WebviewWindow) {
     };
 
     let dark_mode = 1i32;
-    let caption_color = colorref(18, 8, 28);
-    let border_color = colorref(126, 34, 206);
+    let caption_color = colorref(10, 3, 18);
+    let border_color = colorref(32, 12, 52);
     let text_color = colorref(248, 244, 255);
 
     unsafe {
