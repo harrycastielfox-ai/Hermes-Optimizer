@@ -6,7 +6,6 @@ import {
   Cpu,
   Gamepad2,
   Gauge,
-  HardDrive,
   Loader2,
   ShieldCheck,
   SlidersHorizontal,
@@ -86,7 +85,7 @@ const phaseTemplates: OptimizePhase[] = [
     Gamepad2,
     18,
   ),
-  phase("profile", "Plano global NEX", "Perfil interno aplicado sem escolha manual", Cpu, 16),
+  phase("profile", "Consolidação global", "Ajustes internos sem escolha manual", Cpu, 16),
   phase(
     "manual",
     "Avançado guiado",
@@ -110,11 +109,10 @@ export function SmartOptimizeModal({
   onCompleted?: (executionReport: ExecutionReport) => void;
 }) {
   const [phases, setPhases] = useState<OptimizePhase[]>(() => resetPhases());
-  const [logs, setLogs] = useState<LogItem[]>([]);
+  const [, setLogs] = useState<LogItem[]>([]);
   const [reports, setReports] = useState<OptimizeAllReports>({});
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
   const [currentStatus, setCurrentStatus] = useState("Aguardando otimização.");
-  const [recommendedProfileId, setRecommendedProfileId] = useState("seguro");
   const [finalExecutionReport, setFinalExecutionReport] = useState<ExecutionReport | null>(null);
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
@@ -151,14 +149,15 @@ export function SmartOptimizeModal({
   const activePhase = phases.find((item) => item.status === "running");
   const canCancel = runStatus === "running" && !cancelRequested.current;
   const canClose = runStatus !== "running" || cancelRequested.current;
-  const planActions = useMemo(
-    () => buildOptimizationPlan(reports, recommendedProfileId),
-    [reports, recommendedProfileId],
+  const planActions = useMemo(() => buildOptimizationPlan(reports), [reports]);
+  const readyPlanActions = useMemo(
+    () => planActions.filter((item) => item.status === "ready" || item.status === "ok").length,
+    [planActions],
   );
 
   async function runSmartOptimization(runId: number) {
     try {
-      await runPhases(runId, 0, {}, recommendedProfileId);
+      await runPhases(runId, 0, {});
     } catch (error) {
       if (activeRun.current !== runId) {
         return;
@@ -174,14 +173,8 @@ export function SmartOptimizeModal({
     }
   }
 
-  async function runPhases(
-    runId: number,
-    startIndex: number,
-    initialReports: OptimizeAllReports,
-    initialRecommendedProfileId: string,
-  ) {
+  async function runPhases(runId: number, startIndex: number, initialReports: OptimizeAllReports) {
     let nextReports: OptimizeAllReports = initialReports;
-    let nextRecommendedProfileId = initialRecommendedProfileId;
 
     for (let index = startIndex; index < phaseTemplates.length; index += 1) {
       const template = phaseTemplates[index];
@@ -189,16 +182,9 @@ export function SmartOptimizeModal({
       if (shouldStop(runId)) return;
 
       await executePhase(runId, template.id, async () => {
-        const result = await runOptimizeAllPhase(template.id, {
-          reports: nextReports,
-          recommendedProfileId: nextRecommendedProfileId,
-        });
+        const result = await runOptimizeAllPhase(template.id);
 
         nextReports = { ...nextReports, ...result.reports };
-        if (result.recommendedProfileId) {
-          nextRecommendedProfileId = result.recommendedProfileId;
-          setRecommendedProfileId(result.recommendedProfileId);
-        }
         setReports({ ...nextReports });
 
         return result.outputs;
@@ -332,7 +318,7 @@ export function SmartOptimizeModal({
           : item,
       ),
     );
-    appendLog("warning", "Usuário cancelou o fluxo Resolver Agora.");
+    appendLog("warning", "Usuário cancelou o fluxo Otimizar Tudo.");
   }
 
   function shouldStop(runId: number) {
@@ -441,7 +427,7 @@ export function SmartOptimizeModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid grid-cols-1 gap-5">
             <div className="space-y-3">
               <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
                 <div className="flex items-center justify-between gap-3">
@@ -481,31 +467,11 @@ export function SmartOptimizeModal({
               {finalExecutionReport && <OptimizationSuccessPanel report={finalExecutionReport} />}
             </div>
 
-            <aside className="space-y-4">
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">
-                  PLANO DO PC
-                </h3>
-                <div className="mt-3 space-y-2">
-                  {planActions.map((item) => (
-                    <PlanActionRow key={item.id} item={item} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">LOG</h3>
-                <div className="mt-3 space-y-2">
-                  {logs.length > 0 ? (
-                    logs.map((item) => <LogRow key={item.id} item={item} />)
-                  ) : (
-                    <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
-                      Aguardando primeira fase.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </aside>
+            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border/70 bg-background/72 p-3 text-center">
+              <ProgressStat label="Motor" value="NEX" />
+              <ProgressStat label="Validadas" value={`${readyPlanActions}`} />
+              <ProgressStat label="Modo" value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"} />
+            </div>
           </div>
         </div>
 
@@ -552,7 +518,7 @@ export function SmartOptimizeModal({
   );
 }
 
-function buildOptimizationPlan(reports: OptimizeAllReports, _profileId: string): PlanAction[] {
+function buildOptimizationPlan(reports: OptimizeAllReports): PlanAction[] {
   const actions: PlanAction[] = [];
 
   if (reports.diagnostic) {
@@ -644,9 +610,7 @@ function buildOptimizationPlan(reports: OptimizeAllReports, _profileId: string):
   actions.push({
     id: "profile",
     title: "Plano global NEX",
-    detail: reports.profileResult
-      ? `${reports.profileResult.engineResults.length} engine(s) internas ${appliedVerb(reports.profileResult.dryRun)}.`
-      : "Plano seguro usado internamente, sem escolha manual de perfil.",
+    detail: "Consolidação interna sem perfil favorito e sem escolha manual.",
     status: "ready",
   });
 
@@ -849,31 +813,6 @@ function SummaryCard({
   );
 }
 
-function PlanActionRow({ item }: { item: PlanAction }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-      <div className="flex items-start gap-2">
-        <span
-          className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${planStatusDot(item.status)}`}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-[12px] font-bold text-foreground">{item.title}</p>
-            <span
-              className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold ${planStatusPill(
-                item.status,
-              )}`}
-            >
-              {planStatusLabel(item.status)}
-            </span>
-          </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function PhaseCard({ phase }: { phase: OptimizePhase }) {
   const Icon =
     phase.status === "running" ? Loader2 : phase.status === "completed" ? CheckCircle2 : phase.icon;
@@ -921,27 +860,6 @@ function PhaseCard({ phase }: { phase: OptimizePhase }) {
         </div>
       </div>
     </article>
-  );
-}
-
-function LogRow({ item }: { item: LogItem }) {
-  const className =
-    item.level === "error"
-      ? "border-destructive/20 bg-destructive/10 text-destructive"
-      : item.level === "warning"
-        ? "border-warning/25 bg-warning/10 text-warning"
-        : "border-primary/20 bg-primary/10 text-primary";
-
-  return (
-    <div className="rounded-xl border border-border/60 bg-background/70 px-3 py-2">
-      <div className="flex items-start gap-2">
-        <HardDrive className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-        <p className="flex-1 text-[12px] leading-relaxed text-foreground">{item.message}</p>
-        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${className}`}>
-          {item.level}
-        </span>
-      </div>
-    </div>
   );
 }
 
@@ -996,27 +914,6 @@ function phaseStatusLabel(status: PhaseStatus) {
   if (status === "failed") return "Falha";
   if (status === "cancelled") return "Cancelado";
   return "Pendente";
-}
-
-function planStatusDot(status: PlanActionStatus) {
-  if (status === "ready") return "bg-primary";
-  if (status === "ok") return "bg-success";
-  if (status === "pending") return "bg-warning";
-  return "bg-muted-foreground";
-}
-
-function planStatusPill(status: PlanActionStatus) {
-  if (status === "ready") return "border-primary/20 bg-primary/10 text-primary";
-  if (status === "ok") return "border-success/20 bg-success/10 text-success";
-  if (status === "pending") return "border-warning/25 bg-warning/10 text-warning";
-  return "border-border bg-muted text-muted-foreground";
-}
-
-function planStatusLabel(status: PlanActionStatus) {
-  if (status === "ready") return "Pronto";
-  if (status === "ok") return "Ok";
-  if (status === "pending") return "Pendente";
-  return "Modulo";
 }
 
 function mergeAdvancedExecutionDetails(

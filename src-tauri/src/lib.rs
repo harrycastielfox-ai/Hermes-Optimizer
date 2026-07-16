@@ -7,6 +7,7 @@ mod clean;
 mod diagnostic;
 mod gamer;
 mod gamer_dependencies;
+mod licensing;
 mod optimizer;
 mod performance;
 mod profiles;
@@ -85,7 +86,18 @@ fn hermes_window_minimize(app: tauri::AppHandle) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_opener::init());
+
+    builder
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -97,6 +109,11 @@ pub fn run() {
             #[cfg(windows)]
             if let Some(window) = app.get_webview_window("main") {
                 apply_nex_window_frame(&window);
+            }
+            #[cfg(all(debug_assertions, windows))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                app.deep_link().register_all()?;
             }
             Ok(())
         })
@@ -128,6 +145,7 @@ pub fn run() {
             gamer_dependencies::gamer_dependency_install_verified,
             gamer_dependencies::gamer_dependency_open_cache_dir,
             gamer_dependencies::gamer_dependency_verify_installers,
+            licensing::nex_device_identity,
             optimizer::optimize_now_plan,
             performance::performance_apply_controlled,
             performance::performance_engine_read,

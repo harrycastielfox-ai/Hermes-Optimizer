@@ -11,6 +11,7 @@ const files = {
   ),
   advancedLib: readFileSync(join(root, "src", "lib", "advanced.ts"), "utf8"),
   optimizeAll: readFileSync(join(root, "src", "lib", "optimize-all.ts"), "utf8"),
+  gamerDependencies: readFileSync(join(root, "src", "lib", "gamer-dependencies.ts"), "utf8"),
   quickPrepare: readFileSync(join(root, "src", "lib", "quick-prepare.ts"), "utf8"),
   executionReport: readFileSync(join(root, "src", "lib", "execution-report.ts"), "utf8"),
 };
@@ -80,6 +81,16 @@ const checks = [
       files.optimizeAll.includes("applyOptimizeNowAdvancedActions") &&
       !files.optimizeAll.includes("applyCleanEngine") &&
       !files.optimizeAll.includes("applyAdvancedActions({"),
+  },
+  {
+    name: "Modo teste nao baixa dependencias gamer",
+    ok:
+      files.gamerDependencies.includes("if (request.dryRun)") &&
+      files.gamerDependencies.includes("Modo teste: nenhum download foi iniciado.") &&
+      files.gamerDependencies.indexOf("if (request.dryRun)") <
+        files.gamerDependencies.indexOf(
+          "const downloadResult = await downloadOfficialGamerDependencyInstallers()",
+        ),
   },
   {
     name: "Meta visual usa alvo central de 160 acoes",

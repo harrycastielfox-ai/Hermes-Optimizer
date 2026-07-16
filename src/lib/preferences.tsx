@@ -54,6 +54,7 @@ type TranslationKey =
   | "sidebar.repair"
   | "sidebar.scheduler"
   | "sidebar.custom"
+  | "sidebar.account"
   | "sidebar.settings"
   | "settings.eyebrow"
   | "settings.title"
@@ -190,6 +191,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "sidebar.repair": "Reparar Windows",
     "sidebar.scheduler": "Manutenção Programada",
     "sidebar.custom": "Personalizado",
+    "sidebar.account": "Minha conta",
     "sidebar.settings": "Configurações",
     "settings.eyebrow": "CONFIGURAÇÕES",
     "settings.title": "Configurações",
@@ -248,23 +250,24 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "Nesta etapa, Configurações e a navegação principal já respondem ao idioma escolhido.",
     "settings.license.title": "Licença",
     "settings.license.description":
-      "Área comercial preparada sem ativação, servidor, pagamento ou validação real.",
+      "Conta Google, códigos de uso único e validação online do acesso.",
     "settings.license.version": "Versão atual",
     "settings.license.channel": "Canal atual",
     "settings.license.status": "Status da licença",
     "settings.license.activation": "Ativação",
-    "settings.license.devMode": "Congelada para esta release",
-    "settings.license.notImplemented": "Ativação indisponível",
-    "settings.license.note.title": "Sem licenciamento real",
+    "settings.license.devMode": "Servidor aguardando configuração",
+    "settings.license.notImplemented": "Ativação pela área Minha conta",
+    "settings.license.note.title": "Licenciamento protegido",
     "settings.license.note.text":
-      "Licenciamento real está congelado nesta release: nenhuma chave é validada, nenhum servidor é chamado e nenhum pagamento é integrado.",
+      "O acesso é vinculado à conta Google e ao primeiro computador ativado. Códigos só podem ser resgatados uma vez.",
     "settings.privacy.title": "Privacidade",
     "settings.privacy.description":
       "Compromissos locais do NEX e base visual para preferências futuras.",
     "settings.privacy.local": "NEX funciona localmente.",
     "settings.privacy.noTelemetry": "Sem telemetria obrigatória.",
     "settings.privacy.noUpload": "Sem envio automático de dados.",
-    "settings.privacy.noCloud": "Sem nuvem obrigatória, conta ou login.",
+    "settings.privacy.noCloud":
+      "Sem upload obrigatório de diagnósticos; somente conta e licença usam o servidor.",
     "settings.privacy.share.title": "Compartilhar dados anônimos",
     "settings.privacy.share.description":
       "Opção futura. Desativada por padrão e sem qualquer coleta nesta fase.",
@@ -301,6 +304,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "sidebar.repair": "Repair Windows",
     "sidebar.scheduler": "Scheduled Maintenance",
     "sidebar.custom": "Custom",
+    "sidebar.account": "My account",
     "sidebar.settings": "Settings",
     "settings.eyebrow": "SETTINGS",
     "settings.title": "Settings",
@@ -358,23 +362,24 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "In this step, Settings and the main navigation already respond to the selected language.",
     "settings.license.title": "License",
     "settings.license.description":
-      "Commercial area prepared without activation, server, payment, or real validation.",
+      "Google account, single-use codes, and online access validation.",
     "settings.license.version": "Current version",
     "settings.license.channel": "Current channel",
     "settings.license.status": "License status",
     "settings.license.activation": "Activation",
-    "settings.license.devMode": "Frozen for this release",
-    "settings.license.notImplemented": "Activation unavailable",
-    "settings.license.note.title": "No real licensing",
+    "settings.license.devMode": "Server awaiting configuration",
+    "settings.license.notImplemented": "Activation in My account",
+    "settings.license.note.title": "Protected licensing",
     "settings.license.note.text":
-      "Real licensing is frozen for this release: no key is validated, no server is called, and no payment is integrated.",
+      "Access is bound to the Google account and first activated computer. Codes can only be redeemed once.",
     "settings.privacy.title": "Privacy",
     "settings.privacy.description":
       "NEX local commitments and a visual base for future preferences.",
     "settings.privacy.local": "NEX runs locally.",
     "settings.privacy.noTelemetry": "No mandatory telemetry.",
     "settings.privacy.noUpload": "No automatic data upload.",
-    "settings.privacy.noCloud": "No mandatory cloud, account, or login.",
+    "settings.privacy.noCloud":
+      "No mandatory diagnostic uploads; only account and license use the server.",
     "settings.privacy.share.title": "Share anonymous data",
     "settings.privacy.share.description":
       "Future option. Disabled by default with no collection in this phase.",
@@ -411,6 +416,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "sidebar.repair": "Reparar Windows",
     "sidebar.scheduler": "Mantenimiento Programado",
     "sidebar.custom": "Personalizado",
+    "sidebar.account": "Mi cuenta",
     "sidebar.settings": "Configuracion",
     "settings.eyebrow": "CONFIGURACION",
     "settings.title": "Configuracion",
@@ -470,23 +476,24 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "En esta etapa, Configuración y la navegación principal ya responden al idioma elegido.",
     "settings.license.title": "Licencia",
     "settings.license.description":
-      "Área comercial preparada sin activación, servidor, pago o validación real.",
+      "Cuenta Google, códigos de un solo uso y validación de acceso en línea.",
     "settings.license.version": "Version actual",
     "settings.license.channel": "Canal actual",
     "settings.license.status": "Estado de licencia",
     "settings.license.activation": "Activacion",
-    "settings.license.devMode": "Congelada para esta release",
-    "settings.license.notImplemented": "Activacion no disponible",
-    "settings.license.note.title": "Sin licencia real",
+    "settings.license.devMode": "Servidor pendiente de configuración",
+    "settings.license.notImplemented": "Activación en Mi cuenta",
+    "settings.license.note.title": "Licencia protegida",
     "settings.license.note.text":
-      "La licencia real está congelada en esta release: no se valida clave, no se llama servidor y no se integra pago.",
+      "El acceso se vincula a la cuenta Google y al primer equipo activado. Cada código solo puede canjearse una vez.",
     "settings.privacy.title": "Privacidad",
     "settings.privacy.description":
       "Compromisos locales de NEX y base visual para preferencias futuras.",
     "settings.privacy.local": "NEX funciona localmente.",
     "settings.privacy.noTelemetry": "Sin telemetria obligatoria.",
     "settings.privacy.noUpload": "Sin envio automático de datos.",
-    "settings.privacy.noCloud": "Sin nube obligatoria, cuenta o login.",
+    "settings.privacy.noCloud":
+      "Sin carga obligatoria de diagnósticos; solo la cuenta y la licencia usan el servidor.",
     "settings.privacy.share.title": "Compartir datos anónimos",
     "settings.privacy.share.description":
       "Opción futura. Desactivada por defecto y sin recopilación en esta fase.",
@@ -523,6 +530,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "sidebar.repair": "Windows修復",
     "sidebar.scheduler": "定期メンテナンス",
     "sidebar.custom": "カスタム",
+    "sidebar.account": "マイアカウント",
     "sidebar.settings": "設定",
     "settings.eyebrow": "設定",
     "settings.title": "設定",
@@ -578,23 +586,23 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.language.note.text":
       "この段階では、設定画面とメインナビゲーションが選択した言語に対応します。",
     "settings.license.title": "ライセンス",
-    "settings.license.description":
-      "有効化、サーバー、支払い、実検証なしで準備された商用エリアです。",
+    "settings.license.description": "Google アカウント、使い捨てコード、オンラインアクセス検証。",
     "settings.license.version": "現在のバージョン",
     "settings.license.channel": "現在のチャンネル",
     "settings.license.status": "ライセンス状態",
     "settings.license.activation": "有効化",
-    "settings.license.devMode": "このリリースでは凍結",
-    "settings.license.notImplemented": "有効化は未対応",
-    "settings.license.note.title": "実ライセンスなし",
+    "settings.license.devMode": "サーバー設定待ち",
+    "settings.license.notImplemented": "マイアカウントで有効化",
+    "settings.license.note.title": "保護されたライセンス",
     "settings.license.note.text":
-      "このリリースでは実ライセンスを凍結しています。キー検証、サーバー呼び出し、支払い連携はありません。",
+      "アクセスは Google アカウントと最初に有効化した PC に関連付けられます。コードは一度だけ利用できます。",
     "settings.privacy.title": "プライバシー",
     "settings.privacy.description": "NEXのローカル方針と今後のプライバシー設定のベースです。",
     "settings.privacy.local": "NEXはローカルで動作します。",
     "settings.privacy.noTelemetry": "必須テレメトリなし。",
     "settings.privacy.noUpload": "データの自動送信なし。",
-    "settings.privacy.noCloud": "必須クラウド、アカウント、ログインなし。",
+    "settings.privacy.noCloud":
+      "診断情報の必須アップロードはありません。アカウントとライセンスのみサーバーを使用します。",
     "settings.privacy.share.title": "匿名データを共有",
     "settings.privacy.share.description":
       "今後のオプションです。標準では無効で、この段階では収集はありません。",
@@ -731,7 +739,7 @@ export function readPreferences(): HermesAdminPreferences {
     const parsed = JSON.parse(raw) as Partial<HermesAdminPreferences>;
     return mergePreferences(parsed);
   } catch (error) {
-    console.warn("Falha ao ler preferencias locais do Hermes.", error);
+    console.warn("Falha ao ler preferencias locais do NEX.", error);
     return {
       ...defaultPreferences,
       updatedAt: new Date().toISOString(),

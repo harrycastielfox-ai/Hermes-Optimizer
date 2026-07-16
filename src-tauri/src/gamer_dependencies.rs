@@ -428,7 +428,7 @@ fn install_verified_blocking(
     }
     if !dry_run && !is_process_elevated() {
         return Err(
-            "Instalacao real exige que o Hermes esteja aberto como administrador.".to_string(),
+            "Instalacao real exige que o NEX esteja aberto como administrador.".to_string(),
         );
     }
 
@@ -470,13 +470,17 @@ fn install_verified_blocking(
         .iter()
         .filter(|item| matches!(item.status, GamerDependencyInstallActionStatus::DryRun))
         .count();
-    let final_report = verify_installers_blocking(
-        app,
-        GamerDependencyVerifyRequest {
-            packages: request.packages,
-            package_ids: None,
-        },
-    )?;
+    let final_report = if dry_run {
+        verification
+    } else {
+        verify_installers_blocking(
+            app,
+            GamerDependencyVerifyRequest {
+                packages: request.packages,
+                package_ids: None,
+            },
+        )?
+    };
 
     let message = if dry_run {
         format!(
@@ -1017,7 +1021,7 @@ fn verify_package(
 
     if !file_exists {
         if !installed_locally {
-            blocked_reasons.push("Instalador ainda nao esta no cache local do Hermes.".to_string());
+            blocked_reasons.push("Instalador ainda nao esta no cache local do NEX.".to_string());
         }
         return GamerDependencyVerificationItem {
             package_id: package.id.clone(),

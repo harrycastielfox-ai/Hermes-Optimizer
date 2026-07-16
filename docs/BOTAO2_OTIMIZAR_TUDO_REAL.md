@@ -18,8 +18,8 @@ Este documento descreve o contrato do Botao 2 depois que a Fase 1 ja foi conclui
 - Limpeza: Clean Engine com itens seguros.
 - Inicializacao: Startup Engine para itens controlaveis de alto impacto.
 - Performance: energia, Game Mode, GameDVR e visual controlado.
-- Gamer: jogo alvo, Fate Trigger/UE5, Discord/Steam protegidos e processos seguros.
-- Perfil: aplica o perfil recomendado quando liberado.
+- Gamer global: prioriza automaticamente Fate Trigger/UE5 quando disponivel, protege Discord/Steam e trata processos seguros sem pedir escolha manual.
+- Consolidacao global: combina os motores implementados sem perfil favorito e sem persistir preferencia de perfil.
 - Avancado guiado: comandos allowlistados, sem alto risco/extremo automatico.
 
 ## Resultado esperado

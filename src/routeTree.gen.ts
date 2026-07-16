@@ -21,10 +21,12 @@ import { Route as LimpezaRouteImport } from './routes/limpeza'
 import { Route as InicializacaoRouteImport } from './routes/inicializacao'
 import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
 import { Route as DefenderRouteImport } from './routes/defender'
+import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as CentralRouteImport } from './routes/central'
 import { Route as AntiCheatRouteImport } from './routes/anti-cheat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminLicencasRouteImport } from './routes/admin.licencas'
 
 const SegurancaRoute = SegurancaRouteImport.update({
   id: '/seguranca',
@@ -86,6 +88,11 @@ const DefenderRoute = DefenderRouteImport.update({
   path: '/defender',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContaRoute = ContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -106,12 +113,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLicencasRoute = AdminLicencasRouteImport.update({
+  id: '/admin/licencas',
+  path: '/admin/licencas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
@@ -124,12 +137,14 @@ export interface FileRoutesByFullPath {
   '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
+  '/admin/licencas': typeof AdminLicencasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
@@ -142,6 +157,7 @@ export interface FileRoutesByTo {
   '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
+  '/admin/licencas': typeof AdminLicencasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +165,7 @@ export interface FileRoutesById {
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
   '/diagnostico': typeof DiagnosticoRoute
   '/inicializacao': typeof InicializacaoRoute
@@ -161,6 +178,7 @@ export interface FileRoutesById {
   '/preparar-ambiente': typeof PrepararAmbienteRoute
   '/reparar-windows': typeof RepararWindowsRoute
   '/seguranca': typeof SegurancaRoute
+  '/admin/licencas': typeof AdminLicencasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -169,6 +187,7 @@ export interface FileRouteTypes {
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/conta'
     | '/defender'
     | '/diagnostico'
     | '/inicializacao'
@@ -181,12 +200,14 @@ export interface FileRouteTypes {
     | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
+    | '/admin/licencas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/conta'
     | '/defender'
     | '/diagnostico'
     | '/inicializacao'
@@ -199,12 +220,14 @@ export interface FileRouteTypes {
     | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
+    | '/admin/licencas'
   id:
     | '__root__'
     | '/'
     | '/anti-cheat'
     | '/central'
     | '/configuracoes'
+    | '/conta'
     | '/defender'
     | '/diagnostico'
     | '/inicializacao'
@@ -217,6 +240,7 @@ export interface FileRouteTypes {
     | '/preparar-ambiente'
     | '/reparar-windows'
     | '/seguranca'
+    | '/admin/licencas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -224,6 +248,7 @@ export interface RootRouteChildren {
   AntiCheatRoute: typeof AntiCheatRoute
   CentralRoute: typeof CentralRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ContaRoute: typeof ContaRoute
   DefenderRoute: typeof DefenderRoute
   DiagnosticoRoute: typeof DiagnosticoRoute
   InicializacaoRoute: typeof InicializacaoRoute
@@ -236,6 +261,7 @@ export interface RootRouteChildren {
   PrepararAmbienteRoute: typeof PrepararAmbienteRoute
   RepararWindowsRoute: typeof RepararWindowsRoute
   SegurancaRoute: typeof SegurancaRoute
+  AdminLicencasRoute: typeof AdminLicencasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -324,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefenderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conta': {
+      id: '/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof ContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
@@ -352,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/licencas': {
+      id: '/admin/licencas'
+      path: '/admin/licencas'
+      fullPath: '/admin/licencas'
+      preLoaderRoute: typeof AdminLicencasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -360,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   AntiCheatRoute: AntiCheatRoute,
   CentralRoute: CentralRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  ContaRoute: ContaRoute,
   DefenderRoute: DefenderRoute,
   DiagnosticoRoute: DiagnosticoRoute,
   InicializacaoRoute: InicializacaoRoute,
@@ -372,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrepararAmbienteRoute: PrepararAmbienteRoute,
   RepararWindowsRoute: RepararWindowsRoute,
   SegurancaRoute: SegurancaRoute,
+  AdminLicencasRoute: AdminLicencasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

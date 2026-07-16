@@ -116,7 +116,7 @@ function OtimizacoesPage() {
             <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold tracking-[0.18em] text-primary">
-                  O QUE O HERMES RECOMENDA
+                  O QUE O NEX RECOMENDA
                 </h2>
                 <p className="text-[12px] text-muted-foreground mt-1">
                   Primeira camada em linguagem simples. Os detalhes técnicos continuam disponíveis

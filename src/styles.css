@@ -45,6 +45,23 @@
   --font-display: "Inter", system-ui, sans-serif;
 }
 
+.hermes-window-resize {
+  position: fixed;
+  background: transparent;
+  pointer-events: none;
+}
+
+.hermes-window-resize--n,
+.hermes-window-resize--s,
+.hermes-window-resize--e,
+.hermes-window-resize--w,
+.hermes-window-resize--ne,
+.hermes-window-resize--nw,
+.hermes-window-resize--se,
+.hermes-window-resize--sw {
+  background: transparent;
+}
+
 :root {
   --radius: 0.875rem;
   --background: oklch(0.985 0.003 285);

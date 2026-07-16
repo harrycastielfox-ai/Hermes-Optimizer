@@ -1216,7 +1216,7 @@ fn gamer_previous_state(
             key: "gamer-active-profile".to_string(),
             category: RestorePreviousStateCategory::Metadata,
             value: format!("{} | {}", profile.game_name, profile.executable),
-            source: "Hermes gamer_profiles.json".to_string(),
+            source: "NEX gamer_profiles.json".to_string(),
             captured: true,
         });
     }
@@ -1366,7 +1366,7 @@ fn close_process_gracefully(process: &GamerProcess) -> GamerCloseResult {
             pid: process.pid,
             name: process.display_name.clone(),
             status: GamerCloseStatus::Skipped,
-            message: "Processo protegido pela denylist Hermes.".to_string(),
+            message: "Processo protegido pela denylist NEX.".to_string(),
         };
     }
 

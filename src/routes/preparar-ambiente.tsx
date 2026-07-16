@@ -179,7 +179,7 @@ function PrepararAmbientePage() {
                 </h2>
                 <p className="mt-1 text-[12px] text-muted-foreground">
                   Inspirado no setup em fases, mas com transparencia, modulo certo e rollback do
-                  Hermes.
+                  NEX.
                 </p>
               </div>
               <span className="w-fit rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">

@@ -1197,7 +1197,7 @@ function readTasks(): { tasks: SchedulerTask[]; removedLegacyDefaults: boolean }
 
     return { tasks: normalizedTasks, removedLegacyDefaults };
   } catch (error) {
-    console.warn("Falha ao ler tarefas programadas Hermes.", error);
+    console.warn("Falha ao ler tarefas programadas NEX.", error);
     saveTasks([]);
     return { tasks: [], removedLegacyDefaults: false };
   }
@@ -1230,7 +1230,7 @@ function readHistory(clearLegacyHistory = false): SchedulerHistoryEntry[] {
     const parsed = JSON.parse(raw) as SchedulerHistoryEntry[];
     return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
   } catch (error) {
-    console.warn("Falha ao ler histórico do Scheduler Hermes.", error);
+    console.warn("Falha ao ler histórico do Scheduler NEX.", error);
     return [];
   }
 }

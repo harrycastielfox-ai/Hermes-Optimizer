@@ -1,4 +1,12 @@
-import { CalendarClock, Home, LockKeyhole, Settings, ShieldCheck, Zap } from "lucide-react";
+import {
+  CalendarClock,
+  Home,
+  LockKeyhole,
+  Settings,
+  ShieldCheck,
+  UserRound,
+  Zap,
+} from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { useHermesTranslation } from "@/lib/preferences";
@@ -9,6 +17,7 @@ const items = [
   { icon: LockKeyhole, labelKey: "sidebar.antiCheat", to: "/anti-cheat" },
   { icon: ShieldCheck, labelKey: "sidebar.defender", to: "/defender" },
   { icon: CalendarClock, labelKey: "sidebar.scheduler", to: "/manutencao-programada" },
+  { icon: UserRound, labelKey: "sidebar.account", to: "/conta" },
   { icon: Settings, labelKey: "sidebar.settings", to: "/configuracoes" },
 ] as const;
 

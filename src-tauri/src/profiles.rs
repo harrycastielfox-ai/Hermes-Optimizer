@@ -266,7 +266,7 @@ fn profiles_apply_blocking(
             if safe_mode::is_enabled() { safe_mode::notice() } else { "" }
         )
     } else {
-        "Perfil aplicado orquestrando engines Hermes com snapshot, log e rollback por engine."
+        "Perfil aplicado orquestrando engines NEX com snapshot, log e rollback por engine."
             .to_string()
     };
 
@@ -638,7 +638,7 @@ fn recommended_profile_path(app: &AppHandle) -> Result<PathBuf, String> {
     let mut dir = app
         .path()
         .app_data_dir()
-        .map_err(|err| format!("Nao foi possivel localizar AppData do Hermes: {err}"))?;
+        .map_err(|err| format!("Nao foi possivel localizar AppData do NEX: {err}"))?;
     dir.push("recommended_profile.json");
     Ok(dir)
 }

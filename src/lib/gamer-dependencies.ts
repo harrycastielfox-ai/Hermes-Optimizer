@@ -453,6 +453,23 @@ export async function installVerifiedGamerDependencies(
 export async function prepareAndInstallVerifiedGamerDependencies(
   request: GamerDependencyInstallRequest,
 ): Promise<GamerDependencyPreparedInstallResult> {
+  if (request.dryRun) {
+    const installResult = await installVerifiedGamerDependencies(request);
+    const downloadResult: GamerDependencyDownloadResult = {
+      downloadedCount: 0,
+      skippedCount: GAMER_DEPENDENCY_PACKAGES.length,
+      failedCount: 0,
+      messages: ["Modo teste: nenhum download foi iniciado."],
+      report: installResult.report,
+    };
+
+    return {
+      downloadResult,
+      installResult,
+      report: installResult.report,
+    };
+  }
+
   const downloadResult = await downloadOfficialGamerDependencyInstallers();
   const installResult = await installVerifiedGamerDependencies(request);
 

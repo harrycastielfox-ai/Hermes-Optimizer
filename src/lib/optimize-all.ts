@@ -21,7 +21,6 @@ import {
   type PerformanceApplyResult,
   type PerformanceReport,
 } from "@/lib/performance";
-import { applyHermesProfile, loadProfilesCatalog, type ProfileApplyResult } from "@/lib/profiles";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 import {
   applyStartupEngine,
@@ -70,7 +69,6 @@ export type OptimizeAllReports = {
   gamerResult?: GamerApplyResult;
   advisor?: AdvisorAiReport;
   plan?: OptimizeNowPlan;
-  profileResult?: ProfileApplyResult;
   advanced?: AdvancedCatalog;
   advancedResult?: AdvancedApplyResult;
   gamerFocusAdvanced?: AdvancedCatalog;
@@ -94,23 +92,10 @@ export type OptimizeAllGameTarget = {
   engineHint?: string;
 };
 
-export type OptimizeAllGameSelection = {
-  target?: OptimizeAllGameTarget;
-  skip?: boolean;
-};
-
-export type OptimizeAllPhaseContext = {
-  reports: OptimizeAllReports;
-  recommendedProfileId: string;
-  gameSelection?: OptimizeAllGameSelection;
-};
-
 export type OptimizeAllPhaseResult = {
   outputs: string[];
   reports?: Partial<OptimizeAllReports>;
-  recommendedProfileId?: string;
   gameTargets?: OptimizeAllGameTarget[];
-  requiresGameSelection?: boolean;
 };
 
 export const HERMES_PREPARE_ADVANCED_ACTION_IDS = [
@@ -182,7 +167,6 @@ const HERMES_GAMER_FOCUS_ACTION_IDS = [
 
 export async function runOptimizeAllPhase(
   phaseId: OptimizeAllPhaseId,
-  context: OptimizeAllPhaseContext,
 ): Promise<OptimizeAllPhaseResult> {
   if (phaseId === "plan") {
     return runPlanPhase();
@@ -211,15 +195,15 @@ export async function runOptimizeAllPhase(
   }
 
   if (phaseId === "performance") {
-    return runPerformancePhase(context.recommendedProfileId);
+    return runPerformancePhase();
   }
 
   if (phaseId === "gamer") {
-    return runGamerPhase(context);
+    return runGamerPhase();
   }
 
   if (phaseId === "profile") {
-    return runProfilePhase(context);
+    return runProfilePhase();
   }
 
   return runAdvancedPhase();
@@ -264,11 +248,11 @@ async function runCleanupPhase(): Promise<OptimizeAllPhaseResult> {
       cleanResult: result.value ?? undefined,
     },
     outputs: [
-      `${formatGb(clean.totalGb)} GB candidatos à revisão`,
-      `${clean.items.length} área(s) mapeada(s)`,
+      `${formatGb(clean.totalGb)} GB candidatos para revisao`,
+      `${clean.items.length} area(s) mapeada(s)`,
       result.value
         ? `${result.value.plannedEntries} item(ns) ${appliedVerb(result.value.dryRun)} pela Clean Engine`
-        : (result.message ?? "Sem item seguro selecionado para validação"),
+        : (result.message ?? "Sem item seguro selecionado para validacao"),
     ],
   };
 }
@@ -325,16 +309,15 @@ async function runStartupPhase(): Promise<OptimizeAllPhaseResult> {
 }
 
 async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
-  const [advanced, gamerDependencyVerification] = await Promise.all([
-    refreshAdvancedCatalog(),
-    verifyGamerDependencyInstallers(),
-  ]);
+  const advanced = await refreshAdvancedCatalog();
   const gamerDependencyPreparedResult = await tryRun(() =>
     prepareAndInstallVerifiedGamerDependencies({
       confirmed: shouldConfirmReal(),
       dryRun: shouldDryRun(),
     }),
   );
+  const gamerDependencyVerification =
+    gamerDependencyPreparedResult.value?.report ?? (await verifyGamerDependencyInstallers());
   const finalGamerDependencyVerification =
     gamerDependencyPreparedResult.value?.report ?? gamerDependencyVerification;
   const gamerDependencies = buildGamerDependencyReadiness(
@@ -382,9 +365,9 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
   };
 }
 
-async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseResult> {
+async function runPerformancePhase(): Promise<OptimizeAllPhaseResult> {
   const performance = await refreshPerformanceReport();
-  const actionIds = pickPerformanceActionIds(performance, profileId);
+  const actionIds = pickPerformanceActionIds(performance);
   const result = await tryRun(() =>
     actionIds.length
       ? applyPerformanceControlled({
@@ -411,23 +394,10 @@ async function runPerformancePhase(profileId: string): Promise<OptimizeAllPhaseR
   };
 }
 
-async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<OptimizeAllPhaseResult> {
+async function runGamerPhase(): Promise<OptimizeAllPhaseResult> {
   const gamer = await loadGamerReport();
   const gameTargets = buildGameTargets(gamer);
-
-  if (context.gameSelection?.skip) {
-    return {
-      reports: { gamer },
-      gameTargets,
-      outputs: [
-        `${gamer.summary.detectedGames} jogo(s) detectado(s)`,
-        "Seleção de jogo ignorada pelo usuário",
-        "Plano Gamer não foi aplicado nesta execução",
-      ],
-    };
-  }
-
-  const target = context.gameSelection?.target ?? pickGlobalGamerTarget(gameTargets);
+  const target = pickGlobalGamerTarget(gameTargets);
   const processIds = gamer.suggestedProcesses
     .filter((process) => process.canClose && process.recommendation === "suggestedClose")
     .map((process) => process.pid);
@@ -468,7 +438,7 @@ async function runGamerPhase(context: OptimizeAllPhaseContext): Promise<Optimize
         : "Prioridade do jogo aguardando deteccao",
       result.value
         ? `${result.value.closedProcesses.length} processo(s) ${result.value.dryRun ? "validados" : "fechados"} pela Gamer Engine`
-        : (result.message ?? "Seleção manual de jogo será necessária"),
+        : (result.message ?? "Pacote gamer global validado sem jogo aberto"),
     ],
   };
 }
@@ -535,42 +505,18 @@ async function runGamerFocusPackage(target?: OptimizeAllGameTarget) {
   };
 }
 
-async function runProfilePhase(context: OptimizeAllPhaseContext): Promise<OptimizeAllPhaseResult> {
-  const catalog = await loadProfilesCatalog();
-  const profileId = pickProfile(
-    context.reports,
-    catalog.profiles.map((item) => item.id),
-  );
-  const result = await tryRun(() =>
-    applyHermesProfile({
-      profileId,
-      confirmed: shouldConfirmReal(),
-      dryRun: shouldDryRun(),
-      extremeConfirmed: !HERMES_SAFE_TEST_MODE && profileId === "extremo",
-    }),
-  );
-
+async function runProfilePhase(): Promise<OptimizeAllPhaseResult> {
   return {
-    recommendedProfileId: profileId,
-    reports: {
-      profileResult: result.value ?? undefined,
-    },
     outputs: [
-      `Plano global interno: ${profileLabel(profileId)}`,
-      result.value?.recommendedProfilePersisted
-        ? "Plano global salvo localmente"
-        : "Plano global aguardando persistencia",
-      result.value?.conflictWarnings.length
-        ? `${result.value.conflictWarnings.length} conflito(s) de perfil detectado(s)`
-        : "Perfil sem conflito critico",
-      result.value
-        ? `${result.value.engineResults.length} engine(s) ${appliedVerb(result.value.dryRun)} pelo perfil`
-        : (result.message ?? "Perfil disponível para revisão manual"),
-      HERMES_SAFE_TEST_MODE ? "Nenhuma alteração real aplicada" : "Perfil aplicado no modo real",
+      "Consolidacao global validada",
+      "Sem perfil favorito, sem escolha manual e sem persistir preferencia de perfil",
+      "Performance, limpeza, inicializacao, Gamer/Fate Trigger e Advanced Engine seguem no mesmo fluxo",
+      HERMES_SAFE_TEST_MODE
+        ? "Nenhuma alteracao real aplicada"
+        : "Plano global aplicado no modo real",
     ],
   };
 }
-
 async function runAdvancedPhase(): Promise<OptimizeAllPhaseResult> {
   const advanced = await refreshAdvancedCatalog();
   const availableIds = new Set(
@@ -617,62 +563,21 @@ function appliedVerb(dryRun: boolean) {
   return dryRun ? "validados" : "aplicados";
 }
 
-function pickProfile(reports: OptimizeAllReports, availableProfiles: string[]) {
-  const raw = reports.advisor?.summary.recommendedProfile?.toLowerCase() ?? "";
-  const candidates = [
-    ["extremo", "extremo"],
-    ["gamer", "gamer"],
-    ["jogo", "gamer"],
-    ["economia", "economia"],
-    ["trabalho", "trabalho"],
-    ["seguro", "seguro"],
-  ] as const;
-
-  for (const [needle, profileId] of candidates) {
-    if (raw.includes(needle) && availableProfiles.includes(profileId)) {
-      return profileId;
-    }
-  }
-
-  if ((reports.gamer?.summary.detectedGames ?? 0) > 0 && availableProfiles.includes("gamer")) {
-    return "gamer";
-  }
-
-  if (
-    ((reports.startup?.highImpactCount ?? 0) > 0 || (reports.clean?.totalGb ?? 0) > 1) &&
-    availableProfiles.includes("trabalho")
-  ) {
-    return "trabalho";
-  }
-
-  return availableProfiles.includes("seguro") ? "seguro" : (availableProfiles[0] ?? "seguro");
-}
-
-function pickPerformanceActionIds(report: PerformanceReport, profileId: string): string[] {
+function pickPerformanceActionIds(report: PerformanceReport): string[] {
   const ids = report.settings
     .filter((item) => item.canOptimizeLater)
-    .map((item) => performanceSettingToActionId(item.id, profileId))
+    .map((item) => performanceSettingToActionId(item.id))
     .filter((item): item is string => Boolean(item));
 
   if (ids.length > 0) {
     return [...new Set(ids)].slice(0, 5);
   }
 
-  if (profileId === "economia") {
-    return ["set-power-saver-power-plan"];
-  }
-
-  if (profileId === "seguro" || profileId === "trabalho") {
-    return ["set-balanced-power-plan"];
-  }
-
   return ["set-high-performance-power-plan"];
 }
 
-function performanceSettingToActionId(settingId: string, profileId: string): string | undefined {
+function performanceSettingToActionId(settingId: string): string | undefined {
   if (settingId === "power-plan") {
-    if (profileId === "economia") return "set-power-saver-power-plan";
-    if (profileId === "seguro" || profileId === "trabalho") return "set-balanced-power-plan";
     return "set-high-performance-power-plan";
   }
   if (settingId === "transparency") return "disable-transparency";
@@ -711,7 +616,7 @@ function buildGameTargets(report: GamerReport): OptimizeAllGameTarget[] {
   targets.push({
     id: "preset-fate-trigger-ue5",
     label: "Fate Trigger",
-    detail: "Prioridade Hermes: Fate Trigger via Steam em Unreal Engine 5.",
+    detail: "Prioridade NEX: Fate Trigger via Steam em Unreal Engine 5.",
     source: "preset",
     confidence: "high",
     executable: "FateTrigger-Win64-Shipping.exe",
@@ -825,14 +730,6 @@ async function tryRun<T>(task: () => Promise<T | null>): Promise<{ value?: T; me
   } catch (error) {
     return { message: errorMessage(error) };
   }
-}
-
-function profileLabel(profileId: string) {
-  if (profileId === "gamer") return "Gamer";
-  if (profileId === "trabalho") return "Trabalho";
-  if (profileId === "economia") return "Economia";
-  if (profileId === "extremo") return "Extremo";
-  return "Seguro";
 }
 
 function formatGb(value: number) {

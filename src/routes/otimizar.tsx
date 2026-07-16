@@ -561,6 +561,7 @@ function OptimizationPhaseBoard({
       }).format(new Date(quickPrepareGate.completedAt))
     : null;
   const phase2Ready = !optimizeLocked && !optimizeWaitingForRestart;
+  const phase1Locked = Boolean(quickPrepareGate) && prepareRebootStatus === "confirmed";
   const phase2StatusLabel = optimizeLocked
     ? "Bloqueado"
     : optimizeWaitingForRestart
@@ -597,7 +598,11 @@ function OptimizationPhaseBoard({
       )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <article className="rounded-2xl border border-success/35 bg-card/90 p-3.5 shadow-[0_18px_38px_-32px_rgba(34,197,94,0.6)]">
+        <article
+          className={`rounded-2xl border p-3.5 shadow-[0_18px_38px_-32px_rgba(34,197,94,0.6)] ${
+            phase1Locked ? "border-success/25 bg-card/70" : "border-success/35 bg-card/90"
+          }`}
+        >
           <div className="mb-3 flex items-start justify-between gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-success text-sm font-black text-success-foreground shadow-[0_14px_30px_-20px_rgba(34,197,94,0.8)]">
               1
@@ -626,13 +631,23 @@ function OptimizationPhaseBoard({
             type="button"
             data-testid="hermes-prepare-start"
             onClick={onPrepare}
-            disabled={isQuickPrepareOpen}
+            disabled={isQuickPrepareOpen || phase1Locked}
             className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-center text-sm font-black text-primary-foreground shadow-[0_14px_34px_-24px_rgba(37,99,235,0.95)] transition hover:bg-primary/95 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isQuickPrepareOpen ? "Preparando..." : "Iniciar Preparação"}
+            {isQuickPrepareOpen ? (
+              "Preparando..."
+            ) : phase1Locked ? (
+              <>
+                <Lock className="mr-2 h-4 w-4" /> Fase 1 concluída
+              </>
+            ) : (
+              "Iniciar Preparação"
+            )}
           </button>
           <p className="mt-2 text-center text-[12px] font-bold text-muted-foreground">
-            Leva de 2 a 5 minutos. Depois reinicie para a Fase 2 render melhor.
+            {phase1Locked
+              ? "Novo boot confirmado. Continue somente pela Fase 2."
+              : "Leva de 2 a 5 minutos. Depois reinicie para a Fase 2 render melhor."}
           </p>
         </article>
 

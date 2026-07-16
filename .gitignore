@@ -17,6 +17,9 @@ src-tauri/target*/
 .tanstack/**
 .nitro
 *.local
+.env
+.env.*
+!.env.example
 .release/
 src-tauri/tauri.windows.signing.local.json
 diagnostics/

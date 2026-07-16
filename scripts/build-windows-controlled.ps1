@@ -5,6 +5,7 @@ param(
   [ValidateSet("all", "msi", "nsis")]
   [string]$Bundles = "all",
 
+  [switch]$InternalQaBypass,
   [switch]$Signed,
   [string]$CertificateThumbprint = $env:HERMES_CERT_THUMBPRINT,
   [string]$TimestampUrl = $env:HERMES_TIMESTAMP_URL,
@@ -16,7 +17,16 @@ $ErrorActionPreference = "Stop"
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $releaseGateScript = Join-Path $PSScriptRoot "verify-release-gates.ps1"
 $safeModeValue = if ($Mode -eq "real") { "false" } else { "true" }
+$internalQaBypassValue = if ($InternalQaBypass) { "true" } else { "false" }
 $bundleTargets = if ($Bundles -eq "all") { "msi,nsis" } else { $Bundles }
+
+if ($InternalQaBypass -and $Mode -ne "real") {
+  throw "O bypass interno de QA so pode ser usado com -Mode real."
+}
+
+if ($InternalQaBypass -and $Signed) {
+  throw "Build assinado bloqueado: o bypass interno de QA nunca pode acompanhar um release assinado."
+}
 
 function Normalize-Thumbprint {
   param([string]$Thumbprint)
@@ -106,15 +116,21 @@ if ($LASTEXITCODE -ne 0) {
 
 $env:VITE_HERMES_SAFE_TEST_MODE = $safeModeValue
 $env:HERMES_SAFE_TEST_MODE = $safeModeValue
+$env:VITE_NEX_INTERNAL_QA_BYPASS = $internalQaBypassValue
 
 Write-Host "Hermes Windows build"
 Write-Host "Modo: $Mode"
 Write-Host "Frontend VITE_HERMES_SAFE_TEST_MODE=$env:VITE_HERMES_SAFE_TEST_MODE"
 Write-Host "Backend  HERMES_SAFE_TEST_MODE=$env:HERMES_SAFE_TEST_MODE"
+Write-Host "Licenca VITE_NEX_INTERNAL_QA_BYPASS=$env:VITE_NEX_INTERNAL_QA_BYPASS"
 Write-Host "Bundles: $bundleTargets"
 
 if ($Mode -eq "real") {
   Write-Host "ATENCAO: este build libera execucao real nas engines implementadas." -ForegroundColor Yellow
+}
+
+if ($InternalQaBypass) {
+  Write-Host "QA INTERNO: login/licenca ignorados somente neste build nao assinado." -ForegroundColor Yellow
 }
 
 $configPath = $null

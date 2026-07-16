@@ -56,6 +56,12 @@ Assert-True ($controlledBuild -match '\$env:VITE_HERMES_SAFE_TEST_MODE\s*=\s*\$s
   "Build controlado precisa setar VITE_HERMES_SAFE_TEST_MODE."
 Assert-True ($controlledBuild -match '\$env:HERMES_SAFE_TEST_MODE\s*=\s*\$safeModeValue') `
   "Build controlado precisa setar HERMES_SAFE_TEST_MODE."
+Assert-True ($controlledBuild -match '\$env:VITE_NEX_INTERNAL_QA_BYPASS\s*=\s*\$internalQaBypassValue') `
+  "Build controlado precisa definir explicitamente VITE_NEX_INTERNAL_QA_BYPASS."
+Assert-True ($controlledBuild -match '\$InternalQaBypass\s*-and\s*\$Mode\s*-ne\s*"real"') `
+  "Bypass interno de QA precisa aceitar somente -Mode real."
+Assert-True ($controlledBuild -match '\$InternalQaBypass\s*-and\s*\$Signed') `
+  "Build controlado precisa bloquear bypass interno de QA junto com assinatura."
 Assert-True ($controlledBuild -match 'Frontend VITE_HERMES_SAFE_TEST_MODE=') `
   "Build controlado precisa imprimir o modo seguro do frontend."
 Assert-True ($controlledBuild -match 'Backend\s+HERMES_SAFE_TEST_MODE=') `

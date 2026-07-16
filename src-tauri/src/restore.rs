@@ -279,7 +279,7 @@ pub fn restore_create_snapshot(
     let snapshot = RestoreSnapshot {
         id: snapshot_id.clone(),
         timestamp: timestamp.clone(),
-        name: text_or(request.name, "Snapshot de seguranca Hermes".to_string()),
+        name: text_or(request.name, "Snapshot de seguranca NEX".to_string()),
         description: text_or(
             request.description,
             "Snapshot estrutural local criado antes de otimizacoes reais.".to_string(),
@@ -390,7 +390,7 @@ pub fn restore_engine_status(app: AppHandle) -> Result<RestoreEngineStatus, Stri
             "Mantem ate {} snapshots e {} eventos locais.",
             MAX_RESTORE_SNAPSHOTS, MAX_RESTORE_EVENTS
         ),
-        storage: "AppData local do Hermes, pasta history.".to_string(),
+        storage: "AppData local do NEX, pasta history.".to_string(),
         ready_for_real_actions: unsupported_rollback_actions == 0 && failed_snapshots == 0,
         warnings,
     })
@@ -754,7 +754,7 @@ fn validate_rollback_action(action: &RestoreRollbackAction) -> RestoreActionResu
                 return RestoreActionResult {
                     action_id: action.id.clone(),
                     status: RestoreActionResultStatus::Unsupported,
-                    message: "Rollback customizado nao reconhecido pelo Hermes.".to_string(),
+                    message: "Rollback customizado nao reconhecido pelo NEX.".to_string(),
                 };
             }
 
@@ -794,7 +794,7 @@ fn validate_scoped_registry_value_action(
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
-            message: format!("{scope}: caminho de Registro fora da allowlist Hermes."),
+            message: format!("{scope}: caminho de Registro fora da allowlist NEX."),
         };
     }
 
@@ -802,7 +802,7 @@ fn validate_scoped_registry_value_action(
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
-            message: format!("{scope}: valor de Registro fora da allowlist Hermes."),
+            message: format!("{scope}: valor de Registro fora da allowlist NEX."),
         };
     }
 
@@ -832,7 +832,7 @@ fn validate_scoped_registry_value_action(
     RestoreActionResult {
         action_id: action.id.clone(),
         status: RestoreActionResultStatus::DryRun,
-        message: format!("{scope}: rollback validado dentro da allowlist Hermes."),
+        message: format!("{scope}: rollback validado dentro da allowlist NEX."),
     }
 }
 
@@ -921,7 +921,7 @@ fn restore_defender_exclusion_action(action: &RestoreRollbackAction) -> RestoreA
         Ok(_) => RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Applied,
-            message: "Exclusao do Hermes removida do Windows Defender.".to_string(),
+            message: "Exclusao do NEX removida do Windows Defender.".to_string(),
         },
         Err(error) => RestoreActionResult {
             action_id: action.id.clone(),
@@ -936,7 +936,7 @@ fn validate_defender_exclusion_action(action: &RestoreRollbackAction) -> Restore
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Unsupported,
-            message: "Rollback do Defender nao reconhecido pelo Hermes.".to_string(),
+            message: "Rollback do Defender nao reconhecido pelo NEX.".to_string(),
         };
     }
 
@@ -974,7 +974,7 @@ fn restore_scoped_registry_value_action(
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
             message: format!(
-                "Rollback bloqueado: caminho de Registro fora da allowlist Hermes para {scope}."
+                "Rollback bloqueado: caminho de Registro fora da allowlist NEX para {scope}."
             ),
         };
     }
@@ -984,7 +984,7 @@ fn restore_scoped_registry_value_action(
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
             message: format!(
-                "Rollback bloqueado: valor de Registro fora da allowlist Hermes para {scope}."
+                "Rollback bloqueado: valor de Registro fora da allowlist NEX para {scope}."
             ),
         };
     }
@@ -1110,7 +1110,7 @@ fn restore_custom_action(action: &RestoreRollbackAction) -> RestoreActionResult 
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Unsupported,
-            message: "Rollback customizado nao reconhecido pelo Hermes.".to_string(),
+            message: "Rollback customizado nao reconhecido pelo NEX.".to_string(),
         };
     }
 
@@ -1163,14 +1163,14 @@ fn validate_file_backup_action(action: &RestoreRollbackAction) -> RestoreActionR
         return RestoreActionResult {
             action_id: action.id.clone(),
             status: RestoreActionResultStatus::Failed,
-            message: "Backup de arquivo fora da quarentena Hermes.".to_string(),
+            message: "Backup de arquivo fora da quarentena NEX.".to_string(),
         };
     }
 
     RestoreActionResult {
         action_id: action.id.clone(),
         status: RestoreActionResultStatus::DryRun,
-        message: "Rollback de arquivo validado para quarentena Hermes.".to_string(),
+        message: "Rollback de arquivo validado para quarentena NEX.".to_string(),
     }
 }
 
@@ -1412,7 +1412,7 @@ fn is_allowed_registry_value_kind(value_kind: &str, allowed_value_kinds: &[&str]
 fn scoped_registry_success_message(scope: &str, previous_value: &str) -> String {
     if previous_value == "__HERMES_MISSING__" {
         return match scope {
-            "Inicializacao" => "Inicializacao restaurada: valor criado pelo Hermes foi removido da chave permitida. Nenhum programa foi apagado.".to_string(),
+            "Inicializacao" => "Inicializacao restaurada: valor criado pelo NEX foi removido da chave permitida. Nenhum programa foi apagado.".to_string(),
             "Efeitos visuais" => "Efeitos visuais restaurados: valor ausente anteriormente foi removido da chave permitida.".to_string(),
             "Game Mode" => "Game Mode restaurado: valor ausente anteriormente foi removido da chave permitida.".to_string(),
             _ => "Valor de Registro ausente anteriormente foi removido da chave permitida.".to_string(),
@@ -1661,10 +1661,10 @@ mod tests {
             id: "rollback-clean-file".to_string(),
             action_type: RestoreRollbackActionType::RestoreFileBackup,
             target: target.to_string_lossy().to_string(),
-            description: "Restaurar arquivo da quarentena Hermes.".to_string(),
+            description: "Restaurar arquivo da quarentena NEX.".to_string(),
             previous_value: None,
             backup_path: Some(backup.to_string_lossy().to_string()),
-            command_preview: Some("Move quarentena Hermes para origem permitida".to_string()),
+            command_preview: Some("Move quarentena NEX para origem permitida".to_string()),
             status: RestoreRollbackActionStatus::Pending,
         };
 

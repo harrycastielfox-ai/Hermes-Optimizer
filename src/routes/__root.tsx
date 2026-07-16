@@ -4,13 +4,17 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { HermesWindowChrome } from "../components/common/HermesWindowChrome";
+import { NexLicenseGate } from "../components/licensing/NexLicenseGate";
 import { reportClientError } from "../lib/lovable-error-reporting";
+import { NexAuthProvider } from "../lib/nex-auth";
 import { HermesPreferencesProvider } from "../lib/preferences";
 
 function NotFoundComponent() {
@@ -136,9 +140,28 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <HermesPreferencesProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <NexAuthProvider>
+          <HermesWindowChrome />
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <LicenseAwareOutlet />
+        </NexAuthProvider>
       </HermesPreferencesProvider>
     </QueryClientProvider>
   );
+}
+
+const PUBLIC_LICENSE_ROUTES = new Set([
+  "/",
+  "/conta",
+  "/configuracoes",
+  "/anti-cheat",
+  "/admin/licencas",
+]);
+
+function LicenseAwareOutlet() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const outlet = <Outlet />;
+
+  if (PUBLIC_LICENSE_ROUTES.has(pathname)) return outlet;
+  return <NexLicenseGate>{outlet}</NexLicenseGate>;
 }

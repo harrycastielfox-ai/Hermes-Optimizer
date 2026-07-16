@@ -535,7 +535,7 @@ fn disabled_item_to_startup_item(_index: usize, item: DisabledStartupItem) -> St
         can_disable_later: false,
         can_enable_later: true,
         controllable: is_current_user_startup_path(&item.registry_path),
-        control_reason: "Item desabilitado pelo Hermes; pode ser reativado com rollback."
+        control_reason: "Item desabilitado pelo NEX; pode ser reativado com rollback."
             .to_string(),
         registry_path: Some(item.registry_path),
         registry_value_name: Some(item.registry_value_name),
@@ -669,7 +669,7 @@ fn startup_previous_state(action: &StartupApplyAction, item: &StartupItem) -> Re
                 .clone()
                 .unwrap_or_else(|| "Registro indisponivel".to_string())
         ),
-        source: "Win32_StartupCommand/Hermes disabled store".to_string(),
+        source: "Win32_StartupCommand/NEX disabled store".to_string(),
         captured: item.registry_path.is_some() && item.registry_value_name.is_some(),
     }
 }

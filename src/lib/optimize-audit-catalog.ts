@@ -107,7 +107,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
       "risk-baseline",
       "Classificar risco inicial",
       "risk.baseline",
-      "Hermes local policy",
+      "NEX local policy",
       "analysis",
       "info",
       true,
@@ -418,7 +418,7 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
   auditPhase("startup", "Inicialização", "Apps de alto impacto", [...startupSeeds()]),
   auditPhase("performance", "Performance", "Energia, Game Mode e rede", [...performanceSeeds()]),
   auditPhase("gamer", "Sessão Gamer", "Jogo alvo, Discord e overlays", [...gamerSeeds()]),
-  auditPhase("profile", "Perfil recomendado", "Seguro, Trabalho, Gamer ou Extremo", [
+  auditPhase("profile", "Consolidação global", "Ajustes internos sem escolha manual", [
     ...profileSeeds(),
   ]),
   auditPhase("manual", "Avançado guiado", "Comandos allowlistados e ajustes finos", [
@@ -469,8 +469,8 @@ export const OPTIMIZE_AUDIT_PHASES: AuditPhaseDefinition[] = [
     ),
     a(
       "defender-exclusion-hermes",
-      "Permissao Defender do Hermes",
-      "Defender.Exclusion.Hermes",
+      "Permissao Defender do NEX",
+      "Defender.Exclusion.NEX",
       "allow-hermes-defender-exclusion",
       "engine",
       "medium",
@@ -686,7 +686,7 @@ function cleanupSeeds(): AuditSeed[] {
     "WER reports",
     "Installer leftovers",
     "Old update residues",
-    "Hermes quarantine purge",
+    "NEX quarantine purge",
     "DNS resolver cache",
     "Store cache",
     "NVIDIA shader cache",

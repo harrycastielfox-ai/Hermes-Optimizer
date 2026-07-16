@@ -716,7 +716,7 @@ fn build_clean_snapshot_request(
                     engine: "clean-engine".to_string(),
                     title: format!("Quarentenar {}", plan.item_label),
                     description: format!(
-                        "Mover {} para quarentena reversivel Hermes.",
+                        "Mover {} para quarentena reversivel NEX.",
                         path_text(&plan.original_path)
                     ),
                     risk: RestoreRiskLevel::Low,
@@ -800,12 +800,12 @@ fn plan_to_rollback(index: usize, plan: &CleanMovePlan) -> RestoreRollbackAction
         action_type: RestoreRollbackActionType::RestoreFileBackup,
         target: path_text(&plan.original_path),
         description: format!(
-            "Restaurar {} da quarentena Hermes para o local original.",
+            "Restaurar {} da quarentena NEX para o local original.",
             plan.item_label
         ),
         previous_value: None,
         backup_path: Some(path_text(&plan.backup_path)),
-        command_preview: Some("Move-Item from Hermes quarantine".to_string()),
+        command_preview: Some("Move-Item from NEX quarantine".to_string()),
         status: RestoreRollbackActionStatus::Pending,
     }
 }
@@ -1758,7 +1758,7 @@ foreach ($path in @($thumbnailPaths)) {
     [pscustomobject]@{
       id = 'log-rotation'
       label = 'Log rotation'
-      description = 'Rotacao interna dos historicos do Hermes; mantem apenas eventos recentes'
+      description = 'Rotacao interna dos historicos do NEX; mantem apenas eventos recentes'
       estimatedBytes = 0
       paths = @()
     }

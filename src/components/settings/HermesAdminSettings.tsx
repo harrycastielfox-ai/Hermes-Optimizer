@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Bell,
   CheckCircle2,
@@ -12,10 +13,11 @@ import {
   MonitorCog,
   Palette,
   RefreshCcw,
+  UserRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import { useHermesPreferences, type UpdateChannel } from "@/lib/preferences";
+import { useHermesPreferences } from "@/lib/preferences";
 
 export function HermesAdminSettings() {
   const { preferences, loaded, language, updatePreferences, resetPreferences, t } =
@@ -337,29 +339,20 @@ export function HermesAdminSettings() {
         </SettingsPanel>
 
         <SettingsPanel
-          icon={FileKey2}
-          title={t("settings.license.title")}
-          description={t("settings.license.description")}
+          icon={UserRound}
+          title="Conta e assinatura"
+          description="Login Google, resgate de código e dias restantes ficam reunidos na área da conta."
         >
-          <InfoGrid
-            items={[
-              { label: t("settings.license.version"), value: "0.x" },
-              {
-                label: t("settings.license.channel"),
-                value: channelLabel(preferences.updates.channel, t),
-              },
-              { label: t("settings.license.status"), value: t("settings.license.devMode") },
-              {
-                label: t("settings.license.activation"),
-                value: t("settings.license.notImplemented"),
-              },
-            ]}
-          />
-          <ReadonlyNote
-            icon={LockKeyhole}
-            title={t("settings.license.note.title")}
-            text={t("settings.license.note.text")}
-          />
+          <Link
+            to="/conta"
+            className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-black text-foreground transition hover:border-primary/50 hover:bg-primary/15"
+          >
+            <span className="flex items-center gap-3">
+              <FileKey2 className="h-5 w-5 text-primary" />
+              Abrir Minha conta
+            </span>
+            <span className="text-primary">→</span>
+          </Link>
         </SettingsPanel>
 
         <SettingsPanel
@@ -512,21 +505,6 @@ function ReadonlyNote({
   );
 }
 
-function InfoGrid({ items }: { items: Array<{ label: string; value: string }> }) {
-  return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {items.map((item) => (
-        <div key={item.label} className="rounded-xl border border-border/70 bg-card px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            {item.label}
-          </p>
-          <p className="mt-1 text-sm font-bold text-foreground">{item.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function PrivacyPromise({ text }: { text: string }) {
   return (
     <div className="flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">
@@ -534,17 +512,6 @@ function PrivacyPromise({ text }: { text: string }) {
       <span>{text}</span>
     </div>
   );
-}
-
-function channelLabel(
-  channel: UpdateChannel,
-  t: (key: "settings.option.beta" | "settings.option.future" | "settings.option.stable") => string,
-) {
-  if (channel === "beta") {
-    return `${t("settings.option.beta")} ${t("settings.option.future")}`;
-  }
-
-  return t("settings.option.stable");
 }
 
 function formatDate(value: string, language: string) {

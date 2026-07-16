@@ -77,7 +77,7 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
   - Prioridade Fate Trigger/UE5.
   - Ajustes avancados de rede.
   - Apps em segundo plano e notificacoes gamer via Advanced Engine.
-  - Perfil recomendado.
+  - Consolidacao global sem perfil favorito ou escolha manual.
   - Processos seguros com preservacao de Discord/Steam/anti-cheat.
 - Historico interno do que foi feito em execucoes anteriores para suporte/debug.
 - Checklist de QA e testes manuais.
@@ -114,6 +114,8 @@ A meta de produto e competir com otimizadores de alto nivel do mercado, unindo d
 
 - A meta oficial e construir um aplicativo capaz de disputar mercado, nao apenas um prototipo.
 - O fluxo principal sera em dois botoes.
+- Preparar PC e Otimizar Tudo executam uma otimizacao global; nenhum deles pede perfil favorito ou jogo para continuar.
+- Perfis e selecao manual de jogo permanecem preservados para um modulo futuro separado, sem interromper o fluxo global.
 - Fate Trigger/UE5 e prioridade especial do Perfil Gamer.
 - O modo de teste nao e o produto final, mas e mantido ate o motor real ser confiavel.
 - Rollback/snapshot nao deve bloquear o desejo de funcionamento, mas dados internos e reversibilidade continuam importantes para confianca.

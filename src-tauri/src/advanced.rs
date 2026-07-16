@@ -6,7 +6,7 @@
     },
     safe_mode,
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     fs,
     path::PathBuf,
@@ -207,19 +207,41 @@ enum AdvancedOperation {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct DnsInterfaceState {
+    #[serde(default, deserialize_with = "deserialize_nullable_string")]
     interface_alias: String,
+    #[serde(default, deserialize_with = "deserialize_nullable_string_vec")]
     server_addresses: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct ServiceStartModeState {
+    #[serde(default, deserialize_with = "deserialize_nullable_string")]
     name: String,
     start_mode: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+fn deserialize_nullable_string<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(Option::<String>::deserialize(deserializer)?.unwrap_or_default())
+}
+
+fn deserialize_nullable_string_vec<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(Option::<Vec<Option<String>>>::deserialize(deserializer)?
+        .unwrap_or_default()
+        .into_iter()
+        .flatten()
+        .filter(|value| !value.trim().is_empty())
+        .collect())
+}
+
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
 struct RawAdvancedState {
     auto_game_mode_enabled: Option<i64>,
     allow_auto_game_mode: Option<i64>,
@@ -416,7 +438,7 @@ fn execute_advanced_plans(
                 title: plan.action.title.clone(),
                 status: AdvancedActionStatus::DryRun,
                 message: format!(
-                    "{} â€” nenhum comando CMD/PowerShell/Registro foi executado.",
+                    "{} - nenhum comando CMD/PowerShell/Registro foi executado.",
                     safe_mode::mode_prefix(dry_run)
                 ),
             })
@@ -447,7 +469,7 @@ fn execute_advanced_plans(
         }
     } else if dry_run {
         format!(
-            "{} â€” comandos avancados validados com snapshot e rollback preparados. {}",
+            "{} - comandos avancados validados com snapshot e rollback preparados. {}",
             safe_mode::mode_prefix(dry_run),
             if safe_mode::is_enabled() {
                 safe_mode::notice()
@@ -2060,7 +2082,7 @@ fn check_gamer_dependencies_plan(state: &RawAdvancedState) -> AdvancedPlan {
         action: action(
             "check-gamer-dependencies",
             "Verificar dependencias gamer",
-            "LÃª VC++ Redistributables e DirectX localmente antes de qualquer instalacao futura com hash/assinatura.",
+            "Lê VC++ Redistributables e DirectX localmente antes de qualquer instalacao futura com hash/assinatura.",
             AdvancedMethod::PowerShell,
             AdvancedRisk::Low,
             false,
@@ -4313,6 +4335,28 @@ try {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn advanced_state_accepts_nullable_nested_windows_values() {
+        let json = serde_json::json!({
+            "optionalServiceStartModes": [
+                { "name": null, "startMode": null },
+                { "name": "WerSvc", "startMode": "Manual" }
+            ],
+            "dnsInterfaces": [
+                { "interfaceAlias": null, "serverAddresses": null },
+                { "interfaceAlias": "Ethernet", "serverAddresses": ["1.1.1.1", null] }
+            ]
+        });
+
+        let state: RawAdvancedState = serde_json::from_value(json).expect("nullable Windows state");
+
+        assert_eq!(state.optional_service_start_modes[0].name, "");
+        assert_eq!(state.optional_service_start_modes[1].name, "WerSvc");
+        assert_eq!(state.dns_interfaces[0].interface_alias, "");
+        assert!(state.dns_interfaces[0].server_addresses.is_empty());
+        assert_eq!(state.dns_interfaces[1].server_addresses, vec!["1.1.1.1"]);
+    }
 
     #[test]
     fn advanced_allowlist_blocks_windows_theme_values() {
