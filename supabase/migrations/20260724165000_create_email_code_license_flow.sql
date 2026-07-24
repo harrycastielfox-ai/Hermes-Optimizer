@@ -197,7 +197,7 @@ begin
     v_code_id,
     now()
   )
-  on conflict (account_id) do update
+  on conflict on constraint email_entitlements_pkey do update
   set
     plan_id = excluded.plan_id,
     status = 'active',
