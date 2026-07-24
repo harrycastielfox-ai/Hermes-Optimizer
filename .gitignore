@@ -23,6 +23,7 @@ src-tauri/target*/
 .release/
 src-tauri/tauri.windows.signing.local.json
 diagnostics/
+graphify-out/
 
 # Signing secrets / certificates
 *.pfx
