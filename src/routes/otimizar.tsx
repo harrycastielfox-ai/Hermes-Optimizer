@@ -151,41 +151,43 @@ function OtimizarPage() {
   }, []);
 
   const handlePrepareCompleted = useCallback(
-    (_reports: QuickPrepareReports, report: ExecutionReport) => {
-      void (async () => {
-        const bootContext = systemBootContext?.available
-          ? systemBootContext
-          : await refreshSystemBootContext();
+    async (_reports: QuickPrepareReports, report: ExecutionReport) => {
+      const bootContext = systemBootContext?.available
+        ? systemBootContext
+        : await refreshSystemBootContext();
 
-        if (bootContext.available) {
-          setSystemBootContext(bootContext);
-        }
+      if (!bootContext.available || !bootContext.currentBootId) {
+        throw new Error(
+          "O NEX não conseguiu registrar o boot atual. O reinício automático foi bloqueado para preservar a liberação correta da Fase 2.",
+        );
+      }
 
-        const completedAt = new Date().toISOString();
-        const nextGate: QuickPrepareGate = {
-          completedAt,
-          dnsProviderId: selectedDnsProviderId,
-          safeMode: HERMES_SAFE_TEST_MODE,
-          bootIdAtCompletion: bootContext.currentBootId,
-          bootedAtAtCompletion: bootContext.bootedAt,
-        };
-        setQuickPrepareGate(nextGate);
-        writeQuickPrepareGate(nextGate);
-        const nextRestart: RestartRecommendation = {
-          phase: "prepare",
-          createdAt: completedAt,
-          safeMode: HERMES_SAFE_TEST_MODE,
-          message: "Reinicie o PC antes de executar a Otimização Avançada.",
-          bootIdAtCreated: bootContext.currentBootId,
-        };
-        setRestartRecommendation(nextRestart);
-        writeRestartRecommendation(nextRestart);
-        setExecutionReport(report);
-        writeExecutionReport(report);
-        const nextCycleReport = buildExecutionCycleReport({ prepare: report });
-        setExecutionCycleReport(nextCycleReport);
-        writeExecutionCycleReport(nextCycleReport);
-      })();
+      setSystemBootContext(bootContext);
+
+      const completedAt = new Date().toISOString();
+      const nextGate: QuickPrepareGate = {
+        completedAt,
+        dnsProviderId: selectedDnsProviderId,
+        safeMode: HERMES_SAFE_TEST_MODE,
+        bootIdAtCompletion: bootContext.currentBootId,
+        bootedAtAtCompletion: bootContext.bootedAt,
+      };
+      setQuickPrepareGate(nextGate);
+      writeQuickPrepareGate(nextGate);
+      const nextRestart: RestartRecommendation = {
+        phase: "prepare",
+        createdAt: completedAt,
+        safeMode: HERMES_SAFE_TEST_MODE,
+        message: "Reinicie o PC antes de executar a Otimização Avançada.",
+        bootIdAtCreated: bootContext.currentBootId,
+      };
+      setRestartRecommendation(nextRestart);
+      writeRestartRecommendation(nextRestart);
+      setExecutionReport(report);
+      writeExecutionReport(report);
+      const nextCycleReport = buildExecutionCycleReport({ prepare: report });
+      setExecutionCycleReport(nextCycleReport);
+      writeExecutionCycleReport(nextCycleReport);
     },
     [selectedDnsProviderId, systemBootContext],
   );

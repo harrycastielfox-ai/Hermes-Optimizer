@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, Loader2, Power, RotateCcw, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 import { cancelSystemRestart, requestSystemRestart, type SystemRestartResult } from "@/lib/system";
 
@@ -15,14 +15,21 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
   const [cancelState, setCancelState] = useState<RequestState>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [restartResult, setRestartResult] = useState<SystemRestartResult | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const autoRestartRequested = useRef(false);
 
   const isPrepare = phase === "prepare";
-  const title = isPrepare ? "Reinicie antes do Botão 2" : "Reinício final recomendado";
+  const title =
+    restartResult?.scheduled && countdown !== null
+      ? `Reiniciando em ${countdown} segundo${countdown === 1 ? "" : "s"}`
+      : isPrepare
+        ? "Reinício automático antes do Botão 2"
+        : "Reinício final recomendado";
   const description = isPrepare
-    ? "A Fase 1 prepara Windows, DNS, visual gamer e servicos. Reiniciar deixa a Fase 2 rodar em cima do estado limpo."
+    ? "A Fase 1 terminou. No modo real, o NEX agenda o reinício automaticamente e só libera a Fase 2 depois de detectar o novo boot."
     : "A Fase 2 termina componentes, rede, perfil e Gamer. Reiniciar ajuda o Windows a consolidar os ajustes.";
 
-  async function handleRestart() {
+  const handleRestart = useCallback(async () => {
     setRequestState("running");
     setMessage(null);
 
@@ -33,6 +40,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
         delaySeconds: 5,
       });
       setRestartResult(result);
+      setCountdown(result.scheduled ? (result.delaySeconds ?? 5) : null);
       setMessage(result.message);
       setRequestState("success");
       onRestartRequested?.(result);
@@ -40,7 +48,28 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
       setRequestState("failed");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }
+  }, [onRestartRequested]);
+
+  useEffect(() => {
+    if (!isPrepare || HERMES_SAFE_TEST_MODE || autoRestartRequested.current) {
+      return;
+    }
+
+    autoRestartRequested.current = true;
+    void handleRestart();
+  }, [handleRestart, isPrepare]);
+
+  useEffect(() => {
+    if (!restartResult?.scheduled || countdown === null || countdown <= 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCountdown((current) => (current === null ? null : Math.max(0, current - 1)));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [countdown, restartResult?.scheduled]);
 
   async function handleCancelRestart() {
     setCancelState("running");
@@ -49,8 +78,10 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
     try {
       const result = await cancelSystemRestart(HERMES_SAFE_TEST_MODE);
       setRestartResult(result);
+      setCountdown(null);
       setMessage(result.message);
       setCancelState("success");
+      setRequestState("idle");
     } catch (error) {
       setCancelState("failed");
       setMessage(error instanceof Error ? error.message : String(error));
@@ -79,7 +110,9 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
               <ShieldCheck className="h-4 w-4 text-success" />
               {HERMES_SAFE_TEST_MODE
                 ? "Modo teste: o NEX valida o comando, mas não reinicia o computador."
-                : "Modo real: o Windows reinicia em 5 segundos depois da confirmação."}
+                : isPrepare
+                  ? "Modo real: contagem automática de 5 segundos. Use Cancelar para interromper."
+                  : "Modo real: o Windows reinicia em 5 segundos depois da confirmação."}
             </p>
           </div>
         </div>
@@ -103,7 +136,7 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
           <button
             type="button"
             onClick={handleRestart}
-            disabled={requestState === "running"}
+            disabled={requestState === "running" || Boolean(restartResult?.scheduled)}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground shadow-[0_12px_28px_-18px_rgba(37,99,235,0.9)] transition hover:bg-primary/95 disabled:opacity-60"
           >
             {requestState === "running" ? (
@@ -113,7 +146,11 @@ export function RestartPrompt({ phase, onRestartRequested }: RestartPromptProps)
             ) : (
               <Power className="h-4 w-4" />
             )}
-            {HERMES_SAFE_TEST_MODE ? "Validar reinício" : "Reiniciar em 5s"}
+            {HERMES_SAFE_TEST_MODE
+              ? "Validar reinício"
+              : restartResult?.scheduled && countdown !== null
+                ? `${countdown}s`
+                : "Reiniciar em 5s"}
           </button>
         </div>
       </div>

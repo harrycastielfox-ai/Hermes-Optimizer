@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { extname, join } from "node:path";
 
 const root = process.cwd();
 
@@ -54,6 +54,18 @@ const mojibakePatterns = [
 
 const coreCopyFiles = Object.entries(files);
 
+function walkSourceFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = join(directory, entry.name);
+    if (entry.isDirectory()) return walkSourceFiles(fullPath);
+    return [fullPath];
+  });
+}
+
+const allSourceCopyFiles = walkSourceFiles(join(root, "src"))
+  .filter((filePath) => [".ts", ".tsx"].includes(extname(filePath)))
+  .map((filePath) => [filePath, readFileSync(filePath, "utf8")]);
+
 function hasNoMojibake(content) {
   return mojibakePatterns.every((fragment) => !content.includes(fragment));
 }
@@ -92,6 +104,10 @@ const checks = [
   {
     name: "Arquivos de copy principal nao possuem mojibake",
     ok: coreCopyFiles.every(([, content]) => hasNoMojibake(content)),
+  },
+  {
+    name: "Todo o frontend nao possui mojibake",
+    ok: allSourceCopyFiles.every(([, content]) => hasNoMojibake(content)),
   },
   {
     name: "Tela Otimizar mantem copy principal com acentos corretos",

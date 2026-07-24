@@ -14,6 +14,8 @@ export default tseslint.config(
       ".output",
       ".vinxi",
       ".tanstack",
+      ".release",
+      ".release/**",
       "src-tauri/target",
       "package-lock.json",
       "bun.lock",

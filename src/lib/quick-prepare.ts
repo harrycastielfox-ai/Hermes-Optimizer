@@ -35,6 +35,7 @@ import { readSystemSecurityContext, type SystemSecurityContext } from "@/lib/sys
 import { HERMES_PREPARE_ADVANCED_ACTION_IDS } from "@/lib/optimize-all";
 import {
   buildGamerDependencyReadiness,
+  gamerDependencyPreparationIssues,
   prepareAndInstallVerifiedGamerDependencies,
   type GamerDependencyInstallResult,
   type GamerDependencyReadiness,
@@ -170,8 +171,8 @@ const QUICK_PREPARE_PERFORMANCE_ACTION_IDS = [
 
 const QUICK_PREPARE_PERFORMANCE_LABELS: Record<string, string> = {
   "set-high-performance-power-plan": "Economia OFF + Alto desempenho",
-  "disable-transparency": "TransparÃªncias OFF",
-  "disable-window-animations": "AnimaÃ§Ãµes OFF",
+  "disable-transparency": "Transparências OFF",
+  "disable-window-animations": "Animações OFF",
   "disable-visual-shadows": "Sombras visuais OFF",
 };
 
@@ -179,21 +180,21 @@ const QUICK_PREPARE_ADVANCED_LABELS: Record<string, string> = {
   "enable-game-mode": "Game Mode ON",
   "disable-game-dvr": "GameDVR OFF",
   "disable-xbox-game-bar-deep": "Xbox Game Bar e captura OFF",
-  "set-visual-effects-gamer-minimal": "Visual gamer mÃ­nimo",
-  "disable-hibernation": "HibernaÃ§Ã£o OFF",
-  "disable-startup-delay": "InicializaÃ§Ã£o sem atraso",
+  "set-visual-effects-gamer-minimal": "Visual gamer mínimo",
+  "disable-hibernation": "Hibernação OFF",
+  "disable-startup-delay": "Inicialização sem atraso",
   "disable-advertising-id": "ID de publicidade OFF",
   "disable-tailored-experiences": "Experiencias personalizadas OFF",
   "disable-consumer-features": "Apps e sugestoes promovidas OFF",
-  "disable-activity-history": "HistÃ³rico de atividades OFF",
-  "disable-location-tracking": "LocalizaÃ§Ã£o de apps bloqueada",
-  "disable-recall-user": "Recall bloqueado no usuÃ¡rio",
+  "disable-activity-history": "Histórico de atividades OFF",
+  "disable-location-tracking": "Localização de apps bloqueada",
+  "disable-recall-user": "Recall bloqueado no usuário",
   "flush-dns-cache": "Cache DNS limpo",
   "dism-analyze-component-store": "CMD DISM: analisar componentes",
   "dism-start-component-cleanup": "CMD DISM: limpar componentes",
   "dism-check-netfx3": "CMD DISM: verificar NetFx3",
   "dism-check-directplay": "CMD DISM: verificar DirectPlay",
-  "check-gamer-dependencies": "DependÃªncias gamer verificadas",
+  "check-gamer-dependencies": "Dependências gamer verificadas",
   "set-diagtrack-service-manual": "Servico de telemetria em manual",
   "set-mapsbroker-service-manual": "Servico de mapas em manual",
 };
@@ -222,14 +223,14 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "check-admin",
       "scan",
       "Verificar administrador",
-      "Confere se o NEX estÃ¡ elevado.",
+      "Confere se o NEX está elevado.",
       "scanOnly",
     ),
     task(
       "scan-diagnostic",
       "scan",
-      "DiagnÃ³stico local",
-      "Leitura de saÃºde e hardware.",
+      "Diagnóstico local",
+      "Leitura de saúde e hardware.",
       "scanOnly",
     ),
     task(
@@ -249,7 +250,7 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-gamer-dependencies",
       "components",
-      "Preparar dependÃªncias gamer",
+      "Preparar dependências gamer",
       "VC++ 2005-2022, DirectX, hash e assinatura.",
       "scanOnly",
     ),
@@ -257,13 +258,13 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
       "install-gamer-dependencies",
       "components",
       "Validar instaladores gamer",
-      "Executa somente dependÃªncias verificadas no cache.",
+      "Executa somente dependências verificadas no cache.",
       "adminOnly",
     ),
     task(
       "scan-clean",
       "cleanup",
-      "Mapear temporÃ¡rios",
+      "Mapear temporários",
       "Cache, logs e limpeza segura.",
       "scanOnly",
     ),
@@ -277,15 +278,15 @@ export function buildQuickPrepareTaskPlan(context: QuickPrepareContext): QuickPr
     task(
       "scan-startup",
       "startup",
-      "Mapear inicializaÃ§Ã£o",
+      "Mapear inicialização",
       "Apps ativos e impacto no boot.",
       "scanOnly",
     ),
     task(
       "apply-startup",
       "startup",
-      "Validar inicializaÃ§Ã£o",
-      "Desativa alto impacto controlÃ¡vel.",
+      "Validar inicialização",
+      "Desativa alto impacto controlável.",
       "userSafe",
     ),
     ...QUICK_PREPARE_PERFORMANCE_ACTION_IDS.map((id) =>
@@ -339,7 +340,7 @@ export async function runQuickPrepareExecutor(
 
   for (const [index, step] of steps.entries()) {
     if (callbacks.shouldCancel?.()) {
-      throw new Error("Preparar PC cancelado pelo usuÃ¡rio.");
+      throw new Error("Preparar PC cancelado pelo usuário.");
     }
 
     callbacks.onTaskStart?.({
@@ -362,8 +363,10 @@ export async function runQuickPrepareExecutor(
       reports: result.reports,
     });
 
-    if (step.id === "check-admin" && result.status === "unavailable") {
-      throw new Error(result.outputs[0] ?? "Preparar PC exige administrador.");
+    if (result.status === "unavailable" && requiresRealAdmin(context)) {
+      throw new Error(
+        result.outputs[0] ?? `A etapa ${step.title} não pôde ser concluída em modo real.`,
+      );
     }
   }
 
@@ -402,7 +405,7 @@ async function runQuickPrepareTask(
           system.isElevated
             ? "Administrador confirmado."
             : "Sem administrador: modo teste continua validando a fila.",
-          system.username ? `Usuario: ${system.username}` : "UsuÃ¡rio nÃ£o informado pelo Windows.",
+          system.username ? `Usuario: ${system.username}` : "Usuário não informado pelo Windows.",
         ],
       };
     }
@@ -413,8 +416,8 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { diagnostic },
         outputs: [
-          `SaÃºde atual: ${Math.round(diagnostic.healthScore)}/100`,
-          "DiagnÃ³stico local salvo para o Dashboard.",
+          `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
+          "Diagnóstico local salvo para o Dashboard.",
         ],
       };
     }
@@ -456,11 +459,8 @@ async function runQuickPrepareTask(
         advanced,
         gamerDependencyVerification,
       );
-      const hasUsableDependency =
-        gamerDependencyVerification.readyCount > 0 ||
-        gamerDependencyVerification.installedLocallyCount > 0;
       return {
-        status: hasUsableDependency ? "completed" : "unavailable",
+        status: "completed",
         reports: { gamerDependencies, gamerDependencyVerification, advanced },
         outputs: formatGamerDependencyOutputs(gamerDependencies, gamerDependencyVerification),
       };
@@ -480,10 +480,12 @@ async function runQuickPrepareTask(
       );
       const successfulDependencyActions =
         gamerDependencyInstallResult.installedCount + gamerDependencyInstallResult.skippedCount;
+      const dependencyIssues = gamerDependencyPreparationIssues(preparedDependencies);
       const dependencyStatus =
         gamerDependencyInstallResult.dryRun ||
-        successfulDependencyActions > 0 ||
-        preparedDependencies.downloadResult.downloadedCount > 0
+        (dependencyIssues.length === 0 &&
+          (successfulDependencyActions > 0 ||
+            preparedDependencies.downloadResult.downloadedCount > 0))
           ? "completed"
           : "unavailable";
       return {
@@ -497,7 +499,7 @@ async function runQuickPrepareTask(
         outputs: formatGamerDependencyInstallOutputs(
           gamerDependencyInstallResult,
           preparedDependencies.downloadResult,
-        ),
+        ).concat(dependencyIssues),
       };
     }
 
@@ -510,8 +512,8 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { clean },
         outputs: [
-          `${formatGb(clean.totalGb)} GB temporÃ¡rios mapeados`,
-          `${state.selectedCleanItemIds.length} Ã¡rea(s) seguras selecionadas`,
+          `${formatGb(clean.totalGb)} GB temporários mapeados`,
+          `${state.selectedCleanItemIds.length} área(s) seguras selecionadas`,
         ],
       };
     }
@@ -534,7 +536,7 @@ async function runQuickPrepareTask(
         reports: { cleanResult },
         outputs: [
           `${cleanResult.plannedEntries} item(ns) validados`,
-          cleanResult.dryRun ? "Modo teste: limpeza nÃ£o removeu arquivos." : cleanResult.message,
+          cleanResult.dryRun ? "Modo teste: limpeza não removeu arquivos." : cleanResult.message,
         ],
       };
     }
@@ -554,8 +556,8 @@ async function runQuickPrepareTask(
         status: "completed",
         reports: { startup },
         outputs: [
-          `${startup.totalItems} item(ns) de inicializaÃ§Ã£o`,
-          `${state.selectedStartupItemIds.length} alto impacto controlÃ¡vel`,
+          `${startup.totalItems} item(ns) de inicialização`,
+          `${state.selectedStartupItemIds.length} alto impacto controlável`,
         ],
       };
     }
@@ -564,7 +566,7 @@ async function runQuickPrepareTask(
       if (state.selectedStartupItemIds.length === 0) {
         return {
           status: "completed",
-          outputs: ["Sem inicializaÃ§Ã£o de alto impacto controlÃ¡vel."],
+          outputs: ["Sem inicialização de alto impacto controlável."],
         };
       }
 
@@ -580,7 +582,7 @@ async function runQuickPrepareTask(
         outputs: [
           `${startupResult.selectedItems} item(ns) validados`,
           startupResult.dryRun
-            ? "Modo teste: inicializaÃ§Ã£o nÃ£o foi alterada."
+            ? "Modo teste: inicialização não foi alterada."
             : startupResult.message,
         ],
       };
@@ -611,7 +613,7 @@ async function runQuickPrepareTask(
       if (available === false) {
         return {
           status: "unavailable",
-          outputs: [`${actionId} indisponÃ­vel neste catÃ¡logo.`],
+          outputs: [`${actionId} indisponível neste catálogo.`],
         };
       }
 
@@ -673,7 +675,7 @@ async function runQuickPrepareTask(
 
     return {
       status: "unavailable",
-      outputs: [`Passo ${step.id} ainda nÃ£o implementado.`],
+      outputs: [`Passo ${step.id} ainda não implementado.`],
     };
   } catch (error) {
     return {
@@ -760,10 +762,10 @@ function formatGamerDependencyOutputs(
       : verification.cacheDir;
 
   return [
-    `${verification.readyCount}/${verification.totalPackages} dependÃªncia(s) VC++/DirectX prontas`,
+    `${verification.readyCount}/${verification.totalPackages} dependência(s) VC++/DirectX prontas`,
     `${readiness.installPlan.approvedPackages}/${readiness.installPlan.totalPackages} aprovada(s) no manifesto oficial`,
     `${missingCount} ausente(s), ${blockedCount} bloqueada(s), ${failedCount} falha(s)`,
-    `${verification.installedLocallyCount} jÃ¡ instalada(s) no Windows`,
+    `${verification.installedLocallyCount} já instalada(s) no Windows`,
     readiness.detectedSummary,
     `Cache local: ${cacheLabel}`,
   ];
@@ -825,12 +827,12 @@ async function runScanPhase(): Promise<QuickPreparePhaseResult> {
   return {
     reports: { diagnostic, performance, advanced, gamerDependencies, gamerDependencyVerification },
     outputs: [
-      `SaÃºde atual: ${Math.round(diagnostic.healthScore)}/100`,
+      `Saúde atual: ${Math.round(diagnostic.healthScore)}/100`,
       getPowerSaverPrepareMessage(performance),
       `Modo Jogo: ${performance.gameMode.status}`,
       `${advanced.actions.length} ajuste(s) Windows mapeados`,
-      `${gamerDependencyVerification.installedLocallyCount} dependÃªncia(s) jÃ¡ instalada(s) no Windows`,
-      `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependÃªncia(s) VC++/DirectX prontas`,
+      `${gamerDependencyVerification.installedLocallyCount} dependência(s) já instalada(s) no Windows`,
+      `${gamerDependencyVerification.readyCount}/${gamerDependencyVerification.totalPackages} dependência(s) VC++/DirectX prontas`,
     ],
   };
 }
@@ -853,8 +855,8 @@ async function runCleanupPhase(context: QuickPrepareContext): Promise<QuickPrepa
   return {
     reports: { clean, cleanResult: result.value ?? undefined },
     outputs: [
-      `${formatGb(clean.totalGb)} GB temporÃ¡rios mapeados`,
-      `${itemIds.length} Ã¡rea(s) seguras selecionadas`,
+      `${formatGb(clean.totalGb)} GB temporários mapeados`,
+      `${itemIds.length} área(s) seguras selecionadas`,
       result.value
         ? `${result.value.plannedEntries} item(ns) ${
             result.value.dryRun ? "validados" : "aplicados"
@@ -889,13 +891,13 @@ async function runStartupPhase(context: QuickPrepareContext): Promise<QuickPrepa
   return {
     reports: { startup, startupResult: result.value ?? undefined },
     outputs: [
-      `${startup.totalItems} item(ns) de inicializaÃ§Ã£o analisados`,
+      `${startup.totalItems} item(ns) de inicialização analisados`,
       `${itemIds.length} alto impacto selecionado(s)`,
       result.value
         ? `${result.value.selectedItems} item(ns) ${
             result.value.dryRun ? "validados" : "aplicados"
           } para desativar`
-        : (result.message ?? "Sem inicializaÃ§Ã£o de alto impacto controlÃ¡vel"),
+        : (result.message ?? "Sem inicialização de alto impacto controlável"),
     ],
   };
 }
@@ -935,7 +937,7 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
   const appliedPerformance = performanceResult.value?.appliedActions.length ?? 0;
   const advancedSummary = advancedResult.value
     ? formatAdvancedActionSummary(advancedResult.value)
-    : "Advanced Engine aguardando validaÃ§Ã£o";
+    : "Advanced Engine aguardando validação";
 
   return {
     reports: {
@@ -946,7 +948,7 @@ async function runWindowsPhase(context: QuickPrepareContext): Promise<QuickPrepa
     },
     outputs: [
       `Economia OFF, Alto desempenho, Game Mode ON, Game DVR OFF, DNS ${dnsProvider.label}, visual gamer, privacidade e CMD/DISM`,
-      `${appliedPerformance} ajuste(s) de performance; ${advancedSummary} no motor avanÃ§ado`,
+      `${appliedPerformance} ajuste(s) de performance; ${advancedSummary} no motor avançado`,
       HERMES_SAFE_TEST_MODE
         ? "Modo teste: nada foi aplicado de verdade"
         : "Ajustes reais executados",
@@ -998,8 +1000,8 @@ function shouldConfirmPhaseReal(context: QuickPrepareContext) {
 
 function getPowerSaverPrepareMessage(performance: PerformanceReport) {
   return isPowerSaverPlan(performance)
-    ? "Economia de energia detectada: o BotÃ£o 1 troca para Alto desempenho."
-    : `Energia: ${performance.powerPlan.status || "IndisponÃ­vel"}`;
+    ? "Economia de energia detectada: o Botão 1 troca para Alto desempenho."
+    : `Energia: ${performance.powerPlan.status || "Indisponível"}`;
 }
 
 function isPowerSaverPlan(performance: PerformanceReport) {

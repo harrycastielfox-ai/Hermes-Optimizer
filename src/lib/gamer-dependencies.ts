@@ -147,6 +147,36 @@ export type GamerDependencyPreparedInstallResult = {
   report: GamerDependencyVerificationReport;
 };
 
+export function gamerDependencyPreparationIssues(
+  result: GamerDependencyPreparedInstallResult,
+): string[] {
+  if (result.installResult.dryRun) {
+    return [];
+  }
+
+  const unresolvedPackages = result.report.packages.filter(
+    (item) => !item.installedLocally && item.status !== "verified",
+  );
+  const failedActions = result.installResult.actions.filter(
+    (item) => item.status === "failed" || item.status === "blocked",
+  );
+  const issues: string[] = [];
+
+  if (result.downloadResult.failedCount > 0) {
+    issues.push(`${result.downloadResult.failedCount} download(s) oficial(is) falharam`);
+  }
+  if (failedActions.length > 0) {
+    issues.push(`${failedActions.length} instalação(ões) falharam ou foram bloqueadas`);
+  }
+  if (unresolvedPackages.length > 0) {
+    issues.push(
+      `${unresolvedPackages.length} dependência(s) continuam ausentes ou sem verificação`,
+    );
+  }
+
+  return issues;
+}
+
 export type GamerDependencyInstallRequest = {
   confirmed: boolean;
   dryRun?: boolean;

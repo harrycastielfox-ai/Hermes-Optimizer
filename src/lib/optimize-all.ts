@@ -38,6 +38,7 @@ import {
 } from "@/lib/advanced";
 import {
   buildGamerDependencyReadiness,
+  gamerDependencyPreparationIssues,
   prepareAndInstallVerifiedGamerDependencies,
   type GamerDependencyDownloadResult,
   type GamerDependencyInstallResult,
@@ -320,6 +321,18 @@ async function runComponentsPhase(): Promise<OptimizeAllPhaseResult> {
     gamerDependencyPreparedResult.value?.report ?? (await verifyGamerDependencyInstallers());
   const finalGamerDependencyVerification =
     gamerDependencyPreparedResult.value?.report ?? gamerDependencyVerification;
+  if (!HERMES_SAFE_TEST_MODE && !gamerDependencyPreparedResult.value) {
+    throw new Error(
+      gamerDependencyPreparedResult.message ??
+        "Não foi possível preparar as dependências gamer em modo real.",
+    );
+  }
+  if (gamerDependencyPreparedResult.value) {
+    const dependencyIssues = gamerDependencyPreparationIssues(gamerDependencyPreparedResult.value);
+    if (!HERMES_SAFE_TEST_MODE && dependencyIssues.length > 0) {
+      throw new Error(`Dependências gamer incompletas: ${dependencyIssues.join("; ")}.`);
+    }
+  }
   const gamerDependencies = buildGamerDependencyReadiness(
     advanced,
     finalGamerDependencyVerification,
@@ -728,6 +741,9 @@ async function tryRun<T>(task: () => Promise<T | null>): Promise<{ value?: T; me
     const value = await task();
     return value ? { value } : {};
   } catch (error) {
+    if (!HERMES_SAFE_TEST_MODE) {
+      throw error;
+    }
     return { message: errorMessage(error) };
   }
 }

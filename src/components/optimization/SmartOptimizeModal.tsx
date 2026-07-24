@@ -281,6 +281,9 @@ export function SmartOptimizeModal({
       });
       upsertReportAction(phaseId, "unavailable", [message, "Fase isolada sem efeitos."]);
       appendLog("warning", `${template?.title ?? phaseId}: ${message}`);
+      if (!HERMES_SAFE_TEST_MODE) {
+        throw new Error(`${template?.title ?? phaseId}: ${message}`);
+      }
     }
   }
 
@@ -383,94 +386,128 @@ export function SmartOptimizeModal({
           </button>
         </header>
 
-        <div className="overflow-auto px-5 py-5 lg:px-6">
-          <section className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
-            <SummaryCard
-              icon={Zap}
-              label="Ações avaliadas"
-              value={`${TOTAL_PLANNED_ACTIONS}`}
-              sub={`Agrupadas em ${phaseTemplates.length} fases`}
-            />
-            <SummaryCard
-              icon={CheckCircle2}
-              label="Processadas"
-              value={`${completedActionCount}`}
-              sub={`${progress}% do fluxo`}
-            />
-            <SummaryCard
-              icon={Cpu}
-              label="Plano"
-              value="Global"
-              sub="Sem perfil ou jogo manual nesta fase"
-            />
-            <SummaryCard
-              icon={ShieldCheck}
-              label="Modo"
-              value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}
-              sub={HERMES_SAFE_TEST_MODE ? "Modo teste ativo" : "Execução real liberada"}
-            />
+        <div className="px-5 py-5 lg:px-6">
+          <section className="mx-auto flex max-w-3xl flex-col items-center py-4 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/12 text-primary">
+              {runStatus === "completed" ? (
+                <CheckCircle2 className="h-7 w-7" />
+              ) : runStatus === "failed" || runStatus === "cancelled" ? (
+                <AlertTriangle className="h-7 w-7" />
+              ) : (
+                <Loader2 className="h-7 w-7 animate-spin" />
+              )}
+            </span>
+            <p className="mt-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+              {HERMES_SAFE_TEST_MODE ? "Validação segura" : "Otimização global"}
+            </p>
+            <h3 className="mt-2 text-xl font-black text-foreground">{currentStatus}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {runStatus === "completed"
+                ? "O processo foi concluído."
+                : `${activePhase?.title ?? "Finalizando"} · ${progress}% concluído`}
+            </p>
+            <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-3 text-xs font-bold text-muted-foreground">
+              <span>{progress}%</span>
+              <span aria-hidden="true">•</span>
+              <span>{HERMES_SAFE_TEST_MODE ? "Modo teste" : "Modo real"}</span>
+            </div>
           </section>
 
-          <div className="mb-4 rounded-2xl border border-warning/25 bg-warning/10 px-4 py-3 text-warning">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <div>
-                <p className="text-sm font-bold">
-                  Plano NEX validado antes de qualquer mudança real.
-                </p>
-                <p className="mt-1 text-[12px] leading-relaxed">
-                  {HERMES_SAFE_TEST_MODE
-                    ? "Modo teste ativo: o NEX confere o caminho completo sem alterar o Windows."
-                    : "Modo real ligado: o NEX executa somente ajustes liberados e confirmados pelo motor."}
-                </p>
+          <div className="hidden">
+            <section className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
+              <SummaryCard
+                icon={Zap}
+                label="Ações avaliadas"
+                value={`${TOTAL_PLANNED_ACTIONS}`}
+                sub={`Agrupadas em ${phaseTemplates.length} fases`}
+              />
+              <SummaryCard
+                icon={CheckCircle2}
+                label="Processadas"
+                value={`${completedActionCount}`}
+                sub={`${progress}% do fluxo`}
+              />
+              <SummaryCard
+                icon={Cpu}
+                label="Plano"
+                value="Global"
+                sub="Sem perfil ou jogo manual nesta fase"
+              />
+              <SummaryCard
+                icon={ShieldCheck}
+                label="Modo"
+                value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"}
+                sub={HERMES_SAFE_TEST_MODE ? "Modo teste ativo" : "Execução real liberada"}
+              />
+            </section>
+
+            <div className="mb-4 rounded-2xl border border-warning/25 bg-warning/10 px-4 py-3 text-warning">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold">
+                    Plano NEX validado antes de qualquer mudança real.
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed">
+                    {HERMES_SAFE_TEST_MODE
+                      ? "Modo teste ativo: o NEX confere o caminho completo sem alterar o Windows."
+                      : "Modo real ligado: o NEX executa somente ajustes liberados e confirmados pelo motor."}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-5">
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">{currentStatus}</h3>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
-                      Fase atual: {activePhase?.title ?? "Finalizando"}.
-                    </p>
+            <div className="grid grid-cols-1 gap-5">
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">{currentStatus}</h3>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        Fase atual: {activePhase?.title ?? "Finalizando"}.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-right">
+                      <ProgressStat label="Concluído" value={`${progress}%`} />
+                      <ProgressStat label="Falta" value={`${remainingProgress}%`} />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-right">
-                    <ProgressStat label="Concluído" value={`${progress}%`} />
-                    <ProgressStat label="Falta" value={`${remainingProgress}%`} />
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-500"
-                    style={{ width: `${progress}%` }}
+
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                  {phases.map((item) => (
+                    <PhaseCard key={item.id} phase={item} />
+                  ))}
+                </div>
+
+                {reports.gamerDependencyVerification && (
+                  <GamerDependenciesPanel
+                    report={reports.gamerDependencyVerification}
+                    automaticDownloadResult={reports.gamerDependencyDownloadResult}
+                    automaticInstallResult={reports.gamerDependencyInstallResult}
                   />
-                </div>
+                )}
+
+                {finalExecutionReport && <OptimizationSuccessPanel report={finalExecutionReport} />}
               </div>
 
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                {phases.map((item) => (
-                  <PhaseCard key={item.id} phase={item} />
-                ))}
+              <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border/70 bg-background/72 p-3 text-center">
+                <ProgressStat label="Motor" value="NEX" />
+                <ProgressStat label="Validadas" value={`${readyPlanActions}`} />
+                <ProgressStat label="Modo" value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"} />
               </div>
-
-              {reports.gamerDependencyVerification && (
-                <GamerDependenciesPanel
-                  report={reports.gamerDependencyVerification}
-                  automaticDownloadResult={reports.gamerDependencyDownloadResult}
-                  automaticInstallResult={reports.gamerDependencyInstallResult}
-                />
-              )}
-
-              {finalExecutionReport && <OptimizationSuccessPanel report={finalExecutionReport} />}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border/70 bg-background/72 p-3 text-center">
-              <ProgressStat label="Motor" value="NEX" />
-              <ProgressStat label="Validadas" value={`${readyPlanActions}`} />
-              <ProgressStat label="Modo" value={HERMES_SAFE_TEST_MODE ? "Teste" : "Real"} />
             </div>
           </div>
         </div>

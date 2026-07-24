@@ -99,7 +99,18 @@ let deviceIdentityPromise: Promise<NexDeviceIdentity> | null = null;
 const BROWSER_DEVICE_STORAGE_KEY = "nex.auth.development-device.v1";
 
 export function isNexAuthConfigured() {
-  return Boolean(supabaseUrl && supabasePublishableKey);
+  const hasRealProjectUrl = Boolean(
+    supabaseUrl &&
+    /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(supabaseUrl) &&
+    !supabaseUrl.includes("seu-projeto"),
+  );
+  const hasRealPublishableKey = Boolean(
+    supabasePublishableKey &&
+    /^(sb_publishable_|eyJ)/.test(supabasePublishableKey) &&
+    !supabasePublishableKey.includes("substitua"),
+  );
+
+  return hasRealProjectUrl && hasRealPublishableKey;
 }
 
 function getSupabaseClient() {

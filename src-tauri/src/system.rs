@@ -132,7 +132,7 @@ pub fn system_restart_computer(
     let request = request.unwrap_or_default();
     let requested_dry_run = request.dry_run.unwrap_or(!request.confirmed);
     let dry_run = safe_mode::force_dry_run(requested_dry_run);
-    let delay_seconds = request.delay_seconds.unwrap_or(60).clamp(15, 300);
+    let delay_seconds = request.delay_seconds.unwrap_or(60).clamp(5, 300);
 
     if !dry_run && !request.confirmed {
         return Err("Confirmacao obrigatoria para reiniciar o computador.".to_string());

@@ -709,6 +709,12 @@ fn download_package(
     package: &GamerDependencyVerifyPackage,
 ) -> Result<DownloadOutcome, String> {
     let installer_file_name = sanitize_installer_file_name(&package.installer_file_name)?;
+    if dependency_already_installed(package).unwrap_or(false) {
+        return Ok(DownloadOutcome::Skipped(format!(
+            "{} ja esta instalada neste Windows; download dispensado.",
+            package.title
+        )));
+    }
     let Some(official_url) = clean_optional(package.official_url.clone()) else {
         return Ok(DownloadOutcome::Skipped(format!(
             "{} pulado: URL direta oficial ainda nao foi aprovada no manifesto.",

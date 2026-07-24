@@ -306,7 +306,7 @@ struct RawAdvancedState {
     pcie_link_state_ac: Option<String>,
     pcie_link_state_dc: Option<String>,
     timer_policy_summary: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_nullable_string_vec")]
     defender_exclusion_paths: Vec<String>,
 }
 
@@ -4346,7 +4346,8 @@ mod tests {
             "dnsInterfaces": [
                 { "interfaceAlias": null, "serverAddresses": null },
                 { "interfaceAlias": "Ethernet", "serverAddresses": ["1.1.1.1", null] }
-            ]
+            ],
+            "defenderExclusionPaths": ["C:\\NEX", null, ""]
         });
 
         let state: RawAdvancedState = serde_json::from_value(json).expect("nullable Windows state");
@@ -4356,6 +4357,7 @@ mod tests {
         assert_eq!(state.dns_interfaces[0].interface_alias, "");
         assert!(state.dns_interfaces[0].server_addresses.is_empty());
         assert_eq!(state.dns_interfaces[1].server_addresses, vec!["1.1.1.1"]);
+        assert_eq!(state.defender_exclusion_paths, vec!["C:\\NEX"]);
     }
 
     #[test]

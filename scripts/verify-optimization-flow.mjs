@@ -9,11 +9,25 @@ const files = {
     join(root, "src", "components", "optimization", "SmartOptimizeModal.tsx"),
     "utf8",
   ),
+  quickModal: readFileSync(
+    join(root, "src", "components", "optimization", "QuickPrepareModal.tsx"),
+    "utf8",
+  ),
+  restartPrompt: readFileSync(
+    join(root, "src", "components", "optimization", "RestartPrompt.tsx"),
+    "utf8",
+  ),
   advancedLib: readFileSync(join(root, "src", "lib", "advanced.ts"), "utf8"),
   optimizeAll: readFileSync(join(root, "src", "lib", "optimize-all.ts"), "utf8"),
   gamerDependencies: readFileSync(join(root, "src", "lib", "gamer-dependencies.ts"), "utf8"),
   quickPrepare: readFileSync(join(root, "src", "lib", "quick-prepare.ts"), "utf8"),
   executionReport: readFileSync(join(root, "src", "lib", "execution-report.ts"), "utf8"),
+  gamerDependencyEngine: readFileSync(
+    join(root, "src-tauri", "src", "gamer_dependencies.rs"),
+    "utf8",
+  ),
+  advancedEngine: readFileSync(join(root, "src-tauri", "src", "advanced.rs"), "utf8"),
+  systemBackend: readFileSync(join(root, "src-tauri", "src", "system.rs"), "utf8"),
 };
 
 const checks = [
@@ -75,6 +89,24 @@ const checks = [
       !files.otimizarRoute.includes("Iniciar mesmo assim"),
   },
   {
+    name: "Fase 1 agenda reinicio automatico real em cinco segundos",
+    ok:
+      files.restartPrompt.includes("autoRestartRequested") &&
+      files.restartPrompt.includes("void handleRestart()") &&
+      files.restartPrompt.includes("delaySeconds: 5") &&
+      files.restartPrompt.includes("HERMES_SAFE_TEST_MODE || autoRestartRequested.current") &&
+      files.systemBackend.includes("clamp(5, 300)"),
+  },
+  {
+    name: "Fase 1 persiste o boot antes de iniciar o reinicio automatico",
+    ok:
+      files.quickModal.includes("await onCompleted?.(nextReports, executionReport)") &&
+      files.quickModal.indexOf("await onCompleted?.(nextReports, executionReport)") <
+        files.quickModal.indexOf('setRunStatus("completed")') &&
+      files.otimizarRoute.includes("if (!bootContext.available || !bootContext.currentBootId)") &&
+      files.otimizarRoute.includes("O reinício automático foi bloqueado"),
+  },
+  {
     name: "Botao 2 usa wrappers Optimize Now para Clean e Advanced",
     ok:
       files.optimizeAll.includes("applyOptimizeNowCleanEngine") &&
@@ -91,6 +123,29 @@ const checks = [
         files.gamerDependencies.indexOf(
           "const downloadResult = await downloadOfficialGamerDependencyInstallers()",
         ),
+  },
+  {
+    name: "Modo real nao conclui com dependencia gamer incompleta",
+    ok:
+      files.gamerDependencies.includes("gamerDependencyPreparationIssues") &&
+      files.quickPrepare.includes("dependencyIssues.length === 0") &&
+      files.quickPrepare.includes(
+        'result.status === "unavailable" && requiresRealAdmin(context)',
+      ) &&
+      files.optimizeAll.includes("Dependências gamer incompletas") &&
+      files.smartModal.includes("if (!HERMES_SAFE_TEST_MODE)"),
+  },
+  {
+    name: "Dependencia ja instalada nao e baixada novamente",
+    ok:
+      files.gamerDependencyEngine.includes("dependency_already_installed(package)") &&
+      files.gamerDependencyEngine.includes("download dispensado"),
+  },
+  {
+    name: "Catalogo avancado aceita arrays nulos retornados pelo Windows",
+    ok: files.advancedEngine.includes(
+      '#[serde(default, deserialize_with = "deserialize_nullable_string_vec")]\n    defender_exclusion_paths',
+    ),
   },
   {
     name: "Meta visual usa alvo central de 160 acoes",

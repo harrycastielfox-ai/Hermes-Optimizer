@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 import { HermesWindowChrome } from "../components/common/HermesWindowChrome";
 import { NexLicenseGate } from "../components/licensing/NexLicenseGate";
 import { reportClientError } from "../lib/lovable-error-reporting";
@@ -105,12 +105,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "twitter:image",
         content: "/nex-logo.png",
-      },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
       },
     ],
   }),

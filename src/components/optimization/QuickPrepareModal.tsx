@@ -72,7 +72,10 @@ export function QuickPrepareModal({
   runKey: number;
   onClose: () => void;
   onDiagnostic?: (report: DiagnosticReport) => void;
-  onCompleted?: (reports: QuickPrepareReports, executionReport: ExecutionReport) => void;
+  onCompleted?: (
+    reports: QuickPrepareReports,
+    executionReport: ExecutionReport,
+  ) => void | Promise<void>;
   dnsProviderId: DnsProviderId;
 }) {
   const [phases, setPhases] = useState<PreparePhase[]>(() => resetPhases());
@@ -151,7 +154,6 @@ export function QuickPrepareModal({
         return;
       }
 
-      setRunStatus("completed");
       const executionReport = buildExecutionReport({
         phase: "prepare",
         title: "Preparação da Máquina",
@@ -165,8 +167,10 @@ export function QuickPrepareModal({
         ],
       });
       setFinalExecutionReport(executionReport);
-      setCurrentStatus("Preparo concluído. Reinicie o PC antes do Botão 2.");
-      onCompleted?.(nextReports, executionReport);
+      setCurrentStatus("Salvando conclusão da Fase 1.");
+      await onCompleted?.(nextReports, executionReport);
+      setRunStatus("completed");
+      setCurrentStatus("Preparo concluído. Reinício automático preparado.");
       appendLog("info", "Preparar PC finalizado.");
       appendLog("warning", "Reinício recomendado antes de executar Otimizar Tudo.");
     } catch (error) {
@@ -323,121 +327,161 @@ export function QuickPrepareModal({
           </button>
         </header>
 
-        <div className="overflow-auto px-5 py-5 lg:px-6">
-          <div className="mb-4 rounded-2xl border border-warning/25 bg-warning/10 px-4 py-3 text-warning">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              <div>
-                <p className="text-sm font-bold">
-                  {HERMES_SAFE_TEST_MODE
-                    ? "Modo teste ativo: o NEX valida o que faria sem alterar o Windows."
-                    : "Modo real: o NEX executa os ajustes implementados."}
-                </p>
-                <p className="mt-1 text-[12px] leading-relaxed">
-                  Este fluxo usa CMD/PowerShell/Registro allowlistados por baixo: Game Mode,
-                  GameDVR, DNS escolhido, visual gamer mínimo, limpeza, inicialização e processos
-                  seguros.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">{currentStatus}</h3>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
-                      Fase atual: {activePhase?.title ?? "Finalizando"}.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-right">
-                    <ProgressStat label="Concluído" value={`${progress}%`} />
-                    <ProgressStat label="Falta" value={`${remainingProgress}%`} />
-                  </div>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-500"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                {phases.map((item) => (
-                  <PreparePhaseCard key={item.id} phase={item} />
-                ))}
-              </div>
-
-              {reports.gamerDependencyVerification && (
-                <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
+        <div className="px-5 py-5 lg:px-6">
+          <section className="mx-auto flex max-w-3xl flex-col items-center py-4 text-center">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/12 text-primary">
+              {runStatus === "completed" ? (
+                <CheckCircle2 className="h-7 w-7" />
+              ) : runStatus === "failed" || runStatus === "cancelled" ? (
+                <AlertTriangle className="h-7 w-7" />
+              ) : (
+                <Loader2 className="h-7 w-7 animate-spin" />
               )}
+            </span>
+            <p className="mt-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+              {HERMES_SAFE_TEST_MODE ? "Validação segura" : "Preparação global"}
+            </p>
+            <h3 className="mt-2 text-xl font-black text-foreground">{currentStatus}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {runStatus === "completed"
+                ? "A Fase 1 foi concluída."
+                : `${activePhase?.title ?? "Finalizando"} · ${progress}% concluído`}
+            </p>
+            <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-3 text-xs font-bold text-muted-foreground">
+              <span>{progress}%</span>
+              <span aria-hidden="true">•</span>
+              <span>{HERMES_SAFE_TEST_MODE ? "Modo teste" : "Modo real"}</span>
+            </div>
+          </section>
 
-              {finalExecutionReport && <PrepareSuccessPanel report={finalExecutionReport} />}
+          <div className="hidden">
+            <div className="mb-4 rounded-2xl border border-warning/25 bg-warning/10 px-4 py-3 text-warning">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold">
+                    {HERMES_SAFE_TEST_MODE
+                      ? "Modo teste ativo: o NEX valida o que faria sem alterar o Windows."
+                      : "Modo real: o NEX executa os ajustes implementados."}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed">
+                    Este fluxo usa CMD/PowerShell/Registro allowlistados por baixo: Game Mode,
+                    GameDVR, DNS escolhido, visual gamer mínimo, limpeza, inicialização e processos
+                    seguros.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <aside className="space-y-4">
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">RESUMO</h3>
-                <div className="mt-3 space-y-2 text-sm">
-                  <SummaryLine label="Saúde" value={formatScore(reports.diagnostic?.healthScore)} />
-                  <SummaryLine
-                    label="Passos"
-                    value={totalTasks > 0 ? `${completedTasks}/${totalTasks}` : "Montando"}
-                  />
-                  <SummaryLine
-                    label="Admin"
-                    value={
-                      reports.system ? (reports.system.isElevated ? "Sim" : "Não") : "Verificando"
-                    }
-                  />
-                  <SummaryLine
-                    label="Temporários"
-                    value={reports.clean ? `${formatGb(reports.clean.totalGb)} GB` : "Aguardando"}
-                  />
-                  <SummaryLine
-                    label="Inicialização"
-                    value={
-                      reports.startup
-                        ? `${reports.startup.highImpactCount} alto impacto`
-                        : "Aguardando"
-                    }
-                  />
-                  <SummaryLine
-                    label="VC++/DirectX"
-                    value={
-                      reports.gamerDependencyVerification
-                        ? `${reports.gamerDependencyVerification.readyCount}/${reports.gamerDependencyVerification.totalPackages} prontas; ${reports.gamerDependencyVerification.installedLocallyCount} instaladas`
-                        : "Aguardando"
-                    }
-                  />
-                  <SummaryLine label="DNS" value={`${dnsProvider.label} ${dnsProvider.primary}`} />
-                  <SummaryLine
-                    label="Processos"
-                    value={
-                      reports.gamer
-                        ? `${reports.gamer.summary.suggestedToClose} sugeridos`
-                        : "Aguardando"
-                    }
-                  />
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">{currentStatus}</h3>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        Fase atual: {activePhase?.title ?? "Finalizando"}.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-right">
+                      <ProgressStat label="Concluído" value={`${progress}%`} />
+                      <ProgressStat label="Falta" value={`${remainingProgress}%`} />
+                    </div>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                  {phases.map((item) => (
+                    <PreparePhaseCard key={item.id} phase={item} />
+                  ))}
+                </div>
+
+                {reports.gamerDependencyVerification && (
+                  <GamerDependenciesPanel report={reports.gamerDependencyVerification} />
+                )}
+
+                {finalExecutionReport && <PrepareSuccessPanel report={finalExecutionReport} />}
               </div>
 
-              <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
-                <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">LOG</h3>
-                <div className="mt-3 space-y-2">
-                  {logs.length > 0 ? (
-                    logs.map((item) => <LogRow key={item.id} item={item} />)
-                  ) : (
-                    <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
-                      Aguardando primeira fase.
-                    </p>
-                  )}
+              <aside className="space-y-4">
+                <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
+                  <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">RESUMO</h3>
+                  <div className="mt-3 space-y-2 text-sm">
+                    <SummaryLine
+                      label="Saúde"
+                      value={formatScore(reports.diagnostic?.healthScore)}
+                    />
+                    <SummaryLine
+                      label="Passos"
+                      value={totalTasks > 0 ? `${completedTasks}/${totalTasks}` : "Montando"}
+                    />
+                    <SummaryLine
+                      label="Admin"
+                      value={
+                        reports.system ? (reports.system.isElevated ? "Sim" : "Não") : "Verificando"
+                      }
+                    />
+                    <SummaryLine
+                      label="Temporários"
+                      value={reports.clean ? `${formatGb(reports.clean.totalGb)} GB` : "Aguardando"}
+                    />
+                    <SummaryLine
+                      label="Inicialização"
+                      value={
+                        reports.startup
+                          ? `${reports.startup.highImpactCount} alto impacto`
+                          : "Aguardando"
+                      }
+                    />
+                    <SummaryLine
+                      label="VC++/DirectX"
+                      value={
+                        reports.gamerDependencyVerification
+                          ? `${reports.gamerDependencyVerification.readyCount}/${reports.gamerDependencyVerification.totalPackages} prontas; ${reports.gamerDependencyVerification.installedLocallyCount} instaladas`
+                          : "Aguardando"
+                      }
+                    />
+                    <SummaryLine
+                      label="DNS"
+                      value={`${dnsProvider.label} ${dnsProvider.primary}`}
+                    />
+                    <SummaryLine
+                      label="Processos"
+                      value={
+                        reports.gamer
+                          ? `${reports.gamer.summary.suggestedToClose} sugeridos`
+                          : "Aguardando"
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            </aside>
+
+                <div className="rounded-2xl border border-border/70 bg-background/72 p-4">
+                  <h3 className="text-[11px] font-bold tracking-[0.18em] text-primary">LOG</h3>
+                  <div className="mt-3 space-y-2">
+                    {logs.length > 0 ? (
+                      logs.map((item) => <LogRow key={item.id} item={item} />)
+                    ) : (
+                      <p className="rounded-xl border border-dashed border-border bg-background/60 px-3 py-4 text-sm text-muted-foreground">
+                        Aguardando primeira fase.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
 
