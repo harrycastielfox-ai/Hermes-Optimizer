@@ -120,13 +120,13 @@ function Dashboard() {
       <Sidebar />
 
       <div className="flex min-h-0 flex-1 flex-col min-w-0">
-        <main className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-5 xl:px-8 xl:py-6">
-          <div className="mx-auto flex min-h-full w-full max-w-[1540px] flex-col">
+        <main className="min-h-0 flex-1 overflow-hidden px-4 py-3 sm:px-5 xl:px-8 xl:py-4">
+          <div className="mx-auto grid h-full w-full max-w-[1540px] grid-rows-[auto_auto_auto_auto_auto] overflow-hidden">
             {/* Header */}
-            <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="mb-3 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div className="relative min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-card/45 px-4 py-2.5 shadow-[0_14px_42px_-36px_rgba(168,85,247,0.7)] backdrop-blur xl:max-w-[520px]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(216,180,254,0.14),transparent_30%),linear-gradient(120deg,rgba(255,255,255,0.05),transparent_54%)]" />
-                <div className="relative flex min-h-[72px] flex-col justify-center">
+                <div className="relative flex min-h-[68px] flex-col justify-center">
                   <span className="inline-flex h-4 w-fit items-center rounded-full border border-primary/25 bg-primary/10 px-2 text-[7px] font-black uppercase tracking-[0.18em] text-primary">
                     Command Center
                   </span>
@@ -139,7 +139,7 @@ function Dashboard() {
                   </p>
                 </div>
               </div>
-              <div className="relative flex w-full max-w-[340px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/10 bg-card/82 px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_16px_34px_-24px_rgba(168,85,247,0.5)] backdrop-blur xl:w-[330px]">
+              <div className="relative flex w-full max-w-[330px] items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/10 bg-card/82 px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_16px_34px_-24px_rgba(168,85,247,0.5)] backdrop-blur xl:w-[330px]">
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.1] via-transparent to-primary/14 opacity-70" />
                 <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                   <Shield
@@ -165,7 +165,7 @@ function Dashboard() {
             </div>
 
             {/* Metrics row */}
-            <div className="mb-4 grid grid-cols-1 gap-3.5 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-4">
               <MetricCard
                 icon={Heart}
                 label="Saúde geral"
@@ -222,7 +222,7 @@ function Dashboard() {
             </div>
 
             {/* Three panels */}
-            <div className="mb-4 grid grid-cols-1 gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
+            <div className="mb-3 grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(300px,0.9fr)]">
               <InfoPanel title="SISTEMA">
                 <InfoRow
                   icon={HermesComputerIcon}
@@ -312,7 +312,7 @@ function Dashboard() {
             </div>
 
             {/* Status bar */}
-            <div className="rounded-2xl border border-border/45 bg-card/75 p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_10px_28px_-24px_rgba(15,23,42,0.18)]">
+            <div className="rounded-2xl border border-border/45 bg-card/75 p-2 shadow-[0_1px_2px_rgba(15,23,42,0.03),0_10px_28px_-24px_rgba(15,23,42,0.18)]">
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
                 <StatusItem
                   icon={Monitor}
@@ -371,7 +371,7 @@ function Dashboard() {
               </div>
             </div>
 
-            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+            <p className="mt-2 text-center text-[10px] text-muted-foreground">
               NEX Optimizer 0.1.0 • Local first • Ações reais somente com confirmação
             </p>
           </div>

@@ -77,15 +77,15 @@ export function Sparkline() {
     <svg viewBox={`0 0 ${w} ${h}`} className="h-7 w-full" preserveAspectRatio="none">
       <defs>
         <linearGradient id="sp" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.6 0.2 250)" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="oklch(0.6 0.2 250)" stopOpacity="0" />
+          <stop offset="0%" stopColor="oklch(0.72 0.25 304)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="oklch(0.72 0.25 304)" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={`${d} L${w},${h} L0,${h} Z`} fill="url(#sp)" />
       <path
         d={d}
         fill="none"
-        stroke="oklch(0.55 0.22 260)"
+        stroke="oklch(0.72 0.25 304)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />

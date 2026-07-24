@@ -7,7 +7,6 @@ import {
   Clock3,
   ExternalLink,
   KeyRound,
-  LogIn,
   LogOut,
   Mail,
   RefreshCw,
@@ -42,20 +41,15 @@ function AccountPage() {
     entitlement,
     deviceIdentity,
     deviceAccess,
-    deviceTransfer,
     error,
-    signInWithGoogle,
     signOut,
     redeemCode,
-    requestDeviceTransfer,
-    cancelDeviceTransfer,
     refreshEntitlement,
     clearError,
   } = useNexAuth();
+  const [email, setEmail] = useState(user?.email ?? "");
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState<
-    "login" | "redeem" | "refresh" | "transfer" | "cancel-transfer" | null
-  >(null);
+  const [busy, setBusy] = useState<"activate" | "refresh" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const storeUrl = getNexStoreUrl();
   const remainingDays = useMemo(() => {
@@ -66,29 +60,19 @@ function AccountPage() {
     );
   }, [entitlement]);
 
-  async function handleLogin() {
-    setBusy("login");
-    setNotice(null);
-    clearError();
-    try {
-      await signInWithGoogle();
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function handleRedeem(event: React.FormEvent) {
+  async function handleActivate(event: React.FormEvent) {
     event.preventDefault();
-    setBusy("redeem");
+    setBusy("activate");
     setNotice(null);
     clearError();
     try {
-      const activated = await redeemCode(code);
+      const activated = await redeemCode(code, email);
       setCode("");
+      setEmail(user?.email ?? email.trim().toLowerCase());
       setNotice(`Acesso ${activated.planName} ativado com sucesso.`);
-    } catch (redemptionError) {
+    } catch (activationError) {
       setNotice(
-        redemptionError instanceof Error ? redemptionError.message : String(redemptionError),
+        activationError instanceof Error ? activationError.message : String(activationError),
       );
     } finally {
       setBusy(null);
@@ -110,34 +94,6 @@ function AccountPage() {
     await openNexExternalUrl(storeUrl);
   }
 
-  async function handleTransferRequest() {
-    setBusy("transfer");
-    setNotice(null);
-    clearError();
-    try {
-      await requestDeviceTransfer();
-      setNotice("Solicitação enviada. A licença continua protegida até a análise do suporte.");
-    } catch (transferError) {
-      setNotice(transferError instanceof Error ? transferError.message : String(transferError));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function handleTransferCancel() {
-    setBusy("cancel-transfer");
-    setNotice(null);
-    clearError();
-    try {
-      await cancelDeviceTransfer();
-      setNotice("Solicitação de troca cancelada.");
-    } catch (cancelError) {
-      setNotice(cancelError instanceof Error ? cancelError.message : String(cancelError));
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <div className="lightning-bg flex min-h-screen">
       <Sidebar />
@@ -152,7 +108,8 @@ function AccountPage() {
                 Minha conta
               </h1>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Entre com o Google, resgate seu código e acompanhe os dias restantes do acesso.
+                Ative com e-mail e código de acesso. Depois da primeira ativação, o NEX entra
+                automaticamente neste computador.
               </p>
             </div>
             <button
@@ -172,8 +129,8 @@ function AccountPage() {
               <div>
                 <p className="font-bold">Servidor de contas aguardando configuração</p>
                 <p className="mt-1 text-sm opacity-85">
-                  A interface está pronta. O login será liberado após conectar as chaves públicas do
-                  Supabase e habilitar o Google OAuth.
+                  Defina as chaves públicas do Supabase e reinicie o dev server para ativar o
+                  licenciamento online.
                 </p>
               </div>
             </div>
@@ -185,7 +142,7 @@ function AccountPage() {
             </div>
           )}
 
-          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[0_20px_48px_-36px_rgba(168,85,247,0.8)] backdrop-blur">
               <div className="flex items-start gap-3">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
@@ -194,38 +151,27 @@ function AccountPage() {
                 <div>
                   <h2 className="text-lg font-black text-foreground">Identidade NEX</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Sua compra e seus códigos ficam vinculados a esta conta.
+                    Sua compra e seus códigos ficam vinculados ao e-mail e ao primeiro computador
+                    ativado.
                   </p>
                 </div>
               </div>
 
               {loading ? (
                 <div className="mt-6 flex items-center gap-3 rounded-xl border border-border/70 bg-background/70 p-4 text-sm text-muted-foreground">
-                  <RefreshCw className="h-4 w-4 animate-spin text-primary" /> Verificando sua
-                  sessão...
+                  <RefreshCw className="h-4 w-4 animate-spin text-primary" /> Verificando acesso...
                 </div>
               ) : user ? (
                 <div className="mt-6 space-y-4">
                   <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-background/70 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
-                      {user.user_metadata.avatar_url ? (
-                        <img
-                          src={String(user.user_metadata.avatar_url)}
-                          alt=""
-                          className="h-11 w-11 rounded-full border border-primary/25 object-cover"
-                        />
-                      ) : (
-                        <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary">
-                          <UserRound className="h-5 w-5" />
-                        </span>
-                      )}
+                      <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/15 text-primary">
+                        <Mail className="h-5 w-5" />
+                      </span>
                       <div className="min-w-0">
-                        <p className="truncate font-bold text-foreground">
-                          {String(user.user_metadata.full_name || "Conta NEX")}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                          <Mail className="h-3.5 w-3.5" />
-                          {user.email}
+                        <p className="truncate font-bold text-foreground">{user.email}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Login automático ativo neste computador.
                         </p>
                       </div>
                     </div>
@@ -243,70 +189,58 @@ function AccountPage() {
                       <ShieldCheck className="h-5 w-5 shrink-0 text-success" />
                       <div className="min-w-0">
                         <p className="text-xs font-black uppercase tracking-wider text-success">
-                          Dispositivo protegido
+                          Computador vinculado
                         </p>
                         <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                          {deviceIdentity.label}. A identidade bruta do Windows não sai deste PC.
+                          {deviceIdentity.label}. O NEX envia apenas um hash da máquina.
                         </p>
                       </div>
                     </div>
                   )}
-
-                  <form
-                    onSubmit={handleRedeem}
-                    className="rounded-xl border border-primary/25 bg-primary/5 p-4"
-                  >
-                    <label htmlFor="license-code" className="text-sm font-black text-foreground">
-                      Resgatar código
-                    </label>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      Use o código recebido após a compra. Ele será vinculado à sua conta.
-                    </p>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <input
-                        id="license-code"
-                        value={code}
-                        onChange={(event) => setCode(event.target.value.toUpperCase())}
-                        placeholder="NEX-XXXX-XXXX-XXXX"
-                        autoComplete="off"
-                        spellCheck={false}
-                        className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-[0.08em] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      />
-                      <button
-                        type="submit"
-                        disabled={
-                          busy === "redeem" || code.trim().length < 8 || deviceAccess === "blocked"
-                        }
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
-                      >
-                        <KeyRound className="h-4 w-4" />{" "}
-                        {busy === "redeem" ? "Validando..." : "Resgatar"}
-                      </button>
-                    </div>
-                  </form>
                 </div>
-              ) : (
-                <div className="mt-6 rounded-xl border border-border/70 bg-background/70 p-5 text-center">
-                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary">
-                    <LogIn className="h-6 w-6" />
-                  </span>
-                  <h3 className="mt-4 font-black text-foreground">Entre para ativar seu acesso</h3>
-                  <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">
-                    O Google identifica sua conta. O NEX solicita apenas nome, foto e e-mail básico.
-                  </p>
+              ) : null}
+
+              <form
+                onSubmit={handleActivate}
+                className="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4"
+              >
+                <label htmlFor="license-email" className="text-sm font-black text-foreground">
+                  Ativar acesso
+                </label>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Use o e-mail da compra e o código recebido. O código é de uso único.
+                </p>
+                <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_auto]">
+                  <input
+                    id="license-email"
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="cliente@email.com"
+                    autoComplete="email"
+                    className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                  <input
+                    id="license-code"
+                    required
+                    value={code}
+                    onChange={(event) => setCode(event.target.value.toUpperCase())}
+                    placeholder="NEX-XXXX-XXXX-XXXX"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-[0.08em] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
                   <button
-                    type="button"
-                    disabled={!configured || busy === "login"}
-                    onClick={() => void handleLogin()}
-                    className="mt-5 inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-white px-5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
+                    type="submit"
+                    disabled={busy === "activate" || code.trim().length < 8}
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    <span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-blue-500 via-red-500 to-yellow-400 text-[10px] font-black text-white">
-                      G
-                    </span>
-                    {busy === "login" ? "Abrindo Google..." : "Entrar com Google"}
+                    <KeyRound className="h-4 w-4" />
+                    {busy === "activate" ? "Validando..." : "Ativar"}
                   </button>
                 </div>
-              )}
+              </form>
             </section>
 
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur">
@@ -318,7 +252,7 @@ function AccountPage() {
                   <div>
                     <h2 className="text-lg font-black text-foreground">Seu acesso</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Status atualizado pelo servidor.
+                      Status confirmado pelo servidor NEX.
                     </p>
                   </div>
                 </div>
@@ -335,65 +269,25 @@ function AccountPage() {
               </div>
 
               {deviceAccess === "blocked" ? (
-                <div className="mt-6 rounded-2xl border border-destructive/35 bg-destructive/10 p-5">
-                  <div className="flex items-center gap-2 text-sm font-black text-destructive">
-                    <ShieldCheck className="h-5 w-5" /> Computador não autorizado
-                  </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    Esta conta possui uma licença ativa vinculada a outro computador. O NEX não
-                    libera otimizações neste dispositivo.
-                  </p>
-                  {deviceTransfer?.status === "pending" ? (
-                    <div className="mt-4 rounded-xl border border-warning/30 bg-background/45 p-4">
-                      <p className="text-sm font-black text-warning">Troca aguardando análise</p>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        Solicitada para {deviceTransfer.requestedDeviceLabel} em{" "}
-                        {formatDateTime(deviceTransfer.requestedAt)}. O computador antigo continua
-                        autorizado até a aprovação.
-                      </p>
-                      <button
-                        type="button"
-                        disabled={busy === "cancel-transfer"}
-                        onClick={() => void handleTransferCancel()}
-                        className="mt-3 inline-flex h-9 items-center justify-center rounded-xl border border-border bg-card px-3 text-xs font-black text-foreground transition hover:border-primary/40 disabled:opacity-50"
-                      >
-                        {busy === "cancel-transfer" ? "Cancelando..." : "Cancelar solicitação"}
-                      </button>
-                    </div>
-                  ) : deviceTransfer?.status === "approved" ? (
-                    <button
-                      type="button"
-                      onClick={() => void handleRefresh()}
-                      className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground"
-                    >
-                      <RefreshCw className="h-4 w-4" /> Atualizar licença aprovada
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={busy === "transfer"}
-                      onClick={() => void handleTransferRequest()}
-                      className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-black text-primary-foreground transition hover:brightness-110 disabled:opacity-50"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      {busy === "transfer" ? "Enviando..." : "Solicitar troca de computador"}
-                    </button>
-                  )}
-                </div>
+                <StatusBox
+                  tone="danger"
+                  title="Licença vinculada a outro PC"
+                  text="Este e-mail possui acesso ativo em outra máquina. Será necessário liberar uma troca de dispositivo pelo suporte."
+                />
               ) : deviceAccess === "unavailable" && user ? (
-                <div className="mt-6 rounded-2xl border border-warning/35 bg-warning/10 p-5">
-                  <div className="flex items-center gap-2 text-sm font-black text-warning">
-                    <ShieldCheck className="h-5 w-5" /> Verificação indisponível
-                  </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    O acesso permanece bloqueado até o servidor confirmar esta licença e este
-                    computador.
-                  </p>
-                </div>
+                <StatusBox
+                  tone="warning"
+                  title="Verificação indisponível"
+                  text="O NEX mantém as otimizações bloqueadas até confirmar a licença e este computador."
+                />
               ) : entitlement ? (
                 <div className="mt-6">
                   <div
-                    className={`rounded-2xl border p-5 ${entitlement.status === "active" ? "border-success/30 bg-success/10" : "border-warning/30 bg-warning/10"}`}
+                    className={`rounded-2xl border p-5 ${
+                      entitlement.status === "active"
+                        ? "border-success/30 bg-success/10"
+                        : "border-warning/30 bg-warning/10"
+                    }`}
                   >
                     <div className="flex items-center gap-2 text-sm font-black">
                       <ShieldCheck className="h-5 w-5" />
@@ -455,6 +349,29 @@ function AccountPage() {
   );
 }
 
+function StatusBox({
+  title,
+  text,
+  tone,
+}: {
+  title: string;
+  text: string;
+  tone: "warning" | "danger";
+}) {
+  const toneClass =
+    tone === "danger"
+      ? "border-destructive/35 bg-destructive/10"
+      : "border-warning/35 bg-warning/10";
+  return (
+    <div className={`mt-6 rounded-2xl border p-5 ${toneClass}`}>
+      <div className="flex items-center gap-2 text-sm font-black text-foreground">
+        <ShieldCheck className="h-5 w-5" /> {title}
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
+    </div>
+  );
+}
+
 function PlanCard({ plan, onBuy }: { plan: NexPlan; onBuy: () => void }) {
   const monthly =
     plan.durationDays >= 30 ? Math.round((plan.priceCents / plan.durationDays) * 30) : null;
@@ -462,7 +379,11 @@ function PlanCard({ plan, onBuy }: { plan: NexPlan; onBuy: () => void }) {
     <button
       type="button"
       onClick={() => void onBuy()}
-      className={`relative min-h-40 overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/55 ${plan.featured ? "border-primary/45 bg-primary/12 shadow-[0_18px_42px_-30px_rgba(168,85,247,0.95)]" : "border-border/70 bg-card/80"}`}
+      className={`relative min-h-40 overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/55 ${
+        plan.featured
+          ? "border-primary/45 bg-primary/12 shadow-[0_18px_42px_-30px_rgba(168,85,247,0.95)]"
+          : "border-border/70 bg-card/80"
+      }`}
     >
       {plan.featured && (
         <span className="absolute right-3 top-3 rounded-full bg-primary px-2 py-1 text-[9px] font-black uppercase tracking-wider text-primary-foreground">
@@ -510,15 +431,5 @@ function formatDate(value: string) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(new Date(value));
 }

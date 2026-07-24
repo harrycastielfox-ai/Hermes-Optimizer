@@ -25,7 +25,7 @@ export function HealthRing({
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="oklch(0.92 0.02 250)"
+          stroke="oklch(0.92 0.02 304)"
           strokeWidth={stroke}
           fill="none"
         />
@@ -33,7 +33,7 @@ export function HealthRing({
           cx={size / 2}
           cy={size / 2}
           r={r - stroke / 1.8}
-          stroke="oklch(0.97 0.01 250)"
+          stroke="oklch(0.98 0.006 304)"
           strokeWidth="1"
           fill="none"
         />

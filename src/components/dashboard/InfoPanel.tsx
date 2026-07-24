@@ -24,7 +24,7 @@ export function InfoPanel({
   watermarkSrc?: string;
 }) {
   return (
-    <div className="relative min-h-[348px] overflow-hidden rounded-2xl border border-white/10 bg-card/82 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_18px_42px_-30px_rgba(168,85,247,0.48)] backdrop-blur">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card/82 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.18),0_18px_42px_-30px_rgba(168,85,247,0.48)] backdrop-blur">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-primary/10 opacity-70" />
       {watermarkSrc && (
         <img
@@ -34,10 +34,10 @@ export function InfoPanel({
           className="pointer-events-none absolute -right-5 -bottom-3 w-[238px] max-w-[68%] opacity-[0.12] grayscale contrast-125 mix-blend-multiply [mask-image:radial-gradient(ellipse_at_center,black_42%,transparent_76%)] dark:opacity-[0.10] dark:mix-blend-multiply dark:brightness-125 dark:contrast-150"
         />
       )}
-      <h3 className="relative z-10 mb-4 text-[12px] font-bold tracking-[0.18em] text-primary">
+      <h3 className="relative z-10 mb-3.5 text-[12px] font-bold tracking-[0.18em] text-primary">
         {title}
       </h3>
-      <div className="relative z-10 space-y-3.5">{children}</div>
+      <div className="relative z-10 space-y-3">{children}</div>
     </div>
   );
 }
@@ -52,14 +52,14 @@ export function InfoRow({
   value: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[38px_minmax(96px,0.45fr)_minmax(0,1fr)] items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+    <div className="grid grid-cols-[36px_minmax(96px,0.45fr)_minmax(0,1fr)] items-center gap-3">
+      <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center">
         <PanelIconView
           icon={icon}
           className={
             typeof icon === "string"
-              ? "h-8 w-8 object-contain"
-              : "h-8 w-8 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
+              ? "h-7.5 w-7.5 object-contain"
+              : "h-7.5 w-7.5 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
           }
         />
       </div>
@@ -83,24 +83,24 @@ export function HwRow({
   secondary?: string;
 }) {
   return (
-    <div className="grid grid-cols-[38px_minmax(118px,0.46fr)_minmax(0,1fr)] items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+    <div className="grid grid-cols-[36px_minmax(116px,0.46fr)_minmax(0,1fr)] items-center gap-3">
+      <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center">
         <PanelIconView
           icon={icon}
           className={
             typeof icon === "string"
-              ? "h-8 w-8 object-contain"
-              : "h-8 w-8 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
+              ? "h-7.5 w-7.5 object-contain"
+              : "h-7.5 w-7.5 text-white drop-shadow-[0_0_12px_rgba(216,180,254,0.6)]"
           }
         />
       </div>
-      <span className="text-[11px] font-semibold leading-none tracking-wider text-muted-foreground">
+      <span className="text-[10.5px] font-semibold leading-none tracking-wider text-muted-foreground">
         {label}
       </span>
       <div className="min-w-0 text-[13px] leading-snug">
         <div className="break-words text-foreground/90">{primary}</div>
         {secondary && (
-          <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{secondary}</div>
+          <div className="mt-0.5 text-[10.5px] leading-snug text-muted-foreground">{secondary}</div>
         )}
       </div>
     </div>
@@ -124,8 +124,8 @@ export function RecRow({
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground leading-snug">{desc}</p>
+        <p className="text-[13px] font-semibold leading-tight text-foreground">{title}</p>
+        <p className="line-clamp-2 text-[11px] text-muted-foreground leading-snug">{desc}</p>
       </div>
     </div>
   );

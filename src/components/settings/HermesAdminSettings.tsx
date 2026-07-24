@@ -341,7 +341,7 @@ export function HermesAdminSettings() {
         <SettingsPanel
           icon={UserRound}
           title="Conta e assinatura"
-          description="Login Google, resgate de código e dias restantes ficam reunidos na área da conta."
+          description="E-mail, código de acesso e dias restantes ficam reunidos na área da conta."
         >
           <Link
             to="/conta"

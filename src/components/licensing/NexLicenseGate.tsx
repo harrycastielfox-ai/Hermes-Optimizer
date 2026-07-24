@@ -96,7 +96,7 @@ function getBlockedContent({
   if (!signedIn) {
     return {
       title: "Entre para otimizar",
-      description: "Use sua conta Google e resgate um código NEX para liberar as otimizações.",
+      description: "Use seu e-mail e código NEX para liberar as otimizações neste computador.",
     };
   }
   if (deviceAccess === "blocked") {

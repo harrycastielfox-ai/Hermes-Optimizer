@@ -6,14 +6,14 @@ import {
   Clipboard,
   KeyRound,
   LoaderCircle,
-  LogIn,
+  LockKeyhole,
   RefreshCw,
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import { invokeNexLicenseAdmin, NEX_PLANS, useNexAuth, type NexPlan } from "@/lib/nex-auth";
+import { invokeNexLicenseAdmin, NEX_PLANS, type NexPlan } from "@/lib/nex-auth";
 
 export const Route = createFileRoute("/admin/licencas")({
   head: () => ({
@@ -46,8 +46,13 @@ type TransferRequest = {
   review_note: string | null;
 };
 
+const ADMIN_KEY_SESSION_KEY = "nex.admin.key.session.v1";
+
 function NexLicenseAdminPage() {
-  const { configured, loading, user, signInWithGoogle } = useNexAuth();
+  const [adminKey, setAdminKey] = useState(() =>
+    typeof window === "undefined" ? "" : window.sessionStorage.getItem(ADMIN_KEY_SESSION_KEY) || "",
+  );
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [planId, setPlanId] = useState(NEX_PLANS[1].id);
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
@@ -61,27 +66,49 @@ function NexLicenseAdminPage() {
     [planId],
   );
 
-  const loadTransfers = useCallback(async () => {
-    if (!user) return;
-    setBusy("load");
-    setMessage(null);
-    try {
-      const result = await invokeNexLicenseAdmin<{ transfers: TransferRequest[] }>({
-        action: "list_transfers",
-      });
-      setTransfers(result.transfers);
-    } catch (error) {
-      setMessage(adminError(error));
-    } finally {
-      setBusy(null);
-    }
-  }, [user]);
+  const loadTransfers = useCallback(
+    async (keyOverride?: string) => {
+      const key = (keyOverride ?? adminKey).trim();
+      if (!key) return;
+      setBusy("load");
+      setMessage(null);
+      try {
+        const result = await invokeNexLicenseAdmin<{ transfers: TransferRequest[] }>(
+          { action: "list_transfers" },
+          key,
+        );
+        setTransfers(result.transfers);
+        setAdminUnlocked(true);
+        window.sessionStorage.setItem(ADMIN_KEY_SESSION_KEY, key);
+      } catch (error) {
+        setAdminUnlocked(false);
+        window.sessionStorage.removeItem(ADMIN_KEY_SESSION_KEY);
+        setMessage(adminError(error));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [adminKey],
+  );
 
   useEffect(() => {
-    void loadTransfers();
-  }, [loadTransfers]);
+    if (adminKey.trim()) void loadTransfers(adminKey);
+  }, [adminKey, loadTransfers]);
 
-  async function handleCreateCode(event: React.FormEvent) {
+  async function handleUnlock(event: FormEvent) {
+    event.preventDefault();
+    await loadTransfers(adminKey);
+  }
+
+  function handleLock() {
+    setAdminUnlocked(false);
+    setAdminKey("");
+    setTransfers([]);
+    setCreatedCode(null);
+    window.sessionStorage.removeItem(ADMIN_KEY_SESSION_KEY);
+  }
+
+  async function handleCreateCode(event: FormEvent) {
     event.preventDefault();
     setBusy("create");
     setMessage(null);
@@ -93,13 +120,16 @@ function NexLicenseAdminPage() {
         Number.isFinite(lifetime) && lifetime > 0
           ? new Date(Date.now() + lifetime * 86_400_000).toISOString()
           : null;
-      const result = await invokeNexLicenseAdmin<{ code: CreatedCode }>({
-        action: "create_code",
-        planId,
-        assignedEmail: email.trim(),
-        expiresAt,
-        note: note.trim() || null,
-      });
+      const result = await invokeNexLicenseAdmin<{ code: CreatedCode }>(
+        {
+          action: "create_code",
+          planId,
+          assignedEmail: email.trim(),
+          expiresAt,
+          note: note.trim() || null,
+        },
+        adminKey,
+      );
       setCreatedCode(result.code);
       setMessage("Código criado. Ele será exibido somente nesta resposta.");
     } catch (error) {
@@ -113,15 +143,18 @@ function NexLicenseAdminPage() {
     setBusy(transfer.id);
     setMessage(null);
     try {
-      await invokeNexLicenseAdmin({
-        action: "review_transfer",
-        transferId: transfer.id,
-        decision,
-        note:
-          decision === "approved"
-            ? "Troca aprovada pelo painel NEX."
-            : "Troca rejeitada pelo painel NEX.",
-      });
+      await invokeNexLicenseAdmin(
+        {
+          action: "review_transfer",
+          transferId: transfer.id,
+          decision,
+          note:
+            decision === "approved"
+              ? "Troca aprovada pelo painel NEX."
+              : "Troca rejeitada pelo painel NEX.",
+        },
+        adminKey,
+      );
       await loadTransfers();
       setMessage(decision === "approved" ? "Troca aprovada." : "Troca rejeitada.");
     } catch (error) {
@@ -149,36 +182,67 @@ function NexLicenseAdminPage() {
             <h1 className="mt-2 text-3xl font-black text-foreground">Administração de licenças</h1>
             <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               Gere códigos vinculados ao comprador e analise trocas de computador. O acesso é
-              validado novamente no servidor em cada operação.
+              validado no servidor em cada operação.
             </p>
           </header>
 
-          {!configured ? (
-            <AdminNotice text="Conecte o projeto Supabase para ativar este painel." />
-          ) : loading ? (
-            <AdminNotice text="Verificando a identidade administrativa..." loading />
-          ) : !user ? (
-            <section className="mt-6 border-y border-border/70 py-8">
-              <ShieldCheck className="h-8 w-8 text-primary" />
+          {message && (
+            <div className="mt-5 border-l-2 border-primary bg-primary/10 px-4 py-3 text-sm font-semibold text-foreground">
+              {message}
+            </div>
+          )}
+
+          {!adminUnlocked ? (
+            <section className="mt-6 border border-border/70 bg-card/60 p-6">
+              <LockKeyhole className="h-8 w-8 text-primary" />
               <h2 className="mt-4 text-xl font-black text-foreground">Acesso administrativo</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Entre com um e-mail presente no segredo NEX_ADMIN_EMAILS.
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Digite a chave administrativa local. Ela é enviada somente para a Edge Function,
+                validada por hash no Supabase e mantida apenas nesta sessão.
               </p>
-              <button
-                type="button"
-                onClick={() => void signInWithGoogle()}
-                className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground"
+              <form
+                onSubmit={handleUnlock}
+                className="mt-5 flex max-w-2xl flex-col gap-3 sm:flex-row"
               >
-                <LogIn className="h-4 w-4" /> Entrar com Google
-              </button>
+                <input
+                  required
+                  type="password"
+                  value={adminKey}
+                  onChange={(event) => setAdminKey(event.target.value)}
+                  placeholder="NEX-ADMIN-..."
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-background/75 px-3 text-sm text-foreground outline-none focus:border-primary"
+                />
+                <button
+                  type="submit"
+                  disabled={busy !== null}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground disabled:opacity-50"
+                >
+                  {busy === "load" ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="h-4 w-4" />
+                  )}
+                  Validar acesso
+                </button>
+              </form>
             </section>
           ) : (
             <>
-              {message && (
-                <div className="mt-5 border-l-2 border-primary bg-primary/10 px-4 py-3 text-sm font-semibold text-foreground">
-                  {message}
+              <div className="mt-6 flex items-center justify-between gap-4 border border-emerald-500/25 bg-emerald-500/10 p-4">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-5 w-5 text-emerald-300" />
+                  <p className="text-sm font-bold text-emerald-100">
+                    Painel administrativo liberado nesta sessão.
+                  </p>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={handleLock}
+                  className="rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-black text-emerald-200"
+                >
+                  Bloquear painel
+                </button>
+              </div>
 
               <div className="mt-6 grid gap-7 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                 <section>
@@ -357,8 +421,8 @@ function NexLicenseAdminPage() {
               </div>
 
               <div className="mt-7 flex items-start gap-3 border-t border-border/60 pt-5 text-xs text-muted-foreground">
-                <Ban className="mt-0.5 h-4 w-4 shrink-0 text-primary" />A chave administrativa nunca
-                é enviada ao navegador ou armazenada no aplicativo.
+                <Ban className="mt-0.5 h-4 w-4 shrink-0 text-primary" />A chave administrativa fica
+                apenas na sessão desta janela e o banco armazena somente o hash.
               </div>
             </>
           )}
@@ -368,7 +432,7 @@ function NexLicenseAdminPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">
@@ -376,19 +440,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       </span>
       {children}
     </label>
-  );
-}
-
-function AdminNotice({ text, loading = false }: { text: string; loading?: boolean }) {
-  return (
-    <div className="mt-6 flex items-center gap-3 border-l-2 border-warning bg-warning/10 px-4 py-4 text-warning">
-      {loading ? (
-        <LoaderCircle className="h-5 w-5 animate-spin" />
-      ) : (
-        <ShieldCheck className="h-5 w-5" />
-      )}
-      <p className="text-sm font-bold">{text}</p>
-    </div>
   );
 }
 
@@ -415,9 +466,8 @@ function formatDateTime(value: string) {
 
 function adminError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  if (/ADMIN_NOT_ALLOWED/i.test(message)) {
-    return "Esta conta não está autorizada a administrar licenças.";
-  }
+  if (/ADMIN_KEY_REQUIRED/i.test(message)) return "Informe a chave administrativa.";
+  if (/ADMIN_NOT_ALLOWED/i.test(message)) return "Chave administrativa inválida ou desativada.";
   if (/INVALID_ASSIGNED_EMAIL/i.test(message)) return "Informe um e-mail válido.";
   if (/INVALID_PLAN/i.test(message)) return "O plano selecionado não está disponível.";
   if (/TRANSFER_NOT_PENDING/i.test(message)) {

@@ -249,8 +249,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.language.note.text":
       "Nesta etapa, Configurações e a navegação principal já respondem ao idioma escolhido.",
     "settings.license.title": "Licença",
-    "settings.license.description":
-      "Conta Google, códigos de uso único e validação online do acesso.",
+    "settings.license.description": "E-mail, códigos de uso único e validação online do acesso.",
     "settings.license.version": "Versão atual",
     "settings.license.channel": "Canal atual",
     "settings.license.status": "Status da licença",
@@ -259,7 +258,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.license.notImplemented": "Ativação pela área Minha conta",
     "settings.license.note.title": "Licenciamento protegido",
     "settings.license.note.text":
-      "O acesso é vinculado à conta Google e ao primeiro computador ativado. Códigos só podem ser resgatados uma vez.",
+      "O acesso é vinculado ao e-mail e ao primeiro computador ativado. Códigos só podem ser resgatados uma vez.",
     "settings.privacy.title": "Privacidade",
     "settings.privacy.description":
       "Compromissos locais do NEX e base visual para preferências futuras.",
@@ -361,8 +360,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.language.note.text":
       "In this step, Settings and the main navigation already respond to the selected language.",
     "settings.license.title": "License",
-    "settings.license.description":
-      "Google account, single-use codes, and online access validation.",
+    "settings.license.description": "Email, single-use codes, and online access validation.",
     "settings.license.version": "Current version",
     "settings.license.channel": "Current channel",
     "settings.license.status": "License status",
@@ -371,7 +369,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.license.notImplemented": "Activation in My account",
     "settings.license.note.title": "Protected licensing",
     "settings.license.note.text":
-      "Access is bound to the Google account and first activated computer. Codes can only be redeemed once.",
+      "Access is bound to the email and first activated computer. Codes can only be redeemed once.",
     "settings.privacy.title": "Privacy",
     "settings.privacy.description":
       "NEX local commitments and a visual base for future preferences.",
@@ -476,7 +474,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
       "En esta etapa, Configuración y la navegación principal ya responden al idioma elegido.",
     "settings.license.title": "Licencia",
     "settings.license.description":
-      "Cuenta Google, códigos de un solo uso y validación de acceso en línea.",
+      "E-mail, códigos de un solo uso y validación de acceso en línea.",
     "settings.license.version": "Version actual",
     "settings.license.channel": "Canal actual",
     "settings.license.status": "Estado de licencia",
@@ -485,7 +483,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.license.notImplemented": "Activación en Mi cuenta",
     "settings.license.note.title": "Licencia protegida",
     "settings.license.note.text":
-      "El acceso se vincula a la cuenta Google y al primer equipo activado. Cada código solo puede canjearse una vez.",
+      "El acceso se vincula al e-mail y al primer equipo activado. Cada código solo puede canjearse una vez.",
     "settings.privacy.title": "Privacidad",
     "settings.privacy.description":
       "Compromisos locales de NEX y base visual para preferencias futuras.",
@@ -586,7 +584,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.language.note.text":
       "この段階では、設定画面とメインナビゲーションが選択した言語に対応します。",
     "settings.license.title": "ライセンス",
-    "settings.license.description": "Google アカウント、使い捨てコード、オンラインアクセス検証。",
+    "settings.license.description": "メール、使い捨てコード、オンラインアクセス検証。",
     "settings.license.version": "現在のバージョン",
     "settings.license.channel": "現在のチャンネル",
     "settings.license.status": "ライセンス状態",
@@ -595,7 +593,7 @@ const translations: Record<LanguagePreference, Partial<Record<TranslationKey, st
     "settings.license.notImplemented": "マイアカウントで有効化",
     "settings.license.note.title": "保護されたライセンス",
     "settings.license.note.text":
-      "アクセスは Google アカウントと最初に有効化した PC に関連付けられます。コードは一度だけ利用できます。",
+      "アクセスはメールと最初に有効化した PC に関連付けられます。コードは一度だけ利用できます。",
     "settings.privacy.title": "プライバシー",
     "settings.privacy.description": "NEXのローカル方針と今後のプライバシー設定のベースです。",
     "settings.privacy.local": "NEXはローカルで動作します。",

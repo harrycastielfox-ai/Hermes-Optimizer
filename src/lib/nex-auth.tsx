@@ -1,4 +1,4 @@
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import {
   createContext,
@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -32,6 +31,23 @@ export type NexDeviceIdentity = {
   fingerprint: string;
   label: string;
   source: string;
+};
+
+export type NexUser = {
+  id: string;
+  email: string;
+  user_metadata: {
+    full_name?: string | null;
+    avatar_url?: string | null;
+  };
+};
+
+export type NexLicenseSession = {
+  accountId: string | null;
+  email: string;
+  entitlement: NexEntitlement | null;
+  access: NexDeviceAccess;
+  verifiedAt: string;
 };
 
 export type NexDeviceAccess =
@@ -66,19 +82,32 @@ export const NEX_PLANS: NexPlan[] = [
   },
 ];
 
+type LicenseFunctionResponse = {
+  ok?: boolean;
+  error?: string;
+  account?: {
+    id: string | null;
+    email: string;
+  };
+  access?: NexDeviceAccess;
+  accessReason?: string;
+  entitlement?: NexEntitlement | null;
+};
+
 type AuthContextValue = {
   configured: boolean;
   loading: boolean;
-  session: Session | null;
-  user: User | null;
+  session: NexLicenseSession | null;
+  user: NexUser | null;
   entitlement: NexEntitlement | null;
   deviceIdentity: NexDeviceIdentity | null;
   deviceAccess: NexDeviceAccess;
   deviceTransfer: NexDeviceTransfer | null;
   error: string | null;
+  activateWithEmailCode: (email: string, code: string) => Promise<NexEntitlement>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  redeemCode: (code: string) => Promise<NexEntitlement>;
+  redeemCode: (code: string, email?: string) => Promise<NexEntitlement>;
   requestDeviceTransfer: () => Promise<NexDeviceTransfer>;
   cancelDeviceTransfer: () => Promise<void>;
   refreshEntitlement: () => Promise<void>;
@@ -87,9 +116,14 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const supabaseUrl = (
+  import.meta.env.VITE_SUPABASE_URL ?? import.meta.env.NEXT_PUBLIC_SUPABASE_URL
+)?.trim();
 const supabasePublishableKey = (
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  import.meta.env.VITE_SUPABASE_ANON_KEY ??
+  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )?.trim();
 const storeUrl = import.meta.env.VITE_NEX_STORE_URL?.trim();
 
@@ -97,6 +131,7 @@ let browserClient: SupabaseClient | null = null;
 let deviceIdentityPromise: Promise<NexDeviceIdentity> | null = null;
 
 const BROWSER_DEVICE_STORAGE_KEY = "nex.auth.development-device.v1";
+const LICENSE_SESSION_STORAGE_KEY = "nex.auth.email-license-session.v1";
 
 export function isNexAuthConfigured() {
   const hasRealProjectUrl = Boolean(
@@ -121,9 +156,8 @@ function getSupabaseClient() {
   if (!browserClient) {
     browserClient = createClient(supabaseUrl!, supabasePublishableKey!, {
       auth: {
-        flowType: "pkce",
-        persistSession: true,
-        autoRefreshToken: true,
+        persistSession: false,
+        autoRefreshToken: false,
         detectSessionInUrl: false,
       },
     });
@@ -134,14 +168,6 @@ function getSupabaseClient() {
 
 function isTauriRuntime() {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-}
-
-function getOAuthRedirectUrl() {
-  if (isTauriRuntime()) {
-    return "nexoptimizer://auth/callback";
-  }
-
-  return `${window.location.origin}/conta`;
 }
 
 export async function openNexExternalUrl(url: string) {
@@ -160,12 +186,18 @@ export function getNexStoreUrl() {
 
 export async function invokeNexLicenseAdmin<T = Record<string, unknown>>(
   payload: Record<string, unknown>,
+  adminKey?: string,
 ) {
   const client = getSupabaseClient();
+  const normalizedAdminKey = adminKey?.trim();
+  if (!normalizedAdminKey) throw new Error("ADMIN_KEY_REQUIRED");
   if (!client) throw new Error("O servidor de licenças ainda não foi configurado.");
 
   const { data, error } = await client.functions.invoke("nex-license-admin", {
     body: payload,
+    headers: {
+      "x-nex-admin-key": normalizedAdminKey,
+    },
   });
   if (error) {
     let message = error.message;
@@ -175,37 +207,13 @@ export async function invokeNexLicenseAdmin<T = Record<string, unknown>>(
         const body = (await response.clone().json()) as { error?: string };
         if (body.error) message = body.error;
       } catch {
-        // The SDK message is the safest fallback for non-JSON errors.
+        // Keep the SDK message for non-JSON responses.
       }
     }
     throw new Error(message);
   }
 
   return data as T;
-}
-
-function mapDeviceEntitlement(row: Record<string, unknown>): NexEntitlement {
-  const expiresAt = String(row.license_expires_at);
-  const storedStatus = String(row.license_status);
-  const expired = new Date(expiresAt).getTime() <= Date.now();
-
-  return {
-    userId: String(row.license_user_id),
-    planId: String(row.license_plan_id),
-    planName: String(row.license_plan_name),
-    status: storedStatus === "revoked" ? "revoked" : expired ? "expired" : "active",
-    startsAt: String(row.license_starts_at),
-    expiresAt,
-  };
-}
-
-function mapDeviceAccess(reason: string): NexDeviceAccess {
-  if (reason === "ALLOWED") return "allowed";
-  if (reason === "NO_ENTITLEMENT") return "unlicensed";
-  if (reason === "EXPIRED") return "expired";
-  if (reason === "REVOKED") return "revoked";
-  if (reason === "DEVICE_MISMATCH") return "blocked";
-  return "unavailable";
 }
 
 async function sha256Hex(value: string) {
@@ -244,46 +252,48 @@ async function getDeviceIdentity() {
   return deviceIdentityPromise;
 }
 
-async function readDeviceEntitlement(client: SupabaseClient, identity: NexDeviceIdentity) {
-  const { data, error } = await client.rpc("get_device_entitlement", {
-    device_fingerprint: identity.fingerprint,
-    requested_device_label: identity.label,
-  });
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
 
-  if (error) {
-    throw error;
+function isSessionFresh(session: NexLicenseSession) {
+  if (!session.entitlement || session.entitlement.status !== "active") return false;
+  return new Date(session.entitlement.expiresAt).getTime() > Date.now();
+}
+
+function readStoredSession() {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(LICENSE_SESSION_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as NexLicenseSession;
+    if (!parsed.email || !parsed.access) return null;
+    return parsed;
+  } catch {
+    window.localStorage.removeItem(LICENSE_SESSION_STORAGE_KEY);
+    return null;
   }
-
-  const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | undefined;
-  if (!row) return { entitlement: null, access: "unavailable" as NexDeviceAccess };
-
-  const access = mapDeviceAccess(String(row.access_reason));
-  const entitlement = row.license_plan_id ? mapDeviceEntitlement(row) : null;
-  return { entitlement, access };
 }
 
-function mapDeviceTransfer(row: Record<string, unknown>): NexDeviceTransfer {
+function writeStoredSession(session: NexLicenseSession | null) {
+  if (typeof window === "undefined") return;
+  if (!session) {
+    window.localStorage.removeItem(LICENSE_SESSION_STORAGE_KEY);
+    return;
+  }
+  window.localStorage.setItem(LICENSE_SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+function makeUserFromSession(session: NexLicenseSession | null): NexUser | null {
+  if (!session) return null;
   return {
-    id: String(row.id),
-    status: String(row.status) as NexDeviceTransfer["status"],
-    requestedDeviceLabel: String(row.requested_device_label),
-    requestedAt: String(row.requested_at),
-    reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
-    reviewNote: row.review_note ? String(row.review_note) : null,
+    id: session.accountId ?? session.email,
+    email: session.email,
+    user_metadata: {
+      full_name: session.email,
+      avatar_url: null,
+    },
   };
-}
-
-async function readLatestDeviceTransfer(client: SupabaseClient, userId: string) {
-  const { data, error } = await client
-    .from("device_transfer_requests")
-    .select("id, status, requested_device_label, requested_at, reviewed_at, review_note")
-    .eq("user_id", userId)
-    .order("requested_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data ? mapDeviceTransfer(data as Record<string, unknown>) : null;
 }
 
 function friendlyAuthError(error: unknown) {
@@ -295,16 +305,13 @@ function friendlyAuthError(error: unknown) {
     return "Este código expirou e não pode mais ser utilizado.";
   }
   if (/CODE_ASSIGNED_TO_ANOTHER_ACCOUNT/i.test(message)) {
-    return "Este código pertence a outra conta Google.";
+    return "Este código pertence a outro e-mail.";
   }
   if (/CODE_NOT_ASSIGNED/i.test(message)) {
     return "Este código ainda não foi associado ao e-mail da compra.";
   }
   if (/ACCOUNT_EMAIL_REQUIRED/i.test(message)) {
-    return "Sua conta Google precisa fornecer um e-mail válido para resgatar o código.";
-  }
-  if (/GOOGLE_AUTH_REQUIRED/i.test(message)) {
-    return "Entre com uma conta Google para usar a licença do NEX.";
+    return "Digite o e-mail usado na compra.";
   }
   if (/DEVICE_ALREADY_BOUND|DEVICE_MISMATCH/i.test(message)) {
     return "Esta licença já está vinculada a outro computador.";
@@ -314,6 +321,12 @@ function friendlyAuthError(error: unknown) {
   }
   if (/DEVICE_IDENTITY_APP_REQUIRED/i.test(message)) {
     return "Abra o NEX Optimizer instalado no Windows para ativar esta licença.";
+  }
+  if (/SERVER_NOT_CONFIGURED/i.test(message)) {
+    return "O servidor de licenças ainda não foi configurado.";
+  }
+  if (/LICENSE_NOT_FOUND|NO_ENTITLEMENT/i.test(message)) {
+    return "Nenhum acesso ativo foi encontrado para este e-mail neste computador.";
   }
   if (/TRANSFER_ALREADY_PENDING/i.test(message)) {
     return "Já existe uma solicitação de troca aguardando análise.";
@@ -327,84 +340,120 @@ function friendlyAuthError(error: unknown) {
   if (/ALREADY_THIS_DEVICE/i.test(message)) {
     return "Esta licença já está vinculada a este computador.";
   }
-  if (/invalid login|provider/i.test(message)) {
-    return "O login Google ainda não está habilitado no servidor do NEX.";
-  }
-  if (/network|fetch/i.test(message)) {
+  if (/network|fetch|Failed to fetch/i.test(message)) {
     return "Não foi possível acessar o servidor de licenças. Verifique sua conexão.";
   }
   return message;
 }
 
+async function invokeLicenseSession(
+  action: "activate" | "verify",
+  email: string,
+  identity: NexDeviceIdentity,
+  code?: string,
+) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("O servidor de licenças ainda não foi configurado.");
+
+  const { data, error } = await client.functions.invoke("nex-license-session", {
+    body: {
+      action,
+      email: normalizeEmail(email),
+      code,
+      device: identity,
+    },
+  });
+  if (error) {
+    let message = error.message;
+    const response = "context" in error ? (error.context as Response | undefined) : undefined;
+    if (response) {
+      try {
+        const body = (await response.clone().json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // Keep SDK error message for non-JSON responses.
+      }
+    }
+    throw new Error(message);
+  }
+
+  const result = data as LicenseFunctionResponse;
+  if (!result?.ok && result?.error) throw new Error(result.error);
+  return result;
+}
+
+function buildSession(email: string, result: LicenseFunctionResponse): NexLicenseSession {
+  const access = result.access ?? "unavailable";
+  return {
+    accountId: result.account?.id ?? null,
+    email: normalizeEmail(result.account?.email ?? email),
+    entitlement: result.entitlement ?? null,
+    access,
+    verifiedAt: new Date().toISOString(),
+  };
+}
+
 export function NexAuthProvider({ children }: { children: ReactNode }) {
   const configured = isNexAuthConfigured();
   const [loading, setLoading] = useState(configured);
-  const [session, setSession] = useState<Session | null>(null);
-  const [entitlement, setEntitlement] = useState<NexEntitlement | null>(null);
+  const [session, setSession] = useState<NexLicenseSession | null>(() => readStoredSession());
+  const [entitlement, setEntitlement] = useState<NexEntitlement | null>(() => {
+    const stored = readStoredSession();
+    return stored?.entitlement ?? null;
+  });
   const [deviceIdentity, setDeviceIdentity] = useState<NexDeviceIdentity | null>(null);
-  const [deviceAccess, setDeviceAccess] = useState<NexDeviceAccess>("unlicensed");
+  const [deviceAccess, setDeviceAccess] = useState<NexDeviceAccess>(() => {
+    const stored = readStoredSession();
+    return stored?.access ?? "unlicensed";
+  });
   const [deviceTransfer, setDeviceTransfer] = useState<NexDeviceTransfer | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const handledUrls = useRef(new Set<string>());
+
+  const setLicenseSession = useCallback((nextSession: NexLicenseSession | null) => {
+    setSession(nextSession);
+    setEntitlement(nextSession?.entitlement ?? null);
+    setDeviceAccess(nextSession?.access ?? "unlicensed");
+    writeStoredSession(nextSession);
+  }, []);
 
   const refreshEntitlement = useCallback(async () => {
-    const client = getSupabaseClient();
-    const userId = session?.user.id;
-    if (!client || !userId) {
-      setEntitlement(null);
-      setDeviceAccess("unlicensed");
-      setDeviceTransfer(null);
-      return;
-    }
-
-    try {
-      setDeviceAccess("checking");
-      const identity = await getDeviceIdentity();
-      setDeviceIdentity(identity);
-      const [result, latestTransfer] = await Promise.all([
-        readDeviceEntitlement(client, identity),
-        readLatestDeviceTransfer(client, userId),
-      ]);
-      setEntitlement(result.entitlement);
-      setDeviceAccess(result.access);
-      setDeviceTransfer(latestTransfer);
-    } catch (loadError) {
-      setDeviceAccess("unavailable");
-      setError(friendlyAuthError(loadError));
-    }
-  }, [session?.user.id]);
-
-  useEffect(() => {
-    const client = getSupabaseClient();
-    if (!client) {
+    const stored = readStoredSession();
+    if (!stored?.email) {
+      setLicenseSession(null);
       setLoading(false);
       return;
     }
 
-    let active = true;
-    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => {
-      if (!active) return;
-      setSession(nextSession);
-      if (!nextSession) {
-        setEntitlement(null);
-        setDeviceAccess("unlicensed");
-        setDeviceTransfer(null);
+    if (!configured) {
+      setLicenseSession(stored);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setDeviceAccess("checking");
+      const identity = await getDeviceIdentity();
+      setDeviceIdentity(identity);
+      const result = await invokeLicenseSession("verify", stored.email, identity);
+      setLicenseSession(buildSession(stored.email, result));
+      setError(null);
+    } catch (loadError) {
+      if (isSessionFresh(stored)) {
+        setLicenseSession({ ...stored, access: stored.access || "allowed" });
+      } else {
+        setDeviceAccess("unavailable");
       }
-    });
+      setError(friendlyAuthError(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }, [configured, setLicenseSession]);
 
-    void client.auth
-      .getSession()
-      .then(({ data, error: sessionError }) => {
-        if (sessionError) throw sessionError;
-        if (active) setSession(data.session);
-      })
-      .catch((sessionError) => active && setError(friendlyAuthError(sessionError)))
-      .finally(() => active && setLoading(false));
-
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
+  useEffect(() => {
+    void getDeviceIdentity()
+      .then((identity) => setDeviceIdentity(identity))
+      .catch((identityError) => setError(friendlyAuthError(identityError)));
   }, []);
 
   useEffect(() => {
@@ -428,7 +477,7 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
   }, [entitlement, refreshEntitlement]);
 
   useEffect(() => {
-    if (!session?.user || typeof window === "undefined") return;
+    if (!session?.email || typeof window === "undefined") return;
 
     const refreshAccess = () => void refreshEntitlement();
     window.addEventListener("focus", refreshAccess);
@@ -437,163 +486,76 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", refreshAccess);
       window.removeEventListener("online", refreshAccess);
     };
-  }, [refreshEntitlement, session?.user]);
+  }, [refreshEntitlement, session?.email]);
 
-  useEffect(() => {
-    const client = getSupabaseClient();
-    if (!client || typeof window === "undefined") return;
-
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-
-    const handleCallback = async (rawUrl: string) => {
-      if (disposed || handledUrls.current.has(rawUrl)) return;
-      handledUrls.current.add(rawUrl);
-
-      try {
-        const callbackUrl = new URL(rawUrl);
-        const authCode = callbackUrl.searchParams.get("code");
-        const authError = callbackUrl.searchParams.get("error_description");
-        if (authError) throw new Error(authError);
-        if (!authCode) return;
-
-        const { error: exchangeError } = await client.auth.exchangeCodeForSession(authCode);
-        if (exchangeError) throw exchangeError;
-        setError(null);
-      } catch (callbackError) {
-        setError(friendlyAuthError(callbackError));
-      }
-    };
-
-    if (isTauriRuntime()) {
-      void import("@tauri-apps/plugin-deep-link")
-        .then(async ({ getCurrent, onOpenUrl }) => {
-          const currentUrls = await getCurrent();
-          for (const url of currentUrls ?? []) await handleCallback(url);
-          unlisten = await onOpenUrl((urls) => {
-            for (const url of urls) void handleCallback(url);
-          });
-        })
-        .catch((deepLinkError) => setError(friendlyAuthError(deepLinkError)));
-    } else {
-      void handleCallback(window.location.href);
-    }
-
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    const client = getSupabaseClient();
-    if (!client) {
-      setError("Configure o servidor de contas do NEX antes de entrar.");
-      return;
-    }
-
-    setError(null);
-    const { data, error: oauthError } = await client.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: getOAuthRedirectUrl(),
-        skipBrowserRedirect: true,
-      },
-    });
-
-    if (oauthError) {
-      setError(friendlyAuthError(oauthError));
-      return;
-    }
-
-    if (data.url) await openNexExternalUrl(data.url);
-  }, []);
-
-  const signOut = useCallback(async () => {
-    const client = getSupabaseClient();
-    if (!client) return;
-    const { error: signOutError } = await client.auth.signOut();
-    if (signOutError) {
-      setError(friendlyAuthError(signOutError));
-      return;
-    }
-    setEntitlement(null);
-    setDeviceAccess("unlicensed");
-    setDeviceTransfer(null);
-  }, []);
-
-  const redeemCode = useCallback(
-    async (code: string) => {
-      const client = getSupabaseClient();
-      if (!client) throw new Error("O servidor de licenças ainda não foi configurado.");
-      if (!session?.user) throw new Error("Entre com sua conta Google antes de resgatar o código.");
-
-      const normalized = code.trim();
-      if (normalized.length < 8) throw new Error("Digite um código NEX válido.");
+  const activateWithEmailCode = useCallback(
+    async (email: string, code: string) => {
+      const normalizedEmail = normalizeEmail(email);
+      const normalizedCode = code.trim();
+      if (!normalizedEmail) throw new Error("Digite o e-mail usado na compra.");
+      if (normalizedCode.length < 8) throw new Error("Digite um código NEX válido.");
 
       const identity = deviceIdentity ?? (await getDeviceIdentity());
       setDeviceIdentity(identity);
-      const { error: redemptionError } = await client.rpc("redeem_license_code", {
-        redemption_code: normalized,
-        device_fingerprint: identity.fingerprint,
-        requested_device_label: identity.label,
-      });
-      if (redemptionError) throw new Error(friendlyAuthError(redemptionError));
-
-      const result = await readDeviceEntitlement(client, identity);
-      if (!result.entitlement || result.access !== "allowed")
-        throw new Error("O código foi processado, mas a licença não foi encontrada.");
-      setEntitlement(result.entitlement);
-      setDeviceAccess(result.access);
-      return result.entitlement;
+      const result = await invokeLicenseSession(
+        "activate",
+        normalizedEmail,
+        identity,
+        normalizedCode,
+      );
+      const nextSession = buildSession(normalizedEmail, result);
+      if (!nextSession.entitlement || nextSession.access !== "allowed") {
+        throw new Error("O código foi processado, mas o acesso não foi liberado.");
+      }
+      setLicenseSession(nextSession);
+      setError(null);
+      return nextSession.entitlement;
     },
-    [deviceIdentity, session?.user],
+    [deviceIdentity, setLicenseSession],
+  );
+
+  const signInWithGoogle = useCallback(async () => {
+    setError("O login Google foi removido do fluxo do cliente. Use e-mail e código de acesso.");
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setLicenseSession(null);
+    setDeviceTransfer(null);
+    setError(null);
+  }, [setLicenseSession]);
+
+  const redeemCode = useCallback(
+    async (code: string, email?: string) => {
+      const targetEmail = email ?? session?.email ?? "";
+      try {
+        return await activateWithEmailCode(targetEmail, code);
+      } catch (activationError) {
+        throw new Error(friendlyAuthError(activationError));
+      }
+    },
+    [activateWithEmailCode, session?.email],
   );
 
   const requestDeviceTransfer = useCallback(async () => {
-    const client = getSupabaseClient();
-    if (!client || !session?.user) {
-      throw new Error("Entre com sua conta Google antes de solicitar a troca.");
-    }
-
-    const identity = deviceIdentity ?? (await getDeviceIdentity());
-    setDeviceIdentity(identity);
-    const { error: requestError } = await client.rpc("request_device_transfer", {
-      requested_device_fingerprint: identity.fingerprint,
-      requested_device_name: identity.label,
-    });
-    if (requestError) throw new Error(friendlyAuthError(requestError));
-
-    const nextTransfer = await readLatestDeviceTransfer(client, session.user.id);
-    if (!nextTransfer) throw new Error("A solicitação foi enviada, mas não pôde ser consultada.");
-    setDeviceTransfer(nextTransfer);
-    return nextTransfer;
-  }, [deviceIdentity, session?.user]);
+    throw new Error("A troca automática de computador será conectada ao novo fluxo de e-mail.");
+  }, []);
 
   const cancelDeviceTransfer = useCallback(async () => {
-    const client = getSupabaseClient();
-    if (!client || !deviceTransfer || !session?.user) return;
-
-    const { data, error: cancelError } = await client.rpc("cancel_device_transfer", {
-      transfer_request_id: deviceTransfer.id,
-    });
-    if (cancelError) throw new Error(friendlyAuthError(cancelError));
-    if (!data) throw new Error("Esta solicitação não está mais pendente.");
-
-    setDeviceTransfer(await readLatestDeviceTransfer(client, session.user.id));
-  }, [deviceTransfer, session?.user]);
+    throw new Error("A troca automática de computador será conectada ao novo fluxo de e-mail.");
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       configured,
       loading,
       session,
-      user: session?.user ?? null,
+      user: makeUserFromSession(session),
       entitlement,
       deviceIdentity,
       deviceAccess,
       deviceTransfer,
       error,
+      activateWithEmailCode,
       signInWithGoogle,
       signOut,
       redeemCode,
@@ -603,6 +565,8 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       clearError: () => setError(null),
     }),
     [
+      activateWithEmailCode,
+      cancelDeviceTransfer,
       configured,
       deviceAccess,
       deviceIdentity,
@@ -611,9 +575,8 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       error,
       loading,
       redeemCode,
-      requestDeviceTransfer,
-      cancelDeviceTransfer,
       refreshEntitlement,
+      requestDeviceTransfer,
       session,
       signInWithGoogle,
       signOut,

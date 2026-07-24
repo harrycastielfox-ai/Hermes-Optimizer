@@ -232,7 +232,6 @@ html.dark[data-hermes-accent="white"] {
   .lightning-bg.flex > main {
     min-height: 0;
   }
-
 }
 
 @utility lightning-bg {
@@ -254,16 +253,16 @@ html.dark[data-hermes-accent="white"] {
   .dark .lightning-bg {
     background-image:
       radial-gradient(
-        ellipse at top left,
-        color-mix(in oklab, var(--primary) 16%, transparent),
-        transparent 58%
+        ellipse at 18% 0%,
+        color-mix(in oklab, var(--primary) 12%, transparent),
+        transparent 42%
       ),
       radial-gradient(
-        ellipse at bottom right,
-        color-mix(in oklab, var(--info) 12%, transparent),
-        transparent 58%
+        ellipse at 88% 8%,
+        color-mix(in oklab, var(--primary) 8%, transparent),
+        transparent 36%
       ),
-      linear-gradient(180deg, oklch(0.18 0.03 260), oklch(0.13 0.025 260));
+      linear-gradient(180deg, oklch(0.105 0.03 292), oklch(0.055 0.018 292));
   }
 
   .sidebar-texture {
@@ -278,33 +277,33 @@ html.dark[data-hermes-accent="white"] {
 
   .dark .sidebar-texture {
     background:
-      radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.22), transparent 34%),
-      radial-gradient(circle at 100% 52%, rgba(236, 72, 153, 0.1), transparent 28%),
-      linear-gradient(180deg, rgba(13, 8, 25, 0.98), rgba(7, 5, 13, 0.98));
+      radial-gradient(circle at 46% 4%, rgba(168, 85, 247, 0.2), transparent 30%),
+      radial-gradient(circle at 92% 58%, rgba(216, 180, 254, 0.06), transparent 32%),
+      linear-gradient(180deg, rgba(12, 7, 22, 0.98), rgba(5, 4, 10, 0.98));
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
   }
 
   html[data-hermes-accent="white"] .sidebar-texture {
     background:
-      radial-gradient(circle at 35% 0%, rgba(212, 175, 55, 0.2), transparent 34%),
-      radial-gradient(circle at 88% 74%, rgba(180, 135, 28, 0.14), transparent 36%),
+      radial-gradient(circle at 35% 0%, rgba(255, 255, 255, 0.72), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(148, 163, 184, 0.16), transparent 36%),
       linear-gradient(
         180deg,
-        rgba(255, 254, 249, 0.98) 0%,
-        rgba(255, 251, 238, 0.97) 52%,
-        rgba(250, 244, 224, 0.94) 100%
+        rgba(255, 255, 255, 0.98) 0%,
+        rgba(248, 250, 252, 0.97) 52%,
+        rgba(241, 245, 249, 0.94) 100%
       );
   }
 
   html.dark[data-hermes-accent="white"] .sidebar-texture {
     background:
-      radial-gradient(circle at 35% 0%, rgba(212, 175, 55, 0.24), transparent 34%),
-      radial-gradient(circle at 88% 74%, rgba(180, 135, 28, 0.18), transparent 36%),
+      radial-gradient(circle at 35% 0%, rgba(255, 255, 255, 0.16), transparent 34%),
+      radial-gradient(circle at 88% 74%, rgba(148, 163, 184, 0.12), transparent 36%),
       linear-gradient(
         180deg,
-        rgba(32, 28, 20, 0.98) 0%,
-        rgba(24, 22, 18, 0.97) 52%,
-        rgba(18, 17, 15, 0.96) 100%
+        rgba(23, 23, 28, 0.98) 0%,
+        rgba(16, 16, 22, 0.97) 52%,
+        rgba(10, 10, 15, 0.96) 100%
       );
   }
 
@@ -313,8 +312,8 @@ html.dark[data-hermes-accent="white"] {
     position: absolute;
     inset: 0;
     z-index: -2;
-    opacity: 0.38;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='760' viewBox='0 0 260 760' fill='none'%3E%3Cg stroke='%232563eb' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath opacity='.36' stroke-width='1.25' d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath opacity='.30' stroke-width='1.05' d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3Cpath opacity='.22' stroke-width='.95' d='M125 44 147 117 119 207 154 288 126 376 162 488 133 596 168 718'/%3E%3Cpath opacity='.18' stroke-width='.9' d='M18 336 50 372 30 428 70 496 49 560'/%3E%3C/g%3E%3Cg stroke='%2393c5fd' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' opacity='.18'%3E%3Cpath d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.22;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='760' viewBox='0 0 260 760' fill='none'%3E%3Cg stroke='%23d8b4fe' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath opacity='.22' stroke-width='1.2' d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath opacity='.18' stroke-width='1.05' d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3Cpath opacity='.16' stroke-width='.95' d='M125 44 147 117 119 207 154 288 126 376 162 488 133 596 168 718'/%3E%3C/g%3E%3Cg stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' opacity='.08'%3E%3Cpath d='M28 16 61 92 42 139 88 223 56 300 99 392 76 476 116 584 90 704'/%3E%3Cpath d='M210 0 181 86 213 156 166 254 197 350 152 462 183 558 132 732'/%3E%3C/g%3E%3C/svg%3E");
     background-position: center top;
     background-repeat: repeat-y;
     background-size: 260px 760px;
@@ -326,18 +325,17 @@ html.dark[data-hermes-accent="white"] {
     position: absolute;
     inset: 0;
     z-index: -1;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.22),
-        transparent 18%,
-        rgba(255, 255, 255, 0.12) 72%
-      );
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.22),
+      transparent 18%,
+      rgba(255, 255, 255, 0.12) 72%
+    );
     pointer-events: none;
   }
 
   .dark .sidebar-texture::before {
-    opacity: 0.22;
+    opacity: 0.2;
     filter: blur(0.15px);
   }
 
@@ -388,13 +386,13 @@ html.dark[data-hermes-accent="white"] {
   }
 
   html[data-hermes-accent="white"] .optimize-cta {
-    color: oklch(0.19 0.035 70);
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.32);
+    color: oklch(0.14 0.018 285);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 48%),
-      linear-gradient(135deg, #e6c45b 0%, #c99a27 48%, #a87514 100%);
+      linear-gradient(135deg, #ffffff 0%, #e5e7eb 52%, #cbd5e1 100%);
     box-shadow:
-      0 12px 26px -16px rgba(180, 135, 28, 0.95),
+      0 12px 26px -16px rgba(148, 163, 184, 0.85),
       0 0 0 1px rgba(255, 255, 255, 0.24) inset;
   }
 
@@ -403,13 +401,13 @@ html.dark[data-hermes-accent="white"] {
   }
 
   html.dark[data-hermes-accent="white"] .optimize-cta {
-    color: oklch(0.17 0.035 70);
+    color: oklch(0.12 0.016 285);
   }
 
   html[data-hermes-accent="white"] .optimize-cta:hover {
     box-shadow:
-      0 14px 30px -16px rgba(180, 135, 28, 1),
-      0 0 24px rgba(212, 175, 55, 0.34),
+      0 14px 30px -16px rgba(148, 163, 184, 0.95),
+      0 0 24px rgba(255, 255, 255, 0.28),
       0 0 0 1px rgba(255, 255, 255, 0.52) inset;
   }
 }
@@ -421,14 +419,12 @@ html.dark body {
 html.dark .lightning-bg {
   background-color: oklch(0.06 0.02 292);
   background-image:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 150px),
-    radial-gradient(ellipse at 18% 0%, rgba(168, 85, 247, 0.24), transparent 38%),
-    radial-gradient(ellipse at 88% 10%, rgba(192, 132, 252, 0.16), transparent 30%),
-    radial-gradient(ellipse at 78% 92%, rgba(126, 34, 206, 0.2), transparent 36%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 170px),
+    radial-gradient(ellipse at 16% 0%, rgba(168, 85, 247, 0.18), transparent 36%),
+    radial-gradient(ellipse at 88% 10%, rgba(192, 132, 252, 0.1), transparent 28%),
+    radial-gradient(ellipse at 78% 92%, rgba(126, 34, 206, 0.14), transparent 34%),
     linear-gradient(180deg, oklch(0.105 0.03 292), oklch(0.055 0.02 292)) !important;
-  background-position:
-    center,
-    center !important;
+  background-position: center, center !important;
   background-size:
     180px 180px,
     auto,
@@ -438,9 +434,9 @@ html.dark .lightning-bg {
 }
 
 html.dark[data-hermes-accent="white"] .lightning-bg {
-  background-color: oklch(0.14 0.018 75);
+  background-color: oklch(0.1 0.012 285);
   background-image:
-    radial-gradient(ellipse at 18% 0%, rgba(212, 175, 55, 0.2), transparent 42%),
-    radial-gradient(ellipse at 82% 18%, rgba(180, 135, 28, 0.1), transparent 38%),
-    linear-gradient(180deg, oklch(0.19 0.025 75), oklch(0.135 0.018 70)) !important;
+    radial-gradient(ellipse at 18% 0%, rgba(255, 255, 255, 0.12), transparent 42%),
+    radial-gradient(ellipse at 82% 18%, rgba(148, 163, 184, 0.08), transparent 38%),
+    linear-gradient(180deg, oklch(0.14 0.015 285), oklch(0.09 0.012 285)) !important;
 }
