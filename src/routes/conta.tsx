@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import {
   getNexStoreUrl,
@@ -49,9 +49,11 @@ function AccountPage() {
   } = useNexAuth();
   const [email, setEmail] = useState(user?.email ?? "");
   const [code, setCode] = useState("");
+  const [showActivationForm, setShowActivationForm] = useState(false);
   const [busy, setBusy] = useState<"activate" | "refresh" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const storeUrl = getNexStoreUrl();
+  const hasActiveAccess = entitlement?.status === "active" && deviceAccess === "allowed";
   const remainingDays = useMemo(() => {
     if (!entitlement || entitlement.status !== "active") return 0;
     return Math.max(
@@ -60,7 +62,7 @@ function AccountPage() {
     );
   }, [entitlement]);
 
-  async function handleActivate(event: React.FormEvent) {
+  async function handleActivate(event: FormEvent) {
     event.preventDefault();
     setBusy("activate");
     setNotice(null);
@@ -69,6 +71,7 @@ function AccountPage() {
       const activated = await redeemCode(code, email);
       setCode("");
       setEmail(user?.email ?? email.trim().toLowerCase());
+      setShowActivationForm(false);
       setNotice(`Acesso ${activated.planName} ativado com sucesso.`);
     } catch (activationError) {
       setNotice(
@@ -200,47 +203,58 @@ function AccountPage() {
                 </div>
               ) : null}
 
-              <form
-                onSubmit={handleActivate}
-                className="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4"
-              >
-                <label htmlFor="license-email" className="text-sm font-black text-foreground">
-                  Ativar acesso
-                </label>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Use o e-mail da compra e o código recebido. O código é de uso único.
-                </p>
-                <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_auto]">
-                  <input
-                    id="license-email"
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="cliente@email.com"
-                    autoComplete="email"
-                    className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                  <input
-                    id="license-code"
-                    required
-                    value={code}
-                    onChange={(event) => setCode(event.target.value.toUpperCase())}
-                    placeholder="NEX-XXXX-XXXX-XXXX"
-                    autoComplete="off"
-                    spellCheck={false}
-                    className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-[0.08em] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                  <button
-                    type="submit"
-                    disabled={busy === "activate" || code.trim().length < 8}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    {busy === "activate" ? "Validando..." : "Ativar"}
-                  </button>
-                </div>
-              </form>
+              {hasActiveAccess && !showActivationForm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowActivationForm(true)}
+                  className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 text-xs font-black text-primary transition hover:border-primary/55 hover:bg-primary/15"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Adicionar tempo com outro código
+                </button>
+              ) : (
+                <form
+                  onSubmit={handleActivate}
+                  className="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4"
+                >
+                  <label htmlFor="license-email" className="text-sm font-black text-foreground">
+                    {hasActiveAccess ? "Adicionar tempo" : "Ativar acesso"}
+                  </label>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Use o e-mail da compra e o código recebido. O código é de uso único.
+                  </p>
+                  <div className="mt-3 grid gap-2 xl:grid-cols-[minmax(260px,1.1fr)_minmax(240px,0.9fr)_auto]">
+                    <input
+                      id="license-email"
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="cliente@email.com"
+                      autoComplete="email"
+                      className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                    <input
+                      id="license-code"
+                      required
+                      value={code}
+                      onChange={(event) => setCode(event.target.value.toUpperCase())}
+                      placeholder="NEX-XXXX-XXXX-XXXX"
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="h-11 min-w-0 rounded-xl border border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-[0.08em] text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                    <button
+                      type="submit"
+                      disabled={busy === "activate" || code.trim().length < 8}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-black text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      {busy === "activate" ? "Validando..." : "Ativar"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </section>
 
             <section className="rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur">
