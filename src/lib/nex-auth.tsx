@@ -98,6 +98,7 @@ type AuthContextValue = {
   configured: boolean;
   loading: boolean;
   session: NexLicenseSession | null;
+  rememberedEmail: string | null;
   user: NexUser | null;
   entitlement: NexEntitlement | null;
   deviceIdentity: NexDeviceIdentity | null;
@@ -133,6 +134,7 @@ let deviceIdentityPromise: Promise<NexDeviceIdentity> | null = null;
 
 const BROWSER_DEVICE_STORAGE_KEY = "nex.auth.development-device.v1";
 const LICENSE_SESSION_STORAGE_KEY = "nex.auth.email-license-session.v1";
+const LICENSE_REMEMBERED_EMAIL_STORAGE_KEY = "nex.auth.remembered-email.v1";
 const LICENSE_BACKGROUND_REFRESH_GRACE_MS = 10 * 60 * 1000;
 
 export function isNexAuthConfigured() {
@@ -292,6 +294,23 @@ function writeStoredSession(session: NexLicenseSession | null) {
   window.localStorage.setItem(LICENSE_SESSION_STORAGE_KEY, JSON.stringify(session));
 }
 
+function readRememberedEmail() {
+  if (typeof window === "undefined") return null;
+  return (
+    normalizeEmail(window.localStorage.getItem(LICENSE_REMEMBERED_EMAIL_STORAGE_KEY) ?? "") || null
+  );
+}
+
+function writeRememberedEmail(email: string | null) {
+  if (typeof window === "undefined") return;
+  const normalizedEmail = email ? normalizeEmail(email) : "";
+  if (!normalizedEmail) {
+    window.localStorage.removeItem(LICENSE_REMEMBERED_EMAIL_STORAGE_KEY);
+    return;
+  }
+  window.localStorage.setItem(LICENSE_REMEMBERED_EMAIL_STORAGE_KEY, normalizedEmail);
+}
+
 function makeUserFromSession(session: NexLicenseSession | null): NexUser | null {
   if (!session) return null;
   return {
@@ -405,6 +424,10 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
   const configured = isNexAuthConfigured();
   const [loading, setLoading] = useState(configured);
   const [session, setSession] = useState<NexLicenseSession | null>(() => readStoredSession());
+  const [rememberedEmail, setRememberedEmail] = useState<string | null>(() => {
+    const stored = readStoredSession();
+    return stored?.email ?? readRememberedEmail();
+  });
   const [entitlement, setEntitlement] = useState<NexEntitlement | null>(() => {
     const stored = readStoredSession();
     return stored?.entitlement ?? null;
@@ -421,6 +444,10 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
     setSession(nextSession);
     setEntitlement(nextSession?.entitlement ?? null);
     setDeviceAccess(nextSession?.access ?? "unlicensed");
+    if (nextSession?.email) {
+      setRememberedEmail(nextSession.email);
+      writeRememberedEmail(nextSession.email);
+    }
     writeStoredSession(nextSession);
   }, []);
 
@@ -568,10 +595,15 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    const emailToRemember = session?.email ?? rememberedEmail;
+    if (emailToRemember) {
+      setRememberedEmail(emailToRemember);
+      writeRememberedEmail(emailToRemember);
+    }
     setLicenseSession(null);
     setDeviceTransfer(null);
     setError(null);
-  }, [setLicenseSession]);
+  }, [rememberedEmail, session?.email, setLicenseSession]);
 
   const redeemCode = useCallback(
     async (code: string, email?: string) => {
@@ -593,11 +625,14 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
     throw new Error("A troca automática de computador será conectada ao novo fluxo de e-mail.");
   }, []);
 
+  const clearError = useCallback(() => setError(null), []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       configured,
       loading,
       session,
+      rememberedEmail,
       user: makeUserFromSession(session),
       entitlement,
       deviceIdentity,
@@ -612,11 +647,12 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       requestDeviceTransfer,
       cancelDeviceTransfer,
       refreshEntitlement,
-      clearError: () => setError(null),
+      clearError,
     }),
     [
       activateWithEmailCode,
       cancelDeviceTransfer,
+      clearError,
       configured,
       deviceAccess,
       deviceIdentity,
@@ -624,6 +660,7 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       entitlement,
       error,
       loading,
+      rememberedEmail,
       redeemCode,
       refreshEntitlement,
       requestDeviceTransfer,

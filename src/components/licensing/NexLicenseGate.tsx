@@ -8,13 +8,14 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { getNexStoreUrl, openNexExternalUrl, useNexAuth } from "@/lib/nex-auth";
 
 export function NexLicenseGate({ children }: { children: ReactNode }) {
   const {
     configured,
     loading,
+    rememberedEmail,
     user,
     entitlement,
     deviceAccess,
@@ -23,18 +24,13 @@ export function NexLicenseGate({ children }: { children: ReactNode }) {
     redeemCode,
     verifyEmailAccess,
   } = useNexAuth();
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [email, setEmail] = useState(user?.email ?? rememberedEmail ?? "");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const autoVerifiedEmailRef = useRef<string | null>(null);
   const internalQaBypass = import.meta.env.VITE_NEX_INTERNAL_QA_BYPASS === "true";
   const storeUrl = getNexStoreUrl();
-
-  // Available only in an explicitly generated internal QA build. Public builds keep this false.
-  if (internalQaBypass) return children;
-
-  // Local development remains usable before cloud credentials exist. Packaged builds fail closed.
-  if (!configured && import.meta.env.DEV) return children;
 
   const entitlementExpired =
     entitlement?.status === "active" && new Date(entitlement.expiresAt).getTime() <= Date.now();
@@ -45,6 +41,66 @@ export function NexLicenseGate({ children }: { children: ReactNode }) {
     entitlement?.status === "active" &&
     !entitlementExpired &&
     effectiveDeviceAccess === "allowed";
+
+  useEffect(() => {
+    const nextEmail = user?.email ?? rememberedEmail;
+    if (!email.trim() && nextEmail) setEmail(nextEmail);
+  }, [email, rememberedEmail, user?.email]);
+
+  useEffect(() => {
+    const targetEmail = (rememberedEmail ?? email).trim().toLowerCase();
+    const shouldAutoVerify =
+      configured &&
+      !internalQaBypass &&
+      !loading &&
+      !user &&
+      Boolean(targetEmail) &&
+      effectiveDeviceAccess !== "checking" &&
+      autoVerifiedEmailRef.current !== targetEmail;
+
+    if (!shouldAutoVerify) return;
+
+    let cancelled = false;
+    setBusy(true);
+    autoVerifiedEmailRef.current = targetEmail;
+    setNotice("Validando acesso ativo neste computador...");
+    clearError();
+
+    void verifyEmailAccess(targetEmail)
+      .then((verified) => {
+        if (cancelled) return;
+        setNotice(`Acesso ${verified.planName} confirmado. Entrando no NEX...`);
+      })
+      .catch((activationError) => {
+        if (cancelled) return;
+        setNotice(
+          activationError instanceof Error ? activationError.message : String(activationError),
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    clearError,
+    configured,
+    effectiveDeviceAccess,
+    email,
+    internalQaBypass,
+    loading,
+    rememberedEmail,
+    user,
+    verifyEmailAccess,
+  ]);
+
+  // Available only in an explicitly generated internal QA build. Public builds keep this false.
+  if (internalQaBypass) return children;
+
+  // Local development remains usable before cloud credentials exist. Packaged builds fail closed.
+  if (!configured && import.meta.env.DEV) return children;
 
   if (accessConfirmed) return children;
 
