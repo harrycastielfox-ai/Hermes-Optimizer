@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   BadgeCheck,
   CalendarDays,
@@ -34,6 +34,7 @@ export const Route = createFileRoute("/conta")({
 });
 
 function AccountPage() {
+  const navigate = useNavigate();
   const {
     configured,
     loading,
@@ -95,6 +96,11 @@ function AccountPage() {
       return;
     }
     await openNexExternalUrl(storeUrl);
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    await navigate({ to: "/" });
   }
 
   return (
@@ -180,7 +186,7 @@ function AccountPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => void signOut()}
+                      onClick={() => void handleSignOut()}
                       className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-foreground transition hover:border-primary/40"
                     >
                       <LogOut className="h-4 w-4" /> Sair
