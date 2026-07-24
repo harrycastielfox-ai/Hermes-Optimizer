@@ -111,7 +111,7 @@ type AuthContextValue = {
   redeemCode: (code: string, email?: string) => Promise<NexEntitlement>;
   requestDeviceTransfer: () => Promise<NexDeviceTransfer>;
   cancelDeviceTransfer: () => Promise<void>;
-  refreshEntitlement: () => Promise<void>;
+  refreshEntitlement: (options?: { force?: boolean }) => Promise<void>;
   clearError: () => void;
 };
 
@@ -133,6 +133,7 @@ let deviceIdentityPromise: Promise<NexDeviceIdentity> | null = null;
 
 const BROWSER_DEVICE_STORAGE_KEY = "nex.auth.development-device.v1";
 const LICENSE_SESSION_STORAGE_KEY = "nex.auth.email-license-session.v1";
+const LICENSE_BACKGROUND_REFRESH_GRACE_MS = 10 * 60 * 1000;
 
 export function isNexAuthConfigured() {
   const hasRealProjectUrl = Boolean(
@@ -260,6 +261,12 @@ function normalizeEmail(email: string) {
 function isSessionFresh(session: NexLicenseSession) {
   if (!session.entitlement || session.entitlement.status !== "active") return false;
   return new Date(session.entitlement.expiresAt).getTime() > Date.now();
+}
+
+function isSessionRecentlyVerified(session: NexLicenseSession) {
+  const verifiedAt = new Date(session.verifiedAt).getTime();
+  if (!Number.isFinite(verifiedAt)) return false;
+  return Date.now() - verifiedAt < LICENSE_BACKGROUND_REFRESH_GRACE_MS;
 }
 
 function readStoredSession() {
@@ -417,39 +424,57 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
     writeStoredSession(nextSession);
   }, []);
 
-  const refreshEntitlement = useCallback(async () => {
-    const stored = readStoredSession();
-    if (!stored?.email) {
-      setLicenseSession(null);
-      setLoading(false);
-      return;
-    }
-
-    if (!configured) {
-      setLicenseSession(stored);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setDeviceAccess("checking");
-      const identity = await getDeviceIdentity();
-      setDeviceIdentity(identity);
-      const result = await invokeLicenseSession("verify", stored.email, identity);
-      setLicenseSession(buildSession(stored.email, result));
-      setError(null);
-    } catch (loadError) {
-      if (isSessionFresh(stored)) {
-        setLicenseSession({ ...stored, access: stored.access || "allowed" });
-      } else {
-        setDeviceAccess("unavailable");
+  const refreshEntitlement = useCallback(
+    async (options?: { force?: boolean }) => {
+      const stored = readStoredSession();
+      if (!stored?.email) {
+        setLicenseSession(null);
+        setLoading(false);
+        return;
       }
-      setError(friendlyAuthError(loadError));
-    } finally {
-      setLoading(false);
-    }
-  }, [configured, setLicenseSession]);
+
+      if (!configured) {
+        setLicenseSession(stored);
+        setLoading(false);
+        return;
+      }
+
+      const canUseStoredAccess = isSessionFresh(stored) && stored.access === "allowed";
+      const shouldRefreshInBackground =
+        canUseStoredAccess && !options?.force && isSessionRecentlyVerified(stored);
+
+      if (canUseStoredAccess) {
+        setLicenseSession(stored);
+        setLoading(false);
+        if (shouldRefreshInBackground) return;
+      }
+
+      try {
+        if (!canUseStoredAccess) {
+          setLoading(true);
+          setDeviceAccess("checking");
+        }
+        const identity = await getDeviceIdentity();
+        setDeviceIdentity(identity);
+        const result = await invokeLicenseSession("verify", stored.email, identity);
+        setLicenseSession(buildSession(stored.email, result));
+        setError(null);
+      } catch (loadError) {
+        if (canUseStoredAccess) {
+          setLicenseSession({ ...stored, access: "allowed" });
+          setError(null);
+        } else if (isSessionFresh(stored)) {
+          setLicenseSession({ ...stored, access: stored.access || "allowed" });
+        } else {
+          setDeviceAccess("unavailable");
+          setError(friendlyAuthError(loadError));
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [configured, setLicenseSession],
+  );
 
   useEffect(() => {
     void getDeviceIdentity()

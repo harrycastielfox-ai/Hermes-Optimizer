@@ -85,7 +85,7 @@ function AccountPage() {
   async function handleRefresh() {
     setBusy("refresh");
     clearError();
-    await refreshEntitlement();
+    await refreshEntitlement({ force: true });
     setBusy(null);
   }
 
