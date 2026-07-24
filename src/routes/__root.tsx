@@ -144,13 +144,7 @@ function RootComponent() {
   );
 }
 
-const PUBLIC_LICENSE_ROUTES = new Set([
-  "/",
-  "/conta",
-  "/configuracoes",
-  "/anti-cheat",
-  "/admin/licencas",
-]);
+const PUBLIC_LICENSE_ROUTES = new Set(["/conta", "/admin/licencas"]);
 
 function LicenseAwareOutlet() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });

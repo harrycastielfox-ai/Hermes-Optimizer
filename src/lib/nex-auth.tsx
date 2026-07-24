@@ -105,6 +105,7 @@ type AuthContextValue = {
   deviceTransfer: NexDeviceTransfer | null;
   error: string | null;
   activateWithEmailCode: (email: string, code: string) => Promise<NexEntitlement>;
+  verifyEmailAccess: (email: string) => Promise<NexEntitlement>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   redeemCode: (code: string, email?: string) => Promise<NexEntitlement>;
@@ -514,6 +515,29 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
     [deviceIdentity, setLicenseSession],
   );
 
+  const verifyEmailAccess = useCallback(
+    async (email: string) => {
+      try {
+        const normalizedEmail = normalizeEmail(email);
+        if (!normalizedEmail) throw new Error("Digite o e-mail usado na compra.");
+
+        const identity = deviceIdentity ?? (await getDeviceIdentity());
+        setDeviceIdentity(identity);
+        const result = await invokeLicenseSession("verify", normalizedEmail, identity);
+        const nextSession = buildSession(normalizedEmail, result);
+        if (!nextSession.entitlement || nextSession.access !== "allowed") {
+          throw new Error("Nenhum acesso ativo foi encontrado para este e-mail neste computador.");
+        }
+        setLicenseSession(nextSession);
+        setError(null);
+        return nextSession.entitlement;
+      } catch (verifyError) {
+        throw new Error(friendlyAuthError(verifyError));
+      }
+    },
+    [deviceIdentity, setLicenseSession],
+  );
+
   const signInWithGoogle = useCallback(async () => {
     setError("O login Google foi removido do fluxo do cliente. Use e-mail e código de acesso.");
   }, []);
@@ -556,6 +580,7 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       deviceTransfer,
       error,
       activateWithEmailCode,
+      verifyEmailAccess,
       signInWithGoogle,
       signOut,
       redeemCode,
@@ -580,6 +605,7 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
       session,
       signInWithGoogle,
       signOut,
+      verifyEmailAccess,
     ],
   );
 
