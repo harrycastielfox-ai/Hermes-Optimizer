@@ -122,6 +122,7 @@ pub fn run() {
             advanced::advanced_engine_apply_optimize_now,
             advanced::advanced_engine_catalog,
             advanced::advanced_set_graphics_high_performance_optimize_now,
+            anti_cheat::anti_cheat_enable_memory_integrity,
             anti_cheat::anti_cheat_engine_read,
             advisor_ai_engine::advisor_ai_engine_analyze,
             advisor::advisor_pro_analyze,

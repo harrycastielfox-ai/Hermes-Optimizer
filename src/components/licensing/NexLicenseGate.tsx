@@ -11,6 +11,9 @@ import {
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { getNexStoreUrl, openNexExternalUrl, useNexAuth } from "@/lib/nex-auth";
 
+const AUTO_VERIFY_RETRY_GRACE_MS = 5 * 60 * 1000;
+const autoVerifyAttempts = new Map<string, number>();
+
 export function NexLicenseGate({ children }: { children: ReactNode }) {
   const {
     configured,
@@ -56,13 +59,15 @@ export function NexLicenseGate({ children }: { children: ReactNode }) {
       !user &&
       Boolean(targetEmail) &&
       effectiveDeviceAccess !== "checking" &&
-      autoVerifiedEmailRef.current !== targetEmail;
+      autoVerifiedEmailRef.current !== targetEmail &&
+      Date.now() - (autoVerifyAttempts.get(targetEmail) ?? 0) > AUTO_VERIFY_RETRY_GRACE_MS;
 
     if (!shouldAutoVerify) return;
 
     let cancelled = false;
     setBusy(true);
     autoVerifiedEmailRef.current = targetEmail;
+    autoVerifyAttempts.set(targetEmail, Date.now());
     setNotice("Validando acesso ativo neste computador...");
     clearError();
 

@@ -7,13 +7,12 @@ import {
   Clock3,
   ExternalLink,
   KeyRound,
-  LogOut,
   Mail,
   RefreshCw,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import {
   getNexStoreUrl,
@@ -63,6 +62,10 @@ function AccountPage() {
     );
   }, [entitlement]);
 
+  useEffect(() => {
+    if (user?.email && !code.trim()) setEmail(user.email);
+  }, [code, user?.email]);
+
   async function handleActivate(event: FormEvent) {
     event.preventDefault();
     setBusy("activate");
@@ -86,8 +89,11 @@ function AccountPage() {
   async function handleRefresh() {
     setBusy("refresh");
     clearError();
-    await refreshEntitlement({ force: true });
-    setBusy(null);
+    try {
+      await refreshEntitlement({ force: true });
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function handleBuy() {
@@ -98,7 +104,7 @@ function AccountPage() {
     await openNexExternalUrl(storeUrl);
   }
 
-  async function handleSignOut() {
+  async function handleRevalidateAccess() {
     await signOut();
     await navigate({ to: "/" });
   }
@@ -186,10 +192,10 @@ function AccountPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => void handleSignOut()}
+                      onClick={() => void handleRevalidateAccess()}
                       className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-foreground transition hover:border-primary/40"
                     >
-                      <LogOut className="h-4 w-4" /> Sair
+                      <RefreshCw className="h-4 w-4" /> Revalidar
                     </button>
                   </div>
 

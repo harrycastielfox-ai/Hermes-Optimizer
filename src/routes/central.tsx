@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
@@ -364,6 +364,9 @@ const recommendationContextMap: Record<
 };
 
 export const Route = createFileRoute("/central")({
+  beforeLoad: () => {
+    throw redirect({ to: "/otimizar" });
+  },
   validateSearch: (
     search: Record<string, unknown>,
   ): { nivel?: OptimizationLevelId; recomendacao?: RecommendationContextId } => {

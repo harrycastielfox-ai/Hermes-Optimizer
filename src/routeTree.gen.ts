@@ -14,7 +14,6 @@ import { Route as RepararWindowsRouteImport } from './routes/reparar-windows'
 import { Route as PrepararAmbienteRouteImport } from './routes/preparar-ambiente'
 import { Route as PersonalizadoRouteImport } from './routes/personalizado'
 import { Route as PerfisRouteImport } from './routes/perfis'
-import { Route as OtimizarRouteImport } from './routes/otimizar'
 import { Route as OtimizacoesRouteImport } from './routes/otimizacoes'
 import { Route as ManutencaoProgramadaRouteImport } from './routes/manutencao-programada'
 import { Route as LimpezaRouteImport } from './routes/limpeza'
@@ -51,11 +50,6 @@ const PersonalizadoRoute = PersonalizadoRouteImport.update({
 const PerfisRoute = PerfisRouteImport.update({
   id: '/perfis',
   path: '/perfis',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OtimizarRoute = OtimizarRouteImport.update({
-  id: '/otimizar',
-  path: '/otimizar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OtimizacoesRoute = OtimizacoesRouteImport.update({
@@ -131,7 +125,6 @@ export interface FileRoutesByFullPath {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
-  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -151,7 +144,6 @@ export interface FileRoutesByTo {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
-  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -172,7 +164,6 @@ export interface FileRoutesById {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
-  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -194,7 +185,6 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
-    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -214,7 +204,6 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
-    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -234,7 +223,6 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
-    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -255,7 +243,6 @@ export interface RootRouteChildren {
   LimpezaRoute: typeof LimpezaRoute
   ManutencaoProgramadaRoute: typeof ManutencaoProgramadaRoute
   OtimizacoesRoute: typeof OtimizacoesRoute
-  OtimizarRoute: typeof OtimizarRoute
   PerfisRoute: typeof PerfisRoute
   PersonalizadoRoute: typeof PersonalizadoRoute
   PrepararAmbienteRoute: typeof PrepararAmbienteRoute
@@ -299,13 +286,6 @@ declare module '@tanstack/react-router' {
       path: '/perfis'
       fullPath: '/perfis'
       preLoaderRoute: typeof PerfisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/otimizar': {
-      id: '/otimizar'
-      path: '/otimizar'
-      fullPath: '/otimizar'
-      preLoaderRoute: typeof OtimizarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/otimizacoes': {
@@ -407,7 +387,6 @@ const rootRouteChildren: RootRouteChildren = {
   LimpezaRoute: LimpezaRoute,
   ManutencaoProgramadaRoute: ManutencaoProgramadaRoute,
   OtimizacoesRoute: OtimizacoesRoute,
-  OtimizarRoute: OtimizarRoute,
   PerfisRoute: PerfisRoute,
   PersonalizadoRoute: PersonalizadoRoute,
   PrepararAmbienteRoute: PrepararAmbienteRoute,

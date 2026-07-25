@@ -1,4 +1,4 @@
-﻿use crate::{
+use crate::{
     restore::{
         self, RestoreCreateSnapshotRequest, RestorePlannedAction, RestorePreviousState,
         RestorePreviousStateCategory, RestoreRiskLevel, RestoreRollbackAction,
@@ -27,6 +27,8 @@ const USB_SETTINGS_SUBGROUP_GUID: &str = "2a737441-1930-4402-8d77-b2bebba308a3";
 const USB_SELECTIVE_SUSPEND_SETTING_GUID: &str = "48e6b7a6-50f5-4782-a5d4-53bb8f07e226";
 const PCI_EXPRESS_SUBGROUP_GUID: &str = "501a4d13-42af-4429-9fd1-a8218c268e20";
 const PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID: &str = "ee12f906-d277-404b-b6da-e5fa1a576df5";
+const DISPLAY_SETTINGS_SUBGROUP_GUID: &str = "7516b95f-f776-4464-8c53-06167f40cc99";
+const DISPLAY_IDLE_TIMEOUT_SETTING_GUID: &str = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -279,6 +281,8 @@ struct RawAdvancedState {
     #[serde(default)]
     optional_service_start_modes: Vec<ServiceStartModeState>,
     enable_transparency: Option<i64>,
+    apps_use_light_theme: Option<i64>,
+    system_uses_light_theme: Option<i64>,
     min_animate: Option<String>,
     drag_full_windows: Option<String>,
     font_smoothing: Option<String>,
@@ -305,6 +309,8 @@ struct RawAdvancedState {
     usb_selective_suspend_dc: Option<String>,
     pcie_link_state_ac: Option<String>,
     pcie_link_state_dc: Option<String>,
+    display_idle_timeout_ac: Option<String>,
+    display_idle_timeout_dc: Option<String>,
     timer_policy_summary: Option<String>,
     #[serde(default, deserialize_with = "deserialize_nullable_string_vec")]
     defender_exclusion_paths: Vec<String>,
@@ -714,6 +720,8 @@ fn build_plans(state: &RawAdvancedState, selected_ids: &[String]) -> Vec<Advance
                 HIGH_PERFORMANCE_POWER_PLAN_GUID,
                 AdvancedRisk::Medium,
             )),
+            "set-display-timeout-never" => Some(set_display_timeout_never_plan(state)),
+            "set-windows-dark-mode" => Some(set_windows_dark_mode_plan(state)),
             "set-balanced-power-plan" => Some(set_power_plan_plan(
                 state,
                 "set-balanced-power-plan",
@@ -1900,6 +1908,20 @@ fn disable_pcie_link_state_power_management_plan(state: &RawAdvancedState) -> Ad
     )
 }
 
+fn set_display_timeout_never_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    power_setting_plan(
+        "set-display-timeout-never",
+        "Manter tela sempre ligada",
+        "Define o desligamento da tela como Nunca no plano atual, tanto na tomada quanto na bateria.",
+        DISPLAY_SETTINGS_SUBGROUP_GUID,
+        DISPLAY_IDLE_TIMEOUT_SETTING_GUID,
+        0,
+        0,
+        state.display_idle_timeout_ac.clone(),
+        state.display_idle_timeout_dc.clone(),
+    )
+}
+
 fn check_timer_resolution_policy_plan(state: &RawAdvancedState) -> AdvancedPlan {
     AdvancedPlan {
         action: action(
@@ -1939,6 +1961,7 @@ fn power_setting_plan(
     previous_ac_value: Option<String>,
     previous_dc_value: Option<String>,
 ) -> AdvancedPlan {
+    let reversible = previous_ac_value.is_some() && previous_dc_value.is_some();
     let current_value = format!(
         "AC={} | DC={}",
         previous_ac_value.as_deref().unwrap_or("Nao detectado"),
@@ -1954,7 +1977,7 @@ fn power_setting_plan(
             AdvancedRisk::Medium,
             true,
             false,
-            false,
+            reversible,
             true,
             false,
             current_value,
@@ -2155,6 +2178,53 @@ fn disable_transparency_plan(state: &RawAdvancedState) -> AdvancedPlan {
             state.enable_transparency,
             RestoreRollbackActionType::RestoreVisualEffects,
         )],
+    }
+}
+
+fn set_windows_dark_mode_plan(state: &RawAdvancedState) -> AdvancedPlan {
+    let personalize_path =
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+    AdvancedPlan {
+        action: action(
+            "set-windows-dark-mode",
+            "Ativar modo escuro do Windows",
+            "Ativa o tema escuro nos aplicativos e na interface do Windows para o usuario atual.",
+            AdvancedMethod::Registry,
+            AdvancedRisk::Low,
+            false,
+            false,
+            true,
+            true,
+            false,
+            format!(
+                "Aplicativos={} | Sistema={}",
+                display_optional(state.apps_use_light_theme),
+                display_optional(state.system_uses_light_theme)
+            ),
+            "Definir AppsUseLightTheme=0 e SystemUsesLightTheme=0",
+            "PowerShell New-ItemProperty em HKCU Themes\\Personalize",
+        ),
+        operations: vec![
+            registry_dword(
+                personalize_path,
+                "AppsUseLightTheme",
+                0,
+                state.apps_use_light_theme,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            registry_dword(
+                personalize_path,
+                "SystemUsesLightTheme",
+                0,
+                state.system_uses_light_theme,
+                RestoreRollbackActionType::RestoreRegistryValue,
+            ),
+            AdvancedOperation::Cmd {
+                program: "rundll32.exe".to_string(),
+                args: vec!["user32.dll,UpdatePerUserSystemParameters".to_string()],
+                transient: true,
+            },
+        ],
     }
 }
 
@@ -2676,9 +2746,12 @@ fn default_action_ids() -> Vec<String> {
         "set-xbl-auth-manager-manual".to_string(),
         "set-xbl-game-save-manual".to_string(),
         "set-xbox-net-api-svc-manual".to_string(),
+        "allow-hermes-defender-exclusion".to_string(),
         "set-dns-cloudflare".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
+        "set-display-timeout-never".to_string(),
+        "set-windows-dark-mode".to_string(),
         "disable-usb-selective-suspend".to_string(),
         "disable-pcie-link-state-power-management".to_string(),
         "set-mmcss-gamer-pack".to_string(),
@@ -2742,6 +2815,8 @@ fn allowed_action_ids() -> Vec<String> {
         "set-dns-adguard".to_string(),
         "list-power-plans".to_string(),
         "set-high-performance-power-plan".to_string(),
+        "set-display-timeout-never".to_string(),
+        "set-windows-dark-mode".to_string(),
         "set-balanced-power-plan".to_string(),
         "set-power-saver-power-plan".to_string(),
         "duplicate-ultimate-performance-power-plan".to_string(),
@@ -2802,7 +2877,7 @@ fn validate_plans_for_apply(
             ));
         }
 
-        if plan.action.persistent && !plan.action.reversible {
+        if !dry_run && plan.action.persistent && !plan.action.reversible {
             return Err(format!(
                 "{} e persistente, mas nao possui rollback seguro.",
                 plan.action.title
@@ -3035,6 +3110,14 @@ fn is_advanced_allowed_registry_target(path: &str, name: &str) -> bool {
                 "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
                 "enabletransparency"
             )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
+                "appsuselighttheme"
+            )
+            | (
+                "hkcu:\\software\\microsoft\\windows\\currentversion\\themes\\personalize",
+                "systemuseslighttheme"
+            )
             | ("hkcu:\\control panel\\desktop", "dragfullwindows")
             | ("hkcu:\\control panel\\desktop", "fontsmoothing")
             | ("hkcu:\\control panel\\desktop\\windowmetrics", "minanimate")
@@ -3148,19 +3231,18 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                     status: RestoreRollbackActionStatus::Pending,
                 }),
             AdvancedOperation::PowerSetting {
-                id,
+                subgroup_guid,
+                setting_guid,
                 previous_ac_value,
                 previous_dc_value,
                 ..
             } => RestoreRollbackAction {
                 id: format!("rollback-{}-{}", plan.action.id, index + 1),
-                action_type: RestoreRollbackActionType::Noop,
-                target: format!("power-setting:{id}"),
-                description:
-                    "Ajuste powercfg registrado com estado anterior; rollback automatico ainda nao executa powercfg fino."
-                        .to_string(),
+                action_type: RestoreRollbackActionType::RestorePowerSetting,
+                target: format!("{subgroup_guid}|{setting_guid}"),
+                description: "Restaurar valores AC/DC anteriores do plano de energia.".to_string(),
                 previous_value: Some(format!(
-                    "AC={} | DC={}",
+                    "AC={}|DC={}",
                     previous_ac_value
                         .clone()
                         .unwrap_or_else(|| "Nao detectado".to_string()),
@@ -3169,7 +3251,9 @@ fn plan_to_rollback_actions(plan: &AdvancedPlan) -> Vec<RestoreRollbackAction> {
                         .unwrap_or_else(|| "Nao detectado".to_string())
                 )),
                 backup_path: None,
-                command_preview: Some("No-op".to_string()),
+                command_preview: Some(
+                    "powercfg /SETACVALUEINDEX + /SETDCVALUEINDEX".to_string(),
+                ),
                 status: RestoreRollbackActionStatus::Pending,
             },
             AdvancedOperation::DnsProvider {
@@ -3486,6 +3570,10 @@ fn apply_operation(operation: &AdvancedOperation) -> Result<(), String> {
                     setting_guid.clone(),
                     dc_value.to_string(),
                 ],
+            )?;
+            run_native_command(
+                "powercfg",
+                &["/S".to_string(), "SCHEME_CURRENT".to_string()],
             )
             .map(|_| ())
         }
@@ -3664,7 +3752,7 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
                     normalized_args.as_slice(),
                     [switch, guid]
                         if switch == "/s"
-                            && is_allowed_power_plan_guid(guid)
+                            && (guid == "scheme_current" || is_allowed_power_plan_guid(guid))
                 )
                 || matches!(
                     normalized_args.as_slice(),
@@ -3751,6 +3839,7 @@ fn is_allowed_native_command(program: &str, args: &[String]) -> bool {
                     "shell32.dll,control_rundll".to_string(),
                     "sysdm.cpl,,3".to_string(),
                 ]
+                || normalized_args == ["user32.dll,updateperusersystemparameters".to_string()]
         }
         _ => false,
     }
@@ -3792,6 +3881,8 @@ fn is_allowed_power_setting(subgroup_guid: &str, setting_guid: &str, value: i64)
         && setting_guid.eq_ignore_ascii_case(USB_SELECTIVE_SUSPEND_SETTING_GUID))
         || (subgroup_guid.eq_ignore_ascii_case(PCI_EXPRESS_SUBGROUP_GUID)
             && setting_guid.eq_ignore_ascii_case(PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID))
+        || (subgroup_guid.eq_ignore_ascii_case(DISPLAY_SETTINGS_SUBGROUP_GUID)
+            && setting_guid.eq_ignore_ascii_case(DISPLAY_IDLE_TIMEOUT_SETTING_GUID))
 }
 
 fn current_hermes_executable_path() -> Result<String, String> {
@@ -4002,6 +4093,8 @@ fn fallback_state() -> RawAdvancedState {
         mapsbroker_start_mode: None,
         optional_service_start_modes: Vec::new(),
         enable_transparency: None,
+        apps_use_light_theme: None,
+        system_uses_light_theme: None,
         min_animate: None,
         drag_full_windows: None,
         font_smoothing: None,
@@ -4027,6 +4120,8 @@ fn fallback_state() -> RawAdvancedState {
         usb_selective_suspend_dc: None,
         pcie_link_state_ac: None,
         pcie_link_state_dc: None,
+        display_idle_timeout_ac: None,
+        display_idle_timeout_dc: None,
         timer_policy_summary: None,
         defender_exclusion_paths: Vec::new(),
     }
@@ -4130,6 +4225,7 @@ function Get-PowerSettingValues($subgroup, $setting) {
   }
   try {
     $lines = @(powercfg /Q SCHEME_CURRENT $subgroup $setting)
+    $localizedValues = @()
     foreach ($line in $lines) {
       if ($line -match 'Current AC Power Setting Index:\s+0x([0-9a-fA-F]+)') {
         $result.ac = [string]([Convert]::ToInt64($matches[1], 16))
@@ -4137,6 +4233,13 @@ function Get-PowerSettingValues($subgroup, $setting) {
       if ($line -match 'Current DC Power Setting Index:\s+0x([0-9a-fA-F]+)') {
         $result.dc = [string]([Convert]::ToInt64($matches[1], 16))
       }
+      if ([string]$line -match '0x([0-9a-fA-F]+)\s*$') {
+        $localizedValues += [string]([Convert]::ToInt64($matches[1], 16))
+      }
+    }
+    if (($null -eq $result.ac -or $null -eq $result.dc) -and $localizedValues.Count -ge 2) {
+      $result.ac = $localizedValues[$localizedValues.Count - 2]
+      $result.dc = $localizedValues[$localizedValues.Count - 1]
     }
   } catch {}
   return $result
@@ -4170,6 +4273,7 @@ $ifeoFateTriggerShippingPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersi
 $directXPath = 'HKLM:\SOFTWARE\Microsoft\DirectX'
 $usbPower = Get-PowerSettingValues '2a737441-1930-4402-8d77-b2bebba308a3' '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'
 $pciePower = Get-PowerSettingValues '501a4d13-42af-4429-9fd1-a8218c268e20' 'ee12f906-d277-404b-b6da-e5fa1a576df5'
+$displayPower = Get-PowerSettingValues '7516b95f-f776-4464-8c53-06167f40cc99' '3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e'
 $optionalServiceNames = @(
   'WerSvc',
   'WMPNetworkSvc',
@@ -4302,6 +4406,8 @@ try {
   mapsbrokerStartMode = Get-ServiceStartMode 'MapsBroker'
   optionalServiceStartModes = $optionalServiceStartModes
   enableTransparency = Get-Dword $personalizePath 'EnableTransparency'
+  appsUseLightTheme = Get-Dword $personalizePath 'AppsUseLightTheme'
+  systemUsesLightTheme = Get-Dword $personalizePath 'SystemUsesLightTheme'
   minAnimate = $minAnimateValue
   dragFullWindows = Get-StringValue $desktopPath 'DragFullWindows'
   fontSmoothing = Get-StringValue $desktopPath 'FontSmoothing'
@@ -4327,6 +4433,8 @@ try {
   usbSelectiveSuspendDc = $usbPower.dc
   pcieLinkStateAc = $pciePower.ac
   pcieLinkStateDc = $pciePower.dc
+  displayIdleTimeoutAc = $displayPower.ac
+  displayIdleTimeoutDc = $displayPower.dc
   timerPolicySummary = $timerPolicySummary
   defenderExclusionPaths = $defenderExclusionPaths
 } | ConvertTo-Json -Depth 5 -Compress
@@ -4361,18 +4469,22 @@ mod tests {
     }
 
     #[test]
-    fn advanced_allowlist_blocks_windows_theme_values() {
+    fn advanced_allowlist_accepts_only_supported_windows_theme_values() {
         assert!(is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
             "EnableTransparency"
         ));
-        assert!(!is_advanced_allowed_registry_target(
+        assert!(is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
             "AppsUseLightTheme"
         ));
-        assert!(!is_advanced_allowed_registry_target(
+        assert!(is_advanced_allowed_registry_target(
             "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
             "SystemUsesLightTheme"
+        ));
+        assert!(!is_advanced_allowed_registry_target(
+            "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "ColorPrevalence"
         ));
     }
 
@@ -4480,6 +4592,14 @@ mod tests {
             PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID.to_string(),
             "0".to_string(),
         ];
+        let display_ac_never = vec![
+            "/SETACVALUEINDEX".to_string(),
+            "SCHEME_CURRENT".to_string(),
+            DISPLAY_SETTINGS_SUBGROUP_GUID.to_string(),
+            DISPLAY_IDLE_TIMEOUT_SETTING_GUID.to_string(),
+            "0".to_string(),
+        ];
+        let refresh_current_plan = vec!["/S".to_string(), "SCHEME_CURRENT".to_string()];
         let usb_ac_on = vec![
             "/SETACVALUEINDEX".to_string(),
             "SCHEME_CURRENT".to_string(),
@@ -4501,6 +4621,8 @@ mod tests {
 
         assert!(is_allowed_native_command("powercfg", &usb_ac_off));
         assert!(is_allowed_native_command("powercfg", &pcie_dc_off));
+        assert!(is_allowed_native_command("powercfg", &display_ac_never));
+        assert!(is_allowed_native_command("powercfg", &refresh_current_plan));
         assert!(is_allowed_native_command("powercfg", &duplicate_ultimate));
         assert!(!is_allowed_native_command("powercfg", &usb_ac_on));
         assert!(!is_allowed_native_command("powercfg", &unsupported_setting));
@@ -4522,6 +4644,47 @@ mod tests {
         assert!(is_allowed_native_command("bcdedit", &boot_timeout));
         assert!(!is_allowed_native_command("bcdedit", &boot_timeout_zero));
         assert!(!is_allowed_native_command("bcdedit", &timer_write));
+    }
+
+    #[test]
+    fn advanced_default_catalog_includes_defender_executable_exclusion() {
+        assert!(default_action_ids().contains(&"allow-hermes-defender-exclusion".to_string()));
+    }
+
+    #[test]
+    fn advanced_phase_two_catalog_includes_dark_mode_and_display_never() {
+        let action_ids = default_action_ids();
+
+        assert!(action_ids.contains(&"set-windows-dark-mode".to_string()));
+        assert!(action_ids.contains(&"set-display-timeout-never".to_string()));
+    }
+
+    #[test]
+    fn advanced_allowlist_accepts_only_windows_theme_refresh_command() {
+        let refresh_theme = vec!["user32.dll,UpdatePerUserSystemParameters".to_string()];
+        let arbitrary_command = vec!["user32.dll,MessageBeep".to_string()];
+
+        assert!(is_allowed_native_command("rundll32.exe", &refresh_theme));
+        assert!(!is_allowed_native_command(
+            "rundll32.exe",
+            &arbitrary_command
+        ));
+    }
+
+    #[test]
+    fn advanced_defender_exclusion_accepts_only_nex_executables() {
+        assert!(is_allowed_hermes_executable_path(
+            "C:\\Users\\User\\AppData\\Local\\NEX Optimizer\\NEX Optimizer.exe"
+        ));
+        assert!(is_allowed_hermes_executable_path(
+            "C:\\Projetos\\Hermes-Optimizer\\src-tauri\\target\\debug\\nex-optimizer.exe"
+        ));
+        assert!(!is_allowed_hermes_executable_path(
+            "C:\\Users\\User\\Downloads\\NEX Optimizer"
+        ));
+        assert!(!is_allowed_hermes_executable_path(
+            "C:\\Windows\\System32\\notepad.exe"
+        ));
     }
 
     #[test]

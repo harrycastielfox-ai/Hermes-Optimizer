@@ -303,10 +303,10 @@ function Dashboard() {
                   );
                 })}
                 <Link
-                  to="/otimizacoes"
+                  to="/otimizar"
                   className="mt-2 flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                 >
-                  Ver todas as recomendações →
+                  Ir para otimizar →
                 </Link>
               </InfoPanel>
             </div>

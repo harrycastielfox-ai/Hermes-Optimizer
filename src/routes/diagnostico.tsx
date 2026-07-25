@@ -204,10 +204,10 @@ function HermesAiDiagnosticPanel({ report }: { report: BenchmarkReport }) {
           </div>
 
           <Link
-            to="/otimizacoes"
+            to="/otimizar"
             className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-[0_14px_28px_-18px_rgba(37,99,235,0.95)] transition hover:bg-blue-700"
           >
-            Ver Otimizações Recomendadas
+            Ir para otimizar
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

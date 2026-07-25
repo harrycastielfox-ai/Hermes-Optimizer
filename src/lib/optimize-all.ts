@@ -142,6 +142,8 @@ const HERMES_OPTIMIZE_ADVANCED_ACTION_IDS = [
   "disable-notification-toasts",
   "set-focus-assist-gamer",
   "set-high-performance-power-plan",
+  "set-display-timeout-never",
+  "set-windows-dark-mode",
   "disable-usb-selective-suspend",
   "disable-pcie-link-state-power-management",
   "check-timer-resolution-policy",

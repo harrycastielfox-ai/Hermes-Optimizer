@@ -29,6 +29,16 @@ export type AntiCheatReport = {
   warnings: string[];
 };
 
+export type AntiCheatActivationResult = {
+  dryRun: boolean;
+  changed: boolean;
+  alreadyEnabled: boolean;
+  restartRequired: boolean;
+  requiresAdmin: boolean;
+  message: string;
+  actions: string[];
+};
+
 export const fallbackAntiCheatReport: AntiCheatReport = {
   generatedAt: "0",
   engineVersion: "anti-cheat-fallback-v1",
@@ -71,6 +81,29 @@ export async function analyzeAntiCheat(): Promise<AntiCheatReport> {
       warnings: [error instanceof Error ? error.message : String(error)],
     };
   }
+}
+
+export async function enableMemoryIntegrity(): Promise<AntiCheatActivationResult> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    return {
+      dryRun: true,
+      changed: false,
+      alreadyEnabled: false,
+      restartRequired: true,
+      requiresAdmin: false,
+      message: "Integridade de Memoria validada fora do app. Nenhuma alteracao real foi feita.",
+      actions: [
+        "Validar Integridade de Memoria no Registro do Windows.",
+        "Habilitar HypervisorEnforcedCodeIntegrity quando estiver desativado.",
+        "Solicitar reinicio para aplicar Core Isolation.",
+      ],
+    };
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  return await invoke<AntiCheatActivationResult>("anti_cheat_enable_memory_integrity", {
+    request: { confirmed: true, dryRun: false },
+  });
 }
 
 export function loadCachedAntiCheatReport(): AntiCheatReport {

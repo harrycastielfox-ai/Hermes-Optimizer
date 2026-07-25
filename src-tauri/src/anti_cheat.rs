@@ -1,4 +1,5 @@
 ﻿use serde::{Deserialize, Serialize};
+use crate::safe_mode;
 use std::{
     process::{Command, Stdio},
     thread,
@@ -74,11 +75,49 @@ struct RawAntiCheatReport {
     warnings: Option<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AntiCheatActivationRequest {
+    pub confirmed: bool,
+    pub dry_run: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AntiCheatActivationResult {
+    pub dry_run: bool,
+    pub changed: bool,
+    pub already_enabled: bool,
+    pub restart_required: bool,
+    pub requires_admin: bool,
+    pub message: String,
+    pub actions: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawMemoryIntegrityActivation {
+    changed: Option<bool>,
+    already_enabled: Option<bool>,
+    restart_required: Option<bool>,
+    requires_admin: Option<bool>,
+    message: Option<String>,
+}
+
 #[tauri::command]
 pub async fn anti_cheat_engine_read() -> Result<AntiCheatReport, String> {
     tauri::async_runtime::spawn_blocking(collect_anti_cheat_report)
         .await
         .map_err(|err| format!("Falha ao executar Anti-Cheat em segundo plano: {err}"))?
+}
+
+#[tauri::command]
+pub async fn anti_cheat_enable_memory_integrity(
+    request: Option<AntiCheatActivationRequest>,
+) -> Result<AntiCheatActivationResult, String> {
+    tauri::async_runtime::spawn_blocking(move || enable_memory_integrity(request))
+        .await
+        .map_err(|err| format!("Falha ao ativar Integridade de Memoria: {err}"))?
 }
 
 pub fn collect_anti_cheat_report() -> Result<AntiCheatReport, String> {
@@ -97,6 +136,71 @@ pub fn collect_anti_cheat_component_score() -> (u8, String) {
         Ok(report) => (report.score, report.status),
         Err(_) => (60, "Indisponivel".to_string()),
     }
+}
+
+fn enable_memory_integrity(
+    request: Option<AntiCheatActivationRequest>,
+) -> Result<AntiCheatActivationResult, String> {
+    if !cfg!(target_os = "windows") {
+        return Err("Integridade de Memoria esta disponivel apenas no Windows.".to_string());
+    }
+
+    let request = request.unwrap_or(AntiCheatActivationRequest {
+        confirmed: false,
+        dry_run: Some(true),
+    });
+    let requested_dry_run = request.dry_run.unwrap_or(!request.confirmed);
+    let dry_run = safe_mode::force_dry_run(requested_dry_run);
+    let actions = vec![
+        "Validar Integridade de Memoria no Registro do Windows.".to_string(),
+        "Habilitar HypervisorEnforcedCodeIntegrity quando estiver desativado.".to_string(),
+        "Solicitar reinicio para aplicar Core Isolation.".to_string(),
+    ];
+
+    if dry_run {
+        return Ok(AntiCheatActivationResult {
+            dry_run,
+            changed: false,
+            already_enabled: false,
+            restart_required: true,
+            requires_admin: false,
+            message: format!(
+                "{} - Integridade de Memoria validada. Nenhuma alteracao real foi aplicada.",
+                safe_mode::mode_prefix(dry_run)
+            ),
+            actions,
+        });
+    }
+
+    if !request.confirmed {
+        return Err("Confirmacao obrigatoria para ativar Integridade de Memoria.".to_string());
+    }
+
+    let stdout = run_powershell(POWERSHELL_ENABLE_MEMORY_INTEGRITY_SCRIPT)?;
+    let raw = serde_json::from_str::<RawMemoryIntegrityActivation>(&stdout)
+        .map_err(|err| format!("Nao foi possivel interpretar ativacao Anti-Cheat: {err}"))?;
+    let changed = raw.changed.unwrap_or(false);
+    let already_enabled = raw.already_enabled.unwrap_or(false);
+    let restart_required = raw.restart_required.unwrap_or(changed);
+    let requires_admin = raw.requires_admin.unwrap_or(false);
+
+    Ok(AntiCheatActivationResult {
+        dry_run,
+        changed,
+        already_enabled,
+        restart_required,
+        requires_admin,
+        message: raw.message.unwrap_or_else(|| {
+            if requires_admin {
+                "Abra o NEX como administrador para aplicar esta permissao.".to_string()
+            } else if already_enabled {
+                "Integridade de Memoria ja estava ativa.".to_string()
+            } else {
+                "Integridade de Memoria ativada. Reinicie o PC para concluir.".to_string()
+            }
+        }),
+        actions,
+    })
 }
 
 fn collect_windows_anti_cheat() -> Result<RawAntiCheatReport, String> {
@@ -487,6 +591,54 @@ fn now_timestamp() -> String {
         .unwrap_or_default();
     seconds.to_string()
 }
+
+const POWERSHELL_ENABLE_MEMORY_INTEGRITY_SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+$isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+  [pscustomobject]@{
+    changed = $false
+    alreadyEnabled = $false
+    restartRequired = $false
+    requiresAdmin = $true
+    message = 'Abra o NEX como administrador para ativar Integridade de Memoria.'
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+
+$hvciPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity'
+$before = 0
+try {
+  $current = Get-ItemProperty -LiteralPath $hvciPath -Name Enabled -ErrorAction Stop
+  $before = [int]$current.Enabled
+} catch {
+  $before = 0
+}
+
+New-Item -Path $hvciPath -Force | Out-Null
+New-ItemProperty -LiteralPath $hvciPath -Name Enabled -PropertyType DWord -Value 1 -Force | Out-Null
+
+$after = [int](Get-ItemProperty -LiteralPath $hvciPath -Name Enabled -ErrorAction Stop).Enabled
+$changed = ($before -ne 1 -and $after -eq 1)
+$alreadyEnabled = ($before -eq 1 -and $after -eq 1)
+$message = if ($alreadyEnabled) {
+  'Integridade de Memoria ja estava ativa.'
+} elseif ($after -eq 1) {
+  'Integridade de Memoria ativada. Reinicie o PC para concluir.'
+} else {
+  'O Windows nao confirmou a ativacao da Integridade de Memoria.'
+}
+
+[pscustomobject]@{
+  changed = $changed
+  alreadyEnabled = $alreadyEnabled
+  restartRequired = $changed
+  requiresAdmin = $false
+  message = $message
+} | ConvertTo-Json -Compress
+"#;
 
 const POWERSHELL_ANTI_CHEAT_SCRIPT: &str = r#"
 $ErrorActionPreference = 'SilentlyContinue'

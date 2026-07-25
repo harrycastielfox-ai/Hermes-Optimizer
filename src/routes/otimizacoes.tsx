@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -40,6 +40,9 @@ import {
 import { HERMES_SAFE_TEST_MODE } from "@/lib/safe-mode";
 
 export const Route = createFileRoute("/otimizacoes")({
+  beforeLoad: () => {
+    throw redirect({ to: "/otimizar" });
+  },
   head: () => ({
     meta: [
       { title: "NEX Optimizer - Otimizações" },

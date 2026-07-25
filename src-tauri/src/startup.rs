@@ -535,8 +535,7 @@ fn disabled_item_to_startup_item(_index: usize, item: DisabledStartupItem) -> St
         can_disable_later: false,
         can_enable_later: true,
         controllable: is_current_user_startup_path(&item.registry_path),
-        control_reason: "Item desabilitado pelo NEX; pode ser reativado com rollback."
-            .to_string(),
+        control_reason: "Item desabilitado pelo NEX; pode ser reativado com rollback.".to_string(),
         registry_path: Some(item.registry_path),
         registry_value_name: Some(item.registry_value_name),
     }

@@ -595,15 +595,23 @@ export function NexAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const emailToRemember = session?.email ?? rememberedEmail;
+    const stored = readStoredSession();
+    const reusableSession =
+      stored && isSessionFresh(stored) && stored.access === "allowed" ? stored : null;
+    const emailToRemember = reusableSession?.email ?? session?.email ?? rememberedEmail;
     if (emailToRemember) {
       setRememberedEmail(emailToRemember);
       writeRememberedEmail(emailToRemember);
     }
-    setLicenseSession(null);
     setDeviceTransfer(null);
     setError(null);
-  }, [rememberedEmail, session?.email, setLicenseSession]);
+    if (reusableSession) {
+      setLicenseSession(reusableSession);
+      void refreshEntitlement({ force: true });
+      return;
+    }
+    setLicenseSession(null);
+  }, [refreshEntitlement, rememberedEmail, session?.email, setLicenseSession]);
 
   const redeemCode = useCallback(
     async (code: string, email?: string) => {

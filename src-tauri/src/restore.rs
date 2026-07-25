@@ -13,6 +13,12 @@ use tauri::{AppHandle, Manager};
 const MAX_RESTORE_SNAPSHOTS: usize = 10;
 const MAX_RESTORE_EVENTS: usize = 100;
 const RESTORE_COMMAND_TIMEOUT_SECONDS: u64 = 10;
+const USB_SETTINGS_SUBGROUP_GUID: &str = "2a737441-1930-4402-8d77-b2bebba308a3";
+const USB_SELECTIVE_SUSPEND_SETTING_GUID: &str = "48e6b7a6-50f5-4782-a5d4-53bb8f07e226";
+const PCI_EXPRESS_SUBGROUP_GUID: &str = "501a4d13-42af-4429-9fd1-a8218c268e20";
+const PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID: &str = "ee12f906-d277-404b-b6da-e5fa1a576df5";
+const DISPLAY_SETTINGS_SUBGROUP_GUID: &str = "7516b95f-f776-4464-8c53-06167f40cc99";
+const DISPLAY_IDLE_TIMEOUT_SETTING_GUID: &str = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -183,6 +189,7 @@ pub enum RestoreRollbackActionType {
     Noop,
     RestoreRegistryValue,
     RestorePowerPlan,
+    RestorePowerSetting,
     RestoreStartupEntry,
     RestoreVisualEffects,
     RestoreGameMode,
@@ -661,6 +668,9 @@ fn build_action_results(
                     message: "Acao no-op concluida sem alterar o sistema.".to_string(),
                 },
                 RestoreRollbackActionType::RestorePowerPlan => restore_power_plan_action(action),
+                RestoreRollbackActionType::RestorePowerSetting => {
+                    restore_power_setting_action(action)
+                }
                 RestoreRollbackActionType::RestoreRegistryValue => {
                     restore_registry_value_action(action)
                 }
@@ -721,6 +731,7 @@ fn validate_rollback_action(action: &RestoreRollbackAction) -> RestoreActionResu
                 }
             }
         }
+        RestoreRollbackActionType::RestorePowerSetting => validate_power_setting_action(action),
         RestoreRollbackActionType::RestoreRegistryValue => validate_scoped_registry_value_action(
             action,
             "Registro",
@@ -863,6 +874,98 @@ fn restore_power_plan_action(action: &RestoreRollbackAction) -> RestoreActionRes
             status: RestoreActionResultStatus::Failed,
             message: format!("Falha ao restaurar plano de energia: {error}"),
         },
+    }
+}
+
+fn restore_power_setting_action(action: &RestoreRollbackAction) -> RestoreActionResult {
+    let validation = validate_power_setting_action(action);
+    if !matches!(validation.status, RestoreActionResultStatus::DryRun) {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: validation.status,
+            message: validation.message,
+        };
+    }
+
+    let Some((subgroup_guid, setting_guid)) = parse_power_setting_target(&action.target) else {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Rollback bloqueado: alvo powercfg invalido.".to_string(),
+        };
+    };
+    let Some((ac_value, dc_value)) =
+        parse_power_setting_previous_value(action.previous_value.as_deref())
+    else {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Rollback bloqueado: valores anteriores de energia invalidos.".to_string(),
+        };
+    };
+
+    let ac_args = [
+        "/SETACVALUEINDEX",
+        "SCHEME_CURRENT",
+        subgroup_guid.as_str(),
+        setting_guid.as_str(),
+        ac_value.as_str(),
+    ];
+    let dc_args = [
+        "/SETDCVALUEINDEX",
+        "SCHEME_CURRENT",
+        subgroup_guid.as_str(),
+        setting_guid.as_str(),
+        dc_value.as_str(),
+    ];
+
+    let result = run_native_command("powercfg", &ac_args)
+        .and_then(|_| run_native_command("powercfg", &dc_args))
+        .and_then(|_| run_native_command("powercfg", &["/S", "SCHEME_CURRENT"]));
+
+    match result {
+        Ok(_) => RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Applied,
+            message: "Configuracao anterior de energia restaurada com powercfg.".to_string(),
+        },
+        Err(error) => RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: format!("Falha ao restaurar configuracao de energia: {error}"),
+        },
+    }
+}
+
+fn validate_power_setting_action(action: &RestoreRollbackAction) -> RestoreActionResult {
+    let Some((subgroup_guid, setting_guid)) = parse_power_setting_target(&action.target) else {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Powercfg: alvo de configuracao invalido.".to_string(),
+        };
+    };
+
+    if !is_allowed_power_setting_target(&subgroup_guid, &setting_guid) {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Powercfg: configuracao fora da allowlist NEX.".to_string(),
+        };
+    }
+
+    if parse_power_setting_previous_value(action.previous_value.as_deref()).is_none() {
+        return RestoreActionResult {
+            action_id: action.id.clone(),
+            status: RestoreActionResultStatus::Failed,
+            message: "Powercfg: valores anteriores AC/DC invalidos.".to_string(),
+        };
+    }
+
+    RestoreActionResult {
+        action_id: action.id.clone(),
+        status: RestoreActionResultStatus::DryRun,
+        message: "Powercfg: rollback AC/DC validado dentro da allowlist NEX.".to_string(),
     }
 }
 
@@ -1320,6 +1423,49 @@ fn parse_registry_target(target: &str) -> Option<(String, String, String)> {
     Some((path.to_string(), name.to_string(), value_kind.to_string()))
 }
 
+fn parse_power_setting_target(target: &str) -> Option<(String, String)> {
+    let mut parts = target.split('|');
+    let subgroup_guid = parts.next()?.trim();
+    let setting_guid = parts.next()?.trim();
+    if parts.next().is_some() || !is_guid_like(subgroup_guid) || !is_guid_like(setting_guid) {
+        return None;
+    }
+
+    Some((subgroup_guid.to_string(), setting_guid.to_string()))
+}
+
+fn parse_power_setting_previous_value(value: Option<&str>) -> Option<(String, String)> {
+    let mut parts = value?.split('|');
+    let ac_value = parts.next()?.trim().strip_prefix("AC=")?.trim();
+    let dc_value = parts.next()?.trim().strip_prefix("DC=")?.trim();
+    if parts.next().is_some() {
+        return None;
+    }
+
+    let ac_value = ac_value.parse::<u32>().ok()?;
+    let dc_value = dc_value.parse::<u32>().ok()?;
+    Some((ac_value.to_string(), dc_value.to_string()))
+}
+
+fn is_allowed_power_setting_target(subgroup_guid: &str, setting_guid: &str) -> bool {
+    matches!(
+        (
+            subgroup_guid.to_ascii_lowercase().as_str(),
+            setting_guid.to_ascii_lowercase().as_str()
+        ),
+        (
+            USB_SETTINGS_SUBGROUP_GUID,
+            USB_SELECTIVE_SUSPEND_SETTING_GUID
+        ) | (
+            PCI_EXPRESS_SUBGROUP_GUID,
+            PCIE_LINK_STATE_POWER_MANAGEMENT_SETTING_GUID
+        ) | (
+            DISPLAY_SETTINGS_SUBGROUP_GUID,
+            DISPLAY_IDLE_TIMEOUT_SETTING_GUID
+        )
+    )
+}
+
 fn is_allowed_registry_path(path: &str) -> bool {
     let normalized = path.replace('/', "\\").to_ascii_lowercase();
     normalized.starts_with("hkcu:\\software\\microsoft\\")
@@ -1720,5 +1866,45 @@ mod tests {
             assert!(matches!(result.status, RestoreActionResultStatus::Failed));
             assert!(result.message.contains("fora da allowlist"));
         }
+    }
+
+    #[test]
+    fn validates_display_timeout_power_setting_rollback() {
+        let action = RestoreRollbackAction {
+            id: "rollback-display-timeout".to_string(),
+            action_type: RestoreRollbackActionType::RestorePowerSetting,
+            target: format!("{DISPLAY_SETTINGS_SUBGROUP_GUID}|{DISPLAY_IDLE_TIMEOUT_SETTING_GUID}"),
+            description: "Restaurar tempo anterior da tela.".to_string(),
+            previous_value: Some("AC=600|DC=180".to_string()),
+            backup_path: None,
+            command_preview: Some("powercfg /SETACVALUEINDEX + /SETDCVALUEINDEX".to_string()),
+            status: RestoreRollbackActionStatus::Pending,
+        };
+
+        let result = validate_rollback_action(&action);
+
+        assert!(matches!(result.status, RestoreActionResultStatus::DryRun));
+        assert!(result.message.contains("rollback AC/DC validado"));
+    }
+
+    #[test]
+    fn blocks_unknown_power_setting_rollback() {
+        let action = RestoreRollbackAction {
+            id: "rollback-unknown-power-setting".to_string(),
+            action_type: RestoreRollbackActionType::RestorePowerSetting,
+            target: format!(
+                "{DISPLAY_SETTINGS_SUBGROUP_GUID}|00000000-0000-0000-0000-000000000000"
+            ),
+            description: "Nao deve executar powercfg desconhecido.".to_string(),
+            previous_value: Some("AC=600|DC=180".to_string()),
+            backup_path: None,
+            command_preview: Some("powercfg /SETACVALUEINDEX + /SETDCVALUEINDEX".to_string()),
+            status: RestoreRollbackActionStatus::Pending,
+        };
+
+        let result = validate_rollback_action(&action);
+
+        assert!(matches!(result.status, RestoreActionResultStatus::Failed));
+        assert!(result.message.contains("fora da allowlist"));
     }
 }
