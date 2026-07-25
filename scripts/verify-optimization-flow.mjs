@@ -33,11 +33,15 @@ const files = {
 const checks = [
   {
     name: "Botao 1 possui marcador estavel",
-    ok: files.otimizarRoute.includes('data-testid="hermes-prepare-start"'),
+    ok:
+      files.otimizarRoute.includes('data-testid="hermes-prepare-start"') ||
+      files.otimizarRoute.includes('testId="hermes-prepare-start"'),
   },
   {
     name: "Botao 2 possui marcador estavel",
-    ok: files.otimizarRoute.includes('data-testid="hermes-optimize-start"'),
+    ok:
+      files.otimizarRoute.includes('data-testid="hermes-optimize-start"') ||
+      files.otimizarRoute.includes('testId="hermes-optimize-start"'),
   },
   {
     name: "Botao 2 continua bloqueado antes da Fase 1",

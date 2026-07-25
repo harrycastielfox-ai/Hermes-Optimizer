@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { NexCompanionSettings } from "@/types/nex-companion";
 
 export type UpdateChannel = "stable" | "beta";
 export type ThemePreference = "light" | "dark" | "system";
@@ -30,6 +31,7 @@ export type HermesAdminPreferences = {
     cleanupDone: boolean;
     performanceAlerts: boolean;
   };
+  companion: NexCompanionSettings;
   language: {
     current: LanguagePreference;
   };
@@ -165,6 +167,15 @@ export const defaultPreferences: HermesAdminPreferences = {
     system: true,
     cleanupDone: true,
     performanceAlerts: true,
+  },
+  companion: {
+    enabled: true,
+    showWhenMinimized: true,
+    alwaysOnTop: true,
+    hideInFullscreen: true,
+    compactMode: false,
+    clickThrough: false,
+    size: "medium",
   },
   language: {
     current: "pt-BR",
@@ -770,6 +781,15 @@ export function mergePreferences(value: Partial<HermesAdminPreferences>): Hermes
     notifications: {
       ...defaultPreferences.notifications,
       ...value.notifications,
+    },
+    companion: {
+      ...defaultPreferences.companion,
+      ...value.companion,
+      position: value.companion?.position
+        ? {
+            ...value.companion.position,
+          }
+        : undefined,
     },
     language: {
       current: normalizeLanguage(value.language?.current),

@@ -1,5 +1,5 @@
-﻿use serde::{Deserialize, Serialize};
 use crate::safe_mode;
+use serde::{Deserialize, Serialize};
 use std::{
     process::{Command, Stdio},
     thread,

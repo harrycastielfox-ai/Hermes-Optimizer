@@ -16,7 +16,372 @@ mod safe_mode;
 mod startup;
 mod system;
 
-use tauri::Manager;
+use serde::Deserialize;
+use std::sync::Mutex;
+use tauri::{Emitter, Manager, WebviewUrl};
+
+const NEX_COMPANION_LABEL: &str = "nex-companion";
+
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NexCompanionSettings {
+    enabled: bool,
+    show_when_minimized: bool,
+    always_on_top: bool,
+    hide_in_fullscreen: bool,
+    compact_mode: bool,
+    click_through: bool,
+    size: String,
+    position: Option<NexCompanionPosition>,
+}
+
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NexCompanionPosition {
+    x: i32,
+    y: i32,
+}
+
+impl Default for NexCompanionSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            show_when_minimized: true,
+            always_on_top: true,
+            hide_in_fullscreen: true,
+            compact_mode: false,
+            click_through: false,
+            size: "medium".to_string(),
+            position: None,
+        }
+    }
+}
+
+#[derive(Default)]
+struct NexCompanionRuntime {
+    inner: Mutex<NexCompanionRuntimeState>,
+}
+
+#[derive(Default)]
+struct NexCompanionRuntimeState {
+    is_running: bool,
+    status: String,
+    settings: NexCompanionSettings,
+    hidden_by_user: bool,
+}
+
+fn companion_size(settings: &NexCompanionSettings) -> (f64, f64) {
+    if settings.compact_mode {
+        return (184.0, 224.0);
+    }
+
+    match settings.size.as_str() {
+        "small" => (292.0, 590.0),
+        "large" => (372.0, 750.0),
+        _ => (332.0, 680.0),
+    }
+}
+
+fn apply_companion_settings(
+    window: &tauri::WebviewWindow,
+    settings: &NexCompanionSettings,
+) -> Result<(), String> {
+    let (width, height) = companion_size(settings);
+    window
+        .set_size(tauri::LogicalSize::new(width, height))
+        .map_err(|error| format!("Nao foi possivel dimensionar o NEX Companion: {error}"))?;
+    window
+        .set_always_on_top(settings.always_on_top)
+        .map_err(|error| format!("Nao foi possivel ajustar o NEX Companion: {error}"))?;
+    window
+        .set_ignore_cursor_events(settings.click_through)
+        .map_err(|error| format!("Nao foi possivel ajustar os cliques do NEX Companion: {error}"))
+}
+
+fn position_companion(window: &tauri::WebviewWindow, settings: &NexCompanionSettings) {
+    let Ok(monitors) = window.available_monitors() else {
+        return;
+    };
+    if monitors.is_empty() {
+        return;
+    }
+
+    let requested = settings.position.as_ref();
+    let monitor = requested
+        .and_then(|position| {
+            monitors.iter().find(|monitor| {
+                let origin = monitor.position();
+                let size = monitor.size();
+                position.x >= origin.x
+                    && position.y >= origin.y
+                    && position.x < origin.x + size.width as i32
+                    && position.y < origin.y + size.height as i32
+            })
+        })
+        .or_else(|| {
+            window.current_monitor().ok().flatten().and_then(|current| {
+                monitors
+                    .iter()
+                    .find(|monitor| monitor.name() == current.name())
+            })
+        })
+        .unwrap_or(&monitors[0]);
+
+    let monitor_position = monitor.position();
+    let monitor_size = monitor.size();
+    let Ok(window_size) = window.outer_size() else {
+        return;
+    };
+
+    let min_x = monitor_position.x;
+    let min_y = monitor_position.y;
+    let max_x = monitor_position.x + monitor_size.width as i32 - window_size.width as i32;
+    let max_y = monitor_position.y + monitor_size.height as i32 - window_size.height as i32;
+    let default_x = max_x - 24;
+    let default_y =
+        monitor_position.y + ((monitor_size.height as i32 - window_size.height as i32) / 2);
+    let requested_x = requested.map(|position| position.x).unwrap_or(default_x);
+    let requested_y = requested.map(|position| position.y).unwrap_or(default_y);
+    let max_x = max_x.max(min_x);
+    let max_y = max_y.max(min_y);
+    let mut x = requested_x.clamp(min_x, max_x);
+    let mut y = requested_y.clamp(min_y, max_y);
+    const SNAP_DISTANCE: i32 = 32;
+
+    if (x - min_x).abs() <= SNAP_DISTANCE {
+        x = min_x;
+    } else if (max_x - x).abs() <= SNAP_DISTANCE {
+        x = max_x;
+    }
+    if (y - min_y).abs() <= SNAP_DISTANCE {
+        y = min_y;
+    } else if (max_y - y).abs() <= SNAP_DISTANCE {
+        y = max_y;
+    }
+
+    let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+}
+
+fn show_companion(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window(NEX_COMPANION_LABEL)
+        .ok_or_else(|| "Janela do NEX Companion nao encontrada.".to_string())?;
+    let settings = {
+        let runtime = app.state::<NexCompanionRuntime>();
+        let settings = runtime
+            .inner
+            .lock()
+            .map_err(|_| "Estado do NEX Companion indisponivel.".to_string())?
+            .settings
+            .clone();
+        settings
+    };
+
+    if !settings.enabled {
+        return Ok(());
+    }
+
+    apply_companion_settings(&window, &settings)?;
+    position_companion(&window, &settings);
+    window
+        .show()
+        .map_err(|error| format!("Nao foi possivel mostrar o NEX Companion: {error}"))
+}
+
+fn hide_companion(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window(NEX_COMPANION_LABEL)
+        .ok_or_else(|| "Janela do NEX Companion nao encontrada.".to_string())?;
+    window
+        .hide()
+        .map_err(|error| format!("Nao foi possivel ocultar o NEX Companion: {error}"))
+}
+
+fn set_companion_hidden_by_user(app: &tauri::AppHandle, hidden: bool) {
+    if let Ok(mut state) = app.state::<NexCompanionRuntime>().inner.lock() {
+        state.hidden_by_user = hidden;
+    }
+}
+
+fn open_main_window(app: &tauri::AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "Janela principal nao encontrada.".to_string())?;
+    window
+        .show()
+        .map_err(|error| format!("Nao foi possivel mostrar a janela principal: {error}"))?;
+    window
+        .unminimize()
+        .map_err(|error| format!("Nao foi possivel restaurar a janela principal: {error}"))?;
+    window
+        .set_focus()
+        .map_err(|error| format!("Nao foi possivel focar a janela principal: {error}"))?;
+    let _ = hide_companion(app);
+    Ok(())
+}
+
+#[cfg(windows)]
+fn foreground_application_is_fullscreen(app: &tauri::AppHandle) -> bool {
+    use windows::Win32::{
+        Foundation::{HWND, RECT},
+        Graphics::Gdi::{
+            GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+        },
+        UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowRect, IsIconic, IsWindowVisible},
+    };
+
+    let foreground = unsafe { GetForegroundWindow() };
+    if foreground == HWND::default()
+        || unsafe { !IsWindowVisible(foreground).as_bool() || IsIconic(foreground).as_bool() }
+    {
+        return false;
+    }
+
+    let is_nex_window = ["main", NEX_COMPANION_LABEL].iter().any(|label| {
+        app.get_webview_window(label)
+            .and_then(|window| window.hwnd().ok())
+            .is_some_and(|hwnd| hwnd == foreground)
+    });
+    if is_nex_window {
+        return false;
+    }
+
+    let monitor = unsafe { MonitorFromWindow(foreground, MONITOR_DEFAULTTONEAREST) };
+    if monitor.is_invalid() {
+        return false;
+    }
+
+    let mut monitor_info = MONITORINFO {
+        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+        ..Default::default()
+    };
+    if !unsafe { GetMonitorInfoW(monitor, &mut monitor_info) }.as_bool() {
+        return false;
+    }
+
+    let mut window_rect = RECT::default();
+    if unsafe { GetWindowRect(foreground, &mut window_rect) }.is_err() {
+        return false;
+    }
+
+    const EDGE_TOLERANCE: i32 = 2;
+    let monitor_rect = monitor_info.rcMonitor;
+    (window_rect.left - monitor_rect.left).abs() <= EDGE_TOLERANCE
+        && (window_rect.top - monitor_rect.top).abs() <= EDGE_TOLERANCE
+        && (window_rect.right - monitor_rect.right).abs() <= EDGE_TOLERANCE
+        && (window_rect.bottom - monitor_rect.bottom).abs() <= EDGE_TOLERANCE
+}
+
+#[cfg(not(windows))]
+fn foreground_application_is_fullscreen(_app: &tauri::AppHandle) -> bool {
+    false
+}
+
+fn should_show_companion(app: &tauri::AppHandle) -> bool {
+    let runtime = app.state::<NexCompanionRuntime>();
+    let Ok(state) = runtime.inner.lock() else {
+        return false;
+    };
+    let has_visible_status =
+        state.is_running || matches!(state.status.as_str(), "completed" | "error");
+    has_visible_status
+        && state.settings.enabled
+        && state.settings.show_when_minimized
+        && !state.hidden_by_user
+        && !(state.settings.hide_in_fullscreen && foreground_application_is_fullscreen(app))
+}
+
+fn reconcile_companion_visibility(app: &tauri::AppHandle) {
+    let Some(main_window) = app.get_webview_window("main") else {
+        return;
+    };
+    let Some(companion_window) = app.get_webview_window(NEX_COMPANION_LABEL) else {
+        return;
+    };
+    let main_is_minimized = main_window.is_minimized().unwrap_or(false);
+    let companion_is_visible = companion_window.is_visible().unwrap_or(false);
+    let should_be_visible = main_is_minimized && should_show_companion(app);
+
+    if should_be_visible && !companion_is_visible {
+        let _ = show_companion(app);
+    } else if !should_be_visible && companion_is_visible {
+        let _ = hide_companion(app);
+    }
+}
+
+#[tauri::command]
+fn nex_companion_update_runtime(
+    app: tauri::AppHandle,
+    is_running: bool,
+    status: String,
+) -> Result<(), String> {
+    let runtime = app.state::<NexCompanionRuntime>();
+    let mut state = runtime
+        .inner
+        .lock()
+        .map_err(|_| "Estado do NEX Companion indisponivel.".to_string())?;
+    let started_new_run = is_running && !state.is_running;
+    state.is_running = is_running;
+    state.status = status.clone();
+    if started_new_run {
+        state.hidden_by_user = false;
+    }
+    drop(state);
+
+    if matches!(status.as_str(), "idle" | "cancelled") {
+        let _ = hide_companion(&app);
+    } else {
+        reconcile_companion_visibility(&app);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn nex_companion_update_settings(
+    app: tauri::AppHandle,
+    settings: NexCompanionSettings,
+) -> Result<(), String> {
+    let runtime = app.state::<NexCompanionRuntime>();
+    {
+        let mut state = runtime
+            .inner
+            .lock()
+            .map_err(|_| "Estado do NEX Companion indisponivel.".to_string())?;
+        state.settings = settings.clone();
+    }
+
+    if let Some(window) = app.get_webview_window(NEX_COMPANION_LABEL) {
+        apply_companion_settings(&window, &settings)?;
+        position_companion(&window, &settings);
+        if !settings.enabled {
+            let _ = window.hide();
+        }
+    }
+    reconcile_companion_visibility(&app);
+    Ok(())
+}
+
+#[tauri::command]
+fn nex_companion_show(app: tauri::AppHandle) -> Result<(), String> {
+    set_companion_hidden_by_user(&app, false);
+    show_companion(&app)
+}
+
+#[tauri::command]
+fn nex_companion_hide(app: tauri::AppHandle) -> Result<(), String> {
+    set_companion_hidden_by_user(&app, true);
+    hide_companion(&app)
+}
+
+#[tauri::command]
+fn nex_companion_open_main(app: tauri::AppHandle) -> Result<(), String> {
+    open_main_window(&app)
+}
+
+#[tauri::command]
+fn nex_app_exit(app: tauri::AppHandle) {
+    app.exit(0);
+}
 
 #[cfg(windows)]
 fn colorref(red: u8, green: u8, blue: u8) -> u32 {
@@ -81,21 +446,42 @@ fn hermes_window_minimize(app: tauri::AppHandle) -> Result<(), String> {
 
     window
         .minimize()
-        .map_err(|error| format!("Nao foi possivel minimizar a janela: {error}"))
+        .map_err(|error| format!("Nao foi possivel minimizar a janela: {error}"))?;
+
+    if should_show_companion(&app) {
+        show_companion(&app)?;
+    }
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
+        .manage(NexCompanionRuntime::default())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.unminimize();
-                let _ = window.set_focus();
-            }
+            let _ = open_main_window(app);
         }))
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_opener::init());
+        .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            let app = window.app_handle();
+            if window.label() == NEX_COMPANION_LABEL {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    set_companion_hidden_by_user(app, true);
+                    let _ = hide_companion(app);
+                }
+                return;
+            }
+
+            if window.label() != "main" {
+                return;
+            }
+
+            if matches!(event, tauri::WindowEvent::Resized(_)) {
+                reconcile_companion_visibility(app);
+            }
+        });
 
     builder
         .setup(|app| {
@@ -110,6 +496,95 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 apply_nex_window_frame(&window);
             }
+
+            let companion = tauri::WebviewWindowBuilder::new(
+                app,
+                NEX_COMPANION_LABEL,
+                WebviewUrl::App("/companion".into()),
+            )
+            .title("NEX Companion")
+            .inner_size(332.0, 680.0)
+            .resizable(false)
+            .decorations(false)
+            .transparent(true)
+            .shadow(false)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .focused(false)
+            .visible(false)
+            .build()?;
+            let companion_settings = NexCompanionSettings::default();
+            apply_companion_settings(&companion, &companion_settings)
+                .map_err(std::io::Error::other)?;
+            position_companion(&companion, &companion_settings);
+
+            let tray_menu = tauri::menu::MenuBuilder::new(app)
+                .text("open-main", "Abrir NEX")
+                .text("optimization-status", "Status da otimização")
+                .text("show-companion", "Mostrar Companion")
+                .text("hide-companion", "Ocultar Companion")
+                .text("interactive-companion", "Ativar cliques no Companion")
+                .separator()
+                .text("quit-nex", "Sair")
+                .build()?;
+            let mut tray_builder = tauri::tray::TrayIconBuilder::with_id("nex-tray")
+                .tooltip("NEX Optimizer")
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id().as_ref() {
+                    "open-main" => {
+                        let _ = open_main_window(app);
+                    }
+                    "optimization-status" => {
+                        set_companion_hidden_by_user(app, false);
+                        let _ = show_companion(app);
+                    }
+                    "show-companion" => {
+                        set_companion_hidden_by_user(app, false);
+                        let _ = show_companion(app);
+                    }
+                    "hide-companion" => {
+                        set_companion_hidden_by_user(app, true);
+                        let _ = hide_companion(app);
+                    }
+                    "interactive-companion" => {
+                        if let Some(window) = app.get_webview_window(NEX_COMPANION_LABEL) {
+                            let _ = window.set_ignore_cursor_events(false);
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit-nex" => {
+                        let running = app
+                            .state::<NexCompanionRuntime>()
+                            .inner
+                            .lock()
+                            .map(|state| state.is_running)
+                            .unwrap_or(false);
+                        if running {
+                            let _ = open_main_window(app);
+                            let _ =
+                                app.emit_to("main", "nex://exit-requested", "optimization-running");
+                        } else {
+                            app.exit(0);
+                        }
+                    }
+                    _ => {}
+                });
+            if let Some(icon) = app.default_window_icon().cloned() {
+                tray_builder = tray_builder.icon(icon);
+            }
+            tray_builder.build(app)?;
+
+            let companion_watcher = app.handle().clone();
+            std::thread::Builder::new()
+                .name("nex-companion-visibility".to_string())
+                .spawn(move || loop {
+                    std::thread::sleep(std::time::Duration::from_millis(650));
+                    reconcile_companion_visibility(&companion_watcher);
+                })
+                .map_err(std::io::Error::other)?;
+
             #[cfg(all(debug_assertions, windows))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
@@ -165,7 +640,13 @@ pub fn run() {
             system::system_open_windows_security,
             system::system_restart_computer,
             system::system_security_context_read,
-            hermes_window_minimize
+            hermes_window_minimize,
+            nex_companion_update_runtime,
+            nex_companion_update_settings,
+            nex_companion_show,
+            nex_companion_hide,
+            nex_companion_open_main,
+            nex_app_exit
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

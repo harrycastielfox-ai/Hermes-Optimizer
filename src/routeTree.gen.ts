@@ -14,6 +14,7 @@ import { Route as RepararWindowsRouteImport } from './routes/reparar-windows'
 import { Route as PrepararAmbienteRouteImport } from './routes/preparar-ambiente'
 import { Route as PersonalizadoRouteImport } from './routes/personalizado'
 import { Route as PerfisRouteImport } from './routes/perfis'
+import { Route as OtimizarRouteImport } from './routes/otimizar'
 import { Route as OtimizacoesRouteImport } from './routes/otimizacoes'
 import { Route as ManutencaoProgramadaRouteImport } from './routes/manutencao-programada'
 import { Route as LimpezaRouteImport } from './routes/limpeza'
@@ -22,6 +23,7 @@ import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
 import { Route as DefenderRouteImport } from './routes/defender'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as CompanionRouteImport } from './routes/companion'
 import { Route as CentralRouteImport } from './routes/central'
 import { Route as AntiCheatRouteImport } from './routes/anti-cheat'
 import { Route as IndexRouteImport } from './routes/index'
@@ -50,6 +52,11 @@ const PersonalizadoRoute = PersonalizadoRouteImport.update({
 const PerfisRoute = PerfisRouteImport.update({
   id: '/perfis',
   path: '/perfis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OtimizarRoute = OtimizarRouteImport.update({
+  id: '/otimizar',
+  path: '/otimizar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OtimizacoesRoute = OtimizacoesRouteImport.update({
@@ -92,6 +99,11 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompanionRoute = CompanionRouteImport.update({
+  id: '/companion',
+  path: '/companion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CentralRoute = CentralRouteImport.update({
   id: '/central',
   path: '/central',
@@ -117,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
+  '/companion': typeof CompanionRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
@@ -125,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
+  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -136,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
+  '/companion': typeof CompanionRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
@@ -144,6 +159,7 @@ export interface FileRoutesByTo {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
+  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -156,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/anti-cheat': typeof AntiCheatRoute
   '/central': typeof CentralRoute
+  '/companion': typeof CompanionRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conta': typeof ContaRoute
   '/defender': typeof DefenderRoute
@@ -164,6 +181,7 @@ export interface FileRoutesById {
   '/limpeza': typeof LimpezaRoute
   '/manutencao-programada': typeof ManutencaoProgramadaRoute
   '/otimizacoes': typeof OtimizacoesRoute
+  '/otimizar': typeof OtimizarRoute
   '/perfis': typeof PerfisRoute
   '/personalizado': typeof PersonalizadoRoute
   '/preparar-ambiente': typeof PrepararAmbienteRoute
@@ -177,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/anti-cheat'
     | '/central'
+    | '/companion'
     | '/configuracoes'
     | '/conta'
     | '/defender'
@@ -185,6 +204,7 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
+    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -196,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/anti-cheat'
     | '/central'
+    | '/companion'
     | '/configuracoes'
     | '/conta'
     | '/defender'
@@ -204,6 +225,7 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
+    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -215,6 +237,7 @@ export interface FileRouteTypes {
     | '/'
     | '/anti-cheat'
     | '/central'
+    | '/companion'
     | '/configuracoes'
     | '/conta'
     | '/defender'
@@ -223,6 +246,7 @@ export interface FileRouteTypes {
     | '/limpeza'
     | '/manutencao-programada'
     | '/otimizacoes'
+    | '/otimizar'
     | '/perfis'
     | '/personalizado'
     | '/preparar-ambiente'
@@ -235,6 +259,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AntiCheatRoute: typeof AntiCheatRoute
   CentralRoute: typeof CentralRoute
+  CompanionRoute: typeof CompanionRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ContaRoute: typeof ContaRoute
   DefenderRoute: typeof DefenderRoute
@@ -243,6 +268,7 @@ export interface RootRouteChildren {
   LimpezaRoute: typeof LimpezaRoute
   ManutencaoProgramadaRoute: typeof ManutencaoProgramadaRoute
   OtimizacoesRoute: typeof OtimizacoesRoute
+  OtimizarRoute: typeof OtimizarRoute
   PerfisRoute: typeof PerfisRoute
   PersonalizadoRoute: typeof PersonalizadoRoute
   PrepararAmbienteRoute: typeof PrepararAmbienteRoute
@@ -286,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/perfis'
       fullPath: '/perfis'
       preLoaderRoute: typeof PerfisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otimizar': {
+      id: '/otimizar'
+      path: '/otimizar'
+      fullPath: '/otimizar'
+      preLoaderRoute: typeof OtimizarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/otimizacoes': {
@@ -344,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/companion': {
+      id: '/companion'
+      path: '/companion'
+      fullPath: '/companion'
+      preLoaderRoute: typeof CompanionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/central': {
       id: '/central'
       path: '/central'
@@ -379,6 +419,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AntiCheatRoute: AntiCheatRoute,
   CentralRoute: CentralRoute,
+  CompanionRoute: CompanionRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ContaRoute: ContaRoute,
   DefenderRoute: DefenderRoute,
@@ -387,6 +428,7 @@ const rootRouteChildren: RootRouteChildren = {
   LimpezaRoute: LimpezaRoute,
   ManutencaoProgramadaRoute: ManutencaoProgramadaRoute,
   OtimizacoesRoute: OtimizacoesRoute,
+  OtimizarRoute: OtimizarRoute,
   PerfisRoute: PerfisRoute,
   PersonalizadoRoute: PersonalizadoRoute,
   PrepararAmbienteRoute: PrepararAmbienteRoute,

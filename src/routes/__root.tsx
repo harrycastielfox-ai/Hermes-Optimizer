@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import "../styles.css";
 import { HermesWindowChrome } from "../components/common/HermesWindowChrome";
 import { NexLicenseGate } from "../components/licensing/NexLicenseGate";
+import { NexCompanionController } from "../components/nex-companion/NexCompanionController";
 import { reportClientError } from "../lib/lovable-error-reporting";
 import { NexAuthProvider } from "../lib/nex-auth";
 import { HermesPreferencesProvider } from "../lib/preferences";
@@ -134,17 +135,30 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <HermesPreferencesProvider>
-        <NexAuthProvider>
-          <HermesWindowChrome />
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <LicenseAwareOutlet />
-        </NexAuthProvider>
+        <RootSurface />
       </HermesPreferencesProvider>
     </QueryClientProvider>
   );
 }
 
 const PUBLIC_LICENSE_ROUTES = new Set(["/admin/licencas"]);
+
+function RootSurface() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  if (pathname === "/companion") {
+    return <Outlet />;
+  }
+
+  return (
+    <NexAuthProvider>
+      <HermesWindowChrome />
+      <NexCompanionController />
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <LicenseAwareOutlet />
+    </NexAuthProvider>
+  );
+}
 
 function LicenseAwareOutlet() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });

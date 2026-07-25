@@ -41,6 +41,8 @@ import {
   buildOptimizeAuditReportActions,
   OPTIMIZE_AUDIT_ACTION_TARGET,
 } from "@/lib/optimize-audit-catalog";
+import { publishNexOptimizationState } from "@/lib/nex-companion";
+import type { NexOptimizationStatus, NexOptimizationStepStatus } from "@/types/nex-companion";
 
 type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "failed" | "cancelled";
@@ -117,6 +119,8 @@ export function SmartOptimizeModal({
   const cancelRequested = useRef(false);
   const activeRun = useRef(0);
   const reportActions = useRef<ExecutionReportAction[]>([]);
+  const companionRunId = useRef<string | null>(null);
+  const companionStartedAt = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -125,6 +129,8 @@ export function SmartOptimizeModal({
 
     activeRun.current += 1;
     const runId = activeRun.current;
+    companionRunId.current = `optimize-${Date.now()}-${runKey}`;
+    companionStartedAt.current = Date.now();
     cancelRequested.current = false;
     setPhases(resetPhases());
     setLogs([]);
@@ -154,6 +160,43 @@ export function SmartOptimizeModal({
     () => planActions.filter((item) => item.status === "ready" || item.status === "ok").length,
     [planActions],
   );
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const status = mapRunStatus(runStatus);
+    const companionSteps = phases.map((item) => ({
+      id: item.id,
+      title: item.title,
+      detail: item.subtitle,
+      status: mapPhaseStatus(item.status),
+    }));
+
+    void publishNexOptimizationState({
+      runId: companionRunId.current,
+      phase: "optimize",
+      isRunning: status === "running" || status === "paused",
+      progress: runStatus === "completed" ? 100 : progress,
+      currentStep: runStatus === "completed" ? "Otimização concluída" : currentStatus,
+      currentDetail:
+        runStatus === "completed"
+          ? "Tudo pronto. O plano global foi finalizado."
+          : activePhase?.subtitle,
+      startedAt: companionStartedAt.current,
+      updatedAt: Date.now(),
+      completedSteps: companionSteps
+        .filter((item) => item.status === "completed")
+        .map((item) => item.title),
+      pendingSteps: companionSteps
+        .filter((item) => item.status === "pending" || item.status === "running")
+        .map((item) => item.title),
+      steps: companionSteps,
+      status,
+      errorMessage: runStatus === "failed" ? currentStatus : undefined,
+    });
+  }, [activePhase?.subtitle, currentStatus, open, phases, progress, runStatus]);
 
   async function runSmartOptimization(runId: number) {
     try {
@@ -553,6 +596,35 @@ export function SmartOptimizeModal({
       </div>
     </div>
   );
+}
+
+function mapRunStatus(status: RunStatus): NexOptimizationStatus {
+  switch (status) {
+    case "running":
+      return "running";
+    case "completed":
+      return "completed";
+    case "failed":
+      return "error";
+    case "cancelled":
+      return "cancelled";
+    default:
+      return "idle";
+  }
+}
+
+function mapPhaseStatus(status: PhaseStatus): NexOptimizationStepStatus {
+  switch (status) {
+    case "running":
+      return "running";
+    case "completed":
+    case "unavailable":
+      return "completed";
+    case "failed":
+      return "error";
+    default:
+      return "pending";
+  }
 }
 
 function buildOptimizationPlan(reports: OptimizeAllReports): PlanAction[] {

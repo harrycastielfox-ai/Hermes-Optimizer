@@ -32,6 +32,8 @@ import {
   type ExecutionReportStatus,
 } from "@/lib/execution-report";
 import { verifyExecutionActions } from "@/lib/execution-verification";
+import { publishNexOptimizationState } from "@/lib/nex-companion";
+import type { NexOptimizationStatus, NexOptimizationStepStatus } from "@/types/nex-companion";
 
 type RunStatus = "idle" | "running" | "completed" | "failed" | "cancelled";
 type PhaseStatus = "pending" | "running" | "completed" | "unavailable" | "cancelled";
@@ -92,6 +94,8 @@ export function QuickPrepareModal({
   const phaseTaskCompleted = useRef<Partial<Record<QuickPreparePhaseId, number>>>({});
   const phaseHasUnavailable = useRef<Partial<Record<QuickPreparePhaseId, boolean>>>({});
   const reportActions = useRef<ExecutionReportAction[]>([]);
+  const companionRunId = useRef<string | null>(null);
+  const companionStartedAt = useRef<number | null>(null);
   const executionMode = HERMES_SAFE_TEST_MODE ? "dryRun" : "real";
 
   useEffect(() => {
@@ -101,6 +105,8 @@ export function QuickPrepareModal({
 
     activeRun.current += 1;
     const runId = activeRun.current;
+    companionRunId.current = `prepare-${Date.now()}-${runKey}`;
+    companionStartedAt.current = Date.now();
     cancelRequested.current = false;
     setPhases(resetPhases());
     setReports({});
@@ -127,6 +133,43 @@ export function QuickPrepareModal({
   const canCancel = runStatus === "running" && !cancelRequested.current;
   const canClose = runStatus !== "running" || cancelRequested.current;
   const dnsProvider = getDnsProvider(dnsProviderId);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const status = mapRunStatus(runStatus);
+    const companionSteps = phases.map((item) => ({
+      id: item.id,
+      title: item.title,
+      detail: item.subtitle,
+      status: mapPhaseStatus(item.status),
+    }));
+
+    void publishNexOptimizationState({
+      runId: companionRunId.current,
+      phase: "prepare",
+      isRunning: status === "running" || status === "paused",
+      progress: runStatus === "completed" ? 100 : progress,
+      currentStep: runStatus === "completed" ? "Preparação concluída" : currentStatus,
+      currentDetail:
+        runStatus === "completed"
+          ? "Reinicie o computador para liberar a Etapa 2."
+          : activePhase?.subtitle,
+      startedAt: companionStartedAt.current,
+      updatedAt: Date.now(),
+      completedSteps: companionSteps
+        .filter((item) => item.status === "completed")
+        .map((item) => item.title),
+      pendingSteps: companionSteps
+        .filter((item) => item.status === "pending" || item.status === "running")
+        .map((item) => item.title),
+      steps: companionSteps,
+      status,
+      errorMessage: runStatus === "failed" ? currentStatus : undefined,
+    });
+  }, [activePhase?.subtitle, currentStatus, open, phases, progress, runStatus]);
 
   async function runPrepare(runId: number) {
     try {
@@ -526,6 +569,33 @@ export function QuickPrepareModal({
       </div>
     </div>
   );
+}
+
+function mapRunStatus(status: RunStatus): NexOptimizationStatus {
+  switch (status) {
+    case "running":
+      return "running";
+    case "completed":
+      return "completed";
+    case "failed":
+      return "error";
+    case "cancelled":
+      return "cancelled";
+    default:
+      return "idle";
+  }
+}
+
+function mapPhaseStatus(status: PhaseStatus): NexOptimizationStepStatus {
+  switch (status) {
+    case "running":
+      return "running";
+    case "completed":
+    case "unavailable":
+      return "completed";
+    default:
+      return "pending";
+  }
 }
 
 function PreparePhaseCard({ phase }: { phase: PreparePhase }) {
