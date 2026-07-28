@@ -1,22 +1,26 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   NEX_COMPANION_COMMAND_EVENT,
+  NEX_COMPANION_SETTINGS_CHANGED_EVENT,
+  areNexCompanionSettingsEqual,
   isTauriRuntime,
   readNexOptimizationState,
   syncNexCompanionSettings,
 } from "@/lib/nex-companion";
 import { useHermesPreferences } from "@/lib/preferences";
-import type { NexCompanionCommand } from "@/types/nex-companion";
+import type { NexCompanionCommand, NexCompanionSettings } from "@/types/nex-companion";
 
 const EXIT_REQUEST_EVENT = "nex://exit-requested";
 
 export function NexCompanionController() {
   const { preferences, updatePreferences } = useHermesPreferences();
+  const settingsRef = useRef(preferences.companion);
 
   useEffect(() => {
+    settingsRef.current = preferences.companion;
     void syncNexCompanionSettings(preferences.companion);
   }, [preferences.companion]);
 
@@ -37,6 +41,17 @@ export function NexCompanionController() {
             ...current.companion,
             compactMode: payload === "COLLAPSE_COMPANION",
           },
+        }));
+      }),
+      listen<NexCompanionSettings>(NEX_COMPANION_SETTINGS_CHANGED_EVENT, ({ payload }) => {
+        if (areNexCompanionSettingsEqual(settingsRef.current, payload)) {
+          return;
+        }
+
+        settingsRef.current = payload;
+        updatePreferences((current) => ({
+          ...current,
+          companion: payload,
         }));
       }),
       listen(EXIT_REQUEST_EVENT, async () => {

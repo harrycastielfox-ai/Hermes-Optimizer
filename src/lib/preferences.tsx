@@ -172,8 +172,8 @@ export const defaultPreferences: HermesAdminPreferences = {
     enabled: true,
     showWhenMinimized: true,
     alwaysOnTop: true,
-    hideInFullscreen: true,
-    compactMode: false,
+    hideInFullscreen: false,
+    compactMode: true,
     clickThrough: false,
     size: "medium",
   },
@@ -784,7 +784,7 @@ export function mergePreferences(value: Partial<HermesAdminPreferences>): Hermes
     },
     companion: {
       ...defaultPreferences.companion,
-      ...value.companion,
+      compactMode: value.companion?.compactMode ?? defaultPreferences.companion.compactMode,
       position: value.companion?.position
         ? {
             ...value.companion.position,

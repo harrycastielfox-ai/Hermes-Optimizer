@@ -11,6 +11,7 @@ export const NEX_COMPANION_WINDOW_LABEL = "nex-companion";
 export const NEX_COMPANION_STATE_EVENT = "nex://optimization-state";
 export const NEX_COMPANION_COMMAND_EVENT = "nex://companion-command";
 export const NEX_COMPANION_SETTINGS_EVENT = "nex://companion-settings";
+export const NEX_COMPANION_SETTINGS_CHANGED_EVENT = "nex://companion-settings-changed";
 
 const STATE_STORAGE_KEY = "nex.companion.optimization-state.v1";
 const STATE_DOM_EVENT = "nex:optimization-state-updated";
@@ -75,6 +76,32 @@ export async function syncNexCompanionSettings(settings: NexCompanionSettings) {
     emitTo(NEX_COMPANION_WINDOW_LABEL, NEX_COMPANION_SETTINGS_EVENT, settings),
     invoke("nex_companion_update_settings", { settings }),
   ]);
+}
+
+export async function publishNexCompanionSettingsChange(settings: NexCompanionSettings) {
+  if (!isTauriRuntime()) {
+    return;
+  }
+
+  await emitTo("main", NEX_COMPANION_SETTINGS_CHANGED_EVENT, settings);
+}
+
+export function areNexCompanionSettingsEqual(
+  left: NexCompanionSettings,
+  right: NexCompanionSettings,
+) {
+  return (
+    left.enabled === right.enabled &&
+    left.showWhenMinimized === right.showWhenMinimized &&
+    left.alwaysOnTop === right.alwaysOnTop &&
+    left.hideInFullscreen === right.hideInFullscreen &&
+    left.compactMode === right.compactMode &&
+    left.clickThrough === right.clickThrough &&
+    left.size === right.size &&
+    left.position?.x === right.position?.x &&
+    left.position?.y === right.position?.y &&
+    left.position?.monitorId === right.position?.monitorId
+  );
 }
 
 export function subscribeToLocalOptimizationState(listener: (state: NexOptimizationState) => void) {

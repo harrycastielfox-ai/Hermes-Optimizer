@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Bell,
-  Bot,
   CheckCircle2,
   Download,
   Eye,
@@ -237,76 +236,6 @@ export function HermesAdminSettings() {
             icon={Eye}
             title={t("settings.appearance.note.title")}
             text={t("settings.appearance.note.text")}
-          />
-        </SettingsPanel>
-
-        <SettingsPanel
-          icon={Bot}
-          title="NEX Companion"
-          description="Mascote flutuante com o progresso real quando o NEX estiver minimizado."
-        >
-          <ToggleRow
-            icon={Bot}
-            title="Ativar NEX Companion"
-            description="Permite mostrar a janela flutuante durante uma otimização."
-            checked={preferences.companion.enabled}
-            onCheckedChange={(checked) =>
-              savePreference((current) => ({
-                ...current,
-                companion: { ...current.companion, enabled: checked },
-              }))
-            }
-          />
-          <ToggleRow
-            icon={MonitorCog}
-            title="Mostrar ao minimizar"
-            description="Abre o Companion somente quando existe uma otimização em andamento."
-            checked={preferences.companion.showWhenMinimized}
-            onCheckedChange={(checked) =>
-              savePreference((current) => ({
-                ...current,
-                companion: { ...current.companion, showWhenMinimized: checked },
-              }))
-            }
-          />
-          <ToggleRow
-            icon={Eye}
-            title="Ocultar em tela cheia"
-            description="Evita cobrir jogos, vídeos e apresentações em tela cheia."
-            checked={preferences.companion.hideInFullscreen}
-            onCheckedChange={(checked) =>
-              savePreference((current) => ({
-                ...current,
-                companion: { ...current.companion, hideInFullscreen: checked },
-              }))
-            }
-          />
-          <ToggleRow
-            icon={LockKeyhole}
-            title="Sempre visível"
-            description="Mantém o painel acima das janelas comuns enquanto estiver aberto."
-            checked={preferences.companion.alwaysOnTop}
-            onCheckedChange={(checked) =>
-              savePreference((current) => ({
-                ...current,
-                companion: { ...current.companion, alwaysOnTop: checked },
-              }))
-            }
-          />
-          <SegmentedControl
-            label="Tamanho"
-            value={preferences.companion.size}
-            options={[
-              { value: "small", label: "Pequeno", description: "Discreto" },
-              { value: "medium", label: "Médio", description: "Recomendado" },
-              { value: "large", label: "Grande", description: "Mais legível" },
-            ]}
-            onChange={(size) =>
-              savePreference((current) => ({
-                ...current,
-                companion: { ...current.companion, size },
-              }))
-            }
           />
         </SettingsPanel>
 
